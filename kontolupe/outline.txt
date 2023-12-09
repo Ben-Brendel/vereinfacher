@@ -1,0 +1,23 @@
+App Layout
+----------
+
+* Bei Öffnen der App Abfrage fälliger Buchungen, dann Abfrage, ob berechneter Kontostand stimmt oder aktualisiert werden muss.
+
+* Layout
+- Virtueller Kontostand groß und mit Datumslider
+- Button Kontostand aktualisieren
+- Liste offene Buchungen
+	- ohne Fälligkeit oben
+	- mit Fälligkeit darunter
+
+- Je Buchung:
+	- Buchung erfolgt
+	- Buchung löschen
+	- Buchung verschieben
+
+- Button Neue Buchung mit / ohne Fälligkeit
+
+- Liste Buchungshistorie - DetailedList
+	- Button Rückgängig
+	- Button löschen
+	- Button alle löschen
