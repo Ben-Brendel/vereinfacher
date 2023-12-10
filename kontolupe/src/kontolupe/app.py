@@ -12,6 +12,7 @@ from toga.app import AppStartupMethod, OnExitHandler
 from toga.icons import Icon
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, Pack
 
+# set localization 
 import locale
 locale.setlocale(locale.LC_ALL, '')
 
@@ -66,12 +67,6 @@ class Kontolupe(toga.App):
             step=Decimal('0.01')           
         )
 
-        # self.input_balance_date = toga.TextInput(
-        #     readonly=True,
-        #     value=self.format_date(self.dates[self.date_index]),
-        #     style=Pack(padding=10)
-        # )  
-
         self.input_balance_date = toga.DateInput(
             value=self.date,
             style=Pack(padding=10),
@@ -114,9 +109,16 @@ class Kontolupe(toga.App):
         )
 
         # Button section
-        button_booking = toga.Button(
+        button_new_booking = toga.Button(
             'Neue Buchung erfassen',
             on_press=self.new_booking,
+            style=Pack(padding=10)
+        )
+
+        # Button section
+        button_delete_booking = toga.Button(
+            'Ausgewählte Buchung löschen',
+            on_press=self.delete_booking,
             style=Pack(padding=10)
         )
 
@@ -141,7 +143,8 @@ class Kontolupe(toga.App):
         balance_future_box.add(self.input_balance_date)
         slider_box.add(self.slider_balance_date)
         content_box.add(self.table_bookings)
-        content_box.add(button_booking)
+        content_box.add(button_new_booking)
+        content_box.add(button_delete_booking)
         
 
         """
@@ -165,6 +168,13 @@ class Kontolupe(toga.App):
         self.form_box.add(amount_label)
         self.form_box.add(amount_input)
 
+    def delete_booking(self, widget):
+        # Delete the selected booking from the bookings list
+        if self.table_bookings.selection:
+            index = self.table_bookings.data.index(self.table_bookings.selection)
+            self.bookings.pop(index)
+            self.table_bookings.data = self.table_data()
+
     def table_data(self):
         # Parse the table data list from the bookings list
         table_data = []
@@ -181,14 +191,11 @@ class Kontolupe(toga.App):
         return date.strftime('%d.%m.%Y')
     
     def new_booking(self, widget):
-        
         # Switch to the form box
-        self.main_window.content = self.form_box
-        # Refresh the main window to show the new form
-        self.main_window.refresh()    
+        self.main_window.content = self.form_box  
 
     """
-    The most important function to getting the values right.
+    The most important function for getting the values right.
     """
     def update_values(self, widget):
         # getting the date values right
@@ -196,6 +203,12 @@ class Kontolupe(toga.App):
             self.date_index = int(widget.value)
             self.date = self.dates[self.date_index]
             self.input_balance_date.value = self.date
+            """
+            important to interrupt the function here
+            because changing the value of input_balance_date
+            will trigger the function again which would lead
+            to a miscalculation of the future balance
+            """
             return
         
         elif widget == self.input_balance_date:
@@ -212,12 +225,10 @@ class Kontolupe(toga.App):
             except:
                 self.balance = 0
 
-        print('Balance: '+str(self.balance))
         # calculate the future balance
         new_balance = self.balance
         for booking in self.bookings:
             if booking[0] <= self.date:
-                print('Buchung: '+str(booking[1]))
                 new_balance += booking[1]
         self.input_balance_future.value = new_balance
 
