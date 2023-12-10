@@ -24,9 +24,10 @@ class Kontolupe(toga.App):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # Container for the main content
-        self.main_box = toga.Box(style=Pack(direction=COLUMN))
-
+        """
+        Creating the class variables and initializing them with
+        example values.
+        """
         # Object variables with initial values
         self.balance = 100
         self.bookings = [
@@ -41,8 +42,15 @@ class Kontolupe(toga.App):
         today = datetime.date.today()
         self.dates = [today + datetime.timedelta(days=i) for i in range(31)]
         self.date_index = 0
+        self.date = self.dates[self.date_index]
 
-        # Input section
+        """
+        Creating the box with the main application content.
+        """
+        # Container for the main content
+        self.main_box = toga.Box(style=Pack(direction=COLUMN))
+
+        # Inputs
         self.input_balance_today = toga.NumberInput(
             readonly=False,
             value=self.balance,
@@ -58,11 +66,18 @@ class Kontolupe(toga.App):
             step=Decimal('0.01')           
         )
 
-        self.input_balance_date = toga.TextInput(
-            readonly=True,
-            value=self.format_date(self.dates[self.date_index]),
-            style=Pack(padding=10)
-        )  
+        # self.input_balance_date = toga.TextInput(
+        #     readonly=True,
+        #     value=self.format_date(self.dates[self.date_index]),
+        #     style=Pack(padding=10)
+        # )  
+
+        self.input_balance_date = toga.DateInput(
+            value=self.date,
+            style=Pack(padding=10),
+            min=today,
+            on_change=self.update_values
+        )
 
         # Slider
         self.slider_balance_date = toga.Slider(
@@ -74,18 +89,60 @@ class Kontolupe(toga.App):
             style=Pack(flex=1, padding=10)
         )
 
-        # Create a table with the bookings by taking the data
-        # from the bookings list and formatting the date
-        # and the amount as a currency value with two decimals
-        # and the currency € behind the value
-        # the fourth columns boolean value is transformed to a string
-        # where 0 is displayed as 'Nein' and 1 as 'Ja'.
+        # table for the bookings
         self.table_bookings = toga.Table(
             headings=['Datum', 'Betrag', 'Notiz', 'Wiederkehrend'],
             data=self.table_data(),
             style=Pack(flex=1, padding=10),
             multiple_select=False
         )
+
+        # Label section
+        label_balance_today = toga.Label(
+            'Kontostand heute:',
+            style=Pack(padding=10)
+        )
+
+        label_balance_future = toga.Label(
+            'Kontostand:',
+            style=Pack(padding=10)
+        )
+
+        label_balance_date = toga.Label(
+            'am:',
+            style=Pack(padding=10)
+        )
+
+        # Button section
+        button_booking = toga.Button(
+            'Neue Buchung erfassen',
+            on_press=self.new_booking,
+            style=Pack(padding=10)
+        )
+
+        # Create the subboxes for the main box        
+        balance_today_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        balance_future_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        slider_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+
+        # Add the subboxes to the main box
+        self.main_box.add(balance_today_box)
+        self.main_box.add(balance_future_box)
+        self.main_box.add(slider_box) 
+        self.main_box.add(content_box)
+
+        # Add the widgets to the boxes
+        balance_today_box.add(label_balance_today)
+        balance_today_box.add(self.input_balance_today)
+        balance_future_box.add(label_balance_future)
+        balance_future_box.add(self.input_balance_future)
+        balance_future_box.add(label_balance_date)
+        balance_future_box.add(self.input_balance_date)
+        slider_box.add(self.slider_balance_date)
+        content_box.add(self.table_bookings)
+        content_box.add(button_booking)
+        
 
         """
         Create the content for the form box.
@@ -123,33 +180,49 @@ class Kontolupe(toga.App):
     def format_date(self, date):
         return date.strftime('%d.%m.%Y')
     
-    def update_values(self, widget):
-        # retrieve the current values
-        try:
-            self.balance = Decimal(self.input_balance_today.value)
-        except:
-            self.balance = 0
-        
-        self.date_index = int(self.slider_balance_date.value)
-
-        # show the chosen date
-        self.input_balance_date.value = self.format_date(self.dates[self.date_index])
-
-        # calculate the future balance
-        for booking in self.bookings:
-            if booking[0] <= self.dates[self.date_index]:
-                self.balance += booking[1]
-        self.input_balance_future.value = self.balance
-
-        # update the table
-        self.table_bookings.data = self.table_data()
-
     def new_booking(self, widget):
         
         # Switch to the form box
         self.main_window.content = self.form_box
         # Refresh the main window to show the new form
-        self.main_window.refresh()
+        self.main_window.refresh()    
+
+    """
+    The most important function to getting the values right.
+    """
+    def update_values(self, widget):
+        # getting the date values right
+        if widget == self.slider_balance_date:
+            self.date_index = int(widget.value)
+            self.date = self.dates[self.date_index]
+            self.input_balance_date.value = self.date
+            return
+        
+        elif widget == self.input_balance_date:
+            self.date = widget.value
+            try:
+                self.date_index = self.dates.index(self.date)
+            except:
+                self.date_index = 30
+            self.slider_balance_date.value = self.date_index
+        
+        elif widget == self.input_balance_today:
+            try:
+                self.balance = Decimal(self.input_balance_today.value)
+            except:
+                self.balance = 0
+
+        print('Balance: '+str(self.balance))
+        # calculate the future balance
+        new_balance = self.balance
+        for booking in self.bookings:
+            if booking[0] <= self.date:
+                print('Buchung: '+str(booking[1]))
+                new_balance += booking[1]
+        self.input_balance_future.value = new_balance
+
+        # update the table
+        self.table_bookings.data = self.table_data()
 
 
     """ 
@@ -157,54 +230,6 @@ class Kontolupe(toga.App):
     for creating the main window and its contents.
     """
     def startup(self):
-
-        # Label section
-        label_balance_today = toga.Label(
-            'Kontostand heute:',
-            style=Pack(padding=10)
-        )
-
-        label_balance_future = toga.Label(
-            'Kontostand:',
-            style=Pack(padding=10)
-        )
-
-        label_balance_date = toga.Label(
-            'am:',
-            style=Pack(padding=10)
-        )
-
-        # Button section
-        button_booking = toga.Button(
-            'Neue Buchung erfassen',
-            on_press=self.new_booking,
-            style=Pack(padding=10)
-        )
-
-        # Create the boxes for the main window
-        
-        balance_today_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
-        balance_future_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
-        slider_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
-        content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
-
-        # Add the subboxes to the main box
-        self.main_box.add(balance_today_box)
-        self.main_box.add(balance_future_box)
-        self.main_box.add(slider_box) 
-        self.main_box.add(content_box)
-
-        # Add the widgets to the boxes
-        balance_today_box.add(label_balance_today)
-        balance_today_box.add(self.input_balance_today)
-        balance_future_box.add(label_balance_future)
-        balance_future_box.add(self.input_balance_future)
-        balance_future_box.add(label_balance_date)
-        balance_future_box.add(self.input_balance_date)
-        slider_box.add(self.slider_balance_date)
-        content_box.add(button_booking)
-        content_box.add(self.table_bookings)
-
         # Create the main window
         self.main_window = toga.MainWindow(title=self.formal_name)
         self.main_window.content = self.main_box
