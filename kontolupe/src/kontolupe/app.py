@@ -24,6 +24,9 @@ class Kontolupe(toga.App):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        # Container for the main content
+        self.main_box = toga.Box(style=Pack(direction=COLUMN))
+
         # Object variables with initial values
         self.balance = 100
         self.bookings = [
@@ -84,6 +87,27 @@ class Kontolupe(toga.App):
             multiple_select=False
         )
 
+        """
+        Create the content for the form box.
+        It is not yet visible. It will be shown when the user
+        clicks the button to add a new booking.
+        """
+        # Create a new box for the form
+        self.form_box = toga.Box(style=Pack(direction=COLUMN))
+
+        # Create a label and text input for each field in the form
+        name_label = toga.Label('Name:', style=Pack(padding=(10)))
+        name_input = toga.TextInput()
+
+        amount_label = toga.Label('Amount:', style=Pack(padding=(10)))
+        amount_input = toga.NumberInput()
+
+        # Add the labels and inputs to the form box
+        self.form_box.add(name_label)
+        self.form_box.add(name_input)
+        self.form_box.add(amount_label)
+        self.form_box.add(amount_input)
+
     def table_data(self):
         # Parse the table data list from the bookings list
         table_data = []
@@ -117,8 +141,15 @@ class Kontolupe(toga.App):
                 self.balance += booking[1]
         self.input_balance_future.value = self.balance
 
+        # update the table
+        self.table_bookings.data = self.table_data()
+
     def new_booking(self, widget):
-        print(self.input_balance_today.value)
+        
+        # Switch to the form box
+        self.main_window.content = self.form_box
+        # Refresh the main window to show the new form
+        self.main_window.refresh()
 
 
     """ 
@@ -151,17 +182,17 @@ class Kontolupe(toga.App):
         )
 
         # Create the boxes for the main window
-        main_box = toga.Box(style=Pack(direction=COLUMN))
+        
         balance_today_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
         balance_future_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
         slider_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
         content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
 
         # Add the subboxes to the main box
-        main_box.add(balance_today_box)
-        main_box.add(balance_future_box)
-        main_box.add(slider_box) 
-        main_box.add(content_box)
+        self.main_box.add(balance_today_box)
+        self.main_box.add(balance_future_box)
+        self.main_box.add(slider_box) 
+        self.main_box.add(content_box)
 
         # Add the widgets to the boxes
         balance_today_box.add(label_balance_today)
@@ -176,7 +207,7 @@ class Kontolupe(toga.App):
 
         # Create the main window
         self.main_window = toga.MainWindow(title=self.formal_name)
-        self.main_window.content = main_box
+        self.main_window.content = self.main_box
         self.main_window.show()
         
 # Main loop
