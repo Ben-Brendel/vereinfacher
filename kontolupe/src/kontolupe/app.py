@@ -10,7 +10,7 @@ import datetime
 import toga
 from toga.app import AppStartupMethod, OnExitHandler
 from toga.icons import Icon
-from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, Pack
+from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 
 # set localization 
 import locale
@@ -53,6 +53,13 @@ class Kontolupe(toga.App):
             {'id': 5, 'note': 'halbjährlich'},
             {'id': 6, 'note': 'jährlich'}
         ]
+
+        # store the index of a selected booking
+        self.selected_booking_index = 0
+        
+        # flags
+        self.edit_mode = 0
+        self.far_future = 0
 
         """
         Array of tuples with the following structure:
@@ -124,7 +131,7 @@ class Kontolupe(toga.App):
             tick_count=31,
             value=0,
             on_change=self.update_values,
-            style=Pack(flex=1, padding=10)
+            style=Pack(flex=1, padding=10, padding_top=25)
         )
 
         # table for the bookings
@@ -158,17 +165,22 @@ class Kontolupe(toga.App):
             style=Pack(padding=10)
         )
 
-        # Button section
         button_delete_booking = toga.Button(
             'Ausgewählte Buchung löschen',
             on_press=self.delete_booking,
             style=Pack(padding=10)
         )
 
+        button_edit_booking = toga.Button(
+            'Ausgewählte Buchung bearbeiten',
+            on_press=self.edit_booking,
+            style=Pack(padding=10)
+        )
+
         # Create the subboxes for the main box        
-        balance_today_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
-        balance_future_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
-        slider_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        balance_today_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
+        balance_future_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
+        slider_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
         content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
 
         # Add the subboxes to the main box
@@ -188,6 +200,7 @@ class Kontolupe(toga.App):
         content_box.add(self.table_bookings)
         content_box.add(button_new_booking)
         content_box.add(button_delete_booking)
+        content_box.add(button_edit_booking)
 
 
     """
@@ -201,11 +214,11 @@ class Kontolupe(toga.App):
         self.form_box = toga.Box(style=Pack(direction=COLUMN))
 
         # header
-        header_label = toga.Label('Neue Buchung', style=Pack(padding=(10)))
-        self.form_box.add(header_label)
+        self.form_box_header_label = toga.Label('Neue Buchung', style=Pack(padding=(10)))
+        self.form_box.add(self.form_box_header_label)
 
         # date input
-        form_box_date = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        form_box_date = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
         label_date = toga.Label('Datum:', style=Pack(padding=(10)))
         self.form_box_input_date = toga.DateInput(
             value=datetime.date.today(), 
@@ -217,7 +230,7 @@ class Kontolupe(toga.App):
         self.form_box.add(form_box_date)
 
         # amount input
-        form_box_amount = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        form_box_amount = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
         label_amount = toga.Label('Betrag:', style=Pack(padding=(10)))
         self.form_box_input_amount = toga.NumberInput(
             readonly=False,
@@ -230,7 +243,7 @@ class Kontolupe(toga.App):
         self.form_box.add(form_box_amount)
 
         # note input
-        form_box_note = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        form_box_note = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
         label_note = toga.Label('Notiz:', style=Pack(padding=(10)))
         self.form_box_input_note = toga.TextInput(value='', style=Pack(padding=10, flex=1))
         form_box_note.add(label_note)
@@ -238,7 +251,7 @@ class Kontolupe(toga.App):
         self.form_box.add(form_box_note)
 
         # interval input
-        form_box_interval = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        form_box_interval = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
         label_interval = toga.Label('Intervall:', style=Pack(padding=(10)))
 
         self.form_box_input_interval = toga.Selection(
@@ -307,6 +320,11 @@ class Kontolupe(toga.App):
         # Get the id of the selected interval item
         selected_interval_id = selected_interval_item['id']
 
+        # If edit mode is active, delete the old booking
+        if self.edit_mode == 1:
+            self.bookings.pop(self.selected_booking_index)
+            self.edit_mode = 0        
+
         # Create the new booking
         new_booking = (
             self.form_box_input_date.value,
@@ -329,6 +347,30 @@ class Kontolupe(toga.App):
         # if save button was pressed, return to main box
         if widget == self.button_save:
             self.main_window.content = self.main_box
+
+    """
+    Edit the selected booking.
+    """
+    def edit_booking(self, widget):
+        # Set the edit mode flag
+        self.edit_mode = 1
+
+        # Find the selected booking
+        self.selected_booking_index = self.table_bookings.data.index(self.table_bookings.selection)
+        selected_booking = self.bookings[self.selected_booking_index]
+
+        # Fill the form inputs with the values of the selected booking
+        self.form_box_header_label.text = 'Buchung bearbeiten'
+        self.form_box_input_date.value = selected_booking[0]
+        self.form_box_input_amount.value = selected_booking[1]
+        self.form_box_input_note.value = selected_booking[2]
+
+        # Find the interval item with the id equal to booking[3]
+        interval_item = next(item for item in self.interval_items if item['id'] == selected_booking[3])
+        self.form_box_input_interval.value = interval_item['note']
+
+        # Switch to the form box
+        self.main_window.content = self.form_box
 
 
     """
@@ -357,11 +399,14 @@ class Kontolupe(toga.App):
             ))
         return table_data
 
+
     def format_date(self, date):
         return date.strftime('%d.%m.%Y') 
     
+
     def clear_form_box(self):
         # Clear the form box
+        self.form_box_header_label.text = 'Neue Buchung'
         self.form_box_input_date.value = datetime.date.today()
         self.form_box_input_amount.value = 0
         self.form_box_input_note.value = ''
@@ -373,10 +418,14 @@ class Kontolupe(toga.App):
     """
     def update_values(self, widget):
         # getting the date values right
+        # TODO: clean up!
         if widget == self.slider_balance_date:
-            self.date_index = int(widget.value)
-            self.date = self.dates[self.date_index]
-            self.input_balance_date.value = self.date
+            if not self.far_future:
+                self.date_index = int(widget.value)
+                self.date = self.dates[self.date_index]
+                self.input_balance_date.value = self.date
+            else:
+                self.far_future = 0
             """
             important to interrupt the function here
             because changing the value of input_balance_date
@@ -391,6 +440,7 @@ class Kontolupe(toga.App):
                 self.date_index = self.dates.index(self.date)
             except:
                 self.date_index = 30
+                self.far_future = 1
             self.slider_balance_date.value = self.date_index
         
         elif widget == self.input_balance_today:
