@@ -22,6 +22,7 @@ from decimal import Decimal
 
 class Kontolupe(toga.App):
 
+    # initialize the app
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -31,13 +32,6 @@ class Kontolupe(toga.App):
         """
         # Object variables with initial values
         self.balance = 100
-        self.bookings = [
-            (datetime.date(2023,12,12), -100, 'Arzt',       0),
-            (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
-            (datetime.date(2023,12,27), +500, 'Ben',        0),
-            (datetime.date(2024, 1, 1), -300, 'PKV',        1),                        
-        ]
-        self.bookings.sort()
 
         # Create a list of dates starting from today for the slider
         today = datetime.date.today()
@@ -45,12 +39,61 @@ class Kontolupe(toga.App):
         self.date_index = 0
         self.date = self.dates[self.date_index]
 
+        # Timespan for the creation of the recurring bookings
+        # TODO: make this configurable
+        self.timespan = 365
+
+        # Create the list of interval items
+        self.interval_items=[
+            {'id': 0, 'note': 'einmalig'},
+            {'id': 1, 'note': 'wöchentlich'},
+            {'id': 2, 'note': '14-tägig'},
+            {'id': 3, 'note': 'monatlich'},
+            {'id': 4, 'note': 'quartalsweise'},
+            {'id': 5, 'note': 'halbjährlich'},
+            {'id': 6, 'note': 'jährlich'}
+        ]
+
         """
-        Creating the box with the main application content.
+        Array of tuples with the following structure:
+        (date, amount, note, interval) or in German:
+        (Datum, Betrag, Notiz, Intervall)
+        date:    datetime.date object
+        amount:  Decimal object
+        note:    string
+        interval boolean: 
+            0 = single booking
+            1 = recurring every 7 days
+            2 = recurring every 14 days
+            3 = recurring every month
+            4 = recurring every 3 months
+            5 = recurring every 6 months
+            6 = recurring every year
         """
+        # TODO: figure out how to store and read the bookings
+        # TODO: add expected bookings that have no fixed date yet
+        self.bookings = [
+            (datetime.date(2023,12,12), -100, 'Arzt',       0),
+            (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
+            (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
+            (datetime.date(2024, 1, 1), -300, 'PKV',        1),                        
+        ]
+        self.bookings.sort()
+
+        # create the content boxes
+        # first box to be shown will be the main box
+        self.create_main_box()      
+        self.create_form_box()         
+
+
+    """
+    Creating the box with the main application content.
+    """
+    def create_main_box(self):
         # Container for the main content
         self.main_box = toga.Box(style=Pack(direction=COLUMN))
 
+        # TODO: styling
         # Inputs
         self.input_balance_today = toga.NumberInput(
             readonly=False,
@@ -70,7 +113,7 @@ class Kontolupe(toga.App):
         self.input_balance_date = toga.DateInput(
             value=self.date,
             style=Pack(padding=10),
-            min=today,
+            min=datetime.date.today(),
             on_change=self.update_values
         )
 
@@ -86,7 +129,7 @@ class Kontolupe(toga.App):
 
         # table for the bookings
         self.table_bookings = toga.Table(
-            headings=['Datum', 'Betrag', 'Notiz', 'Wiederkehrend'],
+            headings=['Datum', 'Betrag', 'Notiz', 'Intervall'],
             data=self.table_data(),
             style=Pack(flex=1, padding=10),
             multiple_select=False
@@ -145,54 +188,185 @@ class Kontolupe(toga.App):
         content_box.add(self.table_bookings)
         content_box.add(button_new_booking)
         content_box.add(button_delete_booking)
-        
 
-        """
-        Create the content for the form box.
-        It is not yet visible. It will be shown when the user
-        clicks the button to add a new booking.
-        """
+
+    """
+    Create the content for the form box.
+    It is not yet visible. It will be shown when the user
+    clicks the button to add a new booking.
+    """
+    def create_form_box(self):
+        
         # Create a new box for the form
         self.form_box = toga.Box(style=Pack(direction=COLUMN))
 
-        # Create a label and text input for each field in the form
-        name_label = toga.Label('Name:', style=Pack(padding=(10)))
-        name_input = toga.TextInput()
+        # header
+        header_label = toga.Label('Neue Buchung', style=Pack(padding=(10)))
+        self.form_box.add(header_label)
 
-        amount_label = toga.Label('Amount:', style=Pack(padding=(10)))
-        amount_input = toga.NumberInput()
+        # date input
+        form_box_date = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        label_date = toga.Label('Datum:', style=Pack(padding=(10)))
+        self.form_box_input_date = toga.DateInput(
+            value=datetime.date.today(), 
+            style=Pack(padding=10, flex=1),
+            min=datetime.date.today()
+        )
+        form_box_date.add(label_date)
+        form_box_date.add(self.form_box_input_date)
+        self.form_box.add(form_box_date)
 
-        # Add the labels and inputs to the form box
-        self.form_box.add(name_label)
-        self.form_box.add(name_input)
-        self.form_box.add(amount_label)
-        self.form_box.add(amount_input)
+        # amount input
+        form_box_amount = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        label_amount = toga.Label('Betrag:', style=Pack(padding=(10)))
+        self.form_box_input_amount = toga.NumberInput(
+            readonly=False,
+            value=0,
+            style=Pack(padding=10, flex=1),
+            step=Decimal('0.01')
+        )
+        form_box_amount.add(label_amount)
+        form_box_amount.add(self.form_box_input_amount)
+        self.form_box.add(form_box_amount)
 
+        # note input
+        form_box_note = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        label_note = toga.Label('Notiz:', style=Pack(padding=(10)))
+        self.form_box_input_note = toga.TextInput(value='', style=Pack(padding=10, flex=1))
+        form_box_note.add(label_note)
+        form_box_note.add(self.form_box_input_note)
+        self.form_box.add(form_box_note)
+
+        # interval input
+        form_box_interval = toga.Box(style=Pack(direction=ROW, flex=1, height=50))
+        label_interval = toga.Label('Intervall:', style=Pack(padding=(10)))
+
+        self.form_box_input_interval = toga.Selection(
+            items=[item['note'] for item in self.interval_items],
+            style=Pack(padding=10, flex=1)
+        )
+        self.form_box_input_interval.value = self.interval_items[0]['note']
+        
+        form_box_interval.add(label_interval)
+        form_box_interval.add(self.form_box_input_interval)
+        self.form_box.add(form_box_interval)
+
+        # button box
+        # TODO: add functionality to the buttons
+        form_box_buttons = toga.Box(style=Pack(direction=COLUMN, flex=1))
+        
+        button_cancel = toga.Button(
+            'Abbrechen',
+            on_press=self.cancel_booking,
+            style=Pack(padding=10, flex=1)
+        )
+        form_box_buttons.add(button_cancel)
+
+        self.button_save = toga.Button(
+            'Speichern',
+            on_press=self.save_booking,
+            style=Pack(padding=10, flex=1)
+        )
+        form_box_buttons.add(self.button_save)
+
+        button_save_and_new = toga.Button(
+            'Speichern und neue Buchung',
+            on_press=self.save_booking,
+            style=Pack(padding=10, flex=1)
+        )
+        form_box_buttons.add(button_save_and_new)
+
+        self.form_box.add(form_box_buttons)
+
+
+    """
+    Delete the selected booking if there is a selection.
+    """
     def delete_booking(self, widget):
         # Delete the selected booking from the bookings list
         if self.table_bookings.selection:
             index = self.table_bookings.data.index(self.table_bookings.selection)
             self.bookings.pop(index)
-            self.table_bookings.data = self.table_data()
+            self.update_values(widget)
 
+    """
+    Cancel the booking form.
+    """
+    def cancel_booking(self, widget):
+        self.main_window.content = self.main_box
+        self.clear_form_box()
+
+    """
+    Save the booking.
+    """
+    def save_booking(self, widget):
+        # Find the selected interval item
+        selected_interval_note = self.form_box_input_interval.value
+        selected_interval_item = next(item for item in self.interval_items if item['note'] == selected_interval_note)
+
+        # Get the id of the selected interval item
+        selected_interval_id = selected_interval_item['id']
+
+        # Create the new booking
+        new_booking = (
+            self.form_box_input_date.value,
+            Decimal(self.form_box_input_amount.value),
+            self.form_box_input_note.value,
+            selected_interval_id
+        )
+
+        # Add the new booking to the bookings list and sort the list
+        self.bookings.append(new_booking)
+        self.bookings.sort()
+
+        # Update the table data
+        #self.table_bookings.data = self.table_data()
+        self.update_values(widget)
+
+        # Clear the form inputs
+        self.clear_form_box()
+
+        # if save button was pressed, return to main box
+        if widget == self.button_save:
+            self.main_window.content = self.main_box
+
+
+    """
+    Event handlers.
+    """
+    def new_booking(self, widget):
+        # Switch to the form box
+        self.main_window.content = self.form_box 
+
+
+    """
+    Helper functions.
+    """
     def table_data(self):
         # Parse the table data list from the bookings list
         table_data = []
         for booking in self.bookings:
+            # Find the interval item with the id equal to booking[3]
+            interval_item = next(item for item in self.interval_items if item['id'] == booking[3])
+
             table_data.append((
                 self.format_date(booking[0]), 
                 '{:,.2f} €'.format(booking[1]), 
                 booking[2], 
-                'Ja' if booking[3] else 'Nein'
+                interval_item['note']  # Display the note of the chosen interval
             ))
         return table_data
 
     def format_date(self, date):
-        return date.strftime('%d.%m.%Y')
+        return date.strftime('%d.%m.%Y') 
     
-    def new_booking(self, widget):
-        # Switch to the form box
-        self.main_window.content = self.form_box  
+    def clear_form_box(self):
+        # Clear the form box
+        self.form_box_input_date.value = datetime.date.today()
+        self.form_box_input_amount.value = 0
+        self.form_box_input_note.value = ''
+        self.form_box_input_interval.value = self.interval_items[0]['note']
+
 
     """
     The most important function for getting the values right.
@@ -240,9 +414,13 @@ class Kontolupe(toga.App):
     This method is called when the app starts up and is responsible
     for creating the main window and its contents.
     """
+    # TODO: add a refresh functionality when the app has been
+    #       started on another day
     def startup(self):
-        # Create the main window
+        # create the main window
         self.main_window = toga.MainWindow(title=self.formal_name)
+
+        # show the main box
         self.main_window.content = self.main_box
         self.main_window.show()
         
