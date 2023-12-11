@@ -167,7 +167,7 @@ class Kontolupe(toga.App):
 
         button_delete_booking = toga.Button(
             'Ausgewählte Buchung löschen',
-            on_press=self.delete_booking,
+            on_press=self.confirm_delete_booking,
             style=Pack(padding=10)
         )
 
@@ -295,9 +295,17 @@ class Kontolupe(toga.App):
     """
     Delete the selected booking if there is a selection.
     """
-    def delete_booking(self, widget):
-        # Delete the selected booking from the bookings list
+    def confirm_delete_booking(self, widget):
         if self.table_bookings.selection:
+            self.main_window.confirm_dialog(
+                'Buchung löschen', 
+                'Soll die ausgewählte Buchung wirklich gelöscht werden?',
+                on_result=self.delete_booking
+            )
+
+    def delete_booking(self, widget, result):
+        # Delete the selected booking from the bookings list
+        if self.table_bookings.selection and result:
             index = self.table_bookings.data.index(self.table_bookings.selection)
             self.bookings.pop(index)
             self.update_values(widget)
@@ -412,6 +420,15 @@ class Kontolupe(toga.App):
         self.form_box_input_note.value = ''
         self.form_box_input_interval.value = self.interval_items[0]['note']
 
+    """"
+    functions for saving and loading the data
+    """
+    def save_data(self):
+        pass
+
+    def load_data(self):
+        pass
+
 
     """
     The most important function for getting the values right.
@@ -469,7 +486,6 @@ class Kontolupe(toga.App):
     def startup(self):
         # create the main window
         self.main_window = toga.MainWindow(title=self.formal_name)
-
         # show the main box
         self.main_window.content = self.main_box
         self.main_window.show()
