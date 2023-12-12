@@ -11,13 +11,15 @@ import toga
 from toga.app import AppStartupMethod, OnExitHandler
 from toga.icons import Icon
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
+from toga.paths import Paths
+from decimal import Decimal
+from pathlib import Path
+
+import os
 
 # set localization 
 import locale
 locale.setlocale(locale.LC_ALL, '')
-
-import decimal
-from decimal import Decimal
 
 
 class Kontolupe(toga.App):
@@ -25,6 +27,9 @@ class Kontolupe(toga.App):
     # initialize the app
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # set the app icon
+        self.icon = Icon('icons/kontolupe')
 
         """
         Creating the class variables and initializing them with
@@ -79,12 +84,22 @@ class Kontolupe(toga.App):
         """
         # TODO: figure out how to store and read the bookings
         # TODO: add expected bookings that have no fixed date yet
-        self.bookings = [
-            (datetime.date(2023,12,12), -100, 'Arzt',       0),
-            (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
-            (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
-            (datetime.date(2024, 1, 1), -300, 'PKV',        1),                        
-        ]
+        # self.bookings = [
+        #     (datetime.date(2023,12,12), -100, 'Arzt',       0),
+        #     (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
+        #     (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
+        #     (datetime.date(2024, 1, 1), -300, 'PKV',        1),                        
+        # ]
+        self.bookings = []
+        
+
+        # create the path name to the data file
+        # and create the file if it does not exist
+        # then load the saved data
+        self.data_file = Path(os.path.dirname(os.path.abspath(__file__))) / Path('data.txt')
+        if not self.data_file.exists():
+            self.data_file.touch()
+        self.load_data()
         self.bookings.sort()
 
         # create the content boxes
@@ -265,7 +280,6 @@ class Kontolupe(toga.App):
         self.form_box.add(form_box_interval)
 
         # button box
-        # TODO: add functionality to the buttons
         form_box_buttons = toga.Box(style=Pack(direction=COLUMN, flex=1))
         
         button_cancel = toga.Button(
@@ -424,10 +438,43 @@ class Kontolupe(toga.App):
     functions for saving and loading the data
     """
     def save_data(self):
-        pass
+        # with self.data_file.open('w') as f:
+        #     f.write(str(self.balance))
+
+        # save the balance and the bookings to the file
+        with self.data_file.open('w') as f:
+            f.write(str(self.balance) + '\n')
+            for booking in self.bookings:
+                f.write(str(booking[0]) + '\n')
+                f.write(str(booking[1]) + '\n')
+                f.write(str(booking[2]) + '\n')
+                f.write(str(booking[3]) + '\n')
+
 
     def load_data(self):
-        pass
+        # load the current balance from the file
+        # with self.data_file.open('r') as f:
+        #     try:
+        #         self.balance = Decimal(f.read())
+        #     except:
+        #         pass
+
+        # load the balance and the bookings from the file
+        with self.data_file.open('r') as f:
+            try:
+                self.balance = Decimal(f.readline())
+                while True:
+                    date = f.readline()
+                    if not date:
+                        break
+                    amount = f.readline()
+                    note = f.readline()
+                    interval = f.readline()
+                    self.bookings.append((datetime.date.fromisoformat(date.strip()), float(amount.strip()), note.strip(), int(interval.strip())))
+            except:
+                print('Error while loading data from file.')
+                print(self.bookings)
+                pass
 
 
     """
@@ -441,6 +488,7 @@ class Kontolupe(toga.App):
                 self.date_index = int(widget.value)
                 self.date = self.dates[self.date_index]
                 self.input_balance_date.value = self.date
+                self.far_future = 1
             else:
                 self.far_future = 0
             """
@@ -452,13 +500,16 @@ class Kontolupe(toga.App):
             return
         
         elif widget == self.input_balance_date:
-            self.date = widget.value
-            try:
-                self.date_index = self.dates.index(self.date)
-            except:
-                self.date_index = 30
+            if not self.far_future:
+                self.date = widget.value
+                try:
+                    self.date_index = self.dates.index(self.date)
+                except:
+                    self.date_index = 30
                 self.far_future = 1
-            self.slider_balance_date.value = self.date_index
+                self.slider_balance_date.value = self.date_index
+            else:
+                self.far_future = 0
         
         elif widget == self.input_balance_today:
             try:
@@ -476,6 +527,9 @@ class Kontolupe(toga.App):
         # update the table
         self.table_bookings.data = self.table_data()
 
+        # save the data to the data file
+        self.save_data()
+
 
     """ 
     This method is called when the app starts up and is responsible
@@ -488,6 +542,9 @@ class Kontolupe(toga.App):
         self.main_window = toga.MainWindow(title=self.formal_name)
         # show the main box
         self.main_window.content = self.main_box
+        # update the values
+        self.update_values(self.input_balance_today)
+        # show the main window
         self.main_window.show()
         
 # Main loop
