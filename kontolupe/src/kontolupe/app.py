@@ -81,13 +81,30 @@ class Kontolupe(toga.App):
         """
 
         # TODO: add expected bookings that have no fixed date yet
-        # self.bookings = [
-        #     (datetime.date(2023,12,12), -100, 'Arzt',       0),
-        #     (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
-        #     (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
-        #     (datetime.date(2024, 1, 1), -300, 'PKV',        1),                        
-        # ]
-        self.bookings = []
+        self.bookings = [
+            (datetime.date(2023,12,18), -100, 'Arzt',       0),
+            (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
+            (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
+            (datetime.date(2024, 1, 1), -300, 'Test',        0),                        
+            (datetime.date(2024, 1, 2), -250, 'Test',        0),
+            (datetime.date(2024, 1, 3), +150, 'Test',        0),
+            (datetime.date(2024, 1, 4), -800, 'Test',        0),
+            (datetime.date(2024, 1, 5), +2500, 'Gehalt',     0),
+            (datetime.date(2024, 1, 6), -300, 'Test',        0),
+            (datetime.date(2024, 1, 7), +200, 'Test',        0),
+            (datetime.date(2024, 1, 8), -550, 'Test',        0),
+        ]
+        # self.bookings = []
+
+        self.expected = [
+            ('Kindergeld', 250),
+            ('Beihilfe', 500),
+            ('Gehalt', 2500),
+            ('Beihilfe', 300),
+            ('Beihilfe', 200),
+            ('PKV', 300),
+            ('PKV', 200),
+        ]
         
 
         # create the path name to the data file
@@ -102,6 +119,7 @@ class Kontolupe(toga.App):
 
         # create the content boxes
         # first box to be shown will be the main box
+        # HAS TO BE AT THE END OF THE INIT FUNCTION!!!
         self.create_main_box()      
         self.create_form_box()         
 
@@ -110,15 +128,12 @@ class Kontolupe(toga.App):
     Creating the box with the main application content.
     """
     def create_main_box(self):
-        # Container for the main content
-        self.main_box = toga.Box(style=Pack(direction=COLUMN))
-
         # TODO: styling
         # Inputs
         self.input_balance_today = toga.NumberInput(
             readonly=False,
             value=self.balance,
-            style=Pack(padding=10),
+            style=Pack(padding=5),
             step=Decimal('0.01'),
             on_change=self.update_values            
         )
@@ -126,13 +141,13 @@ class Kontolupe(toga.App):
         self.input_balance_future = toga.NumberInput(
             readonly=True,
             value=self.balance,
-            style=Pack(padding=10),
+            style=Pack(padding=5, font_weight='bold'),
             step=Decimal('0.01')           
         )
 
         self.input_balance_date = toga.DateInput(
             value=self.date,
-            style=Pack(padding=10),
+            style=Pack(padding=5),
             min=datetime.date.today(),
             on_change=self.update_values
         )
@@ -144,63 +159,125 @@ class Kontolupe(toga.App):
             tick_count=31,
             value=0,
             on_change=self.update_values,
-            style=Pack(flex=1, padding=10, padding_top=25)
+            style=Pack(flex=1, padding=20)
         )
 
-        # table for the bookings
+        # tables
         self.table_bookings = toga.Table(
-            headings=['Datum', 'Betrag', 'Notiz', 'Intervall'],
+            accessors=['Datum', 'Betrag', 'Notiz', 'Intervall'],
             data=self.table_data(),
-            style=Pack(flex=1, padding=10),
-            multiple_select=False
+            style=Pack(flex=1, padding=5),
+            multiple_select=False,
+        )
+
+        self.table_expected = toga.Table(
+            accessors=['Notiz', 'Betrag'],
+            data=self.table_expected_data(),
+            style=Pack(flex=1, padding=5),
+            multiple_select=True
         )
 
         # Label section
         label_balance_today = toga.Label(
             'Kontostand heute:',
-            style=Pack(padding=10)
+            style=Pack(padding=5, padding_left=10)
         )
 
         label_balance_future = toga.Label(
             'Kontostand:',
-            style=Pack(padding=10)
+            style=Pack(padding=5, padding_left=10, font_weight='bold')
         )
 
         label_balance_date = toga.Label(
             'am:',
-            style=Pack(padding=10)
+            style=Pack(padding=0)
+        )
+
+        label_bookings_area = toga.Label(
+            'Terminierte Buchungen:',
+            style=Pack(
+                padding=10,
+                font_weight='bold',
+            )
+        )
+
+        label_expected_area = toga.Label(
+            'Offene Buchungen:',
+            style=Pack(
+                padding=10,
+                font_weight='bold',
+            )
         )
 
         # Button section
         button_new_booking = toga.Button(
-            'Neue Buchung erfassen',
+            'Neu',
             on_press=self.new_booking,
-            style=Pack(padding=10)
+            style=Pack(padding=5, flex=1)
         )
 
         button_delete_booking = toga.Button(
-            'Ausgewählte Buchung löschen',
+            'Löschen',
             on_press=self.confirm_delete_booking,
-            style=Pack(padding=10)
+            style=Pack(padding=5, flex=1)
         )
 
         button_edit_booking = toga.Button(
-            'Ausgewählte Buchung bearbeiten',
+            'Bearbeiten',
             on_press=self.edit_booking,
-            style=Pack(padding=10)
+            style=Pack(padding=5, flex=1)
         )
 
+        button_expected_new = toga.Button(
+            'Neu',
+            on_press=self.new_expected,
+            style=Pack(padding=5, flex=1)
+        )
+
+        button_expected_edit = toga.Button(
+            'Bearbeiten',
+            on_press=self.edit_expected,
+            style=Pack(padding=5, flex=1)
+        )
+
+        button_expected_delete = toga.Button(
+            'Löschen',
+            on_press=self.delete_expected,
+            style=Pack(padding=5, flex=1)
+        )
+
+        button_expected_confirm = toga.Button(
+            'Bestätigen',
+            on_press=self.confirm_expected,
+            style=Pack(padding=5, flex=1)
+        )
+
+        # Container for the main content
+        self.main_box = toga.Box(style=Pack(direction=COLUMN))
+
+        # ScrollContainer
+        # self.main_container = toga.ScrollContainer(
+        #     content=self.main_box,
+        #     style=Pack(flex=1),
+        #     vertical=True,
+        #     horizontal=False
+        # )
+
         # Create the subboxes for the main box        
-        balance_today_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
-        balance_future_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
-        slider_box = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
-        content_box = toga.Box(style=Pack(direction=COLUMN, flex=1))
+        balance_today_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        balance_future_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER, background_color='#368BA9'))
+        slider_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        content_bookings_box = toga.Box(style=Pack(direction=COLUMN, flex=3))
+        button_bookings_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        content_expected_box = toga.Box(style=Pack(direction=COLUMN, flex=2))
+        button_expected_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER))  
 
         # Add the subboxes to the main box
         self.main_box.add(balance_today_box)
         self.main_box.add(balance_future_box)
         self.main_box.add(slider_box) 
-        self.main_box.add(content_box)
+        self.main_box.add(content_expected_box)
+        self.main_box.add(content_bookings_box)
 
         # Add the widgets to the boxes
         balance_today_box.add(label_balance_today)
@@ -210,18 +287,25 @@ class Kontolupe(toga.App):
         balance_future_box.add(label_balance_date)
         balance_future_box.add(self.input_balance_date)
         slider_box.add(self.slider_balance_date)
-        content_box.add(self.table_bookings)
+        
+        # bookings area
+        content_bookings_box.add(toga.Divider(style=Pack(padding=5)))
+        button_bookings_box.add(button_new_booking)
+        button_bookings_box.add(button_edit_booking)
+        button_bookings_box.add(button_delete_booking)
+        content_bookings_box.add(label_bookings_area)
+        content_bookings_box.add(self.table_bookings)
+        content_bookings_box.add(button_bookings_box)
 
-        # Add the testarea for the icon
-        # my_image = toga.Image(self.paths.app / 'resources/kontolupe.png')
-        # view = toga.ImageView(my_image)
-        # print(self.paths.app / 'resources/kontolupe.png')
-        # content_box.add(view)
-
-
-        content_box.add(button_new_booking)
-        content_box.add(button_delete_booking)
-        content_box.add(button_edit_booking)
+        # expected area
+        content_expected_box.add(toga.Divider(style=Pack(padding=5)))
+        button_expected_box.add(button_expected_new)
+        button_expected_box.add(button_expected_edit)
+        button_expected_box.add(button_expected_delete)
+        #button_expected_box.add(button_expected_confirm)
+        content_expected_box.add(label_expected_area)
+        content_expected_box.add(self.table_expected)
+        content_expected_box.add(button_expected_box)
 
 
     """
@@ -404,6 +488,18 @@ class Kontolupe(toga.App):
         # Switch to the form box
         self.main_window.content = self.form_box
 
+    # create empty placeholders for all undefined functions
+    def new_expected(self, widget):
+        pass
+
+    def edit_expected(self, widget):
+        pass
+
+    def delete_expected(self, widget):
+        pass
+
+    def confirm_expected(self, widget):       
+        pass
 
     """
     Event handlers.
@@ -428,6 +524,15 @@ class Kontolupe(toga.App):
                 '{:,.2f} €'.format(booking[1]), 
                 booking[2], 
                 interval_item['note']  # Display the note of the chosen interval
+            ))
+        return table_data
+    
+    def table_expected_data(self):
+        table_data = []
+        for booking in self.expected:
+            table_data.append((
+                booking[0], 
+                '{:,.2f} €'.format(booking[1])
             ))
         return table_data
 
