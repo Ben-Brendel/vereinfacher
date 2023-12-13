@@ -58,9 +58,11 @@ class Kontolupe(toga.App):
 
         # store the index of a selected booking
         self.selected_booking_index = 0
+        self.selected_expected_index = 0
         
         # flags
         self.edit_mode = 0
+        self.edit_mode_expected = 0
         self.far_future = 0
 
         """
@@ -104,8 +106,7 @@ class Kontolupe(toga.App):
             ('Beihilfe', 200),
             ('PKV', 300),
             ('PKV', 200),
-        ]
-        
+        ]        
 
         # create the path name to the data file
         # and create the file if it does not exist
@@ -116,12 +117,14 @@ class Kontolupe(toga.App):
             self.data_file.touch()
         self.load_data()
         self.bookings.sort()
+        self.expected.sort()
 
         # create the content boxes
         # first box to be shown will be the main box
         # HAS TO BE AT THE END OF THE INIT FUNCTION!!!
         self.create_main_box()      
         self.create_form_box()         
+        self.create_expected_box()
 
 
     """
@@ -167,14 +170,14 @@ class Kontolupe(toga.App):
             accessors=['Datum', 'Betrag', 'Notiz', 'Intervall'],
             data=self.table_data(),
             style=Pack(flex=1, padding=5),
-            multiple_select=False,
+            multiple_select=False
         )
 
         self.table_expected = toga.Table(
             accessors=['Notiz', 'Betrag'],
             data=self.table_expected_data(),
             style=Pack(flex=1, padding=5),
-            multiple_select=True
+            multiple_select=False
         )
 
         # Label section
@@ -242,15 +245,15 @@ class Kontolupe(toga.App):
 
         button_expected_delete = toga.Button(
             'Löschen',
-            on_press=self.delete_expected,
+            on_press=self.confirm_delete_expected,
             style=Pack(padding=5, flex=1)
         )
 
-        button_expected_confirm = toga.Button(
-            'Bestätigen',
-            on_press=self.confirm_expected,
-            style=Pack(padding=5, flex=1)
-        )
+        # button_expected_confirm = toga.Button(
+        #     'Bestätigen',
+        #     on_press=self.confirm_expected,
+        #     style=Pack(padding=5, flex=1)
+        # )
 
         # Container for the main content
         self.main_box = toga.Box(style=Pack(direction=COLUMN))
@@ -307,9 +310,8 @@ class Kontolupe(toga.App):
         content_expected_box.add(self.table_expected)
         content_expected_box.add(button_expected_box)
 
-
     """
-    Create the content for the form box.
+    Create the content for the form box for a new scheduled booking.
     It is not yet visible. It will be shown when the user
     clicks the button to add a new booking.
     """
@@ -319,12 +321,12 @@ class Kontolupe(toga.App):
         self.form_box = toga.Box(style=Pack(direction=COLUMN))
 
         # header
-        self.form_box_header_label = toga.Label('Neue Buchung', style=Pack(padding=(10)))
+        self.form_box_header_label = toga.Label('Neue Buchung', style=Pack(padding=10, font_weight='bold'))
         self.form_box.add(self.form_box_header_label)
 
         # date input
         form_box_date = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
-        label_date = toga.Label('Datum:', style=Pack(padding=(10)))
+        label_date = toga.Label('Datum:', style=Pack(padding=10))
         self.form_box_input_date = toga.DateInput(
             value=datetime.date.today(), 
             style=Pack(padding=10, flex=1),
@@ -336,7 +338,7 @@ class Kontolupe(toga.App):
 
         # amount input
         form_box_amount = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
-        label_amount = toga.Label('Betrag:', style=Pack(padding=(10)))
+        label_amount = toga.Label('Betrag:', style=Pack(padding=10))
         self.form_box_input_amount = toga.NumberInput(
             readonly=False,
             value=0,
@@ -349,7 +351,7 @@ class Kontolupe(toga.App):
 
         # note input
         form_box_note = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
-        label_note = toga.Label('Notiz:', style=Pack(padding=(10)))
+        label_note = toga.Label('Notiz:', style=Pack(padding=10))
         self.form_box_input_note = toga.TextInput(value='', style=Pack(padding=10, flex=1))
         form_box_note.add(label_note)
         form_box_note.add(self.form_box_input_note)
@@ -357,7 +359,7 @@ class Kontolupe(toga.App):
 
         # interval input
         form_box_interval = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
-        label_interval = toga.Label('Intervall:', style=Pack(padding=(10)))
+        label_interval = toga.Label('Intervall:', style=Pack(padding=10))
 
         self.form_box_input_interval = toga.Selection(
             items=[item['note'] for item in self.interval_items],
@@ -394,6 +396,65 @@ class Kontolupe(toga.App):
         form_box_buttons.add(button_save_and_new)
 
         self.form_box.add(form_box_buttons)
+
+    """
+    Create the content for the form box for a new expected booking.
+    It is not yet visible.
+    """
+    def create_expected_box(self):
+        
+        # Create a new box for the form
+        self.expected_box = toga.Box(style=Pack(direction=COLUMN))
+
+        # header
+        self.expected_box_header_label = toga.Label('Neue offene Buchung', style=Pack(padding=10, font_weight='bold'))
+        self.expected_box.add(self.expected_box_header_label)
+
+        # note input
+        expected_box_note = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
+        label_note = toga.Label('Notiz:', style=Pack(padding=(10)))
+        self.expected_box_input_note = toga.TextInput(value='', style=Pack(padding=10, flex=1))
+        expected_box_note.add(label_note)
+        expected_box_note.add(self.expected_box_input_note)
+        self.expected_box.add(expected_box_note)
+
+        # amount input
+        expected_box_amount = toga.Box(style=Pack(direction=ROW, flex=1, height=50, alignment=CENTER))
+        label_amount = toga.Label('Betrag:', style=Pack(padding=(10)))
+        self.expected_box_input_amount = toga.NumberInput(
+            value=0,
+            style=Pack(padding=10, flex=1),
+            step=Decimal('0.01')
+        )
+        expected_box_amount.add(label_amount)
+        expected_box_amount.add(self.expected_box_input_amount)
+        self.expected_box.add(expected_box_amount)
+
+        # button box
+        expected_box_buttons = toga.Box(style=Pack(direction=COLUMN, flex=1))
+        
+        button_cancel = toga.Button(
+            'Abbrechen',
+            on_press=self.cancel_expected,
+            style=Pack(padding=10, flex=1)
+        )
+        expected_box_buttons.add(button_cancel)
+
+        self.button_expected_save = toga.Button(
+            'Speichern',
+            on_press=self.save_expected,
+            style=Pack(padding=10, flex=1)
+        )
+        expected_box_buttons.add(self.button_expected_save)
+
+        button_save_and_new = toga.Button(
+            'Speichern und neue Buchung',
+            on_press=self.save_expected,
+            style=Pack(padding=10, flex=1)
+        )
+        expected_box_buttons.add(button_save_and_new)
+
+        self.expected_box.add(expected_box_buttons)
 
 
     """
@@ -468,6 +529,10 @@ class Kontolupe(toga.App):
     Edit the selected booking.
     """
     def edit_booking(self, widget):
+
+        if not self.table_bookings.selection:
+            return
+
         # Set the edit mode flag
         self.edit_mode = 1
 
@@ -488,22 +553,88 @@ class Kontolupe(toga.App):
         # Switch to the form box
         self.main_window.content = self.form_box
 
-    # create empty placeholders for all undefined functions
+    # switch to the expected box and clear the inputs
     def new_expected(self, widget):
+        self.main_window.content = self.expected_box
         pass
 
+    
+    # switch to the expected box and fill the inputs with the values of the selected booking
+    # if there is a selection in the table of expected bookings
     def edit_expected(self, widget):
-        pass
+        if not self.table_expected.selection:
+            return
 
-    def delete_expected(self, widget):
-        pass
+        # Set the edit mode flag
+        self.edit_mode_expected = 1
 
-    def confirm_expected(self, widget):       
-        pass
+        # Find the selected booking
+        self.selected_expected_index = self.table_expected.data.index(self.table_expected.selection)
+        selected_booking = self.expected[self.selected_expected_index]
 
-    """
-    Event handlers.
-    """
+        # Fill the form inputs with the values of the selected booking
+        self.expected_box_header_label.text = 'Offene Buchung bearbeiten'
+        self.expected_box_input_amount.value = selected_booking[1]
+        self.expected_box_input_note.value = selected_booking[0]
+
+        # Switch to the form box
+        self.main_window.content = self.expected_box
+
+
+    def confirm_delete_expected(self, widget):
+        if self.table_expected.selection:
+            self.main_window.confirm_dialog(
+                'Buchung löschen', 
+                'Soll die ausgewählte Buchung wirklich gelöscht werden?',
+                on_result=self.delete_expected
+            )
+    
+    def delete_expected(self, widget, result):
+        # Delete the selected booking from the bookings list
+        if self.table_expected.selection and result:
+            index = self.table_expected.data.index(self.table_expected.selection)
+            self.expected.pop(index)
+            self.update_values(widget)
+            self.save_data()
+
+    # def confirm_expected(self, widget):       
+    #     pass
+
+    def cancel_expected(self, widget):
+        self.main_window.content = self.main_box
+        self.clear_expected_box()
+
+    # take the values from the inputs and save the expected booking
+    def save_expected(self, widget):
+        # If edit mode is active, delete the old booking
+        if self.edit_mode_expected == 1:
+            self.expected.pop(self.selected_expected_index)
+            self.edit_mode_expected = 0      
+
+        # Create the new booking
+        new_booking = (
+            self.expected_box_input_note.value,
+            Decimal(self.expected_box_input_amount.value)
+        )
+
+        # Add the new booking to the bookings list and sort the list
+        self.expected.append(new_booking)
+        self.expected.sort()
+
+        # Update the table data
+        self.table_expected.data = self.table_expected_data()
+
+        # save data
+        self.save_data()
+
+        # Clear the form inputs
+        self.clear_expected_box()
+
+        # if save button was pressed, return to main box
+        if widget == self.button_expected_save:
+            self.main_window.content = self.main_box
+
+
     def new_booking(self, widget):
         # Switch to the form box
         self.main_window.content = self.form_box 
@@ -548,6 +679,12 @@ class Kontolupe(toga.App):
         self.form_box_input_amount.value = 0
         self.form_box_input_note.value = ''
         self.form_box_input_interval.value = self.interval_items[0]['note']
+
+    def clear_expected_box(self):
+        # Clear the expected box
+        self.expected_box_header_label.text = 'Neue offene Buchung'
+        self.expected_box_input_amount.value = 0
+        self.expected_box_input_note.value = ''
 
     """"
     functions for saving and loading the data
@@ -639,8 +776,9 @@ class Kontolupe(toga.App):
                 new_balance += booking[1]
         self.input_balance_future.value = new_balance
 
-        # update the table
+        # update the tables
         self.table_bookings.data = self.table_data()
+        self.table_expected.data = self.table_expected_data()
 
 
     """ 
