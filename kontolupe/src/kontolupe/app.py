@@ -94,6 +94,7 @@ class Kontolupe(toga.App):
         # and create the file if it does not exist
         # then load the saved data
         self.data_file = Path(os.path.dirname(os.path.abspath(__file__))) / Path('data.txt')
+        print(self.data_file)
         if not self.data_file.exists():
             self.data_file.touch()
         self.load_data()
@@ -479,7 +480,7 @@ class Kontolupe(toga.App):
                     amount = f.readline()
                     note = f.readline()
                     interval = f.readline()
-                    self.bookings.append((datetime.date.fromisoformat(date.strip()), float(amount.strip()), note.strip(), int(interval.strip())))
+                    self.bookings.append((datetime.date.fromisoformat(date.strip()), Decimal(amount.strip()), note.strip(), int(interval.strip())))
             except:
                 print('Error while loading data from file.')
                 print(self.bookings)
@@ -548,7 +549,7 @@ class Kontolupe(toga.App):
         self.main_window = toga.MainWindow(title=self.formal_name)
         # show the main box
         self.main_window.content = self.main_box
-        # update the values
+        # update the display
         self.update_values(self.input_balance_today)
         # show the main window
         self.main_window.show()
