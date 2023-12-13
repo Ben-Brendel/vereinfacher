@@ -112,7 +112,7 @@ class Kontolupe(toga.App):
         # and create the file if it does not exist
         # then load the saved data
         self.data_file = Path(os.path.dirname(os.path.abspath(__file__))) / Path('data.txt')
-        print(self.data_file)
+        # print(self.data_file)
         if not self.data_file.exists():
             self.data_file.touch()
         self.load_data()
@@ -142,6 +142,13 @@ class Kontolupe(toga.App):
         )
         
         self.input_balance_future = toga.NumberInput(
+            readonly=True,
+            value=self.balance,
+            style=Pack(padding=5, font_weight='bold'),
+            step=Decimal('0.01')           
+        )
+
+        self.input_balance_future_with_expected = toga.NumberInput(
             readonly=True,
             value=self.balance,
             style=Pack(padding=5, font_weight='bold'),
@@ -191,9 +198,19 @@ class Kontolupe(toga.App):
             style=Pack(padding=5, padding_left=10, font_weight='bold')
         )
 
+        label_balance_future_with_expected = toga.Label(
+            'Kontostand:',
+            style=Pack(padding=5, padding_left=10, font_weight='bold')
+        )
+
         label_balance_date = toga.Label(
             'am:',
-            style=Pack(padding=0)
+            style=Pack(padding=0, flex=1)
+        )
+        
+        label_balance_future_with_expected_explanation = toga.Label(
+            'inklusive offener Buchungen',
+            style=Pack(padding=0, flex=1)
         )
 
         label_bookings_area = toga.Label(
@@ -204,7 +221,7 @@ class Kontolupe(toga.App):
             )
         )
 
-        label_expected_area = toga.Label(
+        self.label_expected_area = toga.Label(
             'Offene Buchungen:',
             style=Pack(
                 padding=10,
@@ -269,6 +286,7 @@ class Kontolupe(toga.App):
         # Create the subboxes for the main box        
         balance_today_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         balance_future_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER, background_color='#368BA9'))
+        balance_future_with_expected_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER, background_color='#368BA9'))
         slider_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         content_bookings_box = toga.Box(style=Pack(direction=COLUMN, flex=3))
         button_bookings_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
@@ -278,6 +296,7 @@ class Kontolupe(toga.App):
         # Add the subboxes to the main box
         self.main_box.add(balance_today_box)
         self.main_box.add(balance_future_box)
+        self.main_box.add(balance_future_with_expected_box)
         self.main_box.add(slider_box) 
         self.main_box.add(content_expected_box)
         self.main_box.add(content_bookings_box)
@@ -289,6 +308,9 @@ class Kontolupe(toga.App):
         balance_future_box.add(self.input_balance_future)
         balance_future_box.add(label_balance_date)
         balance_future_box.add(self.input_balance_date)
+        balance_future_with_expected_box.add(label_balance_future_with_expected)
+        balance_future_with_expected_box.add(self.input_balance_future_with_expected)
+        balance_future_with_expected_box.add(label_balance_future_with_expected_explanation)
         slider_box.add(self.slider_balance_date)
         
         # bookings area
@@ -306,7 +328,7 @@ class Kontolupe(toga.App):
         button_expected_box.add(button_expected_edit)
         button_expected_box.add(button_expected_delete)
         #button_expected_box.add(button_expected_confirm)
-        content_expected_box.add(label_expected_area)
+        content_expected_box.add(self.label_expected_area)
         content_expected_box.add(self.table_expected)
         content_expected_box.add(button_expected_box)
 
@@ -693,7 +715,8 @@ class Kontolupe(toga.App):
         # with self.data_file.open('w') as f:
         #     f.write(str(self.balance))
 
-        # save the balance and the bookings to the file
+        # save the balance, the bookings and the expected bookings to the file
+        # use separators as new lines to distinguish between balance, bookings and expected bookings
         with self.data_file.open('w') as f:
             f.write(str(self.balance) + '\n')
             for booking in self.bookings:
@@ -701,32 +724,36 @@ class Kontolupe(toga.App):
                 f.write(str(booking[1]) + '\n')
                 f.write(str(booking[2]) + '\n')
                 f.write(str(booking[3]) + '\n')
+            f.write('---\n')
+            for booking in self.expected:
+                f.write(str(booking[0]) + '\n')
+                f.write(str(booking[1]) + '\n')
 
 
     def load_data(self):
-        # load the current balance from the file
-        # with self.data_file.open('r') as f:
-        #     try:
-        #         self.balance = Decimal(f.read())
-        #     except:
-        #         pass
 
-        # load the balance and the bookings from the file
+        # load the balance, the bookings and the expected bookings from the file
+        # and update the corresponding variables
         with self.data_file.open('r') as f:
             try:
-                self.balance = Decimal(f.readline())
+                balance = f.readline()
+                self.balance = Decimal(balance.strip())
                 while True:
                     date = f.readline()
-                    if not date:
+                    if not date or date == '---':
                         break
                     amount = f.readline()
                     note = f.readline()
                     interval = f.readline()
                     self.bookings.append((datetime.date.fromisoformat(date.strip()), Decimal(amount.strip()), note.strip(), int(interval.strip())))
-            except:
-                print('Error while loading data from file.')
-                print(self.bookings)
-                pass
+                while True:
+                    note = f.readline()
+                    if not note:
+                        break
+                    amount = f.readline()
+                    self.expected.append((note.strip(), Decimal(amount.strip())))
+            except Exception as e:
+                print('Error while loading data from file:', e)
 
 
     """
@@ -775,6 +802,18 @@ class Kontolupe(toga.App):
             if booking[0] <= self.date:
                 new_balance += booking[1]
         self.input_balance_future.value = new_balance
+
+        # calculate the sum of the expected bookings
+        expected_sum = 0
+        for booking in self.expected:
+            expected_sum += booking[1]
+        
+        # calculate the future balance including the expected bookings
+        new_balance_with_expected = new_balance + expected_sum
+        self.input_balance_future_with_expected.value = new_balance_with_expected
+
+        # update the expected label
+        self.label_expected_area.text = 'Offene Buchungen: {:,.2f} €'.format(expected_sum)
 
         # update the tables
         self.table_bookings.data = self.table_data()
