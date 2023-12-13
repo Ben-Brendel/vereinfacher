@@ -28,9 +28,6 @@ class Kontolupe(toga.App):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        # set the app icon
-        self.icon = Icon('icons/kontolupe')
-
         """
         Creating the class variables and initializing them with
         example values.
@@ -82,7 +79,7 @@ class Kontolupe(toga.App):
             5 = recurring every 6 months
             6 = recurring every year
         """
-        # TODO: figure out how to store and read the bookings
+
         # TODO: add expected bookings that have no fixed date yet
         # self.bookings = [
         #     (datetime.date(2023,12,12), -100, 'Arzt',       0),
@@ -213,6 +210,14 @@ class Kontolupe(toga.App):
         balance_future_box.add(self.input_balance_date)
         slider_box.add(self.slider_balance_date)
         content_box.add(self.table_bookings)
+
+        # Add the testarea for the icon
+        # my_image = toga.Image(self.paths.app / 'resources/kontolupe.png')
+        # view = toga.ImageView(my_image)
+        # print(self.paths.app / 'resources/kontolupe.png')
+        # content_box.add(view)
+
+
         content_box.add(button_new_booking)
         content_box.add(button_delete_booking)
         content_box.add(button_edit_booking)
@@ -323,6 +328,7 @@ class Kontolupe(toga.App):
             index = self.table_bookings.data.index(self.table_bookings.selection)
             self.bookings.pop(index)
             self.update_values(widget)
+            self.save_data()
 
     """
     Cancel the booking form.
@@ -362,6 +368,9 @@ class Kontolupe(toga.App):
         # Update the table data
         #self.table_bookings.data = self.table_data()
         self.update_values(widget)
+
+        # save data
+        self.save_data()
 
         # Clear the form inputs
         self.clear_form_box()
@@ -478,7 +487,7 @@ class Kontolupe(toga.App):
 
 
     """
-    The most important function for getting the values right.
+    The most important function for getting the display right.
     """
     def update_values(self, widget):
         # getting the date values right
@@ -487,8 +496,8 @@ class Kontolupe(toga.App):
             if not self.far_future:
                 self.date_index = int(widget.value)
                 self.date = self.dates[self.date_index]
-                self.input_balance_date.value = self.date
                 self.far_future = 1
+                self.input_balance_date.value = self.date
             else:
                 self.far_future = 0
             """
@@ -526,9 +535,6 @@ class Kontolupe(toga.App):
 
         # update the table
         self.table_bookings.data = self.table_data()
-
-        # save the data to the data file
-        self.save_data()
 
 
     """ 
