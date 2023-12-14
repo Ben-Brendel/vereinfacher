@@ -61,6 +61,7 @@ class Kontolupe(toga.App):
         self.selected_expected_index = 0
         
         # flags
+        self.appstart = 1
         self.edit_mode = 0
         self.edit_mode_expected = 0
         self.far_future = 0
@@ -578,7 +579,6 @@ class Kontolupe(toga.App):
     # switch to the expected box and clear the inputs
     def new_expected(self, widget):
         self.main_window.content = self.expected_box
-        pass
 
     
     # switch to the expected box and fill the inputs with the values of the selected booking
@@ -712,45 +712,65 @@ class Kontolupe(toga.App):
     functions for saving and loading the data
     """
     def save_data(self):
-        # with self.data_file.open('w') as f:
-        #     f.write(str(self.balance))
-
+        print('######### SAVING DATA #########')
         # save the balance, the bookings and the expected bookings to the file
         # use separators as new lines to distinguish between balance, bookings and expected bookings
+        # print every written line to the console
         with self.data_file.open('w') as f:
             f.write(str(self.balance) + '\n')
+            print(str(self.balance))
             for booking in self.bookings:
                 f.write(str(booking[0]) + '\n')
+                print(str(booking[0]))
                 f.write(str(booking[1]) + '\n')
+                print(str(booking[1]))
                 f.write(str(booking[2]) + '\n')
+                print(str(booking[2]))
                 f.write(str(booking[3]) + '\n')
+                print(str(booking[3]))
             f.write('---\n')
+            print('---')
             for booking in self.expected:
                 f.write(str(booking[0]) + '\n')
+                print(str(booking[0]))
                 f.write(str(booking[1]) + '\n')
+                print(str(booking[1]))
 
 
     def load_data(self):
 
         # load the balance, the bookings and the expected bookings from the file
         # and update the corresponding variables
+        print('######### LOADING DATA #########')
         with self.data_file.open('r') as f:
             try:
                 balance = f.readline()
+                if not balance:
+                    print("No data in file")
+                    return
+                print(balance.strip())
                 self.balance = Decimal(balance.strip())
+                self.bookings = []
+                self.expected = []
                 while True:
                     date = f.readline()
-                    if not date or date == '---':
+                    print(date.strip())
+                    if not date or date == '---\n':
                         break
                     amount = f.readline()
+                    print(amount.strip())
                     note = f.readline()
+                    print(note.strip())
                     interval = f.readline()
+                    print(interval.strip())
                     self.bookings.append((datetime.date.fromisoformat(date.strip()), Decimal(amount.strip()), note.strip(), int(interval.strip())))
                 while True:
                     note = f.readline()
+                    print(note.strip())
                     if not note:
                         break
                     amount = f.readline()
+                    print(amount.strip())
                     self.expected.append((note.strip(), Decimal(amount.strip())))
             except Exception as e:
                 print('Error while loading data from file:', e)
@@ -795,6 +815,10 @@ class Kontolupe(toga.App):
                 self.balance = Decimal(self.input_balance_today.value)
             except:
                 self.balance = 0
+            if self.appstart:
+                self.appstart = 0
+            else:
+                self.save_data()
 
         # calculate the future balance
         new_balance = self.balance
