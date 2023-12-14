@@ -178,14 +178,16 @@ class Kontolupe(toga.App):
             accessors=['Datum', 'Betrag', 'Notiz', 'Intervall'],
             data=self.table_data(),
             style=Pack(flex=1, padding=5),
-            multiple_select=False
+            multiple_select=False,
+            on_activate=self.edit_booking
         )
 
         self.table_expected = toga.Table(
             accessors=['Notiz', 'Betrag'],
             data=self.table_expected_data(),
             style=Pack(flex=1, padding=5),
-            multiple_select=False
+            multiple_select=False,
+            on_activate=self.edit_expected
         )
 
         # Label section
@@ -422,7 +424,6 @@ class Kontolupe(toga.App):
 
     """
     Create the content for the form box for a new expected booking.
-    It is not yet visible.
     """
     def create_expected_box(self):
         
@@ -481,8 +482,39 @@ class Kontolupe(toga.App):
 
 
     """
-    Delete the selected booking if there is a selection.
+    Functions to handle the scheduled booking section.
+    Buttons on the main box.
     """
+
+    def new_booking(self, widget):
+        # Switch to the form box
+        self.main_window.content = self.form_box
+
+    def edit_booking(self, widget):
+
+        if not self.table_bookings.selection:
+            return
+
+        # Set the edit mode flag
+        self.edit_mode = 1
+
+        # Find the selected booking
+        self.selected_booking_index = self.table_bookings.data.index(self.table_bookings.selection)
+        selected_booking = self.bookings[self.selected_booking_index]
+
+        # Fill the form inputs with the values of the selected booking
+        self.form_box_header_label.text = 'Buchung bearbeiten'
+        self.form_box_input_date.value = selected_booking[0]
+        self.form_box_input_amount.value = selected_booking[1]
+        self.form_box_input_note.value = selected_booking[2]
+
+        # Find the interval item with the id equal to booking[3]
+        interval_item = next(item for item in self.interval_items if item['id'] == selected_booking[3])
+        self.form_box_input_interval.value = interval_item['note']
+
+        # Switch to the form box
+        self.main_window.content = self.form_box
+
     def confirm_delete_booking(self, widget):
         if self.table_bookings.selection:
             self.main_window.confirm_dialog(
@@ -499,16 +531,16 @@ class Kontolupe(toga.App):
             self.update_values(widget)
             self.save_data()
 
+
     """
-    Cancel the booking form.
+    Functions to handle the scheduled booking section.
+    Buttons on the form box.
     """
+
     def cancel_booking(self, widget):
         self.main_window.content = self.main_box
         self.clear_form_box()
 
-    """
-    Save the booking.
-    """
     def save_booking(self, widget):
         # Find the selected interval item
         selected_interval_note = self.form_box_input_interval.value
@@ -535,7 +567,6 @@ class Kontolupe(toga.App):
         self.bookings.sort()
 
         # Update the table data
-        #self.table_bookings.data = self.table_data()
         self.update_values(widget)
 
         # save data
@@ -548,41 +579,22 @@ class Kontolupe(toga.App):
         if widget == self.button_save:
             self.main_window.content = self.main_box
 
+    def clear_form_box(self):
+        # Clear the form box
+        self.form_box_header_label.text = 'Neue Buchung'
+        self.form_box_input_date.value = datetime.date.today()
+        self.form_box_input_amount.value = 0
+        self.form_box_input_note.value = ''
+        self.form_box_input_interval.value = self.interval_items[0]['note']
+
     """
-    Edit the selected booking.
-    """
-    def edit_booking(self, widget):
+    Functions to handle the expected booking section.
+    Buttons on the main box.
+    """    
 
-        if not self.table_bookings.selection:
-            return
-
-        # Set the edit mode flag
-        self.edit_mode = 1
-
-        # Find the selected booking
-        self.selected_booking_index = self.table_bookings.data.index(self.table_bookings.selection)
-        selected_booking = self.bookings[self.selected_booking_index]
-
-        # Fill the form inputs with the values of the selected booking
-        self.form_box_header_label.text = 'Buchung bearbeiten'
-        self.form_box_input_date.value = selected_booking[0]
-        self.form_box_input_amount.value = selected_booking[1]
-        self.form_box_input_note.value = selected_booking[2]
-
-        # Find the interval item with the id equal to booking[3]
-        interval_item = next(item for item in self.interval_items if item['id'] == selected_booking[3])
-        self.form_box_input_interval.value = interval_item['note']
-
-        # Switch to the form box
-        self.main_window.content = self.form_box
-
-    # switch to the expected box and clear the inputs
     def new_expected(self, widget):
         self.main_window.content = self.expected_box
 
-    
-    # switch to the expected box and fill the inputs with the values of the selected booking
-    # if there is a selection in the table of expected bookings
     def edit_expected(self, widget):
         if not self.table_expected.selection:
             return
@@ -602,7 +614,6 @@ class Kontolupe(toga.App):
         # Switch to the form box
         self.main_window.content = self.expected_box
 
-
     def confirm_delete_expected(self, widget):
         if self.table_expected.selection:
             self.main_window.confirm_dialog(
@@ -619,8 +630,10 @@ class Kontolupe(toga.App):
             self.update_values(widget)
             self.save_data()
 
-    # def confirm_expected(self, widget):       
-    #     pass
+    """
+    Functions to handle the expected booking section.
+    Buttons on the form box.
+    """
 
     def cancel_expected(self, widget):
         self.main_window.content = self.main_box
@@ -644,7 +657,7 @@ class Kontolupe(toga.App):
         self.expected.sort()
 
         # Update the table data
-        self.table_expected.data = self.table_expected_data()
+        self.update_values(widget)
 
         # save data
         self.save_data()
@@ -654,16 +667,17 @@ class Kontolupe(toga.App):
 
         # if save button was pressed, return to main box
         if widget == self.button_expected_save:
-            self.main_window.content = self.main_box
+            self.main_window.content = self.main_box 
 
-
-    def new_booking(self, widget):
-        # Switch to the form box
-        self.main_window.content = self.form_box 
+    def clear_expected_box(self):
+        # Clear the expected box
+        self.expected_box_header_label.text = 'Neue offene Buchung'
+        self.expected_box_input_amount.value = 0
+        self.expected_box_input_note.value = ''
 
 
     """
-    Helper functions.
+    Functions to handle the table data.
     """
     def table_data(self):
         # Parse the table data list from the bookings list
@@ -689,33 +703,14 @@ class Kontolupe(toga.App):
             ))
         return table_data
 
-
     def format_date(self, date):
-        return date.strftime('%d.%m.%Y') 
-    
-
-    def clear_form_box(self):
-        # Clear the form box
-        self.form_box_header_label.text = 'Neue Buchung'
-        self.form_box_input_date.value = datetime.date.today()
-        self.form_box_input_amount.value = 0
-        self.form_box_input_note.value = ''
-        self.form_box_input_interval.value = self.interval_items[0]['note']
-
-    def clear_expected_box(self):
-        # Clear the expected box
-        self.expected_box_header_label.text = 'Neue offene Buchung'
-        self.expected_box_input_amount.value = 0
-        self.expected_box_input_note.value = ''
+        return date.strftime('%d.%m.%Y')     
 
     """"
-    functions for saving and loading the data
+    Functions for saving and loading the data to the data file
     """
     def save_data(self):
         print('######### SAVING DATA #########')
-        # save the balance, the bookings and the expected bookings to the file
-        # use separators as new lines to distinguish between balance, bookings and expected bookings
-        # print every written line to the console
         with self.data_file.open('w') as f:
             f.write(str(self.balance) + '\n')
             print(str(self.balance))
@@ -736,11 +731,7 @@ class Kontolupe(toga.App):
                 f.write(str(booking[1]) + '\n')
                 print(str(booking[1]))
 
-
     def load_data(self):
-
-        # load the balance, the bookings and the expected bookings from the file
-        # and update the corresponding variables
         print('######### LOADING DATA #########')
         with self.data_file.open('r') as f:
             try:
@@ -777,7 +768,8 @@ class Kontolupe(toga.App):
 
 
     """
-    The most important function for getting the display right.
+    Updating the values of the widgets.
+    This function should be called every time a value changes.
     """
     def update_values(self, widget):
         # getting the date values right
@@ -790,12 +782,6 @@ class Kontolupe(toga.App):
                 self.input_balance_date.value = self.date
             else:
                 self.far_future = 0
-            """
-            important to interrupt the function here
-            because changing the value of input_balance_date
-            will trigger the function again which would lead
-            to a miscalculation of the future balance
-            """
             return
         
         elif widget == self.input_balance_date:
