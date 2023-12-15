@@ -32,8 +32,6 @@ class Kontolupe(toga.App):
         Creating the class variables and initializing them with
         example values.
         """
-        # Object variables with initial values
-        self.balance = 100
 
         # Create a list of dates starting from today for the slider
         today = datetime.date.today()
@@ -66,6 +64,9 @@ class Kontolupe(toga.App):
         self.edit_mode_expected = 0
         self.far_future = 0
 
+        # Variable for saving the balance
+        self.balance = 0
+
         """
         Array of tuples with the following structure:
         (date, amount, note, interval) or in German:
@@ -84,30 +85,31 @@ class Kontolupe(toga.App):
         """
 
         # TODO: add expected bookings that have no fixed date yet
-        self.bookings = [
-            (datetime.date(2023,12,18), -100, 'Arzt',       0),
-            (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
-            (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
-            (datetime.date(2024, 1, 1), -300, 'Test',        0),                        
-            (datetime.date(2024, 1, 2), -250, 'Test',        0),
-            (datetime.date(2024, 1, 3), +150, 'Test',        0),
-            (datetime.date(2024, 1, 4), -800, 'Test',        0),
-            (datetime.date(2024, 1, 5), +2500, 'Gehalt',     0),
-            (datetime.date(2024, 1, 6), -300, 'Test',        0),
-            (datetime.date(2024, 1, 7), +200, 'Test',        0),
-            (datetime.date(2024, 1, 8), -550, 'Test',        0),
-        ]
-        # self.bookings = []
+        # self.bookings = [
+        #     (datetime.date(2023,12,18), -100, 'Arzt',       0),
+        #     (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
+        #     (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
+        #     (datetime.date(2024, 1, 1), -300, 'Test',        0),                        
+        #     (datetime.date(2024, 1, 2), -250, 'Test',        0),
+        #     (datetime.date(2024, 1, 3), +150, 'Test',        0),
+        #     (datetime.date(2024, 1, 4), -800, 'Test',        0),
+        #     (datetime.date(2024, 1, 5), +2500, 'Gehalt',     0),
+        #     (datetime.date(2024, 1, 6), -300, 'Test',        0),
+        #     (datetime.date(2024, 1, 7), +200, 'Test',        0),
+        #     (datetime.date(2024, 1, 8), -550, 'Test',        0),
+        # ]
+        self.bookings = []
 
-        self.expected = [
-            ('Kindergeld', 250),
-            ('Beihilfe', 500),
-            ('Gehalt', 2500),
-            ('Beihilfe', 300),
-            ('Beihilfe', 200),
-            ('PKV', 300),
-            ('PKV', 200),
-        ]        
+        # self.expected = [
+        #     ('Kindergeld', 250),
+        #     ('Beihilfe', 500),
+        #     ('Gehalt', 2500),
+        #     ('Beihilfe', 300),
+        #     ('Beihilfe', 200),
+        #     ('PKV', 300),
+        #     ('PKV', 200),
+        # ]        
+        self.expected = []
 
         # create the path name to the data file
         # and create the file if it does not exist
@@ -706,65 +708,66 @@ class Kontolupe(toga.App):
     def format_date(self, date):
         return date.strftime('%d.%m.%Y')     
 
-    """"
+    """
     Functions for saving and loading the data to the data file
     """
     def save_data(self):
-        print('######### SAVING DATA #########')
+        # print('######### SAVING DATA #########')
         with self.data_file.open('w') as f:
             f.write(str(self.balance) + '\n')
-            print(str(self.balance))
+            # print(str(self.balance))
             for booking in self.bookings:
                 f.write(str(booking[0]) + '\n')
-                print(str(booking[0]))
+                # print(str(booking[0]))
                 f.write(str(booking[1]) + '\n')
-                print(str(booking[1]))
+                # print(str(booking[1]))
                 f.write(str(booking[2]) + '\n')
-                print(str(booking[2]))
+                # print(str(booking[2]))
                 f.write(str(booking[3]) + '\n')
-                print(str(booking[3]))
+                # print(str(booking[3]))
             f.write('---\n')
-            print('---')
+            # print('---')
             for booking in self.expected:
                 f.write(str(booking[0]) + '\n')
-                print(str(booking[0]))
+                # print(str(booking[0]))
                 f.write(str(booking[1]) + '\n')
-                print(str(booking[1]))
+                # print(str(booking[1]))
 
     def load_data(self):
-        print('######### LOADING DATA #########')
+        # print('######### LOADING DATA #########')
         with self.data_file.open('r') as f:
             try:
                 balance = f.readline()
                 if not balance:
                     print("No data in file")
                     return
-                print(balance.strip())
+                # print(balance.strip())
                 self.balance = Decimal(balance.strip())
                 self.bookings = []
                 self.expected = []
                 while True:
                     date = f.readline()
-                    print(date.strip())
+                    # print(date.strip())
                     if not date or date == '---\n':
                         break
                     amount = f.readline()
-                    print(amount.strip())
+                    # print(amount.strip())
                     note = f.readline()
-                    print(note.strip())
+                    # print(note.strip())
                     interval = f.readline()
-                    print(interval.strip())
+                    # print(interval.strip())
                     self.bookings.append((datetime.date.fromisoformat(date.strip()), Decimal(amount.strip()), note.strip(), int(interval.strip())))
                 while True:
                     note = f.readline()
-                    print(note.strip())
+                    # print(note.strip())
                     if not note:
                         break
                     amount = f.readline()
-                    print(amount.strip())
+                    # print(amount.strip())
                     self.expected.append((note.strip(), Decimal(amount.strip())))
             except Exception as e:
                 print('Error while loading data from file:', e)
+                pass
 
 
     """
