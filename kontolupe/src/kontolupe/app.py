@@ -6,6 +6,7 @@ Du kannst Deine Buchungen erfassen und den Kontostand berechnen lassen.
 """
 
 import datetime
+from dateutil.relativedelta import relativedelta
 
 import toga
 from toga.app import AppStartupMethod, OnExitHandler
@@ -45,13 +46,13 @@ class Kontolupe(toga.App):
 
         # Create the list of interval items
         self.interval_items=[
-            {'id': 0, 'note': 'einmalig'},
-            {'id': 1, 'note': 'wöchentlich'},
-            {'id': 2, 'note': '14-tägig'},
-            {'id': 3, 'note': 'monatlich'},
-            {'id': 4, 'note': 'quartalsweise'},
-            {'id': 5, 'note': 'halbjährlich'},
-            {'id': 6, 'note': 'jährlich'}
+            {'id': 0, 'note': 'einmalig',       'days': 0,  'months': 0},
+            {'id': 1, 'note': 'wöchentlich',    'days': 7,  'months': 0},
+            {'id': 2, 'note': '14-tägig',       'days': 14, 'months': 0},
+            {'id': 3, 'note': 'monatlich',      'days': 0,  'months': 1},
+            {'id': 4, 'note': 'quartalsweise',  'days': 0,  'months': 3},
+            {'id': 5, 'note': 'halbjährlich',   'days': 0,  'months': 6},
+            {'id': 6, 'note': 'jährlich',       'days': 0,  'months': 12}
         ]
 
         # store the index of a selected booking
@@ -85,20 +86,20 @@ class Kontolupe(toga.App):
         """
 
         # TODO: add expected bookings that have no fixed date yet
-        # self.bookings = [
-        #     (datetime.date(2023,12,18), -100, 'Arzt',       0),
-        #     (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
-        #     (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
-        #     (datetime.date(2024, 1, 1), -300, 'Test',        0),                        
-        #     (datetime.date(2024, 1, 2), -250, 'Test',        0),
-        #     (datetime.date(2024, 1, 3), +150, 'Test',        0),
-        #     (datetime.date(2024, 1, 4), -800, 'Test',        0),
-        #     (datetime.date(2024, 1, 5), +2500, 'Gehalt',     0),
-        #     (datetime.date(2024, 1, 6), -300, 'Test',        0),
-        #     (datetime.date(2024, 1, 7), +200, 'Test',        0),
-        #     (datetime.date(2024, 1, 8), -550, 'Test',        0),
-        # ]
-        self.bookings = []
+        self.bookings = [
+            (datetime.date(2023,12,18), -100, 'Arzt',       0),
+            (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
+            (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
+            (datetime.date(2024, 1, 1), -300, 'Test',        0),                        
+            (datetime.date(2024, 1, 2), -250, 'Test',        0),
+            (datetime.date(2024, 1, 3), +150, 'Test',        0),
+            (datetime.date(2024, 1, 4), -800, 'Test',        0),
+            (datetime.date(2024, 1, 5), +2500, 'Gehalt',     0),
+            (datetime.date(2024, 1, 6), -300, 'Test',        0),
+            (datetime.date(2024, 1, 7), +200, 'Test',        0),
+            (datetime.date(2024, 1, 8), -550, 'Test',        0),
+        ]
+        # self.bookings = []
 
         # self.expected = [
         #     ('Kindergeld', 250),
@@ -121,6 +122,33 @@ class Kontolupe(toga.App):
         self.load_data()
         self.bookings.sort()
         self.expected.sort()
+
+        # create an additional list for the recurring bookings
+        self.recurring_bookings = []
+        # loop through the bookings list
+        for booking in self.bookings:
+            # check if the booking is recurring
+            if booking[3] != 0:
+                # calculate the number of recurring bookings
+                # that fit into the timespan
+                number_of_recurring_bookings = int(self.timespan / (self.interval_items[booking[3]]['days'] if self.interval_items[booking[3]]['days'] != 0 else self.interval_items[booking[3]]['months'] * 30))
+                # loop through the number of recurring bookings
+                for i in range(number_of_recurring_bookings):
+                    # calculate the date of the recurring booking
+                    if self.interval_items[booking[3]]['days'] != 0:
+                        date = booking[0] + datetime.timedelta(days=i * self.interval_items[booking[3]]['days'])
+                    else:
+                        date = booking[0] + relativedelta(months=i * self.interval_items[booking[3]]['months'])
+                    # add the recurring booking to the list and add a new
+                    # column that contains the index of the original booking
+                    self.recurring_bookings.append((date, booking[1], booking[2], 0, self.bookings.index(booking)))
+        
+        print(self.recurring_bookings)
+
+        # create a new list for the bookings that
+        # contains both lists (bookings and recurring bookings)
+        # use the same structure as the bookings list
+        
 
         # create the content boxes
         # first box to be shown will be the main box
