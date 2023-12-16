@@ -134,12 +134,12 @@ class Kontolupe(toga.App):
     Creating the box with the main application content.
     """
     def create_main_box(self):
-        # TODO: styling
+
         # Inputs
         self.input_balance_today = toga.NumberInput(
             readonly=False,
             value=self.balance,
-            style=Pack(padding=5),
+            style=Pack(padding=5, padding_bottom=20, padding_top=20),
             step=Decimal('0.01'),
             on_change=self.update_values            
         )
@@ -147,14 +147,14 @@ class Kontolupe(toga.App):
         self.input_balance_future = toga.NumberInput(
             readonly=True,
             value=self.balance,
-            style=Pack(padding=5, font_weight='bold'),
+            style=Pack(padding=5, padding_top=20, font_weight='bold'),
             step=Decimal('0.01')           
         )
 
         self.input_balance_future_with_expected = toga.NumberInput(
             readonly=True,
             value=self.balance,
-            style=Pack(padding=5, font_weight='bold'),
+            style=Pack(padding=5, padding_bottom=20, font_weight='bold'),
             step=Decimal('0.01')           
         )
 
@@ -179,7 +179,7 @@ class Kontolupe(toga.App):
         self.table_bookings = toga.Table(
             accessors=['Datum', 'Betrag', 'Notiz', 'Intervall'],
             data=self.table_data(),
-            style=Pack(flex=1, padding=5),
+            style=Pack(flex=1, padding=5, height=200),
             multiple_select=False,
             on_activate=self.edit_booking
         )
@@ -187,7 +187,7 @@ class Kontolupe(toga.App):
         self.table_expected = toga.Table(
             accessors=['Notiz', 'Betrag'],
             data=self.table_expected_data(),
-            style=Pack(flex=1, padding=5),
+            style=Pack(flex=1, padding=5, height=200),
             multiple_select=False,
             on_activate=self.edit_expected
         )
@@ -281,12 +281,11 @@ class Kontolupe(toga.App):
         self.main_box = toga.Box(style=Pack(direction=COLUMN))
 
         # ScrollContainer
-        # self.main_container = toga.ScrollContainer(
-        #     content=self.main_box,
-        #     style=Pack(flex=1),
-        #     vertical=True,
-        #     horizontal=False
-        # )
+        self.main_container = toga.ScrollContainer(
+            content=self.main_box,
+            vertical=True,
+            horizontal=False
+        )
 
         # Create the subboxes for the main box        
         balance_today_box = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
@@ -346,6 +345,13 @@ class Kontolupe(toga.App):
         
         # Create a new box for the form
         self.form_box = toga.Box(style=Pack(direction=COLUMN))
+
+        # ScrollContainer
+        self.form_container = toga.ScrollContainer(
+            content=self.form_box,
+            vertical=True,
+            horizontal=False
+        )
 
         # header
         self.form_box_header_label = toga.Label('Neue Buchung', style=Pack(padding=10, font_weight='bold'))
@@ -432,6 +438,13 @@ class Kontolupe(toga.App):
         # Create a new box for the form
         self.expected_box = toga.Box(style=Pack(direction=COLUMN))
 
+        # ScrollContainer
+        self.expected_container = toga.ScrollContainer(
+            content=self.expected_box,
+            vertical=True,
+            horizontal=False
+        )
+
         # header
         self.expected_box_header_label = toga.Label('Neue offene Buchung', style=Pack(padding=10, font_weight='bold'))
         self.expected_box.add(self.expected_box_header_label)
@@ -490,7 +503,7 @@ class Kontolupe(toga.App):
 
     def new_booking(self, widget):
         # Switch to the form box
-        self.main_window.content = self.form_box
+        self.main_window.content = self.form_container
 
     def edit_booking(self, widget):
 
@@ -515,7 +528,7 @@ class Kontolupe(toga.App):
         self.form_box_input_interval.value = interval_item['note']
 
         # Switch to the form box
-        self.main_window.content = self.form_box
+        self.main_window.content = self.form_container
 
     def confirm_delete_booking(self, widget):
         if self.table_bookings.selection:
@@ -540,7 +553,7 @@ class Kontolupe(toga.App):
     """
 
     def cancel_booking(self, widget):
-        self.main_window.content = self.main_box
+        self.main_window.content = self.main_container
         self.clear_form_box()
 
     def save_booking(self, widget):
@@ -579,7 +592,7 @@ class Kontolupe(toga.App):
 
         # if save button was pressed, return to main box
         if widget == self.button_save:
-            self.main_window.content = self.main_box
+            self.main_window.content = self.main_container
 
     def clear_form_box(self):
         # Clear the form box
@@ -595,7 +608,7 @@ class Kontolupe(toga.App):
     """    
 
     def new_expected(self, widget):
-        self.main_window.content = self.expected_box
+        self.main_window.content = self.expected_container
 
     def edit_expected(self, widget):
         if not self.table_expected.selection:
@@ -614,7 +627,7 @@ class Kontolupe(toga.App):
         self.expected_box_input_note.value = selected_booking[0]
 
         # Switch to the form box
-        self.main_window.content = self.expected_box
+        self.main_window.content = self.expected_container
 
     def confirm_delete_expected(self, widget):
         if self.table_expected.selection:
@@ -638,7 +651,7 @@ class Kontolupe(toga.App):
     """
 
     def cancel_expected(self, widget):
-        self.main_window.content = self.main_box
+        self.main_window.content = self.main_container
         self.clear_expected_box()
 
     # take the values from the inputs and save the expected booking
@@ -669,7 +682,7 @@ class Kontolupe(toga.App):
 
         # if save button was pressed, return to main box
         if widget == self.button_expected_save:
-            self.main_window.content = self.main_box 
+            self.main_window.content = self.main_container
 
     def clear_expected_box(self):
         # Clear the expected box
@@ -843,7 +856,8 @@ class Kontolupe(toga.App):
         # create the main window
         self.main_window = toga.MainWindow(title=self.formal_name)
         # show the main box
-        self.main_window.content = self.main_box
+        # self.main_window.content = self.main_box
+        self.main_window.content = self.main_container
         # update the display
         self.update_values(self.input_balance_today)
         # show the main window
