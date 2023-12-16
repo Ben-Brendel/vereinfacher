@@ -85,21 +85,20 @@ class Kontolupe(toga.App):
             6 = recurring every year
         """
 
-        # TODO: add expected bookings that have no fixed date yet
-        self.bookings = [
-            (datetime.date(2023,12,18), -100, 'Arzt',       0),
-            (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
-            (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
-            (datetime.date(2024, 1, 1), -300, 'Test',        0),                        
-            (datetime.date(2024, 1, 2), -250, 'Test',        0),
-            (datetime.date(2024, 1, 3), +150, 'Test',        0),
-            (datetime.date(2024, 1, 4), -800, 'Test',        0),
-            (datetime.date(2024, 1, 5), +2500, 'Gehalt',     0),
-            (datetime.date(2024, 1, 6), -300, 'Test',        0),
-            (datetime.date(2024, 1, 7), +200, 'Test',        0),
-            (datetime.date(2024, 1, 8), -550, 'Test',        0),
-        ]
-        # self.bookings = []
+        # self.bookings = [
+        #     (datetime.date(2023,12,18), -100, 'Arzt',       0),
+        #     (datetime.date(2023,12,19), +250, 'Kindergeld', 1),
+        #     (datetime.date(2023,12,27), +500, 'Beihilfe',   0),
+        #     (datetime.date(2024, 1, 1), -300, 'Test',        0),                        
+        #     (datetime.date(2024, 1, 2), -250, 'Test',        0),
+        #     (datetime.date(2024, 1, 3), +150, 'Test',        0),
+        #     (datetime.date(2024, 1, 4), -800, 'Test',        0),
+        #     (datetime.date(2024, 1, 5), +2500, 'Gehalt',     0),
+        #     (datetime.date(2024, 1, 6), -300, 'Test',        0),
+        #     (datetime.date(2024, 1, 7), +200, 'Test',        0),
+        #     (datetime.date(2024, 1, 8), -550, 'Test',        0),
+        # ]
+        self.bookings = []
 
         # self.expected = [
         #     ('Kindergeld', 250),
@@ -148,7 +147,7 @@ class Kontolupe(toga.App):
         # create a new list for the bookings that
         # contains both lists (bookings and recurring bookings)
         # use the same structure as the bookings list
-        
+
 
         # create the content boxes
         # first box to be shown will be the main box

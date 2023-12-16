@@ -2,11 +2,12 @@
 [tool.briefcase]
 project_name = "Vereinfacher"
 bundle = "net.biberwerk"
-version = "0.0.1"
+version = "0.0.3"
 url = "https://biberwerk.net/kontolupe"
 license = "MIT license"
 author = "Ben Brendel"
 author_email = "ben@biberwerk.net"
+
 
 [tool.briefcase.app.kontolupe]
 formal_name = "Kontolupe"
@@ -22,6 +23,7 @@ test_sources = [
 ]
 
 requires = [
+    "python-dateutil",
 ]
 test_requires = [
     "pytest",
