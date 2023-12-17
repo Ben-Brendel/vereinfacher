@@ -3,11 +3,11 @@
 project_name = "Vereinfacher"
 bundle = "net.biberwerk"
 version = "0.0.3"
+build = 2
 url = "https://biberwerk.net/kontolupe"
 license = "MIT license"
 author = "Ben Brendel"
 author_email = "ben@biberwerk.net"
-
 
 [tool.briefcase.app.kontolupe]
 formal_name = "Kontolupe"

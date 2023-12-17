@@ -210,6 +210,13 @@ class Kontolupe(toga.App):
             multiple_select=False,
             on_activate=self.edit_booking
         )
+        # ScrollContainer for the bookings table
+        self.table_bookings_container = toga.ScrollContainer(
+            content=self.table_bookings,
+            vertical=True,
+            horizontal=True,
+            style=Pack(height=200)
+        )
 
         self.table_expected = toga.Table(
             accessors=['Notiz', 'Betrag'],
@@ -217,6 +224,13 @@ class Kontolupe(toga.App):
             style=Pack(flex=1, padding=5, height=200),
             multiple_select=False,
             on_activate=self.edit_expected
+        )
+        # ScrollContainer for the expected table
+        self.table_expected_container = toga.ScrollContainer(
+            content=self.table_expected,
+            vertical=True,
+            horizontal=True,
+            style=Pack(height=200)
         )
 
         # Label section
@@ -307,7 +321,7 @@ class Kontolupe(toga.App):
         # Container for the main content
         self.main_box = toga.Box(style=Pack(direction=COLUMN))
 
-        # ScrollContainer
+        # ScrollContainer for the main box
         self.main_container = toga.ScrollContainer(
             content=self.main_box,
             vertical=True,
@@ -350,7 +364,7 @@ class Kontolupe(toga.App):
         button_bookings_box.add(button_edit_booking)
         button_bookings_box.add(button_delete_booking)
         content_bookings_box.add(label_bookings_area)
-        content_bookings_box.add(self.table_bookings)
+        content_bookings_box.add(self.table_bookings_container)
         content_bookings_box.add(button_bookings_box)
 
         # expected area
@@ -360,7 +374,7 @@ class Kontolupe(toga.App):
         button_expected_box.add(button_expected_delete)
         #button_expected_box.add(button_expected_confirm)
         content_expected_box.add(self.label_expected_area)
-        content_expected_box.add(self.table_expected)
+        content_expected_box.add(self.table_expected_container)
         content_expected_box.add(button_expected_box)
 
     """
