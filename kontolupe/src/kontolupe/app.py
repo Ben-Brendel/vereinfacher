@@ -111,17 +111,6 @@ class Kontolupe(toga.App):
         # ]        
         self.expected = []
 
-        # create the path name to the data file
-        # and create the file if it does not exist
-        # then load the saved data
-        self.data_file = Path(os.path.dirname(os.path.abspath(__file__))) / Path('data.txt')
-        # print(self.data_file)
-        if not self.data_file.exists():
-            self.data_file.touch()
-        self.load_data()
-        self.bookings.sort()
-        self.expected.sort()
-
         # create an additional list for the recurring bookings
         self.recurring_bookings = []
         # loop through the bookings list
@@ -894,6 +883,18 @@ class Kontolupe(toga.App):
     # TODO: add a refresh functionality when the app has been
     #       started on another day
     def startup(self):
+
+        # intialize the data file
+        # data_dir = self.paths.data
+        # self.data_file = data_dir / 'data.txt'
+        self.data_file = Path('/data/data/net.biberwerk.kontolupe/data.txt')
+        self.data_file.touch()
+
+        # initialize the data
+        self.load_data()
+        self.bookings.sort()
+        self.expected.sort()
+
         # create the main window
         self.main_window = toga.MainWindow(title=self.formal_name)
         # show the main box
