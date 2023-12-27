@@ -13,6 +13,9 @@ class Datenbank:
         #self.db_path = Path('/data/data/net.biberwerk.kontolupe/databases/kontolupe.db')
         self.db_path = Path('kontolupe.db')
 
+        # lösche die Datei der Datenbank
+        self.db_path.unlink()
+
         # Datenbank erstellen
         self.create_db()
 
@@ -31,6 +34,7 @@ class Datenbank:
             rechnungsdatum TEXT,
             notiz TEXT,
             beihilfesatz REAL,
+            aktiv INTEGER,
             bezahlt INTEGER,
             beihilfe_id INTEGER REFERENCES beihilfepakete(id),
             pkv_id INTEGER REFERENCES pkvpakete(id)
@@ -39,12 +43,16 @@ class Datenbank:
         cursor.execute("""CREATE TABLE IF NOT EXISTS beihilfepakete (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             betrag REAL,
+            datum TEXT,
+            aktiv INTEGER,
             erhalten INTEGER
         )""")
 
         cursor.execute("""CREATE TABLE IF NOT EXISTS pkvpakete (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             betrag REAL,
+            datum TEXT,
+            aktiv INTEGER,
             erhalten INTEGER
         )""")
 
@@ -70,15 +78,17 @@ class Datenbank:
             rechnungsdatum,
             notiz,
             beihilfesatz,
+            aktiv,
             bezahlt,
             beihilfe_id,
             pkv_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)""", (
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
             arztrechnung.betrag,
             arztrechnung.arzt_id,
             arztrechnung.rechnungsdatum,
             arztrechnung.notiz,
             arztrechnung.beihilfesatz,
+            arztrechnung.aktiv,
             arztrechnung.bezahlt,
             arztrechnung.beihilfe_id,
             arztrechnung.pkv_id
@@ -102,9 +112,13 @@ class Datenbank:
         # Daten einfügen
         cursor.execute("""INSERT INTO beihilfepakete (
             betrag,
+            datum,
+            aktiv,
             erhalten
         ) VALUES (?, ?)""", (
             beihilfepaket.betrag,
+            beihilfepaket.datum,
+            beihilfepaket.aktiv,
             beihilfepaket.erhalten
         ))
 
@@ -126,9 +140,13 @@ class Datenbank:
         # Daten einfügen
         cursor.execute("""INSERT INTO pkvpakete (
             betrag,
+            datum,
+            aktiv,
             erhalten
         ) VALUES (?, ?)""", (
             pkvpaket.betrag,
+            pkvpaket.datum,
+            pkvpaket.aktiv,
             pkvpaket.erhalten
         ))
 
@@ -176,6 +194,7 @@ class Datenbank:
             rechnungsdatum = ?,
             notiz = ?,
             beihilfesatz = ?,
+            aktiv = ?,
             bezahlt = ?,
             beihilfe_id = ?,
             pkv_id = ?
@@ -185,6 +204,7 @@ class Datenbank:
             arztrechnung.rechnungsdatum,
             arztrechnung.notiz,
             arztrechnung.beihilfesatz,
+            arztrechnung.aktiv,
             arztrechnung.bezahlt,
             arztrechnung.beihilfe_id,
             arztrechnung.pkv_id,
@@ -204,9 +224,13 @@ class Datenbank:
         # Daten ändern
         cursor.execute("""UPDATE beihilfepakete SET
             betrag = ?,
+            datum = ?,
+            aktiv = ?,
             erhalten = ?
         WHERE id = ?""", (
             beihilfepaket.betrag,
+            beihilfepaket.datum,
+            beihilfepaket.aktiv,
             beihilfepaket.erhalten,
             beihilfepaket.db_id
         ))
@@ -224,9 +248,13 @@ class Datenbank:
         # Daten ändern
         cursor.execute("""UPDATE pkvpakete SET
             betrag = ?,
+            datum = ?,
+            aktiv = ?,
             erhalten = ?
         WHERE id = ?""", (
             pkvpaket.betrag,
+            pkvpaket.datum,
+            pkvpaket.aktiv,
             pkvpaket.erhalten,
             pkvpaket.db_id
         ))
@@ -320,7 +348,7 @@ class Datenbank:
         cursor = connection.cursor()
 
         # Daten abfragen
-        cursor.execute("""SELECT * FROM arztrechnungen""")
+        cursor.execute("""SELECT * FROM arztrechnungen WHERE aktiv = 1""")
         db_result = cursor.fetchall()
 
         # arztrechnungen in Arztrechnung-Objekte umwandeln
@@ -332,9 +360,10 @@ class Datenbank:
             arztrechnung.rechnungsdatum = db_result[i][3]
             arztrechnung.notiz = db_result[i][4]
             arztrechnung.beihilfesatz = db_result[i][5]
-            arztrechnung.bezahlt = db_result[i][6]
-            arztrechnung.beihilfe_id = db_result[i][7]
-            arztrechnung.pkv_id = db_result[i][8]
+            arztrechnung.aktiv = db_result[i][6]
+            arztrechnung.bezahlt = db_result[i][7]
+            arztrechnung.beihilfe_id = db_result[i][8]
+            arztrechnung.pkv_id = db_result[i][9]
 
         # Datenbankverbindung schließen
         connection.close()
@@ -348,7 +377,7 @@ class Datenbank:
         cursor = connection.cursor()
 
         # Daten abfragen
-        cursor.execute("""SELECT * FROM beihilfepakete""")
+        cursor.execute("""SELECT * FROM beihilfepakete WHERE aktiv = 1""")
         db_result = cursor.fetchall()
 
         # beihilfepakete in BeihilfePaket-Objekte umwandeln
@@ -356,7 +385,9 @@ class Datenbank:
         for i, beihilfepaket in enumerate(beihilfepakete):
             beihilfepaket.db_id = db_result[i][0]
             beihilfepaket.betrag = db_result[i][1]
-            beihilfepaket.erhalten = db_result[i][2]
+            beihilfepaket.datum = db_result[i][2]
+            beihilfepaket.aktiv = db_result[i][3]
+            beihilfepaket.erhalten = db_result[i][4]
 
         # Datenbankverbindung schließen
         connection.close()
@@ -370,7 +401,7 @@ class Datenbank:
         cursor = connection.cursor()
 
         # Daten abfragen
-        cursor.execute("""SELECT * FROM pkvpakete""")
+        cursor.execute("""SELECT * FROM pkvpakete WHERE aktiv = 1""")
         db_result = cursor.fetchall()
 
         # pkvpakete in PKVPaket-Objekte umwandeln
@@ -378,7 +409,9 @@ class Datenbank:
         for i, pkvpaket in enumerate(pkvpakete):
             pkvpaket.db_id = db_result[i][0]
             pkvpaket.betrag = db_result[i][1]
-            pkvpaket.erhalten = db_result[i][2]
+            pkvpaket.datum = db_result[i][2]
+            pkvpaket.aktiv = db_result[i][3]
+            pkvpaket.erhalten = db_result[i][4]
 
         # Datenbankverbindung schließen
         connection.close()
@@ -417,10 +450,12 @@ class Arztrechnung:
         self.rechnungsdatum = None
         self.notiz = None
         self.beihilfesatz = None
+        self.aktiv = True
         self.beihilfe_id = None
         self.pkv_id = None
         self.buchungsdatum = None
         self.bezahlt = False
+        self.db_id = None
 
     def neu(self, db):
         """Neue Arztrechnung erstellen."""
@@ -447,7 +482,10 @@ class BeihilfePaket:
 
         # Betrag der Beihilfe-Einreichung berechnen
         self.betrag = 0        
+        self.datum = None
+        self.aktiv = True
         self.erhalten = False
+        self.db_id = None
 
     def neu(self, rechnungen, db):
         """Neue Beihilfe-Einreichung erstellen."""
@@ -473,7 +511,7 @@ class BeihilfePaket:
 
     def __str__(self):
         """Ausgabe der Beihilfe-Einreichung."""
-        return f"Beihilfe-Einreichung: {self.db_id}\n Betrag: {self.betrag} €\nErhalten: {self.erhalten}"
+        return f"Beihilfe-Einreichung: {self.db_id}\nDatum: {self.datum}\nBetrag: {self.betrag} €\nErhalten: {self.erhalten}"
         
 
 class PKVPaket:
@@ -482,7 +520,10 @@ class PKVPaket:
     def __init__(self):
         """Initialisierung der PKV-Einreichung."""
         self.betrag = 0
+        self.datum = None
+        self.aktiv = True
         self.erhalten = False
+        self.db_id = None
 
     def neu(self, rechnungen, db):
         """Neue PKV-Einreichung erstellen."""
@@ -509,7 +550,7 @@ class PKVPaket:
 
     def __str__(self):
         """Ausgabe der PKV-Einreichung."""
-        return f"PKV-Einreichung: {self.db_id}\n Betrag: {self.betrag} €\nErhalten: {self.erhalten}"
+        return f"PKV-Einreichung: {self.db_id}\nDatum: {self.datum}\nBetrag: {self.betrag} €\nErhalten: {self.erhalten}"
 
 
 class Arzt:
@@ -518,6 +559,7 @@ class Arzt:
     def __init__(self):
         """Initialisierung des Arztes."""
         self.name = None
+        self.db_id = None
 
     def neu(self, db):
         """Neuen Arzt erstellen."""

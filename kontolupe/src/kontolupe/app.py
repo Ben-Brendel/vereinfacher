@@ -28,22 +28,73 @@ class Kontolupe(toga.App):
         super().__init__(*args, **kwargs)
         """Initialisierung der Anwendung."""
 
-        # Create the content boxes
-        #self.create_main_box()      
-        #self.create_form_box()
+    def erzeuge_startseite(self):
+        """Erzeugt die Startseite der Anwendung."""
+
+        # Container für die Startseite
+        self.box_startseite = toga.Box(style=Pack(direction=COLUMN))
+        
+        # Bereich, der die Summe der offenen Buchungen anzeigt
+        label_start_summe_text = toga.Label('Summe offener Buchungen: ')
+        self.label_start_summe_zahl = toga.Label('100,00 €')
+        box_startseite_summe = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_startseite_summe.add(label_start_summe_text)
+        box_startseite_summe.add(self.label_start_summe_zahl)
+        self.box_startseite.add(box_startseite_summe)
+
+        # Bereich der Arztrechnungen
+        label_start_arztrechnungen = toga.Label('Arztrechnungen')
+        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen')
+        button_start_arztrechnungen_neu = toga.Button('Neu')
+        box_startseite_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_anzeigen)
+        box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_neu)
+        box_startseite_arztrechnungen = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        box_startseite_arztrechnungen.add(label_start_arztrechnungen)
+        box_startseite_arztrechnungen.add(box_startseite_arztrechnungen_buttons)
+        self.box_startseite.add(box_startseite_arztrechnungen)
+
+        # Bereich der Beihilfe-Einreichungen
+        label_start_beihilfe = toga.Label('Beihilfe-Einreichungen')
+        button_start_beihilfe_anzeigen = toga.Button('Anzeigen')
+        button_start_beihilfe_neu = toga.Button('Neu')
+        box_startseite_beihilfe_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
+        box_startseite_beihilfe_buttons.add(button_start_beihilfe_neu)
+        box_startseite_beihilfe = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        box_startseite_beihilfe.add(label_start_beihilfe)
+        box_startseite_beihilfe.add(box_startseite_beihilfe_buttons)
+        self.box_startseite.add(box_startseite_beihilfe)
+
+        # Bereich der PKV-Einreichungen
+        label_start_pkv = toga.Label('PKV-Einreichungen')
+        button_start_pkv_anzeigen = toga.Button('Anzeigen')
+        button_start_pkv_neu = toga.Button('Neu')
+        box_startseite_pkv_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
+        box_startseite_pkv_buttons.add(button_start_pkv_neu)
+        box_startseite_pkv = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        box_startseite_pkv.add(label_start_pkv)
+        box_startseite_pkv.add(box_startseite_pkv_buttons)
+        self.box_startseite.add(box_startseite_pkv)
+
 
     def startup(self):
-        """Laden der Daten und Anzeigen des Hauptfensters."""
+        """Laden der Daten, Erzeugen der GUI-Elemente und des Hauptfensters."""
         self.db = Datenbank()
 
-        # lade alle Daten aus der Datenbank
+        # Lade alle Daten aus der Datenbank
         self.arztrechnungen = self.db.lade_arztrechnungen()
         self.aerzte = self.db.lade_aerzte()
         self.beihilfepakete = self.db.lade_beihilfepakete()
         self.pkvpakete = self.db.lade_pkvpakete()
 
-        # create the main window
+        # Erzeuge alle GUI-Elemente
+        self.erzeuge_startseite()
+
+        # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)
+        self.main_window.content = self.box_startseite
         self.main_window.show()
         
 

@@ -1,23 +1,187 @@
-App Layout
+- Hochkant forcieren
+- Icons
+- Hilfetext
+- Titelleistenmenü mit dreigeteilter Menüführung
+- Hintergrundfarbe
+
+- Zurück-Button bei jeder Unterbox ganz oben
+
+-----------
+Startseite:
+-----------
+
+#####
+Summe offener Buchungen: xxx,xx €
+#####
+* Bei Anklicken Öffnen der Liste aller offener Buchungen
+
+#####
+Arztrechnungen
+#####
+# Rechnungen anzeigen -> Öffnet Liste aller aktiven Arztrechnungen mit Buttons (Neu, Ändern, Löschen)
+# Neue Rechnung -> Öffnet Formular zur Erstellung einer neuen Rechnung
+
+#####
+Beihilfe
+#####
+# Einreichungen anzeigen -> Öffnet Liste aller aktiven Einreichungen
+# Neue Einreichung -> Öffnet Formular zur Erstellung einer neuen Beihilfe-Einreichung
+
+#####
+PKV
+#####
+# Einreichungen anzeigen -> Öffnet Liste aller aktiven Einreichungen
+# Neue Einreichung -> Öffnet Formular zur Erstellung einer neuen PKV-Einreichung
+
+--------------------------
+Formular Beihilfe/PKV neu:
+--------------------------
+
+#####
+Überschrift
+und Infotext
+#####
+
+#####
+Liste noch nicht eingereichter Rechnungen
+Multiselect
+#####
+
+#####
+Buttons
+# Ausgewählte einreichen
+# Alle einreichen
+# Abbrechen
+#####
+
+-> Erstellung neuer Einreichung und Anzeigen der Einreichungsliste
+
+----------------------
+Formular Rechnung neu:
+----------------------
+
+#####
+Überschrift
+und Infotext
+#####
+
+#####
+- Betrag
+- Rechnungsdatum
+- Arzt (Auswahlfeld)
+- Notiz
+- Beihilfesatz
+#####
+
+#####
+Buttons
+- Speichern
+- Abbrechen
+#####
+
+-> Erstellung neuer Rechnung und Anzeige der Rechnungsliste
+
+----------------
+Liste Rechnungen
+----------------
+
+#####
+Überschrift
+#####
+
+#####
+Liste der Rechnungen
+- Rechnungsdatum
+- Betrag
+- Arzt
+- Checkbox Bezahlt 	(Nein, Geplant, Ja)
+- Checkbox Beihilfe	(Nein, Beantragt, Ja)
+- Checkbox PKV		(Nein, Beantragt, Ja)
+- Notiz als Mouseover?
+- Button "Als bezahlt markieren"
+#####
+
+#####
+Buttons
+- Neu		-> Leeres Formular
+- Bearbeiten	-> Vorausgefülltes Formular
+- Löschen	-> Löschen
+#####
+
+----------------------------------
+Liste Einreichungen Beihilfe / PKV
+----------------------------------
+
+#####
+Überschrift
+#####
+
+#####
+Liste der offenen Einreichungen
+- Datum
+- Betrag
+(- Einzelrechnungen)
+- Button "Als erhalten markieren"
+#####
+
+#####
+Buttons
+- Neu		-> Leeres Formular
+- Bearbeiten	-> Vorausgefülltes Formular
+- Löschen	-> Löschen 
+#####
+
+----------
+Ärzteliste
 ----------
 
-* Bei Öffnen der App Abfrage fälliger Buchungen, dann Abfrage, ob berechneter Kontostand stimmt oder aktualisiert werden muss.
+#####
+Liste der angelegten Ärzte
+#####
 
-* Layout
-- Virtueller Kontostand groß und mit Datumslider
-- Button Kontostand aktualisieren
-- Liste offene Buchungen
-	- ohne Fälligkeit oben
-	- mit Fälligkeit darunter
+#####
+Buttons
+- Neu
+- Bearbeiten
+- Löschen
+#####
 
-- Je Buchung:
-	- Buchung erfolgt
-	- Buchung löschen
-	- Buchung verschieben
+-------------
+Formular Arzt
+-------------
 
-- Button Neue Buchung mit / ohne Fälligkeit
+#####
+Überschrift 
+und Infotext
+#####
 
-- Liste Buchungshistorie - DetailedList
-	- Button Rückgängig
-	- Button löschen
-	- Button alle löschen
+#####
+- Name
+#####
+
+#####
+Buttons
+- Speichern
+- Abbrechen
+#####
+
+-----------------------
+Liste offener Buchungen
+-----------------------
+
+#####
+Überschrift
+und Infotext
+#####
+
+#####
+Liste offener Buchungen
+- Noch nicht bezahlte Arztrechnungen
+- Noch nicht erhaltene Beihilfe-Einreichungen
+- Noch nicht erhaltene PKV-Einreichungen
+#####
+
+#####
+Buttons
+- Bezahlt/Erhalten
+#####
