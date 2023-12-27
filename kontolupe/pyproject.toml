@@ -15,6 +15,7 @@ description = "Behalte den Überblick über Deine Arztrechnungen, wenn Du beihil
 long_description = """Mit Kontolupe kannst Du Deine Arztrechnungen erfassen und verwalten. 
 Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen überwachen. 
 Die App ist für die private Nutzung kostenlos."""
+
 icon = "src/kontolupe/resources/kontolupe"
 sources = [
     "src/kontolupe",

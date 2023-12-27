@@ -14,7 +14,7 @@ class Datenbank:
         self.db_path = Path('kontolupe.db')
 
         # lösche die Datei der Datenbank
-        self.db_path.unlink()
+        #self.db_path.unlink()
 
         # Datenbank erstellen
         self.create_db()
