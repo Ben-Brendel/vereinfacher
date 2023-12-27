@@ -2,6 +2,8 @@
 outline.txt
 resources/drafts
 resources/icons
+src/kontolupe/app_old.py
+src/kontolupe/kontolupe.db
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
