@@ -28,6 +28,14 @@ class Kontolupe(toga.App):
         super().__init__(*args, **kwargs)
         """Initialisierung der Anwendung."""
 
+    def zurueck_zur_startseite(self, widget):
+        """Zurück zur Startseite."""
+        self.main_window.content = self.box_startseite
+
+    def zeige_seite_liste_arztrechnungen(self, widget):
+        """Zeigt die Seite mit der Liste der Arztrechnungen."""
+        self.main_window.content = self.box_seite_liste_arztrechnungen
+
     def erzeuge_startseite(self):
         """Erzeugt die Startseite der Anwendung."""
 
@@ -44,7 +52,7 @@ class Kontolupe(toga.App):
 
         # Bereich der Arztrechnungen
         label_start_arztrechnungen = toga.Label('Arztrechnungen')
-        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen')
+        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen)
         button_start_arztrechnungen_neu = toga.Button('Neu')
         box_startseite_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_anzeigen)
@@ -78,6 +86,23 @@ class Kontolupe(toga.App):
         box_startseite_pkv.add(box_startseite_pkv_buttons)
         self.box_startseite.add(box_startseite_pkv)
 
+    def erzeuge_seite_liste_arztrechnungen(self):
+        """Erzeugt die Seite, auf der die Arztrechnungen angezeigt werden."""
+        self.box_seite_liste_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
+        self.box_seite_liste_arztrechnungen.add(toga.Button('Zurück', on_press=self.zurueck_zur_startseite))
+        self.box_seite_liste_arztrechnungen.add(toga.Label('Arztrechnungen'))
+
+        # Tabelle mit den Arztrechnungen
+        self.tabelle_arztrechnungen = toga.Table(headings=['Datum', 'Arzt', 'Leistung', 'Betrag'], style=Pack(flex=1))
+        self.box_seite_liste_arztrechnungen.add(self.tabelle_arztrechnungen)
+
+        # Buttons für die Arztrechnungen
+        box_seite_liste_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Neu'))
+        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Bearbeiten'))
+        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Löschen'))
+        self.box_seite_liste_arztrechnungen.add(box_seite_liste_arztrechnungen_buttons)        
+
 
     def startup(self):
         """Laden der Daten, Erzeugen der GUI-Elemente und des Hauptfensters."""
@@ -91,6 +116,7 @@ class Kontolupe(toga.App):
 
         # Erzeuge alle GUI-Elemente
         self.erzeuge_startseite()
+        self.erzeuge_seite_liste_arztrechnungen()
 
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)
