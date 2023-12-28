@@ -10,8 +10,8 @@ class Datenbank:
 
     def __init__(self):
         """Initialisierung der Datenbank."""
-        #self.db_path = Path('/data/data/net.biberwerk.kontolupe/databases/kontolupe.db')
-        self.db_path = Path('kontolupe.db')
+        self.db_path = Path('/data/data/net.biberwerk.kontolupe/kontolupe.db')
+        #self.db_path = Path('kontolupe.db')
 
         # lösche die Datei der Datenbank
         #self.db_path.unlink()
