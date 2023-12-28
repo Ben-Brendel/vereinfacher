@@ -19,7 +19,6 @@ from kontolupe.buchungen import *
 #import locale
 #locale.setlocale(locale.LC_ALL, '')
 
-
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
     def __init__(self, *args, **kwargs):
@@ -27,14 +26,95 @@ class Kontolupe(toga.App):
         """Initialisierung der Anwendung."""
 
         self.flag_bearbeite_arztrechnung = False
-        self.arztrechnung_index = 0
+        self.arztrechnung_b_id = 0
+
+        self.flag_bearbeite_arzt = False
+        self.arzt_b_id = 0
+
+        # Erzeuge die Menüleiste
+        gruppe_arztrechnungen = toga.Group('Arztrechnungen', order = 1)
+
+        self.cmd_arztrechnungen_anzeigen = toga.Command(
+            self.zeige_seite_liste_arztrechnungen,
+            'Arztrechnungen anzeigen',
+            tooltip = 'Zeigt die Liste der Arztrechnungen an.',
+            group = gruppe_arztrechnungen,
+            section = 0
+        )
+
+        self.cmd_arztrechnungen_neu = toga.Command(
+            self.zeige_seite_formular_arztrechnungen_neu,
+            'Neue Arztrechnung',
+            tooltip = 'Erstellt eine neue Arztrechnung.',
+            group = gruppe_arztrechnungen,
+            section = 0
+        )
+
+        gruppe_beihilfepakete = toga.Group('Beihilfe-Einreichungen', order = 2)
+
+        self.cmd_beihilfepakete_anzeigen = toga.Command(
+            None,
+            'Beihilfe-Einreichungen anzeigen',
+            tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
+            group = gruppe_beihilfepakete,
+            section = 0
+        )
+
+        self.cmd_beihilfepakete_neu = toga.Command(
+            None,
+            'Neue Beihilfe-Einreichung',
+            tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
+            group = gruppe_beihilfepakete,
+            section = 0
+        )
+
+        gruppe_pkvpakete = toga.Group('PKV-Einreichungen', order = 3)
+
+        self.cmd_pkvpakete_anzeigen = toga.Command(
+            None,
+            'PKV-Einreichungen anzeigen',
+            tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
+            group = gruppe_pkvpakete,
+            section = 0
+        )
+
+        self.cmd_pkvpakete_neu = toga.Command(
+            None,
+            'Neue PKV-Einreichung',
+            tooltip = 'Erstellt eine neue PKV-Einreichung.',
+            group = gruppe_pkvpakete,
+            section = 0
+        )
+
+        gruppe_aerzte = toga.Group('Ärzte', order = 4)
+
+        self.cmd_aerzte_anzeigen = toga.Command(
+            self.zeige_seite_liste_aerzte,
+            'Ärzte anzeigen',
+            tooltip = 'Zeigt die Liste der Ärzte an.',
+            group = gruppe_aerzte,
+            section = 0
+        )
+
+        self.cmd_aerzte_neu = toga.Command(
+            self.zeige_seite_formular_aerzte_neu,
+            'Neuer Arzt',
+            tooltip = 'Erstellt einen neuen Arzt.',
+            group = gruppe_aerzte,
+            section = 0
+        )
 
     def berechne_summe_offene_buchungen(self):
         """Berechnet die Summe der offenen Buchungen."""
+        
         summe = 0
         for arztrechnung in self.arztrechnungen:
             if arztrechnung.bezahlt == False:
                 summe -= arztrechnung.betrag
+            if arztrechnung.beihilfe_id == None:
+                summe += arztrechnung.betrag * (arztrechnung.beihilfesatz / 100)
+            if arztrechnung.pkv_id == None:
+                summe += arztrechnung.betrag * (1 - (arztrechnung.beihilfesatz / 100))
         
         for beihilfepaket in self.beihilfepakete:
             if beihilfepaket.erhalten == False:
@@ -133,14 +213,14 @@ class Kontolupe(toga.App):
     def erzeuge_seite_formular_arztrechnungen(self):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Arztrechnung."""
         self.box_seite_formular_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
-        self.box_seite_formular_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_startseite))
+        self.box_seite_formular_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_arztrechnungen))
         self.label_formular_arztrechnungen = toga.Label('Neue Arztrechnung')
         self.box_seite_formular_arztrechnungen.add(self.label_formular_arztrechnungen)
 
         # Bereich zur Eingabe des Betrags
         box_formular_arztrechnungen_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_formular_arztrechnungen_betrag.add(toga.Label('Betrag: '))
-        self.input_formular_arztrechnungen_betrag = toga.NumberInput(min=0, max=1000000, step=0.01, value=0)
+        self.input_formular_arztrechnungen_betrag = toga.NumberInput(min=0, max=1000000, step=1, value=0)
         box_formular_arztrechnungen_betrag.add(self.input_formular_arztrechnungen_betrag)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_betrag)
 
@@ -200,7 +280,7 @@ class Kontolupe(toga.App):
         # Setze die Eingabefelder zurück
         self.input_formular_arztrechnungen_betrag.value = 0
         self.input_formular_arztrechnungen_rechnungsdatum.value = datetime.date.today()
-        #self.input_formular_arztrechnungen_arzt.value = self.aerzte[0]
+        self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[0] if len(self.aerzte_liste) > 0 else None
         self.input_formular_arztrechnungen_beihilfesatz.value = 0
         self.input_formular_arztrechnungen_notiz.value = ''
 
@@ -218,14 +298,20 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Bearbeiten einer Arztrechnung."""
 
         # Ermittle den Index der ausgewählten Arztrechnung
-        self.arztrechnung_index = self.index_auswahl(self.tabelle_arztrechnungen)
+        self.arztrechnung_b_id = self.index_auswahl(self.tabelle_arztrechnungen)
 
         # Befülle die Eingabefelder
-        self.input_formular_arztrechnungen_betrag.value = self.arztrechnungen[self.arztrechnung_index].betrag
-        self.input_formular_arztrechnungen_rechnungsdatum.value = self.arztrechnungen[self.arztrechnung_index].rechnungsdatum
-        #self.input_formular_arztrechnungen_arzt.value = self.arztrechnungen[self.arztrechnung_index].arzt_id
-        self.input_formular_arztrechnungen_beihilfesatz.value = self.arztrechnungen[self.arztrechnung_index].beihilfesatz
-        self.input_formular_arztrechnungen_notiz.value = self.arztrechnungen[self.arztrechnung_index].notiz
+        self.input_formular_arztrechnungen_betrag.value = self.arztrechnungen[self.arztrechnung_b_id].betrag
+        self.input_formular_arztrechnungen_rechnungsdatum.value = self.arztrechnungen[self.arztrechnung_b_id].rechnungsdatum
+        self.input_formular_arztrechnungen_beihilfesatz.value = self.arztrechnungen[self.arztrechnung_b_id].beihilfesatz
+        self.input_formular_arztrechnungen_notiz.value = self.arztrechnungen[self.arztrechnung_b_id].notiz
+
+        # Eingabefeld des Arztnamens befüllen
+        if self.aerzte != None:
+            for arzt in self.aerzte:
+                if arzt.db_id == self.arztrechnungen[self.arztrechnung_b_id].arzt_id:
+                    self.input_formular_arztrechnungen_arzt.value = arzt.name
+                    break
 
         # Setze das Flag
         self.flag_bearbeite_arztrechnung = True
@@ -240,7 +326,7 @@ class Kontolupe(toga.App):
     def arztrechnung_speichern(self, widget):
         """Erstellt und speichert eine neue Arztrechnung."""
         # Ermittle die Id des Arztes
-        arzt_id = 0
+        arzt_id = None
         for arzt in self.aerzte:
             if arzt.name == self.input_formular_arztrechnungen_arzt.value:
                 arzt_id = arzt.db_id
@@ -268,22 +354,25 @@ class Kontolupe(toga.App):
             ])
         else:
             # Bearbeite die Arztrechnung
-            self.arztrechnungen[self.arztrechnung_index].rechnungsdatum = self.input_formular_arztrechnungen_rechnungsdatum.value
-            self.arztrechnungen[self.arztrechnung_index].arzt_id = arzt_id
-            self.arztrechnungen[self.arztrechnung_index].notiz = self.input_formular_arztrechnungen_notiz.value
-            self.arztrechnungen[self.arztrechnung_index].betrag = float(self.input_formular_arztrechnungen_betrag.value)
-            self.arztrechnungen[self.arztrechnung_index].beihilfesatz = float(self.input_formular_arztrechnungen_beihilfesatz.value)
+            self.arztrechnungen[self.arztrechnung_b_id].rechnungsdatum = self.input_formular_arztrechnungen_rechnungsdatum.value
+            self.arztrechnungen[self.arztrechnung_b_id].arzt_id = arzt_id
+            self.arztrechnungen[self.arztrechnung_b_id].notiz = self.input_formular_arztrechnungen_notiz.value
+            self.arztrechnungen[self.arztrechnung_b_id].betrag = float(self.input_formular_arztrechnungen_betrag.value)
+            self.arztrechnungen[self.arztrechnung_b_id].beihilfesatz = float(self.input_formular_arztrechnungen_beihilfesatz.value)
 
             # Speichere die Arztrechnung in der Datenbank
-            self.arztrechnungen[self.arztrechnung_index].speichern(self.db)
+            self.arztrechnungen[self.arztrechnung_b_id].speichern(self.db)
 
             # Aktualisiere die Tabelle
-            self.arztrechnungen_liste[self.arztrechnung_index] = [
-                self.arztrechnungen[self.arztrechnung_index].rechnungsdatum, 
+            self.arztrechnungen_liste[self.arztrechnung_b_id] = [
+                self.arztrechnungen[self.arztrechnung_b_id].rechnungsdatum, 
                 self.input_formular_arztrechnungen_arzt.value, 
-                self.arztrechnungen[self.arztrechnung_index].notiz, 
-                self.arztrechnungen[self.arztrechnung_index].betrag
+                self.arztrechnungen[self.arztrechnung_b_id].notiz, 
+                self.arztrechnungen[self.arztrechnung_b_id].betrag
             ]
+
+            # Flag zurücksetzen
+            self.flag_bearbeite_arztrechnung = False
 
             # TODO: Aktualisiere verknüpfte Beihilfe- und PKV-Einreichungen
 
@@ -317,6 +406,143 @@ class Kontolupe(toga.App):
             # TODO: Aktualisiere verknüpfte Beihilfe- und PKV-Einreichungen
 
 
+    def erzeuge_seite_liste_aerzte(self):
+        """Erzeugt die Seite, auf der die Ärzte angezeigt werden."""
+        self.box_seite_liste_aerzte = toga.Box(style=Pack(direction=COLUMN))
+        self.box_seite_liste_aerzte.add(toga.Button('Zurück', on_press=self.zeige_startseite))
+        self.box_seite_liste_aerzte.add(toga.Label('Ärzte'))
+
+        # Tabelle mit den Arztrechnungen
+        self.tabelle_aerzte = toga.Table(
+            headings=['Arzt'], 
+            data=self.aerzte_liste,
+            style=Pack(flex=1)
+        )
+        self.box_seite_liste_aerzte.add(self.tabelle_aerzte)
+
+        # Buttons für die Arztrechnungen
+        box_seite_liste_aerzte_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_seite_liste_aerzte_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_aerzte_neu))
+        box_seite_liste_aerzte_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_aerzte_bearbeiten))
+        box_seite_liste_aerzte_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arzt_loeschen))
+        self.box_seite_liste_aerzte.add(box_seite_liste_aerzte_buttons)   
+
+
+    def zeige_seite_liste_aerzte(self, widget):
+        """Zeigt die Seite mit der Liste der Ärzte."""
+        self.main_window.content = self.box_seite_liste_aerzte
+
+
+    def erzeuge_seite_formular_aerzte(self):
+        """Erzeugt das Formular zum Erstellen und Bearbeiten eines Arztes."""
+        self.box_seite_formular_aerzte = toga.Box(style=Pack(direction=COLUMN))
+        self.box_seite_formular_aerzte.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_aerzte))
+        self.label_formular_aerzte = toga.Label('Neuer Arzt')
+        self.box_seite_formular_aerzte.add(self.label_formular_aerzte)
+
+        # Bereich zur Eingabe der Notiz
+        box_formular_aerzte_name = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_aerzte_name.add(toga.Label('Name des Arztes: '))
+        self.input_formular_aerzte_name = toga.TextInput()
+        box_formular_aerzte_name.add(self.input_formular_aerzte_name)
+        self.box_seite_formular_aerzte.add(box_formular_aerzte_name)
+
+        # Bereich der Buttons
+        box_formular_aerzte_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_aerzte_buttons.add(toga.Button('Speichern', on_press=self.arzt_speichern))
+        box_formular_aerzte_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_aerzte))
+        self.box_seite_formular_aerzte.add(box_formular_aerzte_buttons)
+
+
+    def zeige_seite_formular_aerzte_neu(self, widget):
+        """Zeigt die Seite zum Erstellen eines Arztes."""
+        # Setze die Eingabefelder zurück
+        self.input_formular_aerzte_name.value = ''
+
+        # Zurücksetzen des Flags
+        self.flag_bearbeite_arzt = False
+
+        # Setze die Überschrift
+        self.label_formular_aerzte.text = 'Neuer Arzt'
+
+        # Zeige die Seite
+        self.main_window.content = self.box_seite_formular_aerzte
+
+
+    def zeige_seite_formular_aerzte_bearbeiten(self, widget):
+        """Zeigt die Seite zum Bearbeiten eines Arztes."""
+        # Ermittle den Index der ausgewählten Arztrechnung
+        self.arzt_b_id = self.index_auswahl(self.tabelle_aerzte)
+
+        # Befülle die Eingabefelder
+        self.input_formular_aerzte_name.value = self.aerzte[self.arzt_b_id].name
+
+        # Setze das Flag
+        self.flag_bearbeite_arzt = True
+
+        # Setze die Überschrift
+        self.label_formular_aerzte.text = 'Arzt bearbeiten'
+
+        # Zeige die Seite
+        self.main_window.content = self.box_seite_formular_aerzte
+
+
+    def arzt_speichern(self, widget):
+        """Erstellt und speichert einen neuen Arzt."""
+        if not self.flag_bearbeite_arzt:
+        # Erstelle einen neuen Arzt
+            neuer_arzt = Arzt()
+            neuer_arzt.name = self.input_formular_aerzte_name.value
+
+            # Speichere den Arzt in der Datenbank
+            neuer_arzt.db_id = self.db.neuer_arzt(neuer_arzt)
+
+            # Füge den Arzt der Liste hinzu
+            self.aerzte.append(neuer_arzt)
+            self.aerzte_liste.append(neuer_arzt.name)
+        else:
+            # Bearbeite den Arzt
+            self.aerzte[self.arzt_b_id].name = self.input_formular_aerzte_name.value
+
+            # Speichere den Arzt in der Datenbank
+            self.aerzte[self.arzt_b_id].speichern(self.db)
+
+            # Aktualisiere die Tabelle
+            self.aerzte_liste[self.arzt_b_id] = self.aerzte[self.arzt_b_id].name
+
+            # Flage zurücksetzen
+            self.flag_bearbeite_arzt = False
+
+            # TODO: Aktualisiere verknüpfte Arztrechnungen
+
+        # Tabelle der Ärzte aktualisieren
+        self.tabelle_aerzte.data = self.aerzte_liste
+        self.input_formular_arztrechnungen_arzt.items = self.aerzte_liste
+
+        # Zeige die Liste der Ärzte
+        self.zeige_seite_liste_aerzte(widget)
+
+    
+    def bestaetige_arzt_loeschen(self, widget):
+        """Bestätigt das Löschen eines Arztes."""
+        if self.tabelle_aerzte.selection:
+            self.main_window.confirm_dialog(
+                'Arzt löschen', 
+                'Soll der ausgewählte Arzt wirklich gelöscht werden?',
+                on_result=self.arzt_loeschen
+            )
+
+    def arzt_loeschen(self, widget, result):
+        """Löscht einen Arzt."""
+        if self.tabelle_aerzte.selection and result:
+            index = self.index_auswahl(self.tabelle_aerzte)
+            self.aerzte[index].loeschen(self.db)
+            del self.aerzte[index]
+            del self.aerzte_liste[index]
+            self.tabelle_aerzte.data = self.aerzte_liste
+            self.input_formular_arztrechnungen_arzt.items = self.aerzte_liste
+
+
     def startup(self):
         """Laden der Daten, Erzeugen der GUI-Elemente und des Hauptfensters."""
         self.db = Datenbank()
@@ -336,10 +562,11 @@ class Kontolupe(toga.App):
         for arztrechnung in self.arztrechnungen:
             # Ermittle den Namen des Arztes
             arzt_name = ''
-            for arzt in self.aerzte:
-                if arzt.db_id == arztrechnung.arzt_id:
-                    arzt_name = arzt.name
-                    break
+            if self.aerzte != None:
+                for arzt in self.aerzte:
+                    if arzt.db_id == arztrechnung.arzt_id:
+                        arzt_name = arzt.name
+                        break
             self.arztrechnungen_liste.append([
                 arztrechnung.rechnungsdatum, 
                 arzt_name,
@@ -359,9 +586,23 @@ class Kontolupe(toga.App):
         self.erzeuge_startseite()
         self.erzeuge_seite_liste_arztrechnungen()
         self.erzeuge_seite_formular_arztrechnungen()
+        self.erzeuge_seite_liste_aerzte()
+        self.erzeuge_seite_formular_aerzte()
+
+        # Erstelle die Menüleiste
+        self.commands.add(self.cmd_arztrechnungen_anzeigen)
+        self.commands.add(self.cmd_arztrechnungen_neu)
+        self.commands.add(self.cmd_beihilfepakete_anzeigen)
+        self.commands.add(self.cmd_beihilfepakete_neu)
+        self.commands.add(self.cmd_pkvpakete_anzeigen)
+        self.commands.add(self.cmd_pkvpakete_neu)
+        self.commands.add(self.cmd_aerzte_anzeigen)
+        self.commands.add(self.cmd_aerzte_neu)
 
         # Erstelle das Hauptfenster
-        self.main_window = toga.MainWindow(title=self.formal_name)
+        self.main_window = toga.MainWindow(title=self.formal_name)        
+
+        # Zeige die Startseite
         self.zeige_startseite(None)
         self.main_window.show()
         
