@@ -24,6 +24,8 @@ test_sources = [
     "tests",
 ]
 
+splash_background_color = "#368ba8"
+
 requires = [
     
 ]

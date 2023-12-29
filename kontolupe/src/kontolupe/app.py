@@ -6,18 +6,22 @@ Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen
 überwachen. Die App ist für die private Nutzung kostenlos.
 """
 
-import datetime
-
 import toga
 from toga.app import AppStartupMethod, OnExitHandler
 from toga.icons import Icon
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 from toga.sources import ListSource
+import itertools
+import datetime
 from kontolupe.buchungen import *
 
 # set localization 
 #import locale
 #locale.setlocale(locale.LC_ALL, '')
+
+# Styles erzeugen
+style_h1 = Pack(font_size=16, font_weight='bold')
+style_h2 = Pack(font_size=12, font_weight='bold')
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -39,7 +43,7 @@ class Kontolupe(toga.App):
             'Arztrechnungen anzeigen',
             tooltip = 'Zeigt die Liste der Arztrechnungen an.',
             group = gruppe_arztrechnungen,
-            section = 0
+            order = 10
         )
 
         self.cmd_arztrechnungen_neu = toga.Command(
@@ -47,7 +51,7 @@ class Kontolupe(toga.App):
             'Neue Arztrechnung',
             tooltip = 'Erstellt eine neue Arztrechnung.',
             group = gruppe_arztrechnungen,
-            section = 0
+            order = 20
         )
 
         gruppe_beihilfepakete = toga.Group('Beihilfe-Einreichungen', order = 2)
@@ -57,7 +61,7 @@ class Kontolupe(toga.App):
             'Beihilfe-Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
             group = gruppe_beihilfepakete,
-            section = 0
+            order = 10
         )
 
         self.cmd_beihilfepakete_neu = toga.Command(
@@ -65,7 +69,7 @@ class Kontolupe(toga.App):
             'Neue Beihilfe-Einreichung',
             tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
             group = gruppe_beihilfepakete,
-            section = 0
+            order = 20
         )
 
         gruppe_pkvpakete = toga.Group('PKV-Einreichungen', order = 3)
@@ -75,7 +79,7 @@ class Kontolupe(toga.App):
             'PKV-Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
             group = gruppe_pkvpakete,
-            section = 0
+            order = 10
         )
 
         self.cmd_pkvpakete_neu = toga.Command(
@@ -83,7 +87,7 @@ class Kontolupe(toga.App):
             'Neue PKV-Einreichung',
             tooltip = 'Erstellt eine neue PKV-Einreichung.',
             group = gruppe_pkvpakete,
-            section = 0
+            order = 20
         )
 
         gruppe_aerzte = toga.Group('Ärzte', order = 4)
@@ -93,7 +97,7 @@ class Kontolupe(toga.App):
             'Ärzte anzeigen',
             tooltip = 'Zeigt die Liste der Ärzte an.',
             group = gruppe_aerzte,
-            section = 0
+            order = 10
         )
 
         self.cmd_aerzte_neu = toga.Command(
@@ -101,7 +105,7 @@ class Kontolupe(toga.App):
             'Neuer Arzt',
             tooltip = 'Erstellt einen neuen Arzt.',
             group = gruppe_aerzte,
-            section = 0
+            order = 20
         )
 
     def berechne_summe_offene_buchungen(self):
@@ -134,17 +138,17 @@ class Kontolupe(toga.App):
         self.box_startseite = toga.Box(style=Pack(direction=COLUMN))
         
         # Bereich, der die Summe der offenen Buchungen anzeigt
-        label_start_summe_text = toga.Label('Summe offener Buchungen: ')
-        self.label_start_summe_zahl = toga.Label('{:.2f} €'.format(self.berechne_summe_offene_buchungen()))
+        label_start_summe_text = toga.Label('Summe offener Buchungen: ', style=style_h1)
+        self.label_start_summe_zahl = toga.Label('{:.2f} €'.format(self.berechne_summe_offene_buchungen()), style=style_h1)
         box_startseite_summe = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_summe.add(label_start_summe_text)
         box_startseite_summe.add(self.label_start_summe_zahl)
         self.box_startseite.add(box_startseite_summe)
 
         # Bereich der Arztrechnungen
-        label_start_arztrechnungen = toga.Label('Arztrechnungen')
-        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen)
-        button_start_arztrechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu)
+        label_start_arztrechnungen = toga.Label('Arztrechnungen', style=style_h2)
+        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(width=200))
+        button_start_arztrechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(width=200))
         box_startseite_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_anzeigen)
         box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_neu)
@@ -154,9 +158,9 @@ class Kontolupe(toga.App):
         self.box_startseite.add(box_startseite_arztrechnungen)
 
         # Bereich der Beihilfe-Einreichungen
-        label_start_beihilfe = toga.Label('Beihilfe-Einreichungen')
-        button_start_beihilfe_anzeigen = toga.Button('Anzeigen')
-        button_start_beihilfe_neu = toga.Button('Neu')
+        label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_h2)
+        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=Pack(width=200))
+        button_start_beihilfe_neu = toga.Button('Neu', style=Pack(width=200))
         box_startseite_beihilfe_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_neu)
@@ -166,9 +170,9 @@ class Kontolupe(toga.App):
         self.box_startseite.add(box_startseite_beihilfe)
 
         # Bereich der PKV-Einreichungen
-        label_start_pkv = toga.Label('PKV-Einreichungen')
-        button_start_pkv_anzeigen = toga.Button('Anzeigen')
-        button_start_pkv_neu = toga.Button('Neu')
+        label_start_pkv = toga.Label('PKV-Einreichungen', style=style_h2)
+        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=Pack(width=200))
+        button_start_pkv_neu = toga.Button('Neu', style=Pack(width=200))
         box_startseite_pkv_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
         box_startseite_pkv_buttons.add(button_start_pkv_neu)
@@ -187,19 +191,18 @@ class Kontolupe(toga.App):
         """Erzeugt die Seite, auf der die Arztrechnungen angezeigt werden."""
         self.box_seite_liste_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_liste_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_arztrechnungen.add(toga.Label('Arztrechnungen'))
+        self.box_seite_liste_arztrechnungen.add(toga.Label('Arztrechnungen', style=style_h1))
 
         # Tabelle mit den Arztrechnungen
+        self.tabelle_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
         self.tabelle_arztrechnungen = toga.Table(
-            headings    = ['Betrag', 'Info', 'Bezahlt', 'Buchungsdatum', 'Beihilfe ID', 'PKV ID'],
-            accessors   = ['betrag', 'info', 'bezahlt', 'buchungsdatum', 'beihilfe_id', 'pkv_id'],
+            headings    = ['Betrag', 'Info', 'Buchungsdatum', 'Bezahlt', 'Beihilfe', 'PKV'],
+            accessors   = ['betrag_euro', 'info', 'buchungsdatum', 'bezahlt_text', 'beihilfe_eingereicht', 'pkv_eingereicht'],
             data        = self.arztrechnungen_liste,
-            style       = Pack(flex=1)
+            style=Pack(width=800, flex=1)
         )
-        self.box_seite_liste_arztrechnungen.add(self.tabelle_arztrechnungen)
-        
-        for d in self.tabelle_arztrechnungen.data:
-            print(d)
+        self.tabelle_arztrechnungen_container.content = self.tabelle_arztrechnungen
+        self.box_seite_liste_arztrechnungen.add(self.tabelle_arztrechnungen_container)
 
         # Buttons für die Arztrechnungen
         box_seite_liste_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
@@ -218,7 +221,7 @@ class Kontolupe(toga.App):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Arztrechnung."""
         self.box_seite_formular_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_formular_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_arztrechnungen))
-        self.label_formular_arztrechnungen = toga.Label('Neue Arztrechnung')
+        self.label_formular_arztrechnungen = toga.Label('Neue Arztrechnung', style=style_h1)
         self.box_seite_formular_arztrechnungen.add(self.label_formular_arztrechnungen)
 
         # Bereich zur Eingabe des Rechnungsdatums
@@ -388,10 +391,6 @@ class Kontolupe(toga.App):
 
             # TODO: Aktualisiere verknüpfte Beihilfe- und PKV-Einreichungen
 
-
-        # Tabelle der Arztrechnungen aktualisieren
-        #self.tabelle_arztrechnungen.data = self.arztrechnungen_liste
-
         # Zeige die Startseite
         self.zeige_seite_liste_arztrechnungen(widget)
 
@@ -422,7 +421,7 @@ class Kontolupe(toga.App):
         """Erzeugt die Seite, auf der die Ärzte angezeigt werden."""
         self.box_seite_liste_aerzte = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_liste_aerzte.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_aerzte.add(toga.Label('Ärzte'))
+        self.box_seite_liste_aerzte.add(toga.Label('Ärzte', style=style_h1))
 
         # Tabelle mit den Ärzten
         self.tabelle_aerzte = toga.Table(
@@ -449,7 +448,7 @@ class Kontolupe(toga.App):
         """Erzeugt das Formular zum Erstellen und Bearbeiten eines Arztes."""
         self.box_seite_formular_aerzte = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_formular_aerzte.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_aerzte))
-        self.label_formular_aerzte = toga.Label('Neuer Arzt')
+        self.label_formular_aerzte = toga.Label('Neuer Arzt', style=style_h1)
         self.box_seite_formular_aerzte.add(self.label_formular_aerzte)
 
         # Bereich zur Eingabe des Namens
@@ -565,9 +564,10 @@ class Kontolupe(toga.App):
 
     def arztrechnungen_liste_anfuegen(self, arztrechnung):
         """Fügt der Liste der Arztrechnungen eine neue Arztrechnung hinzu."""
-        self.arztrechnungen_liste.append([{
+        self.arztrechnungen_liste.append({
                 'db_id': arztrechnung.db_id,
                 'betrag': arztrechnung.betrag,
+                'betrag_euro': '{:.2f} €'.format(arztrechnung.betrag),
                 'rechnungsdatum': arztrechnung.rechnungsdatum,
                 'arzt_id': arztrechnung.arzt_id,
                 'notiz': arztrechnung.notiz,
@@ -576,15 +576,19 @@ class Kontolupe(toga.App):
                 'beihilfesatz': arztrechnung.beihilfesatz,
                 'buchungsdatum': arztrechnung.buchungsdatum,
                 'bezahlt': arztrechnung.bezahlt,
+                'bezahlt_text': 'Ja' if arztrechnung.bezahlt else 'Nein',
                 'beihilfe_id': arztrechnung.beihilfe_id,
-                'pkv_id': arztrechnung.pkv_id
-            }])
+                'beihilfe_eingereicht': 'Ja' if arztrechnung.beihilfe_id else 'Nein',
+                'pkv_id': arztrechnung.pkv_id,
+                'pkv_eingereicht': 'Ja' if arztrechnung.pkv_id else 'Nein'
+            })
 
     def arztrechnungen_liste_aendern(self, arztrechnung, rg_id):
         """Ändert ein Element der Liste der Arztrechnungen."""
-        self.arztrechnungen_liste[rg_id] = [{
+        self.arztrechnungen_liste[rg_id] = {
                 'db_id': arztrechnung.db_id,
                 'betrag': arztrechnung.betrag,
+                'betrag_euro': '{:.2f} €'.format(arztrechnung.betrag),
                 'rechnungsdatum': arztrechnung.rechnungsdatum,
                 'arzt_id': arztrechnung.arzt_id,
                 'notiz': arztrechnung.notiz,
@@ -593,9 +597,37 @@ class Kontolupe(toga.App):
                 'beihilfesatz': arztrechnung.beihilfesatz,
                 'buchungsdatum': arztrechnung.buchungsdatum,
                 'bezahlt': arztrechnung.bezahlt,
+                'bezahlt_text': 'Ja' if arztrechnung.bezahlt else 'Nein',
                 'beihilfe_id': arztrechnung.beihilfe_id,
-                'pkv_id': arztrechnung.pkv_id
-            }]
+                'beihilfe_eingereicht': 'Ja' if arztrechnung.beihilfe_id else 'Nein',
+                'pkv_id': arztrechnung.pkv_id,
+                'pkv_eingereicht': 'Ja' if arztrechnung.pkv_id else 'Nein'
+            }
+        
+
+    def arztrechnungen_liste_erzeugen(self):
+        """Erzeugt die Liste für die Arztrechnungen."""
+        self.arztrechnungen_liste = ListSource(accessors=[
+            'db_id', 
+            'betrag', 
+            'betrag_euro',
+            'rechnungsdatum', 
+            'arzt_id', 
+            'notiz', 
+            'arzt_name', 
+            'info', 
+            'beihilfesatz', 
+            'buchungsdatum', 
+            'bezahlt', 
+            'bezahlt_text',
+            'beihilfe_id', 
+            'beihilfe_eingereicht',
+            'pkv_id'
+            'pkv_eingereicht'
+        ])
+
+        for arztrechnung in self.arztrechnungen:            
+            self.arztrechnungen_liste_anfuegen(arztrechnung)
 
 
     def startup(self):
@@ -608,27 +640,13 @@ class Kontolupe(toga.App):
         self.beihilfepakete = self.db.lade_beihilfepakete()
         self.pkvpakete = self.db.lade_pkvpakete()
 
+        # Erzeuge die ListSources für die GUI
+        self.arztrechnungen_liste_erzeugen()
+
         # Umwandlung der Daten in Listen für die GUI
         self.aerzte_liste = []
         for arzt in self.aerzte:
             self.aerzte_liste.append(arzt.name)
-
-        self.arztrechnungen_liste = ListSource(accessors=[
-            'db_id', 
-            'betrag', 
-            'rechnungsdatum', 
-            'arzt_id', 
-            'notiz', 
-            'arzt_name', 
-            'info', 
-            'beihilfesatz', 
-            'buchungsdatum', 
-            'bezahlt', 
-            'beihilfe_id', 
-            'pkv_id'
-        ])
-        for arztrechnung in self.arztrechnungen:            
-            self.arztrechnungen_liste_anfuegen(arztrechnung)
 
         self.beihilfepakete_liste = []
         for beihilfepaket in self.beihilfepakete:
@@ -658,9 +676,18 @@ class Kontolupe(toga.App):
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)      
 
-        # Formatiere alle erzeugten Inhaltselemente
-        for w in self.widgets:
-            w.style.padding = 10
+        # Alle Widgets in eine Liste packen
+        all_children = itertools.chain(
+            self.box_startseite.children,
+            self.box_seite_liste_arztrechnungen.children,
+            self.box_seite_formular_arztrechnungen.children,
+            self.box_seite_liste_aerzte.children,
+            self.box_seite_formular_aerzte.children
+        )           
+
+        # Format all generated content elements
+        for w in all_children:
+            w.style.padding = 10 
 
         # Zeige die Startseite
         self.zeige_startseite(None)
