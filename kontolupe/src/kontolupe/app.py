@@ -148,7 +148,7 @@ class Kontolupe(toga.App):
         self.box_startseite = toga.Box(style=Pack(direction=COLUMN))
         
         # Bereich, der die Summe der offenen Buchungen anzeigt
-        label_start_summe_text = toga.Label('Summe offener Buchungen: ', style=style_h1)
+        label_start_summe_text = toga.Label('Offener Betrag: ', style=style_h1)
         self.label_start_summe_zahl = toga.Label('{:.2f} €'.format(self.berechne_summe_offene_buchungen()), style=style_h1)
         box_startseite_summe = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_summe.add(label_start_summe_text)
@@ -244,7 +244,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Betrags
         box_formular_arztrechnungen_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_formular_arztrechnungen_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
-        self.input_formular_arztrechnungen_betrag = toga.NumberInput(min=0, max=1000000, step=1, value=0, style=Pack(flex=2))
+        self.input_formular_arztrechnungen_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2))
         box_formular_arztrechnungen_betrag.add(self.input_formular_arztrechnungen_betrag)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_betrag)
 
@@ -567,9 +567,9 @@ class Kontolupe(toga.App):
             del self.aerzte[index]
             del self.aerzte_liste[index]
 
-        # Arztrechnungen aktualisieren
-        self.arztrechnungen_liste_aktualisieren()
-        self.input_formular_aerzte_name.items = self.aerzte_liste
+            # Arztrechnungen aktualisieren
+            self.arztrechnungen_aktualisieren()
+            self.input_formular_aerzte_name.items = self.aerzte_liste
 
 
     def erzeuge_seite_liste_beihilfepakete(self):
@@ -616,10 +616,22 @@ class Kontolupe(toga.App):
         box_formular_beihilfepakete_datum.add(self.input_formular_beihilfepakete_datum)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_datum)
 
+        # Bereich zur Auswahl der zugehörigen Arztrechnungen
+        self.formular_beihilfepakete_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
+        self.formular_beihilfe_tabelle_arztrechnungen = toga.Table(
+            headings        = ['Info', 'Betrag', 'Bezahlt'],
+            accessors       = ['info', 'betrag_euro', 'bezahlt_text'],
+            data            = self.arztrechnungen_liste,
+            multiple_select = True,
+            style           = Pack(height=300, flex=1)
+        )
+        self.formular_beihilfepakete_arztrechnungen_container.content = self.formular_beihilfe_tabelle_arztrechnungen
+        self.box_seite_formular_beihilfepakete.add(self.formular_beihilfepakete_arztrechnungen_container)
+
         # Bereich zur Eingabe des Betrags
         box_formular_beihilfepakete_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_formular_beihilfepakete_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
-        self.input_formular_beihilfepakete_betrag = toga.NumberInput(min=0, max=1000000, step=1, value=0, style=Pack(flex=2))
+        self.input_formular_beihilfepakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2))
         box_formular_beihilfepakete_betrag.add(self.input_formular_beihilfepakete_betrag)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_betrag)
 
@@ -730,8 +742,7 @@ class Kontolupe(toga.App):
             self.beihilfepakete[index].loeschen(self.db)
             del self.beihilfepakete[index]
             del self.beihilfepakete_liste[index]
-
-        # TODO: Aktualisiere verknüpfte Arztrechnungen
+            self.arztrechnungen_aktualisieren()
 
 
     def arzt_name(self, arzt_id):
@@ -829,6 +840,57 @@ class Kontolupe(toga.App):
                 'pkv_eingereicht': 'Ja' if arztrechnung.pkv_id else 'Nein'
             })
         
+
+    def arztrechnungen_aktualisieren(self):
+        """Aktualisiert die referenzierten Werte in dden Arztrechnungen und speichert sie in der Datenbank."""
+
+        for arztrechnung in self.arztrechnungen:
+
+            # Aktualisiere die Beihilfe
+            if arztrechnung.beihilfe_id:
+                # Überprüfe ob die Beihilfe noch existiert
+                beihilfepaket_vorhanden = False
+                for beihilfepaket in self.beihilfepakete:
+                    if beihilfepaket.db_id == arztrechnung.beihilfe_id:
+                        beihilfepaket_vorhanden = True
+                        break
+                
+                # Wenn die Beihilfe nicht mehr existiert, setze die Beihilfe zurück
+                if not beihilfepaket_vorhanden:
+                    arztrechnung.beihilfe_id = None
+
+            # Aktualisiere die PKV
+            if arztrechnung.pkv_id:
+                # Überprüfe ob die PKV noch existiert
+                pkvpaket_vorhanden = False
+                for pkvpaket in self.pkvpakete:
+                    if pkvpaket.db_id == arztrechnung.pkv_id:
+                        pkvpaket_vorhanden = True
+                        break
+                
+                # Wenn die PKV nicht mehr existiert, setze die PKV zurück
+                if not pkvpaket_vorhanden:
+                    arztrechnung.pkv_id = None
+
+            # Aktualisiere den Arzt
+            if arztrechnung.arzt_id:
+                # Überprüfe ob der Arzt noch existiert
+                arzt_vorhanden = False
+                for arzt in self.aerzte:
+                    if arzt.db_id == arztrechnung.arzt_id:
+                        arzt_vorhanden = True
+                        break
+                
+                # Wenn der Arzt nicht mehr existiert, setze den Arzt zurück
+                if not arzt_vorhanden:
+                    arztrechnung.arzt_id = None
+            
+            # Aktualisierte Arztrechnung speichern
+            arztrechnung.speichern(self.db)
+
+        # Aktualisiere die Liste der Arztrechnungen
+        self.arztrechnungen_liste_aktualisieren()
+
 
     def arztrechnungen_liste_aktualisieren(self):
         """Aktualisiert die referenzierten Werte in der Liste der Arztrechnungen."""
