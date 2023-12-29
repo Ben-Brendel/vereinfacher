@@ -198,10 +198,10 @@ class Kontolupe(toga.App):
         # Tabelle mit den Arztrechnungen
         self.tabelle_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
         self.tabelle_arztrechnungen = toga.Table(
-            headings    = ['Betrag', 'Info', 'Buchungsdatum', 'Bezahlt', 'Beihilfe', 'PKV'],
-            accessors   = ['betrag_euro', 'info', 'buchungsdatum', 'bezahlt_text', 'beihilfe_eingereicht', 'pkv_eingereicht'],
+            headings    = ['Info', 'Betrag', 'Bezahlt', 'Beihilfe', 'PKV'],
+            accessors   = ['info', 'betrag_euro', 'bezahlt_text', 'beihilfe_eingereicht', 'pkv_eingereicht'],
             data        = self.arztrechnungen_liste,
-            style=Pack(width=800, flex=1)
+            style=Pack(width=600, flex=1)
         )
         self.tabelle_arztrechnungen_container.content = self.tabelle_arztrechnungen
         self.box_seite_liste_arztrechnungen.add(self.tabelle_arztrechnungen_container)
@@ -303,7 +303,7 @@ class Kontolupe(toga.App):
         # Setze die Eingabefelder zurück
         self.input_formular_arztrechnungen_betrag.value = 0
         self.input_formular_arztrechnungen_rechnungsdatum.value = None
-        self.input_formular_arztrechnungen_arzt.value = None
+        self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[0]
         self.input_formular_arztrechnungen_beihilfesatz.value = 0
         self.input_formular_arztrechnungen_notiz.value = ''
         self.input_formular_arztrechnungen_buchungsdatum.value = None
@@ -355,12 +355,6 @@ class Kontolupe(toga.App):
 
     def arztrechnung_speichern(self, widget):
         """Erstellt und speichert eine neue Arztrechnung."""
-        # Ermittle die Id des Arztes
-        # arzt_id = None
-        # for arzt in self.aerzte:
-        #     if arzt.name == self.input_formular_arztrechnungen_arzt.value:
-        #         arzt_id = arzt.db_id
-        #         break
 
         if not self.flag_bearbeite_arztrechnung:
         # Erstelle eine neue Arztrechnung
