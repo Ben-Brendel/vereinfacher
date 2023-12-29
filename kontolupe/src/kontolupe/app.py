@@ -341,7 +341,10 @@ class Kontolupe(toga.App):
         self.input_formular_arztrechnungen_bezahlt.value = self.arztrechnungen[self.arztrechnung_b_id].bezahlt
 
         # Auswahlfeld für den Arzt befüllen
-        self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[arzt_index]
+        if arzt_index is not None:
+            self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[arzt_index]
+        else:
+            self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[0]
 
         # Setze das Flag
         self.flag_bearbeite_arztrechnung = True
@@ -532,6 +535,7 @@ class Kontolupe(toga.App):
 
             # TODO: Aktualisiere verknüpfte Arztrechnungen
 
+
         # Zeige die Liste der Ärzte
         self.zeige_seite_liste_aerzte(widget)
 
@@ -552,7 +556,10 @@ class Kontolupe(toga.App):
             self.aerzte[index].loeschen(self.db)
             del self.aerzte[index]
             del self.aerzte_liste[index]
-            #self.input_formular_arztrechnungen_arzt.items = self.aerzte_liste
+
+        # Arztrechnungen aktualisieren
+        self.arztrechnungen_liste_aktualisieren()
+        self.input_formular_aerzte_name.items = self.aerzte_liste
 
 
     def arzt_name(self, arzt_id):
@@ -620,6 +627,13 @@ class Kontolupe(toga.App):
                 'pkv_eingereicht': 'Ja' if arztrechnung.pkv_id else 'Nein'
             })
         
+
+    def arztrechnungen_liste_aktualisieren(self):
+        """Aktualisiert die referenzierten Werte in der Liste der Arztrechnungen."""
+        for rg_id in range(len(self.arztrechnungen_liste)):
+            self.arztrechnungen_liste_aendern(self.arztrechnungen[rg_id], rg_id)
+        
+
     def aerzte_liste_anfuegen(self, arzt):
         """Fügt der Liste der Ärzte einen neuen Arzt hinzu."""
         self.aerzte_liste.append({
@@ -656,6 +670,9 @@ class Kontolupe(toga.App):
                 'db_id': arzt.db_id,
                 'name': arzt.name,
             }
+        
+        # Arztrechnungen aktualisieren
+        self.arztrechnungen_liste_aktualisieren()
 
 
     def startup(self):
