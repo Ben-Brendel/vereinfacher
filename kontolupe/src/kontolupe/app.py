@@ -37,6 +37,14 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_arzt = False
         self.arzt_b_id = 0
 
+        # Hilfsvariablen zur Bearbeitung der Beihilfe-Pakete
+        self.flag_bearbeite_beihilfepaket = False
+        self.beihilfepaket_b_id = 0
+
+        # Hilfsvariablen zur Bearbeitung der PKV-Pakete
+        self.flag_bearbeite_pkvpaket = False
+        self.pkvpaket_b_id = 0
+
         # Erzeuge die Menüleiste
         gruppe_arztrechnungen = toga.Group('Arztrechnungen', order = 1)
 
@@ -59,7 +67,7 @@ class Kontolupe(toga.App):
         gruppe_beihilfepakete = toga.Group('Beihilfe-Einreichungen', order = 2)
 
         self.cmd_beihilfepakete_anzeigen = toga.Command(
-            None,
+            self.zeige_seite_liste_beihilfepakete,
             'Beihilfe-Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
             group = gruppe_beihilfepakete,
@@ -67,7 +75,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_beihilfepakete_neu = toga.Command(
-            None,
+            self.zeige_seite_formular_beihilfepakete_neu,
             'Neue Beihilfe-Einreichung',
             tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
             group = gruppe_beihilfepakete,
@@ -161,8 +169,8 @@ class Kontolupe(toga.App):
 
         # Bereich der Beihilfe-Einreichungen
         label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_h2)
-        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=Pack(width=200))
-        button_start_beihilfe_neu = toga.Button('Neu', style=Pack(width=200))
+        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=Pack(width=200), on_press=self.zeige_seite_liste_beihilfepakete)
+        button_start_beihilfe_neu = toga.Button('Neu', style=Pack(width=200), on_press=self.zeige_seite_formular_beihilfepakete_neu)
         box_startseite_beihilfe_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_neu)
@@ -371,7 +379,8 @@ class Kontolupe(toga.App):
             neue_arztrechnung.bezahlt = self.input_formular_arztrechnungen_bezahlt.value
 
             # Speichere die Arztrechnung in der Datenbank
-            neue_arztrechnung.db_id = self.db.neue_arztrechnung(neue_arztrechnung)
+            #neue_arztrechnung.db_id = self.db.neue_arztrechnung(neue_arztrechnung)
+            neue_arztrechnung.neu(self.db)
 
             # Füge die Arztrechnung der Liste hinzu
             self.arztrechnungen.append(neue_arztrechnung)
@@ -515,7 +524,8 @@ class Kontolupe(toga.App):
             neuer_arzt.name = self.input_formular_aerzte_name.value
 
             # Speichere den Arzt in der Datenbank
-            neuer_arzt.db_id = self.db.neuer_arzt(neuer_arzt)
+            #neuer_arzt.db_id = self.db.neuer_arzt(neuer_arzt)
+            neuer_arzt.neu(self.db)
 
             # Füge den Arzt der Liste hinzu
             self.aerzte.append(neuer_arzt)
@@ -562,6 +572,168 @@ class Kontolupe(toga.App):
         self.input_formular_aerzte_name.items = self.aerzte_liste
 
 
+    def erzeuge_seite_liste_beihilfepakete(self):
+        """Erzeugt die Seite, auf der die Beihilfepakete angezeigt werden."""
+        self.box_seite_liste_beihilfepakete = toga.Box(style=Pack(direction=COLUMN))
+        self.box_seite_liste_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_startseite))
+        self.box_seite_liste_beihilfepakete.add(toga.Label('Beihilfepakete', style=style_h1))
+
+        # Tabelle mit den Beihilfepaketen
+        self.tabelle_beihilfepakete_container = toga.ScrollContainer(style=Pack(flex=1))
+        self.tabelle_beihilfepakete = toga.Table(
+            headings    = ['Datum', 'Betrag', 'Erhalten'], 
+            accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
+            data        = self.beihilfepakete_liste,
+            style       = Pack(flex=1)
+        )
+        self.tabelle_beihilfepakete_container.content = self.tabelle_beihilfepakete
+        self.box_seite_liste_beihilfepakete.add(self.tabelle_beihilfepakete_container)
+
+        # Buttons für die Beihilfepakete
+        box_seite_liste_beihilfepakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=Pack(flex=1)))
+        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=Pack(flex=1)))
+        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_beihilfepaket_loeschen, style=Pack(flex=1)))
+        self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_buttons)
+
+
+    def zeige_seite_liste_beihilfepakete(self, widget):
+        """Zeigt die Seite mit der Liste der Beihilfepakete."""
+        self.main_window.content = self.box_seite_liste_beihilfepakete
+
+    
+    def erzeuge_seite_formular_beihilfepakete(self):
+        """Erzeugt das Formular zum Erstellen und Bearbeiten eines Beihilfepakets."""
+        self.box_seite_formular_beihilfepakete = toga.Box(style=Pack(direction=COLUMN))
+        self.box_seite_formular_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_beihilfepakete))
+        self.label_formular_beihilfepakete = toga.Label('Neues Beihilfepaket', style=style_h1)
+        self.box_seite_formular_beihilfepakete.add(self.label_formular_beihilfepakete)
+
+        # Bereich zur Eingabe des Datums
+        box_formular_beihilfepakete_datum = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_beihilfepakete_datum.add(toga.Label('Datum: ', style=Pack(flex=1)))
+        self.input_formular_beihilfepakete_datum = toga.DateInput(style=Pack(flex=2))
+        box_formular_beihilfepakete_datum.add(self.input_formular_beihilfepakete_datum)
+        self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_datum)
+
+        # Bereich zur Eingabe des Betrags
+        box_formular_beihilfepakete_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_beihilfepakete_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
+        self.input_formular_beihilfepakete_betrag = toga.NumberInput(min=0, max=1000000, step=1, value=0, style=Pack(flex=2))
+        box_formular_beihilfepakete_betrag.add(self.input_formular_beihilfepakete_betrag)
+        self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_betrag)
+
+        # Bereich zur Angabe der Erhaltung
+        box_formular_beihilfepakete_erhalten = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        self.input_formular_beihilfepakete_erhalten = toga.Switch('Erhalten')
+        box_formular_beihilfepakete_erhalten.add(self.input_formular_beihilfepakete_erhalten)
+        self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_erhalten)
+
+        # Bereich der Buttons
+        box_formular_beihilfepakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern, style=Pack(flex=1)))
+        box_formular_beihilfepakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_beihilfepakete, style=Pack(flex=1)))
+        self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_buttons)
+
+
+    def zeige_seite_formular_beihilfepakete_neu(self, widget):
+        """Zeigt die Seite zum Erstellen eines Beihilfepakets."""
+        # Setze die Eingabefelder zurück
+        self.input_formular_beihilfepakete_betrag.value = 0
+        self.input_formular_beihilfepakete_datum.value = None
+        self.input_formular_beihilfepakete_erhalten.value = False
+
+        # Zurücksetzen des Flags
+        self.flag_bearbeite_beihilfepaket = False
+
+        # Setze die Überschrift
+        self.label_formular_beihilfepakete.text = 'Neues Beihilfepaket'
+
+        # Zeige die Seite
+        self.main_window.content = self.box_seite_formular_beihilfepakete
+
+
+    def zeige_seite_formular_beihilfepakete_bearbeiten(self, widget):
+        """Zeigt die Seite zum Bearbeiten eines Beihilfepakets."""
+        # Ermittle den Index des ausgewählten Beihilfepakets
+        self.beihilfepaket_b_id = self.index_auswahl(self.tabelle_beihilfepakete)
+
+        # Befülle die Eingabefelder
+        self.input_formular_beihilfepakete_betrag.value = self.beihilfepakete[self.beihilfepaket_b_id].betrag
+        self.input_formular_beihilfepakete_datum.value = self.beihilfepakete[self.beihilfepaket_b_id].datum
+        self.input_formular_beihilfepakete_erhalten.value = self.beihilfepakete[self.beihilfepaket_b_id].erhalten
+
+        # Setze das Flag
+        self.flag_bearbeite_beihilfepaket = True
+
+        # Setze die Überschrift
+        self.label_formular_beihilfepakete.text = 'Beihilfepaket bearbeiten'
+
+        # Zeige die Seite
+        self.main_window.content = self.box_seite_formular_beihilfepakete
+
+
+    def beihilfepaket_speichern(self, widget):
+        """Erstellt und speichert ein neues Beihilfepaket oder ändert ein zur Bearbeitung gewähltes."""
+        if not self.flag_bearbeite_beihilfepaket:
+        # Erstelle ein neues Beihilfepaket
+            neues_beihilfepaket = BeihilfePaket()
+            neues_beihilfepaket.datum = self.input_formular_beihilfepakete_datum.value
+            neues_beihilfepaket.betrag = float(self.input_formular_beihilfepakete_betrag.value)
+            neues_beihilfepaket.erhalten = self.input_formular_beihilfepakete_erhalten.value
+
+            # Speichere das Beihilfepaket in der Datenbank
+            #neues_beihilfepaket.db_id = self.db.neues_beihilfepaket(neues_beihilfepaket)
+            neues_beihilfepaket.neu(self.db)
+
+            # Füge das Beihilfepaket der Liste hinzu
+            self.beihilfepakete.append(neues_beihilfepaket)
+            self.beihilfepakete_liste_anfuegen(neues_beihilfepaket)
+
+            # TODO: Aktualisiere verknüpfte Arztrechnungen
+
+        else:
+            # Bearbeite das Beihilfepaket
+            self.beihilfepakete[self.beihilfepaket_b_id].datum = self.input_formular_beihilfepakete_datum.value
+            self.beihilfepakete[self.beihilfepaket_b_id].betrag = float(self.input_formular_beihilfepakete_betrag.value)
+            self.beihilfepakete[self.beihilfepaket_b_id].erhalten = self.input_formular_beihilfepakete_erhalten.value
+
+            # Speichere das Beihilfepaket in der Datenbank
+            self.beihilfepakete[self.beihilfepaket_b_id].speichern(self.db)
+
+            # Aktualisiere die Liste der Beihilfepakete
+            self.beihilfepakete_liste_aendern(self.beihilfepakete[self.beihilfepaket_b_id], self.beihilfepaket_b_id)
+
+            # Flage zurücksetzen
+            self.flag_bearbeite_beihilfepaket = False
+
+            # TODO: Aktualisiere verknüpfte Arztrechnungen
+
+        # Wechsel zur Liste der Beihilfepakete
+        self.zeige_seite_liste_beihilfepakete(widget)
+
+
+    def bestaetige_beihilfepaket_loeschen(self, widget):
+        """Bestätigt das Löschen eines Beihilfepakets."""
+        if self.tabelle_beihilfepakete.selection:
+            self.main_window.confirm_dialog(
+                'Beihilfepaket löschen', 
+                'Soll das ausgewählte Beihilfepaket wirklich gelöscht werden?',
+                on_result=self.beihilfepaket_loeschen
+            )
+
+
+    def beihilfepaket_loeschen(self, widget, result):
+        """Löscht ein Beihilfepaket."""
+        if self.tabelle_beihilfepakete.selection and result:
+            index = self.index_auswahl(self.tabelle_beihilfepakete)
+            self.beihilfepakete[index].loeschen(self.db)
+            del self.beihilfepakete[index]
+            del self.beihilfepakete_liste[index]
+
+        # TODO: Aktualisiere verknüpfte Arztrechnungen
+
+
     def arzt_name(self, arzt_id):
         """Ermittelt den Namen eines Arztes anhand seiner Id."""
         for arzt in self.aerzte:
@@ -606,6 +778,36 @@ class Kontolupe(toga.App):
             self.aerzte_liste_anfuegen(arzt)
 
 
+    def beihilfepakete_liste_erzeugen(self):
+        """Erzeugt die Liste für die Beihilfepakete."""
+        self.beihilfepakete_liste = ListSource(accessors=[
+            'db_id',
+            'betrag',
+            'betrag_euro',
+            'datum',
+            'erhalten',
+            'erhalten_text'
+        ])
+
+        for beihilfepaket in self.beihilfepakete:            
+            self.beihilfepakete_liste_anfuegen(beihilfepaket)
+
+
+    def pkvpakete_liste_erzeugen(self):
+        """Erzeugt die Liste für die PKV-Pakete."""
+        self.pkvpakete_liste = ListSource(accessors=[
+            'db_id',
+            'betrag',
+            'betrag_euro',
+            'datum',
+            'erhalten',
+            'erhalten_text'
+        ])
+
+        for pkvpaket in self.pkvpakete:            
+            self.pkvpakete_liste_anfuegen(pkvpaket)
+
+
     def arztrechnungen_liste_anfuegen(self, arztrechnung):
         """Fügt der Liste der Arztrechnungen eine neue Arztrechnung hinzu."""
         self.arztrechnungen_liste.append({
@@ -639,6 +841,30 @@ class Kontolupe(toga.App):
         self.aerzte_liste.append({
                 'db_id': arzt.db_id,
                 'name': arzt.name,
+            })
+        
+
+    def beihilfepakete_liste_anfuegen(self, beihilfepaket):
+        """Fügt der Liste der Beihilfepakete ein neues Beihilfepaket hinzu."""
+        self.beihilfepakete_liste.append({
+                'db_id': beihilfepaket.db_id,
+                'betrag': beihilfepaket.betrag,
+                'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag),
+                'datum': beihilfepaket.datum,
+                'erhalten': beihilfepaket.erhalten,
+                'erhalten_text': 'Ja' if beihilfepaket.erhalten else 'Nein'
+            })
+        
+
+    def pkvpakete_liste_anfuegen(self, pkvpaket):
+        """Fügt der Liste der PKV-Pakete ein neues PKV-Paket hinzu."""
+        self.pkvpakete_liste.append({
+                'db_id': pkvpaket.db_id,
+                'betrag': pkvpaket.betrag,
+                'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag),
+                'datum': pkvpaket.datum,
+                'erhalten': pkvpaket.erhalten,
+                'erhalten_text': 'Ja' if pkvpaket.erhalten else 'Nein'
             })
 
 
@@ -674,6 +900,30 @@ class Kontolupe(toga.App):
         # Arztrechnungen aktualisieren
         self.arztrechnungen_liste_aktualisieren()
 
+    
+    def beihilfepakete_liste_aendern(self, beihilfepaket, beihilfepaket_id):
+        """Ändert ein Element der Liste der Beihilfepakete."""
+        self.beihilfepakete_liste[beihilfepaket_id] = {
+                'db_id': beihilfepaket.db_id,
+                'betrag': beihilfepaket.betrag,
+                'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag),
+                'datum': beihilfepaket.datum,
+                'erhalten': beihilfepaket.erhalten,
+                'erhalten_text': 'Ja' if beihilfepaket.erhalten else 'Nein'
+            }
+        
+
+    def pkvpakete_liste_aendern(self, pkvpaket, pkvpaket_id):
+        """Ändert ein Element der Liste der PKV-Pakete."""
+        self.pkvpakete_liste[pkvpaket_id] = {
+                'db_id': pkvpaket.db_id,
+                'betrag': pkvpaket.betrag,
+                'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag),
+                'datum': pkvpaket.datum,
+                'erhalten': pkvpaket.erhalten,
+                'erhalten_text': 'Ja' if pkvpaket.erhalten else 'Nein'
+            }
+
 
     def startup(self):
         """Laden der Daten, Erzeugen der GUI-Elemente und des Hauptfensters."""
@@ -688,14 +938,8 @@ class Kontolupe(toga.App):
         # Erzeuge die ListSources für die GUI
         self.arztrechnungen_liste_erzeugen()
         self.aerzte_liste_erzeugen()
-
-        self.beihilfepakete_liste = []
-        for beihilfepaket in self.beihilfepakete:
-            self.beihilfepakete_liste.append([beihilfepaket.datum, beihilfepaket.betrag])
-
-        self.pkvpakete_liste = []
-        for pkvpaket in self.pkvpakete:
-            self.pkvpakete_liste.append([pkvpaket.datum, pkvpaket.betrag])
+        self.beihilfepakete_liste_erzeugen()
+        self.pkvpakete_liste_erzeugen()
 
         # Erzeuge alle GUI-Elemente
         self.erzeuge_startseite()
@@ -703,6 +947,8 @@ class Kontolupe(toga.App):
         self.erzeuge_seite_formular_arztrechnungen()
         self.erzeuge_seite_liste_aerzte()
         self.erzeuge_seite_formular_aerzte()
+        self.erzeuge_seite_liste_beihilfepakete()
+        self.erzeuge_seite_formular_beihilfepakete()
 
         # Erstelle die Menüleiste
         self.commands.add(self.cmd_arztrechnungen_anzeigen)
@@ -723,10 +969,12 @@ class Kontolupe(toga.App):
             self.box_seite_liste_arztrechnungen.children,
             self.box_seite_formular_arztrechnungen.children,
             self.box_seite_liste_aerzte.children,
-            self.box_seite_formular_aerzte.children
+            self.box_seite_formular_aerzte.children,
+            self.box_seite_liste_beihilfepakete.children,
+            self.box_seite_formular_beihilfepakete.children
         )           
 
-        # Format all generated content elements
+        # Alle Widgets mit Padding versehen
         for w in all_children:
             w.style.padding = 10 
 

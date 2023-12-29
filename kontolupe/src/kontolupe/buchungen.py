@@ -115,7 +115,7 @@ class Datenbank:
             datum,
             aktiv,
             erhalten
-        ) VALUES (?, ?)""", (
+        ) VALUES (?, ?, ?, ?)""", (
             beihilfepaket.betrag,
             beihilfepaket.datum,
             beihilfepaket.aktiv,
@@ -143,7 +143,7 @@ class Datenbank:
             datum,
             aktiv,
             erhalten
-        ) VALUES (?, ?)""", (
+        ) VALUES (?, ?, ?, ?)""", (
             pkvpaket.betrag,
             pkvpaket.datum,
             pkvpaket.aktiv,
@@ -481,15 +481,19 @@ class BeihilfePaket:
         """Initialisierung der Beihilfe-Einreichung."""
 
         # Betrag der Beihilfe-Einreichung berechnen
+        self.db_id = None
         self.betrag = 0        
         self.datum = None
         self.aktiv = True
         self.erhalten = False
-        self.db_id = None
 
-    def neu(self, rechnungen, db):
+    def neu(self, db, rechnungen=None):
         """Neue Beihilfe-Einreichung erstellen."""
         # Betrag der Beihilfe-Einreichung berechnen
+
+        if rechnungen is None:
+            rechnungen = []
+
         self.betrag = 0
         for rechnung in rechnungen:
             self.betrag += rechnung.betrag * rechnung.beihilfesatz / 100
