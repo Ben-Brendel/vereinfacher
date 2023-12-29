@@ -217,45 +217,59 @@ class Kontolupe(toga.App):
         self.label_formular_arztrechnungen = toga.Label('Neue Arztrechnung')
         self.box_seite_formular_arztrechnungen.add(self.label_formular_arztrechnungen)
 
-        # Bereich zur Eingabe des Betrags
-        box_formular_arztrechnungen_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_betrag.add(toga.Label('Betrag: '))
-        self.input_formular_arztrechnungen_betrag = toga.NumberInput(min=0, max=1000000, step=1, value=0)
-        box_formular_arztrechnungen_betrag.add(self.input_formular_arztrechnungen_betrag)
-        self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_betrag)
-
         # Bereich zur Eingabe des Rechnungsdatums
         box_formular_arztrechnungen_rechnungsdatum = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: '))
-        self.input_formular_arztrechnungen_rechnungsdatum = toga.DateInput()
+        box_formular_arztrechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=Pack(flex=1)))
+        self.input_formular_arztrechnungen_rechnungsdatum = toga.DateInput(style=Pack(flex=2))
         box_formular_arztrechnungen_rechnungsdatum.add(self.input_formular_arztrechnungen_rechnungsdatum)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_rechnungsdatum)
 
+        # Bereich zur Eingabe des Betrags
+        box_formular_arztrechnungen_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_arztrechnungen_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
+        self.input_formular_arztrechnungen_betrag = toga.NumberInput(min=0, max=1000000, step=1, value=0, style=Pack(flex=2))
+        box_formular_arztrechnungen_betrag.add(self.input_formular_arztrechnungen_betrag)
+        self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_betrag)
+
         # Bereich zur Auswahl des Arztes
         box_formular_arztrechnungen_arzt = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_arzt.add(toga.Label('Arzt: '))
-        self.input_formular_arztrechnungen_arzt = toga.Selection(items=self.aerzte_liste)
+        box_formular_arztrechnungen_arzt.add(toga.Label('Arzt: ', style=Pack(flex=1)))
+        self.input_formular_arztrechnungen_arzt = toga.Selection(items=self.aerzte_liste, style=Pack(flex=2))
         box_formular_arztrechnungen_arzt.add(self.input_formular_arztrechnungen_arzt)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_arzt)
 
-        # Bereich zur Auswahl des Beihilfesatzes
-        box_formular_arztrechnungen_beihilfesatz = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_beihilfesatz.add(toga.Label('Beihilfesatz: '))
-        self.input_formular_arztrechnungen_beihilfesatz = toga.NumberInput(min=0, max=100, step=10, value=0)
-        box_formular_arztrechnungen_beihilfesatz.add(self.input_formular_arztrechnungen_beihilfesatz)
-        self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_beihilfesatz)
-
         # Bereich zur Eingabe der Notiz
         box_formular_arztrechnungen_notiz = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_notiz.add(toga.Label('Notiz: '))
-        self.input_formular_arztrechnungen_notiz = toga.MultilineTextInput()
+        box_formular_arztrechnungen_notiz.add(toga.Label('Notiz: ', style=Pack(flex=1)))
+        self.input_formular_arztrechnungen_notiz = toga.TextInput(style=Pack(flex=2))
         box_formular_arztrechnungen_notiz.add(self.input_formular_arztrechnungen_notiz)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_notiz)
 
+        # Bereich zur Auswahl des Beihilfesatzes
+        box_formular_arztrechnungen_beihilfesatz = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_arztrechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=Pack(flex=1)))
+        self.input_formular_arztrechnungen_beihilfesatz = toga.NumberInput(min=0, max=100, step=10, value=0, style=Pack(flex=2))
+        box_formular_arztrechnungen_beihilfesatz.add(self.input_formular_arztrechnungen_beihilfesatz)
+        self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_beihilfesatz)
+
+        # Bereich zur Eingabe des Buchungsdatums
+        box_formular_arztrechnungen_buchungsdatum = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_arztrechnungen_buchungsdatum.add(toga.Label('Datum Überweisung: ', style=Pack(flex=1)))
+        self.input_formular_arztrechnungen_buchungsdatum = toga.DateInput(style=Pack(flex=2))
+        box_formular_arztrechnungen_buchungsdatum.add(self.input_formular_arztrechnungen_buchungsdatum)
+        self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_buchungsdatum)
+
+        # Bereich zur Angabe der Bezahlung
+        box_formular_arztrechnungen_bezahlt = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        #box_formular_arztrechnungen_bezahlt.add(toga.Label('Bezahlt: ', style=Pack(flex=1)))
+        self.input_formular_arztrechnungen_bezahlt = toga.Switch('Bezahlt')
+        box_formular_arztrechnungen_bezahlt.add(self.input_formular_arztrechnungen_bezahlt)
+        self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_bezahlt)
+
         # Bereich der Buttons
         box_formular_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_buttons.add(toga.Button('Speichern', on_press=self.arztrechnung_speichern))
-        box_formular_arztrechnungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_arztrechnungen))
+        box_formular_arztrechnungen_buttons.add(toga.Button('Speichern', on_press=self.arztrechnung_speichern, style=Pack(flex=1)))
+        box_formular_arztrechnungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(flex=1)))
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_buttons)
 
 
@@ -283,6 +297,8 @@ class Kontolupe(toga.App):
         self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[0] if len(self.aerzte_liste) > 0 else None
         self.input_formular_arztrechnungen_beihilfesatz.value = 0
         self.input_formular_arztrechnungen_notiz.value = ''
+        self.input_formular_arztrechnungen_buchungsdatum.value = datetime.date.today()
+        self.input_formular_arztrechnungen_bezahlt.value = False
 
         # Zurücksetzen des Flags
         self.flag_bearbeite_arztrechnung = False
@@ -305,6 +321,8 @@ class Kontolupe(toga.App):
         self.input_formular_arztrechnungen_rechnungsdatum.value = self.arztrechnungen[self.arztrechnung_b_id].rechnungsdatum
         self.input_formular_arztrechnungen_beihilfesatz.value = self.arztrechnungen[self.arztrechnung_b_id].beihilfesatz
         self.input_formular_arztrechnungen_notiz.value = self.arztrechnungen[self.arztrechnung_b_id].notiz
+        self.input_formular_arztrechnungen_buchungsdatum.value = self.arztrechnungen[self.arztrechnung_b_id].buchungsdatum
+        self.input_formular_arztrechnungen_bezahlt.value = self.arztrechnungen[self.arztrechnung_b_id].bezahlt
 
         # Eingabefeld des Arztnamens befüllen
         if self.aerzte != None:
@@ -340,6 +358,8 @@ class Kontolupe(toga.App):
             neue_arztrechnung.notiz = self.input_formular_arztrechnungen_notiz.value
             neue_arztrechnung.betrag = float(self.input_formular_arztrechnungen_betrag.value)
             neue_arztrechnung.beihilfesatz = float(self.input_formular_arztrechnungen_beihilfesatz.value)
+            neue_arztrechnung.buchungsdatum = self.input_formular_arztrechnungen_buchungsdatum.value
+            neue_arztrechnung.bezahlt = self.input_formular_arztrechnungen_bezahlt.value
 
             # Speichere die Arztrechnung in der Datenbank
             neue_arztrechnung.db_id = self.db.neue_arztrechnung(neue_arztrechnung)
@@ -359,6 +379,8 @@ class Kontolupe(toga.App):
             self.arztrechnungen[self.arztrechnung_b_id].notiz = self.input_formular_arztrechnungen_notiz.value
             self.arztrechnungen[self.arztrechnung_b_id].betrag = float(self.input_formular_arztrechnungen_betrag.value)
             self.arztrechnungen[self.arztrechnung_b_id].beihilfesatz = float(self.input_formular_arztrechnungen_beihilfesatz.value)
+            self.arztrechnungen[self.arztrechnung_b_id].buchungsdatum = self.input_formular_arztrechnungen_buchungsdatum.value
+            self.arztrechnungen[self.arztrechnung_b_id].bezahlt = self.input_formular_arztrechnungen_bezahlt.value
 
             # Speichere die Arztrechnung in der Datenbank
             self.arztrechnungen[self.arztrechnung_b_id].speichern(self.db)
