@@ -621,7 +621,7 @@ class Kontolupe(toga.App):
         self.formular_beihilfe_tabelle_arztrechnungen = toga.Table(
             headings        = ['Info', 'Betrag', 'Bezahlt'],
             accessors       = ['info', 'betrag_euro', 'bezahlt_text'],
-            data            = self.arztrechnungen_liste,
+            data            = self.erzeuge_liste_beihilfe_tabelle_arztrechnungen(),
             multiple_select = True,
             style           = Pack(height=300, flex=1)
         )
@@ -654,6 +654,7 @@ class Kontolupe(toga.App):
         self.input_formular_beihilfepakete_betrag.value = 0
         self.input_formular_beihilfepakete_datum.value = None
         self.input_formular_beihilfepakete_erhalten.value = False
+        self.formular_beihilfe_tabelle_arztrechnungen.data = self.erzeuge_liste_beihilfe_tabelle_arztrechnungen()
 
         # Zurücksetzen des Flags
         self.flag_bearbeite_beihilfepaket = False
@@ -675,6 +676,16 @@ class Kontolupe(toga.App):
         self.input_formular_beihilfepakete_datum.value = self.beihilfepakete[self.beihilfepaket_b_id].datum
         self.input_formular_beihilfepakete_erhalten.value = self.beihilfepakete[self.beihilfepaket_b_id].erhalten
 
+        # Tabelleninhalt aktualisieren
+        tabelle_daten = self.erzeuge_liste_beihilfe_tabelle_arztrechnungen(self.beihilfepakete[self.beihilfepaket_b_id].db_id)
+        self.formular_beihilfe_tabelle_arztrechnungen.data = tabelle_daten
+
+        # TODO: Wähle die verknüpften Arztrechnungen in der Tabelle aus
+        # self.formular_beihilfe_tabelle_arztrechnungen.selection = []
+        # for i, arztrechnung in enumerate(tabelle_daten):
+        #     if arztrechnung.beihilfe_id == self.beihilfepakete[self.beihilfepaket_b_id].db_id:
+        #         self.formular_beihilfe_tabelle_arztrechnungen.selection.append(self.formular_beihilfe_tabelle_arztrechnungen.data[i])
+
         # Setze das Flag
         self.flag_bearbeite_beihilfepaket = True
 
@@ -688,21 +699,25 @@ class Kontolupe(toga.App):
     def beihilfepaket_speichern(self, widget):
         """Erstellt und speichert ein neues Beihilfepaket oder ändert ein zur Bearbeitung gewähltes."""
         if not self.flag_bearbeite_beihilfepaket:
-        # Erstelle ein neues Beihilfepaket
+            # Erstelle ein neues Beihilfepaket
             neues_beihilfepaket = BeihilfePaket()
             neues_beihilfepaket.datum = self.input_formular_beihilfepakete_datum.value
             neues_beihilfepaket.betrag = float(self.input_formular_beihilfepakete_betrag.value)
             neues_beihilfepaket.erhalten = self.input_formular_beihilfepakete_erhalten.value
 
             # Speichere das Beihilfepaket in der Datenbank
-            #neues_beihilfepaket.db_id = self.db.neues_beihilfepaket(neues_beihilfepaket)
             neues_beihilfepaket.neu(self.db)
 
             # Füge das Beihilfepaket der Liste hinzu
             self.beihilfepakete.append(neues_beihilfepaket)
             self.beihilfepakete_liste_anfuegen(neues_beihilfepaket)
 
-            # TODO: Aktualisiere verknüpfte Arztrechnungen
+            # Aktualisiere verknüpfte Arztrechnungen
+            for auswahl_rg in self.formular_beihilfe_tabelle_arztrechnungen.selection:
+                for rg in self.arztrechnungen:
+                    if auswahl_rg.db_id == rg.db_id:
+                        rg.beihilfe_id = neues_beihilfepaket.db_id
+                        rg.speichern(self.db)
 
         else:
             # Bearbeite das Beihilfepaket
@@ -719,7 +734,15 @@ class Kontolupe(toga.App):
             # Flage zurücksetzen
             self.flag_bearbeite_beihilfepaket = False
 
-            # TODO: Aktualisiere verknüpfte Arztrechnungen
+            # Aktualisiere verknüpfte Arztrechnungen
+            for auswahl_rg in self.formular_beihilfe_tabelle_arztrechnungen.selection:
+                for rg in self.arztrechnungen:
+                    if auswahl_rg.db_id == rg.db_id:
+                        rg.beihilfe_id = self.beihilfepakete[self.beihilfepaket_b_id].db_id
+                        rg.speichern(self.db)
+
+        # Arztrechnungen aktualisieren
+        self.arztrechnungen_liste_aktualisieren()
 
         # Wechsel zur Liste der Beihilfepakete
         self.zeige_seite_liste_beihilfepakete(widget)
@@ -744,6 +767,54 @@ class Kontolupe(toga.App):
             del self.beihilfepakete_liste[index]
             self.arztrechnungen_aktualisieren()
 
+
+    def erzeuge_liste_beihilfe_tabelle_arztrechnungen(self, beihilfe_id=None):
+        """Erzeugt die Liste der Arztrechnungen im Formular für die Beihilfepakete."""
+
+        data = ListSource(accessors=[
+            'db_id', 
+            'betrag', 
+            'betrag_euro',
+            'rechnungsdatum', 
+            'arzt_id', 
+            'notiz', 
+            'arzt_name', 
+            'info', 
+            'beihilfesatz', 
+            'buchungsdatum', 
+            'bezahlt', 
+            'bezahlt_text',
+            'beihilfe_id', 
+            'beihilfe_eingereicht',
+            'pkv_id'
+            'pkv_eingereicht'
+        ])
+
+        if self.arztrechnungen_liste is None:
+            return data
+
+        for arztrechnung in self.arztrechnungen_liste:
+            if arztrechnung.beihilfe_id is None or arztrechnung.beihilfe_id == beihilfe_id:
+                data.append({
+                'db_id': arztrechnung.db_id,
+                'betrag': arztrechnung.betrag,
+                'betrag_euro': '{:.2f} €'.format(arztrechnung.betrag),
+                'rechnungsdatum': arztrechnung.rechnungsdatum,
+                'arzt_id': arztrechnung.arzt_id,
+                'notiz': arztrechnung.notiz,
+                'arzt_name': self.arzt_name(arztrechnung.arzt_id),
+                'info': self.arzt_name(arztrechnung.arzt_id) + ' - ' + arztrechnung.notiz,
+                'beihilfesatz': arztrechnung.beihilfesatz,
+                'buchungsdatum': arztrechnung.buchungsdatum,
+                'bezahlt': arztrechnung.bezahlt,
+                'bezahlt_text': 'Ja' if arztrechnung.bezahlt else 'Nein',
+                'beihilfe_id': arztrechnung.beihilfe_id,
+                'beihilfe_eingereicht': 'Ja' if arztrechnung.beihilfe_id else 'Nein',
+                'pkv_id': arztrechnung.pkv_id,
+                'pkv_eingereicht': 'Ja' if arztrechnung.pkv_id else 'Nein'
+            })
+
+        return data
 
     def arzt_name(self, arzt_id):
         """Ermittelt den Namen eines Arztes anhand seiner Id."""
@@ -950,6 +1021,7 @@ class Kontolupe(toga.App):
                 'pkv_id': arztrechnung.pkv_id,
                 'pkv_eingereicht': 'Ja' if arztrechnung.pkv_id else 'Nein'
             }
+        print(str(self.arztrechnungen_liste[rg_id].beihilfe_id) + ' - ' + self.arztrechnungen_liste[rg_id].beihilfe_eingereicht)
         
 
     def aerzte_liste_aendern(self, arzt, arzt_id):
