@@ -445,17 +445,17 @@ class Arztrechnung:
     
     def __init__(self):
         """Initialisierung der Arztrechnung."""
+        self.db_id = None
         self.betrag = 0
-        self.arzt_id = None
         self.rechnungsdatum = None
+        self.arzt_id = None
         self.notiz = None
         self.beihilfesatz = None
-        self.aktiv = True
-        self.beihilfe_id = None
-        self.pkv_id = None
         self.buchungsdatum = None
         self.bezahlt = False
-        self.db_id = None
+        self.beihilfe_id = None
+        self.pkv_id = None
+        self.aktiv = True
 
     def neu(self, db):
         """Neue Arztrechnung erstellen."""
