@@ -25,6 +25,8 @@ test_sources = [
 ]
 
 splash_background_color = "#368ba8"
+primary_color = "#368ba8"
+primary_color_dark = "#368ba8"
 
 requires = [
     
