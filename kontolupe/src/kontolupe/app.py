@@ -20,10 +20,10 @@ from kontolupe.buchungen import *
 #locale.setlocale(locale.LC_ALL, '')
 
 # Styles erzeugen
-style_h1 = Pack(font_size=16, font_weight='bold', text_align=CENTER)
-style_h2 = Pack(font_size=12, font_weight='bold', text_align=CENTER, padding_top=20)
-style_start_summe = Pack(font_size=16, font_weight='bold', text_align=CENTER, padding=30, color='#ffffff')
-style_tabelle_offene_buchungen = Pack(padding=10, height=200)
+style_h1 = Pack(font_size=14, font_weight='bold', text_align=CENTER)
+style_h2 = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding_top=10)
+style_start_summe = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff')
+style_tabelle_offene_buchungen = Pack(padding=10, height=150)
 style_offene_rechnungen = Pack(text_align=CENTER, padding=10)
 
 class Kontolupe(toga.App):
@@ -128,6 +128,10 @@ class Kontolupe(toga.App):
         for arztrechnung in self.arztrechnungen:
             if arztrechnung.bezahlt == False:
                 summe -= arztrechnung.betrag
+            if arztrechnung.beihilfe_id == None:
+                summe += arztrechnung.betrag * (arztrechnung.beihilfesatz / 100)
+            if arztrechnung.pkv_id == None:
+                summe += arztrechnung.betrag * (1 - (arztrechnung.beihilfesatz / 100))
         
         for beihilfepaket in self.beihilfepakete:
             if beihilfepaket.erhalten == False:
@@ -178,8 +182,8 @@ class Kontolupe(toga.App):
         # Bereich der Arztrechnungen
         label_start_arztrechnungen = toga.Label('Arztrechnungen', style=style_h2)
         self.label_start_arztrechnungen_offen = toga.Label(self.text_arztrechnungen_todo(), style=style_offene_rechnungen)
-        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(width=200))
-        button_start_arztrechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(width=200))
+        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(flex=1))
+        button_start_arztrechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(flex=1))
         box_startseite_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_anzeigen)
         box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_neu)
@@ -192,8 +196,8 @@ class Kontolupe(toga.App):
         # Bereich der Beihilfe-Einreichungen
         label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_h2)
         self.label_start_beihilfe_offen = toga.Label(self.text_beihilfe_todo(), style=style_offene_rechnungen)
-        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=Pack(width=200), on_press=self.zeige_seite_liste_beihilfepakete)
-        button_start_beihilfe_neu = toga.Button('Neu', style=Pack(width=200), on_press=self.zeige_seite_formular_beihilfepakete_neu)
+        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=Pack(flex=1), on_press=self.zeige_seite_liste_beihilfepakete)
+        button_start_beihilfe_neu = toga.Button('Neu', style=Pack(flex=1), on_press=self.zeige_seite_formular_beihilfepakete_neu)
         box_startseite_beihilfe_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_neu)
@@ -206,8 +210,8 @@ class Kontolupe(toga.App):
         # Bereich der PKV-Einreichungen
         label_start_pkv = toga.Label('PKV-Einreichungen', style=style_h2)
         self.label_start_pkv_offen = toga.Label(self.text_pkv_todo(), style=style_offene_rechnungen)
-        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=Pack(width=200), on_press=self.zeige_seite_liste_pkvpakete)
-        button_start_pkv_neu = toga.Button('Neu', style=Pack(width=200), on_press=self.zeige_seite_formular_pkvpakete_neu)
+        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=Pack(flex=1), on_press=self.zeige_seite_liste_pkvpakete)
+        button_start_pkv_neu = toga.Button('Neu', style=Pack(flex=1), on_press=self.zeige_seite_formular_pkvpakete_neu)
         box_startseite_pkv_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
         box_startseite_pkv_buttons.add(button_start_pkv_neu)
@@ -250,9 +254,9 @@ class Kontolupe(toga.App):
 
         # Buttons für die Arztrechnungen
         box_seite_liste_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(flex=1)))
-        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_arztrechnungen_bearbeiten, style=Pack(flex=1)))
         box_seite_liste_arztrechnungen_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arztrechnung_loeschen, style=Pack(flex=1)))
+        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_arztrechnungen_bearbeiten, style=Pack(flex=1)))
+        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(flex=1)))
         self.box_seite_liste_arztrechnungen.add(box_seite_liste_arztrechnungen_buttons)    
 
 
@@ -321,8 +325,8 @@ class Kontolupe(toga.App):
 
         # Bereich der Buttons
         box_formular_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_buttons.add(toga.Button('Speichern', on_press=self.arztrechnung_speichern, style=Pack(flex=1)))
         box_formular_arztrechnungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(flex=1)))
+        box_formular_arztrechnungen_buttons.add(toga.Button('Speichern', on_press=self.arztrechnung_speichern, style=Pack(flex=1)))
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_buttons)
 
 
@@ -488,9 +492,9 @@ class Kontolupe(toga.App):
 
         # Buttons für die Ärzten
         box_seite_liste_aerzte_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_seite_liste_aerzte_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_aerzte_neu, style=Pack(flex=1)))
-        box_seite_liste_aerzte_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_aerzte_bearbeiten, style=Pack(flex=1)))
         box_seite_liste_aerzte_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arzt_loeschen, style=Pack(flex=1)))
+        box_seite_liste_aerzte_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_aerzte_bearbeiten, style=Pack(flex=1)))
+        box_seite_liste_aerzte_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_aerzte_neu, style=Pack(flex=1)))
         self.box_seite_liste_aerzte.add(box_seite_liste_aerzte_buttons)   
 
 
@@ -515,8 +519,8 @@ class Kontolupe(toga.App):
 
         # Bereich der Buttons
         box_formular_aerzte_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_aerzte_buttons.add(toga.Button('Speichern', on_press=self.arzt_speichern, style=Pack(flex=1)))
         box_formular_aerzte_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_aerzte, style=Pack(flex=1)))
+        box_formular_aerzte_buttons.add(toga.Button('Speichern', on_press=self.arzt_speichern, style=Pack(flex=1)))
         self.box_seite_formular_aerzte.add(box_formular_aerzte_buttons)
 
 
@@ -631,9 +635,9 @@ class Kontolupe(toga.App):
 
         # Buttons für die Beihilfepakete
         box_seite_liste_beihilfepakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=Pack(flex=1)))
-        #box_seite_liste_beihilfepakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=Pack(flex=1)))
         box_seite_liste_beihilfepakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_beihilfepaket_loeschen, style=Pack(flex=1)))
+        #box_seite_liste_beihilfepakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=Pack(flex=1)))
+        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=Pack(flex=1)))
         self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_buttons)
 
 
@@ -656,9 +660,9 @@ class Kontolupe(toga.App):
 
         # Buttons für die PKV-Einreichungen
         box_seite_liste_pkvpakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_seite_liste_pkvpakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_pkvpakete_neu, style=Pack(flex=1)))
-        #box_seite_liste_pkvpakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_pkvpakete_bearbeiten, style=Pack(flex=1)))
         box_seite_liste_pkvpakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_pkvpaket_loeschen, style=Pack(flex=1)))
+        #box_seite_liste_pkvpakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_pkvpakete_bearbeiten, style=Pack(flex=1)))
+        box_seite_liste_pkvpakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_pkvpakete_neu, style=Pack(flex=1)))
         self.box_seite_liste_pkvpakete.add(box_seite_liste_pkvpakete_buttons)
 
 
@@ -714,8 +718,8 @@ class Kontolupe(toga.App):
 
         # Bereich der Buttons
         box_formular_beihilfepakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern, style=Pack(flex=1)))
         box_formular_beihilfepakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_beihilfepakete, style=Pack(flex=1)))
+        box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern, style=Pack(flex=1)))
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_buttons)
 
 
@@ -761,8 +765,8 @@ class Kontolupe(toga.App):
 
         # Bereich der Buttons
         box_formular_pkvpakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_pkvpakete_buttons.add(toga.Button('Speichern', on_press=self.pkvpaket_speichern, style=Pack(flex=1)))
         box_formular_pkvpakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_pkvpakete, style=Pack(flex=1)))
+        box_formular_pkvpakete_buttons.add(toga.Button('Speichern', on_press=self.pkvpaket_speichern, style=Pack(flex=1)))
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_buttons)
 
 
