@@ -85,7 +85,7 @@ class Kontolupe(toga.App):
         gruppe_pkvpakete = toga.Group('PKV-Einreichungen', order = 3)
 
         self.cmd_pkvpakete_anzeigen = toga.Command(
-            None,
+            self.zeige_seite_liste_pkvpakete,
             'PKV-Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
             group = gruppe_pkvpakete,
@@ -93,7 +93,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_pkvpakete_neu = toga.Command(
-            None,
+            self.zeige_seite_formular_pkvpakete_neu,
             'Neue PKV-Einreichung',
             tooltip = 'Erstellt eine neue PKV-Einreichung.',
             group = gruppe_pkvpakete,
@@ -125,10 +125,6 @@ class Kontolupe(toga.App):
         for arztrechnung in self.arztrechnungen:
             if arztrechnung.bezahlt == False:
                 summe -= arztrechnung.betrag
-            if arztrechnung.beihilfe_id == None:
-                summe += arztrechnung.betrag * (arztrechnung.beihilfesatz / 100)
-            if arztrechnung.pkv_id == None:
-                summe += arztrechnung.betrag * (1 - (arztrechnung.beihilfesatz / 100))
         
         for beihilfepaket in self.beihilfepakete:
             if beihilfepaket.erhalten == False:
@@ -181,8 +177,8 @@ class Kontolupe(toga.App):
 
         # Bereich der PKV-Einreichungen
         label_start_pkv = toga.Label('PKV-Einreichungen', style=style_h2)
-        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=Pack(width=200))
-        button_start_pkv_neu = toga.Button('Neu', style=Pack(width=200))
+        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=Pack(width=200), on_press=self.zeige_seite_liste_pkvpakete)
+        button_start_pkv_neu = toga.Button('Neu', style=Pack(width=200), on_press=self.zeige_seite_formular_pkvpakete_neu)
         box_startseite_pkv_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
         box_startseite_pkv_buttons.add(button_start_pkv_neu)
@@ -195,6 +191,10 @@ class Kontolupe(toga.App):
         """Zurück zur Startseite."""
         self.label_start_summe_zahl.text = '{:.2f} €'.format(self.berechne_summe_offene_buchungen())
         self.main_window.content = self.box_startseite
+
+        # TODO: Tabelle mit offenen Buchungen aktualisieren
+
+        # TODO: Tabelle mit deaktivierbaren Buchungen aktualisieren
 
 
     def erzeuge_seite_liste_arztrechnungen(self):
@@ -379,7 +379,6 @@ class Kontolupe(toga.App):
             neue_arztrechnung.bezahlt = self.input_formular_arztrechnungen_bezahlt.value
 
             # Speichere die Arztrechnung in der Datenbank
-            #neue_arztrechnung.db_id = self.db.neue_arztrechnung(neue_arztrechnung)
             neue_arztrechnung.neu(self.db)
 
             # Füge die Arztrechnung der Liste hinzu
@@ -524,7 +523,6 @@ class Kontolupe(toga.App):
             neuer_arzt.name = self.input_formular_aerzte_name.value
 
             # Speichere den Arzt in der Datenbank
-            #neuer_arzt.db_id = self.db.neuer_arzt(neuer_arzt)
             neuer_arzt.neu(self.db)
 
             # Füge den Arzt der Liste hinzu
@@ -543,7 +541,11 @@ class Kontolupe(toga.App):
             # Flage zurücksetzen
             self.flag_bearbeite_arzt = False
 
-            # TODO: Aktualisiere verknüpfte Arztrechnungen
+            # Aktualisiere die Liste der Arztrechnungen
+            self.arztrechnungen_liste_aktualisieren()
+
+            # Aktualisiere das Auswahlfeld der Ärztenamen
+            self.input_formular_aerzte_name.items = self.aerzte_liste
 
 
         # Zeige die Liste der Ärzte
@@ -573,10 +575,10 @@ class Kontolupe(toga.App):
 
 
     def erzeuge_seite_liste_beihilfepakete(self):
-        """Erzeugt die Seite, auf der die Beihilfepakete angezeigt werden."""
+        """Erzeugt die Seite, auf der die Beihilfe-Einreichungen angezeigt werden."""
         self.box_seite_liste_beihilfepakete = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_liste_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_beihilfepakete.add(toga.Label('Beihilfepakete', style=style_h1))
+        self.box_seite_liste_beihilfepakete.add(toga.Label('Beihilfe-Einreichungen', style=style_h1))
 
         # Tabelle mit den Beihilfepaketen
         self.tabelle_beihilfepakete_container = toga.ScrollContainer(style=Pack(flex=1))
@@ -597,16 +599,46 @@ class Kontolupe(toga.App):
         self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_buttons)
 
 
+    def erzeuge_seite_liste_pkvpakete(self):
+        """Erzeugt die Seite, auf der die PKV-Einreichungen angezeigt werden."""
+        self.box_seite_liste_pkvpakete = toga.Box(style=Pack(direction=COLUMN))
+        self.box_seite_liste_pkvpakete.add(toga.Button('Zurück', on_press=self.zeige_startseite))
+        self.box_seite_liste_pkvpakete.add(toga.Label('PKV-Einreichungen', style=style_h1))
+
+        # Tabelle mit den PKV-Einreichungen
+        self.tabelle_pkvpakete_container = toga.ScrollContainer(style=Pack(flex=1))
+        self.tabelle_pkvpakete = toga.Table(
+            headings    = ['Datum', 'Betrag', 'Erhalten'], 
+            accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
+            data        = self.pkvpakete_liste,
+            style       = Pack(flex=1)
+        )
+        self.tabelle_pkvpakete_container.content = self.tabelle_pkvpakete
+        self.box_seite_liste_pkvpakete.add(self.tabelle_pkvpakete_container)
+
+        # Buttons für die PKV-Einreichungen
+        box_seite_liste_pkvpakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_seite_liste_pkvpakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_pkvpakete_neu, style=Pack(flex=1)))
+        #box_seite_liste_pkvpakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_pkvpakete_bearbeiten, style=Pack(flex=1)))
+        box_seite_liste_pkvpakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_pkvpaket_loeschen, style=Pack(flex=1)))
+        self.box_seite_liste_pkvpakete.add(box_seite_liste_pkvpakete_buttons)
+
+
     def zeige_seite_liste_beihilfepakete(self, widget):
         """Zeigt die Seite mit der Liste der Beihilfepakete."""
         self.main_window.content = self.box_seite_liste_beihilfepakete
 
     
+    def zeige_seite_liste_pkvpakete(self, widget):
+        """Zeigt die Seite mit der Liste der PKV-Einreichungen."""
+        self.main_window.content = self.box_seite_liste_pkvpakete
+
+    
     def erzeuge_seite_formular_beihilfepakete(self):
-        """Erzeugt das Formular zum Erstellen und Bearbeiten eines Beihilfepakets."""
+        """Erzeugt das Formular zum Erstellen und Bearbeiten einer Beihilfe-Einreichung."""
         self.box_seite_formular_beihilfepakete = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_formular_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_beihilfepakete))
-        self.label_formular_beihilfepakete = toga.Label('Neues Beihilfepaket', style=style_h1)
+        self.label_formular_beihilfepakete = toga.Label('Neue Beihilfe-Einreichung', style=style_h1)
         self.box_seite_formular_beihilfepakete.add(self.label_formular_beihilfepakete)
 
         # Bereich zur Eingabe des Datums
@@ -621,7 +653,7 @@ class Kontolupe(toga.App):
         self.formular_beihilfe_tabelle_arztrechnungen = toga.Table(
             headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
             accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
-            data            = self.erzeuge_liste_beihilfe_tabelle_arztrechnungen(),
+            data            = self.erzeuge_teilliste_arztrechnungen(beihilfe=True),
             multiple_select = True,
             on_select       = self.beihilfe_tabelle_arztrechnungen_auswahl_geaendert,   
             style           = Pack(height=300, flex=1)
@@ -649,6 +681,53 @@ class Kontolupe(toga.App):
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_buttons)
 
 
+    def erzeuge_seite_formular_pkvpakete(self):
+        """Erzeugt das Formular zum Erstellen und Bearbeiten einer PKV-Einreichung."""
+        self.box_seite_formular_pkvpakete = toga.Box(style=Pack(direction=COLUMN))
+        self.box_seite_formular_pkvpakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_pkvpakete))
+        self.label_formular_pkvpakete = toga.Label('Neue PKV-Einreichung', style=style_h1)
+        self.box_seite_formular_pkvpakete.add(self.label_formular_pkvpakete)
+
+        # Bereich zur Eingabe des Datums
+        box_formular_pkvpakete_datum = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_pkvpakete_datum.add(toga.Label('Datum: ', style=Pack(flex=1)))
+        self.input_formular_pkvpakete_datum = toga.DateInput(style=Pack(flex=2))
+        box_formular_pkvpakete_datum.add(self.input_formular_pkvpakete_datum)
+        self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_datum)
+
+        # Bereich zur Auswahl der zugehörigen Arztrechnungen
+        self.formular_pkvpakete_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
+        self.formular_pkv_tabelle_arztrechnungen = toga.Table(
+            headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
+            accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
+            data            = self.erzeuge_teilliste_arztrechnungen(pkv=True),
+            multiple_select = True,
+            on_select       = self.pkv_tabelle_arztrechnungen_auswahl_geaendert,   
+            style           = Pack(height=300, flex=1)
+        )
+        self.formular_pkvpakete_arztrechnungen_container.content = self.formular_pkv_tabelle_arztrechnungen
+        self.box_seite_formular_pkvpakete.add(self.formular_pkvpakete_arztrechnungen_container)
+
+        # Bereich zur Eingabe des Betrags
+        box_formular_pkvpakete_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_pkvpakete_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
+        self.input_formular_pkvpakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2))
+        box_formular_pkvpakete_betrag.add(self.input_formular_pkvpakete_betrag)
+        self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_betrag)
+
+        # Bereich zur Angabe der Erhaltung
+        box_formular_pkvpakete_erhalten = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        self.input_formular_pkvpakete_erhalten = toga.Switch('Erhalten')
+        box_formular_pkvpakete_erhalten.add(self.input_formular_pkvpakete_erhalten)
+        self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_erhalten)
+
+        # Bereich der Buttons
+        box_formular_pkvpakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        box_formular_pkvpakete_buttons.add(toga.Button('Speichern', on_press=self.pkvpaket_speichern, style=Pack(flex=1)))
+        box_formular_pkvpakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_pkvpakete, style=Pack(flex=1)))
+        self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_buttons)
+
+
     def beihilfe_tabelle_arztrechnungen_auswahl_geaendert(self, widget):
         """Ermittelt die Summe des Beihilfe-Anteils der ausgewählten Arztrechnungen."""
         summe = 0
@@ -659,26 +738,54 @@ class Kontolupe(toga.App):
         self.input_formular_beihilfepakete_betrag.value = summe
 
 
+    def pkv_tabelle_arztrechnungen_auswahl_geaendert(self, widget):
+        """Ermittelt die Summe des PKV-Anteils der ausgewählten Arztrechnungen."""
+        summe = 0
+        for auswahl_rg in widget.selection:
+            for rg in self.arztrechnungen:
+                if auswahl_rg.db_id == rg.db_id:
+                    summe += rg.betrag * (100 - rg.beihilfesatz) / 100
+        self.input_formular_pkvpakete_betrag.value = summe
+
+
     def zeige_seite_formular_beihilfepakete_neu(self, widget):
         """Zeigt die Seite zum Erstellen eines Beihilfepakets."""
         # Setze die Eingabefelder zurück
         self.input_formular_beihilfepakete_betrag.value = 0
         self.input_formular_beihilfepakete_datum.value = None
         self.input_formular_beihilfepakete_erhalten.value = False
-        self.formular_beihilfe_tabelle_arztrechnungen.data = self.erzeuge_liste_beihilfe_tabelle_arztrechnungen()
+        self.formular_beihilfe_tabelle_arztrechnungen.data = self.erzeuge_teilliste_arztrechnungen(beihilfe=True)
 
         # Zurücksetzen des Flags
         self.flag_bearbeite_beihilfepaket = False
 
         # Setze die Überschrift
-        self.label_formular_beihilfepakete.text = 'Neues Beihilfepaket'
+        self.label_formular_beihilfepakete.text = 'Neue Beihilfe-Einreichung'
 
         # Zeige die Seite
         self.main_window.content = self.box_seite_formular_beihilfepakete
 
 
+    def zeige_seite_formular_pkvpakete_neu(self, widget):
+        """Zeigt die Seite zum Erstellen einer PKV-Einreichung."""
+        # Setze die Eingabefelder zurück
+        self.input_formular_pkvpakete_betrag.value = 0
+        self.input_formular_pkvpakete_datum.value = None
+        self.input_formular_pkvpakete_erhalten.value = False
+        self.formular_pkv_tabelle_arztrechnungen.data = self.erzeuge_teilliste_arztrechnungen(pkv=True)
+
+        # Zurücksetzen des Flags
+        self.flag_bearbeite_pkvpaket = False
+
+        # Setze die Überschrift
+        self.label_formular_pkvpakete.text = 'Neue PKV-Einreichung'
+
+        # Zeige die Seite
+        self.main_window.content = self.box_seite_formular_pkvpakete
+
+
     def zeige_seite_formular_beihilfepakete_bearbeiten(self, widget):
-        """Zeigt die Seite zum Bearbeiten eines Beihilfepakets."""
+        """Zeigt die Seite zum Bearbeiten einer Beihilfe-Einreichung."""
         # Ermittle den Index des ausgewählten Beihilfepakets
         self.beihilfepaket_b_id = self.index_auswahl(self.tabelle_beihilfepakete)
 
@@ -688,7 +795,7 @@ class Kontolupe(toga.App):
         self.input_formular_beihilfepakete_erhalten.value = self.beihilfepakete[self.beihilfepaket_b_id].erhalten
 
         # Tabelleninhalt aktualisieren
-        tabelle_daten = self.erzeuge_liste_beihilfe_tabelle_arztrechnungen(self.beihilfepakete[self.beihilfepaket_b_id].db_id)
+        tabelle_daten = self.erzeuge_teilliste_arztrechnungen(beihilfe=True, beihilfe_id=self.beihilfepakete[self.beihilfepaket_b_id].db_id)
         self.formular_beihilfe_tabelle_arztrechnungen.data = tabelle_daten
 
         # TODO: Wähle die verknüpften Arztrechnungen in der Tabelle aus
@@ -701,14 +808,38 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_beihilfepaket = True
 
         # Setze die Überschrift
-        self.label_formular_beihilfepakete.text = 'Beihilfepaket bearbeiten'
+        self.label_formular_beihilfepakete.text = 'Beihilfe-Einreichung bearbeiten'
 
         # Zeige die Seite
         self.main_window.content = self.box_seite_formular_beihilfepakete
 
 
+    def zeige_seite_formular_pkvpakete_bearbeiten(self, widget):
+        """Zeigt die Seite zum Bearbeiten einer PKV-Einreichung."""
+        # Ermittle den Index der ausgewählten PKV-Einreichung
+        self.pkvpaket_b_id = self.index_auswahl(self.tabelle_pkvpakete)
+
+        # Befülle die Eingabefelder
+        self.input_formular_pkvpakete_betrag.value = self.pkvpakete[self.pkvpaket_b_id].betrag
+        self.input_formular_pkvpakete_datum.value = self.pkvpakete[self.pkvpaket_b_id].datum
+        self.input_formular_pkvpakete_erhalten.value = self.pkvpakete[self.pkvpaket_b_id].erhalten
+
+        # Tabelleninhalt aktualisieren
+        tabelle_daten = self.erzeuge_teilliste_arztrechnungen(pkv=True, pkv_id=self.pkvpakete[self.pkvpaket_b_id].db_id)
+        self.formular_pkv_tabelle_arztrechnungen.data = tabelle_daten
+
+        # Setze das Flag
+        self.flag_bearbeite_pkvpaket = True
+
+        # Setze die Überschrift
+        self.label_formular_pkvpakete.text = 'PKV-Einreichung bearbeiten'
+
+        # Zeige die Seite
+        self.main_window.content = self.box_seite_formular_pkvpakete
+
+
     def beihilfepaket_speichern(self, widget):
-        """Erstellt und speichert ein neues Beihilfepaket oder ändert ein zur Bearbeitung gewähltes."""
+        """Erstellt und speichert eine neue Beihilfe-Einreichung oder ändert eine bestehende."""
 
         if not self.flag_bearbeite_beihilfepaket:
             # Erstelle ein neues Beihilfepaket
@@ -760,8 +891,61 @@ class Kontolupe(toga.App):
         self.zeige_seite_liste_beihilfepakete(widget)
 
 
+    def pkvpaket_speichern(self, widget):
+        """Erstellt und speichert eine neue PKV-Einreichung oder ändert eine bestehende."""
+
+        if not self.flag_bearbeite_pkvpaket:
+            # Erstelle ein neues PKV-Paket
+            neues_pkvpaket = PKVPaket()
+            neues_pkvpaket.datum = self.input_formular_pkvpakete_datum.value
+            neues_pkvpaket.betrag = float(self.input_formular_pkvpakete_betrag.value)
+            neues_pkvpaket.erhalten = self.input_formular_pkvpakete_erhalten.value
+
+            # Speichere das PKV-Einreichung in der Datenbank
+            neues_pkvpaket.neu(self.db)
+
+            # Füge das PKV-Einreichung der Liste hinzu
+            self.pkvpakete.append(neues_pkvpaket)
+            self.pkvpakete_liste_anfuegen(neues_pkvpaket)
+
+            # Aktualisiere verknüpfte Arztrechnungen
+            for auswahl_rg in self.formular_pkv_tabelle_arztrechnungen.selection:
+                for rg in self.arztrechnungen:
+                    if auswahl_rg.db_id == rg.db_id:
+                        rg.pkv_id = neues_pkvpaket.db_id
+                        rg.speichern(self.db)
+
+        else:
+            # Bearbeite das PKV-Paket
+            self.pkvpakete[self.pkvpaket_b_id].datum = self.input_formular_pkvpakete_datum.value
+            self.pkvpakete[self.pkvpaket_b_id].betrag = float(self.input_formular_pkvpakete_betrag.value)
+            self.pkvpakete[self.pkvpaket_b_id].erhalten = self.input_formular_pkvpakete_erhalten.value
+
+            # Speichere das PKV-Einreichung in der Datenbank
+            self.pkvpakete[self.pkvpaket_b_id].speichern(self.db)
+
+            # Aktualisiere die Liste der PKV-Einreichungen
+            self.pkvpakete_liste_aendern(self.pkvpakete[self.pkvpaket_b_id], self.pkvpaket_b_id)
+
+            # Flage zurücksetzen
+            self.flag_bearbeite_pkvpaket = False
+
+            # Aktualisiere verknüpfte Arztrechnungen
+            for auswahl_rg in self.formular_pkv_tabelle_arztrechnungen.selection:
+                for rg in self.arztrechnungen:
+                    if auswahl_rg.db_id == rg.db_id:
+                        rg.pkv_id = self.pkvpakete[self.pkvpaket_b_id].db_id
+                        rg.speichern(self.db)
+
+        # Arztrechnungen aktualisieren
+        self.arztrechnungen_liste_aktualisieren()
+
+        # Wechsel zur Liste der PKV-Einreichungen
+        self.zeige_seite_liste_pkvpakete(widget)
+
+
     def bestaetige_beihilfepaket_loeschen(self, widget):
-        """Bestätigt das Löschen eines Beihilfepakets."""
+        """Bestätigt das Löschen einer Beihilfe-Einreichung."""
         if self.tabelle_beihilfepakete.selection:
             self.main_window.confirm_dialog(
                 'Beihilfe-Einreichung zurücksetzen', 
@@ -770,8 +954,18 @@ class Kontolupe(toga.App):
             )
 
 
+    def bestaetige_pkvpaket_loeschen(self, widget):
+        """Bestätigt das Löschen einer PKV-Einreichung."""
+        if self.tabelle_pkvpakete.selection:
+            self.main_window.confirm_dialog(
+                'PKV-Einreichung zurücksetzen', 
+                'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Arztrechnungen müssen dann erneut eingereicht werden.',
+                on_result=self.pkvpaket_loeschen
+            )
+
+
     def beihilfepaket_loeschen(self, widget, result):
-        """Löscht ein Beihilfepaket."""
+        """Löscht eine Beihilfe-Einreichung."""
         if self.tabelle_beihilfepakete.selection and result:
             index = self.index_auswahl(self.tabelle_beihilfepakete)
             self.beihilfepakete[index].loeschen(self.db)
@@ -780,8 +974,18 @@ class Kontolupe(toga.App):
             self.arztrechnungen_aktualisieren()
 
 
-    def erzeuge_liste_beihilfe_tabelle_arztrechnungen(self, beihilfe_id=None):
-        """Erzeugt die Liste der Arztrechnungen im Formular für die Beihilfepakete."""
+    def pkvpaket_loeschen(self, widget, result):
+        """Löscht eine PKV-Einreichung."""
+        if self.tabelle_pkvpakete.selection and result:
+            index = self.index_auswahl(self.tabelle_pkvpakete)
+            self.pkvpakete[index].loeschen(self.db)
+            del self.pkvpakete[index]
+            del self.pkvpakete_liste[index]
+            self.arztrechnungen_aktualisieren()
+
+
+    def erzeuge_teilliste_arztrechnungen(self, beihilfe=False, pkv=False, beihilfe_id=None, pkv_id=None):
+        """Erzeugt die Liste der eingereichten Arztrechnungen für Beihilfe oder PKV."""
 
         data = ListSource(accessors=[
             'db_id', 
@@ -807,7 +1011,7 @@ class Kontolupe(toga.App):
             return data
 
         for arztrechnung in self.arztrechnungen_liste:
-            if arztrechnung.beihilfe_id is None or arztrechnung.beihilfe_id == beihilfe_id:
+            if (beihilfe and (arztrechnung.beihilfe_id is None or arztrechnung.beihilfe_id == beihilfe_id)) or (pkv and (arztrechnung.pkv_id is None or arztrechnung.pkv_id == pkv_id)):
                 data.append({
                 'db_id': arztrechnung.db_id,
                 'betrag': arztrechnung.betrag,
@@ -929,7 +1133,7 @@ class Kontolupe(toga.App):
         
 
     def arztrechnungen_aktualisieren(self):
-        """Aktualisiert die referenzierten Werte in dden Arztrechnungen und speichert sie in der Datenbank."""
+        """Aktualisiert die referenzierten Werte in den Arztrechnungen und speichert sie in der Datenbank."""
 
         for arztrechnung in self.arztrechnungen:
 
@@ -1100,6 +1304,8 @@ class Kontolupe(toga.App):
         self.erzeuge_seite_formular_aerzte()
         self.erzeuge_seite_liste_beihilfepakete()
         self.erzeuge_seite_formular_beihilfepakete()
+        self.erzeuge_seite_liste_pkvpakete()
+        self.erzeuge_seite_formular_pkvpakete()
 
         # Erstelle die Menüleiste
         self.commands.add(self.cmd_arztrechnungen_anzeigen)
@@ -1122,7 +1328,9 @@ class Kontolupe(toga.App):
             self.box_seite_liste_aerzte.children,
             self.box_seite_formular_aerzte.children,
             self.box_seite_liste_beihilfepakete.children,
-            self.box_seite_formular_beihilfepakete.children
+            self.box_seite_formular_beihilfepakete.children,
+            self.box_seite_liste_pkvpakete.children,
+            self.box_seite_formular_pkvpakete.children
         )           
 
         # Alle Widgets mit Padding versehen
