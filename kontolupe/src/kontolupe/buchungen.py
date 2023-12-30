@@ -491,19 +491,19 @@ class BeihilfePaket:
         """Neue Beihilfe-Einreichung erstellen."""
         # Betrag der Beihilfe-Einreichung berechnen
 
-        if rechnungen is None:
-            rechnungen = []
+        if rechnungen is not None:
+            self.betrag = 0
+            for rechnung in rechnungen:
+                self.betrag += rechnung.betrag * rechnung.beihilfesatz / 100
 
-        self.betrag = 0
-        for rechnung in rechnungen:
-            self.betrag += rechnung.betrag * rechnung.beihilfesatz / 100
-
+        # Beihilfepaket speichern
         self.db_id = db.neues_beihilfepaket(self)
 
-        # Beihilfe-Einreichung mit Arztrechnungen verknüpfen
-        for rechnung in rechnungen:
-            rechnung.beihilfe_id = self.db_id
-            rechnung.speichern(db)
+        if rechnungen is not None:
+            # Beihilfe-Einreichung mit Arztrechnungen verknüpfen
+            for rechnung in rechnungen:
+                rechnung.beihilfe_id = self.db_id
+                rechnung.speichern(db)
 
     def speichern(self, db):
         """Speichern der Beihilfe-Einreichung in der Datenbank."""
@@ -529,20 +529,23 @@ class PKVPaket:
         self.erhalten = False
         self.db_id = None
 
-    def neu(self, rechnungen, db):
+    def neu(self, db, rechnungen=None):
         """Neue PKV-Einreichung erstellen."""
 
         # Betrag der PKV-Einreichung berechnen
-        self.betrag = 0
-        for rechnung in rechnungen:
-            self.betrag += rechnung.betrag * (100 - rechnung.beihilfesatz) / 100
+        if rechnungen is not None:
+            self.betrag = 0
+            for rechnung in rechnungen:
+                self.betrag += rechnung.betrag * (100 - rechnung.beihilfesatz) / 100
 
+        # PKV-Einreichung speichern
         self.db_id = db.neues_pkvpaket(self)
 
-        # PKV-Einreichung mit Arztrechnungen verknüpfen
-        for rechnung in rechnungen:
-            rechnung.pkv_id = self.db_id
-            rechnung.speichern(db)
+        if rechnungen is not None:
+            # PKV-Einreichung mit Arztrechnungen verknüpfen
+            for rechnung in rechnungen:
+                rechnung.pkv_id = self.db_id
+                rechnung.speichern(db)
 
     def speichern(self, db):
         """Speichern der PKV-Einreichung in der Datenbank."""

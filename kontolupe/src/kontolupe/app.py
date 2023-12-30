@@ -592,8 +592,8 @@ class Kontolupe(toga.App):
         # Buttons für die Beihilfepakete
         box_seite_liste_beihilfepakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_seite_liste_beihilfepakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=Pack(flex=1)))
-        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=Pack(flex=1)))
-        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_beihilfepaket_loeschen, style=Pack(flex=1)))
+        #box_seite_liste_beihilfepakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=Pack(flex=1)))
+        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_beihilfepaket_loeschen, style=Pack(flex=1)))
         self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_buttons)
 
 
@@ -619,10 +619,11 @@ class Kontolupe(toga.App):
         # Bereich zur Auswahl der zugehörigen Arztrechnungen
         self.formular_beihilfepakete_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
         self.formular_beihilfe_tabelle_arztrechnungen = toga.Table(
-            headings        = ['Info', 'Betrag', 'Bezahlt'],
-            accessors       = ['info', 'betrag_euro', 'bezahlt_text'],
+            headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
+            accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
             data            = self.erzeuge_liste_beihilfe_tabelle_arztrechnungen(),
             multiple_select = True,
+            on_select       = self.beihilfe_tabelle_arztrechnungen_auswahl_geaendert,   
             style           = Pack(height=300, flex=1)
         )
         self.formular_beihilfepakete_arztrechnungen_container.content = self.formular_beihilfe_tabelle_arztrechnungen
@@ -646,6 +647,16 @@ class Kontolupe(toga.App):
         box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern, style=Pack(flex=1)))
         box_formular_beihilfepakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_beihilfepakete, style=Pack(flex=1)))
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_buttons)
+
+
+    def beihilfe_tabelle_arztrechnungen_auswahl_geaendert(self, widget):
+        """Ermittelt die Summe des Beihilfe-Anteils der ausgewählten Arztrechnungen."""
+        summe = 0
+        for auswahl_rg in widget.selection:
+            for rg in self.arztrechnungen:
+                if auswahl_rg.db_id == rg.db_id:
+                    summe += rg.betrag * rg.beihilfesatz / 100
+        self.input_formular_beihilfepakete_betrag.value = summe
 
 
     def zeige_seite_formular_beihilfepakete_neu(self, widget):
@@ -698,6 +709,7 @@ class Kontolupe(toga.App):
 
     def beihilfepaket_speichern(self, widget):
         """Erstellt und speichert ein neues Beihilfepaket oder ändert ein zur Bearbeitung gewähltes."""
+
         if not self.flag_bearbeite_beihilfepaket:
             # Erstelle ein neues Beihilfepaket
             neues_beihilfepaket = BeihilfePaket()
@@ -752,8 +764,8 @@ class Kontolupe(toga.App):
         """Bestätigt das Löschen eines Beihilfepakets."""
         if self.tabelle_beihilfepakete.selection:
             self.main_window.confirm_dialog(
-                'Beihilfepaket löschen', 
-                'Soll das ausgewählte Beihilfepaket wirklich gelöscht werden?',
+                'Beihilfe-Einreichung zurücksetzen', 
+                'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Arztrechnungen müssen dann erneut eingereicht werden.',
                 on_result=self.beihilfepaket_loeschen
             )
 
@@ -781,6 +793,7 @@ class Kontolupe(toga.App):
             'arzt_name', 
             'info', 
             'beihilfesatz', 
+            'beihilfesatz_prozent',
             'buchungsdatum', 
             'bezahlt', 
             'bezahlt_text',
@@ -805,6 +818,7 @@ class Kontolupe(toga.App):
                 'arzt_name': self.arzt_name(arztrechnung.arzt_id),
                 'info': self.arzt_name(arztrechnung.arzt_id) + ' - ' + arztrechnung.notiz,
                 'beihilfesatz': arztrechnung.beihilfesatz,
+                'beihilfesatz_prozent': '{:.0f} %'.format(arztrechnung.beihilfesatz),
                 'buchungsdatum': arztrechnung.buchungsdatum,
                 'bezahlt': arztrechnung.bezahlt,
                 'bezahlt_text': 'Ja' if arztrechnung.bezahlt else 'Nein',
@@ -836,6 +850,7 @@ class Kontolupe(toga.App):
             'arzt_name', 
             'info', 
             'beihilfesatz', 
+            'beihilfesatz_prozent',
             'buchungsdatum', 
             'bezahlt', 
             'bezahlt_text',
@@ -902,6 +917,7 @@ class Kontolupe(toga.App):
                 'arzt_name': self.arzt_name(arztrechnung.arzt_id),
                 'info': self.arzt_name(arztrechnung.arzt_id) + ' - ' + arztrechnung.notiz,
                 'beihilfesatz': arztrechnung.beihilfesatz,
+                'beihilfesatz_prozent': '{:.0f} %'.format(arztrechnung.beihilfesatz),
                 'buchungsdatum': arztrechnung.buchungsdatum,
                 'bezahlt': arztrechnung.bezahlt,
                 'bezahlt_text': 'Ja' if arztrechnung.bezahlt else 'Nein',
@@ -1013,6 +1029,7 @@ class Kontolupe(toga.App):
                 'arzt_name': self.arzt_name(arztrechnung.arzt_id),
                 'info': self.arzt_name(arztrechnung.arzt_id) + ' - ' + arztrechnung.notiz,
                 'beihilfesatz': arztrechnung.beihilfesatz,
+                'beihilfesatz_prozent': '{:.0f} %'.format(arztrechnung.beihilfesatz),
                 'buchungsdatum': arztrechnung.buchungsdatum,
                 'bezahlt': arztrechnung.bezahlt,
                 'bezahlt_text': 'Ja' if arztrechnung.bezahlt else 'Nein',
