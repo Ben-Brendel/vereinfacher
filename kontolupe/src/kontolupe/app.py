@@ -20,8 +20,10 @@ from kontolupe.buchungen import *
 #locale.setlocale(locale.LC_ALL, '')
 
 # Styles erzeugen
-style_h1 = Pack(font_size=16, font_weight='bold')
-style_h2 = Pack(font_size=12, font_weight='bold')
+style_h1 = Pack(font_size=16, font_weight='bold', text_align=CENTER)
+style_h2 = Pack(font_size=12, font_weight='bold', text_align=CENTER)
+style_start_summe = Pack(font_size=16, font_weight='bold', text_align=CENTER, padding=40, color='#ffffff')
+style_tabelle_offene_buchungen = Pack(color='#ffffff', padding=20, background_color='#ffffff')
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -141,15 +143,26 @@ class Kontolupe(toga.App):
         """Erzeugt die Startseite der Anwendung."""
 
         # Container für die Startseite
-        self.box_startseite = toga.Box(style=Pack(direction=COLUMN))
+        self.box_startseite = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
         
         # Bereich, der die Summe der offenen Buchungen anzeigt
-        label_start_summe_text = toga.Label('Offener Betrag: ', style=style_h1)
-        self.label_start_summe_zahl = toga.Label('{:.2f} €'.format(self.berechne_summe_offene_buchungen()), style=style_h1)
-        box_startseite_summe = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_startseite_summe.add(label_start_summe_text)
-        box_startseite_summe.add(self.label_start_summe_zahl)
-        self.box_startseite.add(box_startseite_summe)
+        self.box_startseite_offen = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8'))
+        self.label_start_summe = toga.Label('Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen()), style=style_start_summe)
+        self.box_startseite_offen.add(self.label_start_summe)
+
+        # Tabelle mit allen offenen Buchungen
+        self.tabelle_offene_buchungen_container = toga.ScrollContainer(style=Pack(height=200))
+        self.tabelle_offene_buchungen = toga.Table(
+            headings    = ['Info', 'Betrag', 'Datum'],
+            accessors   = ['info', 'betrag_euro', 'datum'],
+            data        = self.erzeuge_liste_offene_buchungen(),
+            style=style_tabelle_offene_buchungen
+        )
+        self.tabelle_offene_buchungen_container.content = self.tabelle_offene_buchungen
+        self.box_startseite_offen.add(self.tabelle_offene_buchungen_container)
+
+        # Box der offenen Buchungen zur Startseite hinzufügen
+        self.box_startseite.add(self.box_startseite_offen)
 
         # Bereich der Arztrechnungen
         label_start_arztrechnungen = toga.Label('Arztrechnungen', style=style_h2)
@@ -189,10 +202,11 @@ class Kontolupe(toga.App):
 
     def zeige_startseite(self, widget):
         """Zurück zur Startseite."""
-        self.label_start_summe_zahl.text = '{:.2f} €'.format(self.berechne_summe_offene_buchungen())
+        self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen())
         self.main_window.content = self.box_startseite
 
-        # TODO: Tabelle mit offenen Buchungen aktualisieren
+        # Tabelle mit offenen Buchungen aktualisieren
+        self.tabelle_offene_buchungen.data = self.erzeuge_liste_offene_buchungen()
 
         # TODO: Tabelle mit deaktivierbaren Buchungen aktualisieren
 
@@ -1042,6 +1056,51 @@ class Kontolupe(toga.App):
         return ''
     
 
+    def erzeuge_liste_offene_buchungen(self):
+        """Erzeugt die Liste der offenen Buchungen für die Tabelle auf der Startseite."""
+        offene_buchungen_liste = ListSource(accessors=[
+            'db_id',                        # Datenbank-Id des jeweiligen Elements
+            'typ',                          # Typ des Elements (Arztrechnung, Beihilfe, PKV)
+            'betrag_euro',                  # Betrag der Buchung in Euro
+            'datum',                        # Datum der Buchung (Plandatum der Rechnung oder Einreichungsdatum der Beihilfe/PKV)
+            'info'                         # Info-Text der Buchung
+        ])
+
+        for arztrechnung in self.arztrechnungen:
+            if not arztrechnung.bezahlt:
+                offene_buchungen_liste.append({
+                    'db_id': arztrechnung.db_id,
+                    'typ': 'Arztrechnung',
+                    'betrag_euro': '-{:.2f} €'.format(arztrechnung.betrag),
+                    'datum': arztrechnung.buchungsdatum,
+                    'info': self.arzt_name(arztrechnung.arzt_id) + ' - ' + arztrechnung.notiz
+                })
+    
+        for beihilfepaket in self.beihilfepakete:
+            if not beihilfepaket.erhalten:
+                offene_buchungen_liste.append({
+                    'db_id': beihilfepaket.db_id,
+                    'typ': 'Beihilfe',
+                    'betrag_euro': '+{:.2f} €'.format(beihilfepaket.betrag),
+                    'datum': beihilfepaket.datum,
+                    'info': 'Beihilfe-Einreichung'
+                })
+
+        for pkvpaket in self.pkvpakete:
+            if not pkvpaket.erhalten:
+                offene_buchungen_liste.append({
+                    'db_id': pkvpaket.db_id,
+                    'typ': 'PKV',
+                    'betrag_euro': '+{:.2f} €'.format(pkvpaket.betrag),
+                    'datum': pkvpaket.datum,
+                    'info': 'PKV-Einreichung'
+                })
+
+        for b in offene_buchungen_liste:
+            print(b)
+
+        return offene_buchungen_liste
+
     def arztrechnungen_liste_erzeugen(self):
         """Erzeugt die Liste für die Arztrechnungen."""
         self.arztrechnungen_liste = ListSource(accessors=[
@@ -1242,7 +1301,6 @@ class Kontolupe(toga.App):
                 'pkv_id': arztrechnung.pkv_id,
                 'pkv_eingereicht': 'Ja' if arztrechnung.pkv_id else 'Nein'
             }
-        print(str(self.arztrechnungen_liste[rg_id].beihilfe_id) + ' - ' + self.arztrechnungen_liste[rg_id].beihilfe_eingereicht)
         
 
     def aerzte_liste_aendern(self, arzt, arzt_id):
@@ -1335,7 +1393,8 @@ class Kontolupe(toga.App):
 
         # Alle Widgets mit Padding versehen
         for w in all_children:
-            w.style.padding = 10 
+            if w != self.label_start_summe:
+                w.style.padding = 10 
 
         # Zeige die Startseite
         self.zeige_startseite(None)
