@@ -1123,6 +1123,11 @@ class Kontolupe(toga.App):
         indizes['Beihilfe'] = list(indizes['Beihilfe'])
         indizes['PKV'] = list(indizes['PKV'])
 
+        # sort the lists in reverse order
+        indizes['Arztrechnung'].sort(reverse=True)
+        indizes['Beihilfe'].sort(reverse=True)
+        indizes['PKV'].sort(reverse=True)
+
         return indizes
     
 
@@ -1157,19 +1162,26 @@ class Kontolupe(toga.App):
         """Archiviert alle archivierbaren Buchungen."""
         if result:
             indizes = self.indizes_archivierbare_buchungen()
+
             for i in indizes['Arztrechnung']:
                 self.arztrechnungen[i].aktiv = 0
+                self.arztrechnungen[i].speichern(self.db)
+                del self.arztrechnungen[i]
+                del self.arztrechnungen_liste[i]
 
             for i in indizes['Beihilfe']:
                 self.beihilfepakete[i].aktiv = 0
+                self.beihilfepakete[i].speichern(self.db)
+                del self.beihilfepakete[i]
+                del self.beihilfepakete_liste[i]
                 
             for i in indizes['PKV']:
                 self.pkvpakete[i].aktiv = 0
-
-            self.arztrechnungen_liste_aktualisieren()
-            self.beihilfepakete_liste_aktualisieren()
-            self.pkvpakete_liste_aktualisieren()
-            self.zeige_startseite(self.tabelle_offene_buchungen)
+                self.pkvpakete[i].speichern(self.db)
+                del self.pkvpakete[i]
+                del self.pkvpakete_liste[i]
+            
+            self.zeige_startseite(widget)
     
 
     def text_arztrechnungen_todo(self):
@@ -1258,7 +1270,7 @@ class Kontolupe(toga.App):
             self.arztrechnungen_liste_aktualisieren()
 
             # Aktualisiere die Liste der offenen Buchungen
-            self.zeige_startseite(self.tabelle_offene_buchungen)
+            self.zeige_startseite(widget)
 
     
     def beihilfe_erhalten(self, widget, result):
@@ -1275,7 +1287,7 @@ class Kontolupe(toga.App):
             self.beihilfepakete_liste_aktualisieren()
 
             # Aktualisiere die Liste der offenen Buchungen
-            self.zeige_startseite(self.tabelle_offene_buchungen)
+            self.zeige_startseite(widget)
 
 
     def pkv_erhalten(self, widget, result):
@@ -1292,7 +1304,7 @@ class Kontolupe(toga.App):
             self.pkvpakete_liste_aktualisieren()
 
             # Aktualisiere die Liste der offenen Buchungen
-            self.zeige_startseite(self.tabelle_offene_buchungen)
+            self.zeige_startseite(widget)
     
 
     def erzeuge_liste_offene_buchungen(self):
