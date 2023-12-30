@@ -221,6 +221,16 @@ class Kontolupe(toga.App):
         box_startseite_pkv.add(box_startseite_pkv_buttons)
         self.box_startseite.add(box_startseite_pkv)
 
+        # Bereich für die Archivierungsfunktion
+        label_start_archiv = toga.Label('Archivierung', style=style_h2)
+        self.label_start_archiv_offen = toga.Label(self.text_archiv_todo(), style=style_offene_rechnungen)
+        button_start_archiv = toga.Button('Archivieren', style=Pack(flex=1), on_press=self.archivieren_bestaetigen)
+        box_startseite_archiv = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        box_startseite_archiv.add(label_start_archiv)
+        box_startseite_archiv.add(self.label_start_archiv_offen)
+        box_startseite_archiv.add(button_start_archiv)
+        self.box_startseite.add(box_startseite_archiv)
+
     def zeige_startseite(self, widget):
         """Zurück zur Startseite."""
         self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen())
@@ -232,7 +242,8 @@ class Kontolupe(toga.App):
         self.label_start_beihilfe_offen.text = self.text_beihilfe_todo()
         self.label_start_pkv_offen.text = self.text_pkv_todo()
 
-        # TODO: Tabelle mit deaktivierbaren Buchungen aktualisieren
+        # Tabelle mit deaktivierbaren Buchungen aktualisieren
+        self.label_start_archiv_offen.text = self.text_archiv_todo()
 
 
     def erzeuge_seite_liste_arztrechnungen(self):
@@ -1082,6 +1093,83 @@ class Kontolupe(toga.App):
             if arzt.db_id == arzt_id:
                 return arzt.name
         return ''
+    
+
+    def indizes_archivierbare_buchungen(self):
+        """Ermittelt die Indizes der archivierbaren Arztrechnungen, Beihilfepakete und PKVpakete und gibt sie zurück."""
+        indizes = {
+            'Arztrechnung' : [],
+            'Beihilfe' : set(),
+            'PKV' : set()
+        }
+
+        # Create dictionaries for quick lookup of beihilfepakete and pkvpakete by db_id
+        beihilfepakete_dict = {paket.db_id: paket for paket in self.beihilfepakete}
+        pkvpakete_dict = {paket.db_id: paket for paket in self.pkvpakete}
+
+        for i, arztrechnung in enumerate(self.arztrechnungen):
+            if arztrechnung.bezahlt and arztrechnung.beihilfe_id and arztrechnung.pkv_id:
+                beihilfepaket = beihilfepakete_dict.get(arztrechnung.beihilfe_id)
+                pkvpaket = pkvpakete_dict.get(arztrechnung.pkv_id)
+                if beihilfepaket and beihilfepaket.erhalten and pkvpaket and pkvpaket.erhalten:
+                    # Check if all other arztrechnungen associated with the beihilfepaket and pkvpaket are paid
+                    other_arztrechnungen = [ar for ar in self.arztrechnungen if ar.beihilfe_id == beihilfepaket.db_id or ar.pkv_id == pkvpaket.db_id]
+                    if all(ar.bezahlt for ar in other_arztrechnungen):
+                        indizes['Arztrechnung'].append(i)
+                        indizes['Beihilfe'].add(self.beihilfepakete.index(beihilfepaket))
+                        indizes['PKV'].add(self.pkvpakete.index(pkvpaket))
+
+        # Convert sets back to lists
+        indizes['Beihilfe'] = list(indizes['Beihilfe'])
+        indizes['PKV'] = list(indizes['PKV'])
+
+        return indizes
+    
+
+    def text_archiv_todo(self):
+        """Ermittle den Anzeigetext für die Anzahl noch nicht archivierter Buchungen."""
+        indizes = self.indizes_archivierbare_buchungen()
+
+        # Count the number of items in the dictionary indizes
+        anzahl = sum(len(v) for v in indizes.values())
+
+        match anzahl:
+            case 0:
+                return 'Keine archivierbaren Buchungen vorhanden.'
+            case 1:
+                return '1 archivierbare Buchung vorhanden.'
+            case _:
+                return '{} archivierbare Buchungen vorhanden.'.format(anzahl)
+            
+
+    def archivieren_bestaetigen(self, widget):
+        """Bestätigt das Archivieren von Buchungen."""
+        indizes = self.indizes_archivierbare_buchungen()
+        if sum(len(v) for v in indizes.values()) > 0:
+            self.main_window.confirm_dialog(
+                'Buchungen archivieren', 
+                'Sollen alle archivierbaren Buchungen wirklich archiviert werden? Sie werden dann in der App nicht mehr angezeigt.',
+                on_result=self.archivieren
+            )
+
+
+    def archivieren(self, widget, result):
+        """Archiviert alle archivierbaren Buchungen."""
+        if result:
+            indizes = self.indizes_archivierbare_buchungen()
+            for i in indizes['Arztrechnung']:
+                self.arztrechnungen[i].aktiv = 0
+
+            for i in indizes['Beihilfe']:
+                self.beihilfepakete[i].aktiv = 0
+                
+            for i in indizes['PKV']:
+                self.pkvpakete[i].aktiv = 0
+
+            self.arztrechnungen_liste_aktualisieren()
+            self.beihilfepakete_liste_aktualisieren()
+            self.pkvpakete_liste_aktualisieren()
+            self.zeige_startseite(self.tabelle_offene_buchungen)
     
 
     def text_arztrechnungen_todo(self):
