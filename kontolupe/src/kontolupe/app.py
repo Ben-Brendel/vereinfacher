@@ -21,9 +21,10 @@ from kontolupe.buchungen import *
 
 # Styles erzeugen
 style_h1 = Pack(font_size=16, font_weight='bold', text_align=CENTER)
-style_h2 = Pack(font_size=12, font_weight='bold', text_align=CENTER)
-style_start_summe = Pack(font_size=16, font_weight='bold', text_align=CENTER, padding=40, color='#ffffff')
-style_tabelle_offene_buchungen = Pack(color='#ffffff', padding=20, background_color='#ffffff')
+style_h2 = Pack(font_size=12, font_weight='bold', text_align=CENTER, padding_top=20)
+style_start_summe = Pack(font_size=16, font_weight='bold', text_align=CENTER, padding=30, color='#ffffff')
+style_tabelle_offene_buchungen = Pack(padding=10, height=200)
+style_offene_rechnungen = Pack(text_align=CENTER, padding=10)
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -144,28 +145,39 @@ class Kontolupe(toga.App):
 
         # Container für die Startseite
         self.box_startseite = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        self.scroll_container_startseite = toga.ScrollContainer(content=self.box_startseite)
         
         # Bereich, der die Summe der offenen Buchungen anzeigt
         self.box_startseite_offen = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8'))
         self.label_start_summe = toga.Label('Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen()), style=style_start_summe)
         self.box_startseite_offen.add(self.label_start_summe)
+        self.box_startseite.add(self.box_startseite_offen)
 
         # Tabelle mit allen offenen Buchungen
-        self.tabelle_offene_buchungen_container = toga.ScrollContainer(style=Pack(height=200))
+        self.box_startseite_tabelle_offene_buchungen = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        #self.tabelle_offene_buchungen_container = toga.ScrollContainer(style=Pack(height=200))
         self.tabelle_offene_buchungen = toga.Table(
             headings    = ['Info', 'Betrag', 'Datum'],
             accessors   = ['info', 'betrag_euro', 'datum'],
             data        = self.erzeuge_liste_offene_buchungen(),
-            style=style_tabelle_offene_buchungen
+            style       = style_tabelle_offene_buchungen
         )
-        self.tabelle_offene_buchungen_container.content = self.tabelle_offene_buchungen
-        self.box_startseite_offen.add(self.tabelle_offene_buchungen_container)
+        #self.tabelle_offene_buchungen_container.content = self.tabelle_offene_buchungen
+        #self.box_startseite_tabelle_offene_buchungen.add(self.tabelle_offene_buchungen_container)
+        self.box_startseite_tabelle_offene_buchungen.add(self.tabelle_offene_buchungen)
+
+        # Buttons zur Markierung offener Buchungen als bezahlt/erhalten 
+        self.box_startseite_tabelle_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        self.box_startseite_tabelle_buttons.add(toga.Button('Markiere als bezahlt/erhalten', on_press=self.bestaetige_bezahlung, style=Pack(flex=1)))
+        self.box_startseite_tabelle_offene_buchungen.add(self.box_startseite_tabelle_buttons)
 
         # Box der offenen Buchungen zur Startseite hinzufügen
-        self.box_startseite.add(self.box_startseite_offen)
+        self.box_startseite.add(self.box_startseite_tabelle_offene_buchungen)
+        
 
         # Bereich der Arztrechnungen
         label_start_arztrechnungen = toga.Label('Arztrechnungen', style=style_h2)
+        self.label_start_arztrechnungen_offen = toga.Label(self.text_arztrechnungen_todo(), style=style_offene_rechnungen)
         button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(width=200))
         button_start_arztrechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(width=200))
         box_startseite_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
@@ -173,11 +185,13 @@ class Kontolupe(toga.App):
         box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_neu)
         box_startseite_arztrechnungen = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
         box_startseite_arztrechnungen.add(label_start_arztrechnungen)
+        box_startseite_arztrechnungen.add(self.label_start_arztrechnungen_offen)
         box_startseite_arztrechnungen.add(box_startseite_arztrechnungen_buttons)
         self.box_startseite.add(box_startseite_arztrechnungen)
 
         # Bereich der Beihilfe-Einreichungen
         label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_h2)
+        self.label_start_beihilfe_offen = toga.Label(self.text_beihilfe_todo(), style=style_offene_rechnungen)
         button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=Pack(width=200), on_press=self.zeige_seite_liste_beihilfepakete)
         button_start_beihilfe_neu = toga.Button('Neu', style=Pack(width=200), on_press=self.zeige_seite_formular_beihilfepakete_neu)
         box_startseite_beihilfe_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
@@ -185,11 +199,13 @@ class Kontolupe(toga.App):
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_neu)
         box_startseite_beihilfe = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
         box_startseite_beihilfe.add(label_start_beihilfe)
+        box_startseite_beihilfe.add(self.label_start_beihilfe_offen)
         box_startseite_beihilfe.add(box_startseite_beihilfe_buttons)
         self.box_startseite.add(box_startseite_beihilfe)
 
         # Bereich der PKV-Einreichungen
         label_start_pkv = toga.Label('PKV-Einreichungen', style=style_h2)
+        self.label_start_pkv_offen = toga.Label(self.text_pkv_todo(), style=style_offene_rechnungen)
         button_start_pkv_anzeigen = toga.Button('Anzeigen', style=Pack(width=200), on_press=self.zeige_seite_liste_pkvpakete)
         button_start_pkv_neu = toga.Button('Neu', style=Pack(width=200), on_press=self.zeige_seite_formular_pkvpakete_neu)
         box_startseite_pkv_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
@@ -197,16 +213,20 @@ class Kontolupe(toga.App):
         box_startseite_pkv_buttons.add(button_start_pkv_neu)
         box_startseite_pkv = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
         box_startseite_pkv.add(label_start_pkv)
+        box_startseite_pkv.add(self.label_start_pkv_offen)
         box_startseite_pkv.add(box_startseite_pkv_buttons)
         self.box_startseite.add(box_startseite_pkv)
 
     def zeige_startseite(self, widget):
         """Zurück zur Startseite."""
         self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen())
-        self.main_window.content = self.box_startseite
+        self.main_window.content = self.scroll_container_startseite
 
         # Tabelle mit offenen Buchungen aktualisieren
         self.tabelle_offene_buchungen.data = self.erzeuge_liste_offene_buchungen()
+        self.label_start_arztrechnungen_offen.text = self.text_arztrechnungen_todo()
+        self.label_start_beihilfe_offen.text = self.text_beihilfe_todo()
+        self.label_start_pkv_offen.text = self.text_pkv_todo()
 
         # TODO: Tabelle mit deaktivierbaren Buchungen aktualisieren
 
@@ -243,7 +263,9 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_formular_arztrechnungen(self):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Arztrechnung."""
+        self.scroll_container_formular_arztrechnungen = toga.ScrollContainer(style=Pack(flex=1))
         self.box_seite_formular_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
+        self.scroll_container_formular_arztrechnungen.content = self.box_seite_formular_arztrechnungen
         self.box_seite_formular_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_arztrechnungen))
         self.label_formular_arztrechnungen = toga.Label('Neue Arztrechnung', style=style_h1)
         self.box_seite_formular_arztrechnungen.add(self.label_formular_arztrechnungen)
@@ -325,7 +347,8 @@ class Kontolupe(toga.App):
         # Setze die Eingabefelder zurück
         self.input_formular_arztrechnungen_betrag.value = 0
         self.input_formular_arztrechnungen_rechnungsdatum.value = None
-        self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[0]
+        if len(self.aerzte_liste) > 0:
+            self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[0]
         self.input_formular_arztrechnungen_beihilfesatz.value = 0
         self.input_formular_arztrechnungen_notiz.value = ''
         self.input_formular_arztrechnungen_buchungsdatum.value = None
@@ -338,7 +361,7 @@ class Kontolupe(toga.App):
         self.label_formular_arztrechnungen.text = 'Neue Arztrechnung'
 
         # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_arztrechnungen
+        self.main_window.content = self.scroll_container_formular_arztrechnungen
 
     
     def zeige_seite_formular_arztrechnungen_bearbeiten(self, widget):
@@ -375,7 +398,7 @@ class Kontolupe(toga.App):
         self.label_formular_arztrechnungen.text = 'Arztrechnung bearbeiten'
 
         # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_arztrechnungen
+        self.main_window.content = self.scroll_container_formular_arztrechnungen
 
 
     def arztrechnung_speichern(self, widget):
@@ -385,7 +408,8 @@ class Kontolupe(toga.App):
         # Erstelle eine neue Arztrechnung
             neue_arztrechnung = Arztrechnung()
             neue_arztrechnung.rechnungsdatum = self.input_formular_arztrechnungen_rechnungsdatum.value
-            neue_arztrechnung.arzt_id = self.input_formular_arztrechnungen_arzt.value.db_id
+            if len(self.aerzte_liste) > 0:
+                neue_arztrechnung.arzt_id = self.input_formular_arztrechnungen_arzt.value.db_id
             neue_arztrechnung.notiz = self.input_formular_arztrechnungen_notiz.value
             neue_arztrechnung.betrag = float(self.input_formular_arztrechnungen_betrag.value)
             neue_arztrechnung.beihilfesatz = float(self.input_formular_arztrechnungen_beihilfesatz.value)
@@ -1056,6 +1080,129 @@ class Kontolupe(toga.App):
         return ''
     
 
+    def text_arztrechnungen_todo(self):
+        """Ermittle den Anzeigetext für die Anzahl noch nicht bezahlter Arztrechnungen."""
+        anzahl = 0
+        for arztrechnung in self.arztrechnungen:
+            if not arztrechnung.bezahlt:
+                anzahl += 1
+
+        match anzahl:
+            case 0:
+                return 'Alle Arztrechnungen bezahlt.'
+            case 1:
+                return '1 Arztrechnung noch nicht bezahlt.'
+            case _:
+                return '{} Arztrechnungen noch nicht bezahlt.'.format(anzahl)
+    
+
+    def text_beihilfe_todo(self):
+        """Ermittle den Anzeigetext mit der Anzahl der noch nicht bei der Beihilfe eingereichten Arztrechnungen."""
+        anzahl = 0
+        for arztrechnung in self.arztrechnungen:
+            if not arztrechnung.beihilfe_id:
+                anzahl += 1
+
+        match anzahl:
+            case 0:
+                return 'Alle Arztrechnungen eingereicht.'
+            case 1:
+                return '1 Arztrechnung noch nicht eingereicht.'
+            case _:
+                return '{} Arztrechnungen noch nicht eingereicht.'.format(anzahl)
+            
+
+    def text_pkv_todo(self):
+        """Ermittle den Anzeigetext mit der Anzahl der noch nicht bei der PKV eingereichten Arztrechnungen."""
+        anzahl = 0
+        for arztrechnung in self.arztrechnungen:
+            if not arztrechnung.pkv_id:
+                anzahl += 1
+
+        match anzahl:
+            case 0:
+                return 'Alle Arztrechnungen eingereicht.'
+            case 1:
+                return '1 Arztrechnung noch nicht eingereicht.'
+            case _:
+                return '{} Arztrechnungen noch nicht eingereicht.'.format(anzahl)
+            
+
+    def bestaetige_bezahlung(self, widget):
+        """Bestätigt die Bezahlung einer Arztrechnung."""
+        if self.tabelle_offene_buchungen.selection:
+            match self.tabelle_offene_buchungen.selection.typ:
+                case 'Arztrechnung':
+                    self.main_window.confirm_dialog(
+                        'Arztrechnung als bezahlt markieren', 
+                        'Soll die ausgewählte Arztrechnung wirklich als bezahlt markiert werden?',
+                        on_result=self.arztrechnung_bezahlen
+                    )
+                case 'Beihilfe':
+                    self.main_window.confirm_dialog(
+                        'Beihilfe als erhalten markieren', 
+                        'Soll die ausgewählte Beihilfe wirklich als erhalten markiert werden?',
+                        on_result=self.beihilfe_erhalten
+                    )
+                case 'PKV':
+                    self.main_window.confirm_dialog(
+                        'PKV-Einreichung als erhalten markieren', 
+                        'Soll die ausgewählte PKV-Einreichung wirklich als erhalten markiert werden?',
+                        on_result=self.pkv_erhalten
+                    )
+    
+
+    def arztrechnung_bezahlen(self, widget, result):
+        """Markiert eine Arztrechnung als bezahlt."""
+        if self.tabelle_offene_buchungen.selection and result:
+            # Setze das Flag bezahlt auf True bei der Arztrechnung mit der db_id aus der Tabelle
+            for arztrechnung in self.arztrechnungen:
+                if arztrechnung.db_id == self.tabelle_offene_buchungen.selection.db_id:
+                    arztrechnung.bezahlt = True
+                    arztrechnung.speichern(self.db)
+                    break
+            
+            # Aktualisiere die Liste der Arztrechnungen
+            self.arztrechnungen_liste_aktualisieren()
+
+            # Aktualisiere die Liste der offenen Buchungen
+            self.zeige_startseite(self.tabelle_offene_buchungen)
+
+    
+    def beihilfe_erhalten(self, widget, result):
+        """Markiert eine Beihilfe als erhalten."""
+        if self.tabelle_offene_buchungen.selection and result:
+            # Setze das Flag erhalten auf True bei der Beihilfe mit der db_id aus der Tabelle
+            for beihilfepaket in self.beihilfepakete:
+                if beihilfepaket.db_id == self.tabelle_offene_buchungen.selection.db_id:
+                    beihilfepaket.erhalten = True
+                    beihilfepaket.speichern(self.db)
+                    break
+            
+            # Aktualisiere die Liste der Beihilfepakete
+            self.beihilfepakete_liste_aktualisieren()
+
+            # Aktualisiere die Liste der offenen Buchungen
+            self.zeige_startseite(self.tabelle_offene_buchungen)
+
+
+    def pkv_erhalten(self, widget, result):
+        """Markiert eine PKV-Einreichung als erhalten."""
+        if self.tabelle_offene_buchungen.selection and result:
+            # Setze das Flag erhalten auf True bei der PKV-Einreichung mit der db_id aus der Tabelle
+            for pkvpaket in self.pkvpakete:
+                if pkvpaket.db_id == self.tabelle_offene_buchungen.selection.db_id:
+                    pkvpaket.erhalten = True
+                    pkvpaket.speichern(self.db)
+                    break
+            
+            # Aktualisiere die Liste der PKV-Einreichungen
+            self.pkvpakete_liste_aktualisieren()
+
+            # Aktualisiere die Liste der offenen Buchungen
+            self.zeige_startseite(self.tabelle_offene_buchungen)
+    
+
     def erzeuge_liste_offene_buchungen(self):
         """Erzeugt die Liste der offenen Buchungen für die Tabelle auf der Startseite."""
         offene_buchungen_liste = ListSource(accessors=[
@@ -1095,9 +1242,6 @@ class Kontolupe(toga.App):
                     'datum': pkvpaket.datum,
                     'info': 'PKV-Einreichung'
                 })
-
-        for b in offene_buchungen_liste:
-            print(b)
 
         return offene_buchungen_liste
 
@@ -1246,6 +1390,18 @@ class Kontolupe(toga.App):
         """Aktualisiert die referenzierten Werte in der Liste der Arztrechnungen."""
         for rg_id in range(len(self.arztrechnungen_liste)):
             self.arztrechnungen_liste_aendern(self.arztrechnungen[rg_id], rg_id)
+
+    
+    def beihilfepakete_liste_aktualisieren(self):
+        """Aktualisiert die Liste der Beihilfepakete."""
+        for beihilfepaket_id in range(len(self.beihilfepakete_liste)):
+            self.beihilfepakete_liste_aendern(self.beihilfepakete[beihilfepaket_id], beihilfepaket_id)
+
+    
+    def pkvpakete_liste_aktualisieren(self):
+        """Aktualisiert die Liste der PKV-Pakete."""
+        for pkvpaket_id in range(len(self.pkvpakete_liste)):
+            self.pkvpakete_liste_aendern(self.pkvpakete[pkvpaket_id], pkvpaket_id)
         
 
     def aerzte_liste_anfuegen(self, arzt):
