@@ -49,20 +49,20 @@ class Kontolupe(toga.App):
         self.pkvpaket_b_id = 0
 
         # Erzeuge die Menüleiste
-        gruppe_arztrechnungen = toga.Group('Arztrechnungen', order = 1)
+        gruppe_arztrechnungen = toga.Group('Rechnungen', order = 1)
 
         self.cmd_arztrechnungen_anzeigen = toga.Command(
             self.zeige_seite_liste_arztrechnungen,
-            'Arztrechnungen anzeigen',
-            tooltip = 'Zeigt die Liste der Arztrechnungen an.',
+            'Rechnungen anzeigen',
+            tooltip = 'Zeigt die Liste der Rechnungen an.',
             group = gruppe_arztrechnungen,
             order = 10
         )
 
         self.cmd_arztrechnungen_neu = toga.Command(
             self.zeige_seite_formular_arztrechnungen_neu,
-            'Neue Arztrechnung',
-            tooltip = 'Erstellt eine neue Arztrechnung.',
+            'Neue Rechnung',
+            tooltip = 'Erstellt eine neue Rechnung.',
             group = gruppe_arztrechnungen,
             order = 20
         )
@@ -103,20 +103,20 @@ class Kontolupe(toga.App):
             order = 20
         )
 
-        gruppe_aerzte = toga.Group('Ärzte', order = 4)
+        gruppe_aerzte = toga.Group('Einrichtungen', order = 4)
 
         self.cmd_aerzte_anzeigen = toga.Command(
             self.zeige_seite_liste_aerzte,
-            'Ärzte anzeigen',
-            tooltip = 'Zeigt die Liste der Ärzte an.',
+            'Einrichtungen anzeigen',
+            tooltip = 'Zeigt die Liste der Einrichtungen an.',
             group = gruppe_aerzte,
             order = 10
         )
 
         self.cmd_aerzte_neu = toga.Command(
             self.zeige_seite_formular_aerzte_neu,
-            'Neuer Arzt',
-            tooltip = 'Erstellt einen neuen Arzt.',
+            'Neue Einrichtung',
+            tooltip = 'Erstellt eine neue Einrichtung.',
             group = gruppe_aerzte,
             order = 20
         )
@@ -190,7 +190,7 @@ class Kontolupe(toga.App):
         
 
         # Bereich der Arztrechnungen
-        label_start_arztrechnungen = toga.Label('Arztrechnungen', style=style_h2)
+        label_start_arztrechnungen = toga.Label('Rechnungen', style=style_h2)
         self.label_start_arztrechnungen_offen = toga.Label(self.text_arztrechnungen_todo(), style=style_offene_rechnungen)
         button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(flex=1))
         button_start_arztrechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(flex=1))
@@ -260,7 +260,7 @@ class Kontolupe(toga.App):
         """Erzeugt die Seite, auf der die Arztrechnungen angezeigt werden."""
         self.box_seite_liste_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_liste_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_arztrechnungen.add(toga.Label('Arztrechnungen', style=style_h1))
+        self.box_seite_liste_arztrechnungen.add(toga.Label('Rechnungen', style=style_h1))
 
         # Tabelle mit den Arztrechnungen
         self.tabelle_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
@@ -292,7 +292,7 @@ class Kontolupe(toga.App):
         self.box_seite_formular_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
         self.scroll_container_formular_arztrechnungen.content = self.box_seite_formular_arztrechnungen
         self.box_seite_formular_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_arztrechnungen))
-        self.label_formular_arztrechnungen = toga.Label('Neue Arztrechnung', style=style_h1)
+        self.label_formular_arztrechnungen = toga.Label('Neue Rechnung', style=style_h1)
         self.box_seite_formular_arztrechnungen.add(self.label_formular_arztrechnungen)
 
         # Bereich zur Eingabe des Rechnungsdatums
@@ -311,7 +311,7 @@ class Kontolupe(toga.App):
 
         # Bereich zur Auswahl des Arztes
         box_formular_arztrechnungen_arzt = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_arzt.add(toga.Label('Arzt: ', style=Pack(flex=1)))
+        box_formular_arztrechnungen_arzt.add(toga.Label('Einrichtung: ', style=Pack(flex=1)))
         self.input_formular_arztrechnungen_arzt = toga.Selection(items=self.aerzte_liste, accessor='name', style=Pack(flex=2))
         box_formular_arztrechnungen_arzt.add(self.input_formular_arztrechnungen_arzt)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_arzt)
@@ -383,7 +383,7 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_arztrechnung = False
 
         # Setze die Überschrift
-        self.label_formular_arztrechnungen.text = 'Neue Arztrechnung'
+        self.label_formular_arztrechnungen.text = 'Neue Rechnung'
 
         # Zeige die Seite
         self.main_window.content = self.scroll_container_formular_arztrechnungen
@@ -420,7 +420,7 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_arztrechnung = True
 
         # Setze die Überschrift
-        self.label_formular_arztrechnungen.text = 'Arztrechnung bearbeiten'
+        self.label_formular_arztrechnungen.text = 'Rechnung bearbeiten'
 
         # Zeige die Seite
         self.main_window.content = self.scroll_container_formular_arztrechnungen
@@ -535,8 +535,8 @@ class Kontolupe(toga.App):
         """Bestätigt das Löschen einer Arztrechnung."""
         if self.tabelle_arztrechnungen.selection:
             self.main_window.confirm_dialog(
-                'Arztrechnung löschen', 
-                'Soll die ausgewählte Arztrechnung wirklich gelöscht werden?',
+                'Rechnung löschen', 
+                'Soll die ausgewählte Rechnung wirklich gelöscht werden?',
                 on_result=self.arztrechnung_loeschen
             )
 
@@ -556,13 +556,13 @@ class Kontolupe(toga.App):
         """Erzeugt die Seite, auf der die Ärzte angezeigt werden."""
         self.box_seite_liste_aerzte = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_liste_aerzte.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_aerzte.add(toga.Label('Ärzte', style=style_h1))
+        self.box_seite_liste_aerzte.add(toga.Label('Einrichtungen', style=style_h1))
 
         # Tabelle mit den Ärzten
 
         self.tabelle_aerzte_container = toga.ScrollContainer(style=Pack(flex=1))
         self.tabelle_aerzte = toga.Table(
-            headings    = ['Arzt'], 
+            headings    = ['Einrichtung'], 
             accessors   = ['name'],
             data        = self.aerzte_liste,
             style       = Pack(flex=1)
@@ -587,12 +587,12 @@ class Kontolupe(toga.App):
         """Erzeugt das Formular zum Erstellen und Bearbeiten eines Arztes."""
         self.box_seite_formular_aerzte = toga.Box(style=Pack(direction=COLUMN))
         self.box_seite_formular_aerzte.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_aerzte))
-        self.label_formular_aerzte = toga.Label('Neuer Arzt', style=style_h1)
+        self.label_formular_aerzte = toga.Label('Neue Einrichtung', style=style_h1)
         self.box_seite_formular_aerzte.add(self.label_formular_aerzte)
 
         # Bereich zur Eingabe des Namens
         box_formular_aerzte_name = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_aerzte_name.add(toga.Label('Name des Arztes: ', style=Pack(flex=1)))
+        box_formular_aerzte_name.add(toga.Label('Name der Einrichtung: ', style=Pack(flex=1)))
         self.input_formular_aerzte_name = toga.TextInput(style=Pack(flex=2))
         box_formular_aerzte_name.add(self.input_formular_aerzte_name)
         self.box_seite_formular_aerzte.add(box_formular_aerzte_name)
@@ -613,7 +613,7 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_arzt = False
 
         # Setze die Überschrift
-        self.label_formular_aerzte.text = 'Neuer Arzt'
+        self.label_formular_aerzte.text = 'Neue Einrichtung'
 
         # Zeige die Seite
         self.main_window.content = self.box_seite_formular_aerzte
@@ -631,7 +631,7 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_arzt = True
 
         # Setze die Überschrift
-        self.label_formular_aerzte.text = 'Arzt bearbeiten'
+        self.label_formular_aerzte.text = 'Einrichtung bearbeiten'
 
         # Zeige die Seite
         self.main_window.content = self.box_seite_formular_aerzte
@@ -678,8 +678,8 @@ class Kontolupe(toga.App):
         """Bestätigt das Löschen eines Arztes."""
         if self.tabelle_aerzte.selection:
             self.main_window.confirm_dialog(
-                'Arzt löschen', 
-                'Soll der ausgewählte Arzt wirklich gelöscht werden?',
+                'Einrichtung löschen', 
+                'Soll die ausgewählte Einrichtung wirklich gelöscht werden?',
                 on_result=self.arzt_loeschen
             )
 
@@ -1071,7 +1071,7 @@ class Kontolupe(toga.App):
         if self.tabelle_beihilfepakete.selection:
             self.main_window.confirm_dialog(
                 'Beihilfe-Einreichung zurücksetzen', 
-                'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Arztrechnungen müssen dann erneut eingereicht werden.',
+                'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.',
                 on_result=self.beihilfepaket_loeschen
             )
 
@@ -1081,7 +1081,7 @@ class Kontolupe(toga.App):
         if self.tabelle_pkvpakete.selection:
             self.main_window.confirm_dialog(
                 'PKV-Einreichung zurücksetzen', 
-                'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Arztrechnungen müssen dann erneut eingereicht werden.',
+                'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.',
                 on_result=self.pkvpaket_loeschen
             )
 
@@ -1262,11 +1262,11 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
-                return 'Alle Arztrechnungen bezahlt.'
+                return 'Alle Rechnungen bezahlt.'
             case 1:
-                return '1 Arztrechnung noch nicht bezahlt.'
+                return '1 Rechnung noch nicht bezahlt.'
             case _:
-                return '{} Arztrechnungen noch nicht bezahlt.'.format(anzahl)
+                return '{} Rechnungen noch nicht bezahlt.'.format(anzahl)
     
 
     def text_beihilfe_todo(self):
@@ -1278,11 +1278,11 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
-                return 'Alle Arztrechnungen eingereicht.'
+                return 'Alle Rechnungen eingereicht.'
             case 1:
-                return '1 Arztrechnung noch nicht eingereicht.'
+                return '1 Rechnung noch nicht eingereicht.'
             case _:
-                return '{} Arztrechnungen noch nicht eingereicht.'.format(anzahl)
+                return '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
             
 
     def text_pkv_todo(self):
@@ -1294,11 +1294,11 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
-                return 'Alle Arztrechnungen eingereicht.'
+                return 'Alle Rechnungen eingereicht.'
             case 1:
-                return '1 Arztrechnung noch nicht eingereicht.'
+                return '1 Rechnung noch nicht eingereicht.'
             case _:
-                return '{} Arztrechnungen noch nicht eingereicht.'.format(anzahl)
+                return '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
             
 
     def bestaetige_bezahlung(self, widget):
@@ -1307,8 +1307,8 @@ class Kontolupe(toga.App):
             match self.tabelle_offene_buchungen.selection.typ:
                 case 'Arztrechnung':
                     self.main_window.confirm_dialog(
-                        'Arztrechnung als bezahlt markieren', 
-                        'Soll die ausgewählte Arztrechnung wirklich als bezahlt markiert werden?',
+                        'Rechnung als bezahlt markieren', 
+                        'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?',
                         on_result=self.arztrechnung_bezahlen
                     )
                 case 'Beihilfe':
