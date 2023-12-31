@@ -18,21 +18,21 @@ from kontolupe.buchungen import *
 style_box_column        = Pack(direction=COLUMN, alignment=CENTER)
 style_box_row           = Pack(direction=ROW, alignment=CENTER)
 style_scroll_container  = Pack(flex=1)
-style_label_h1          = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=20)
-style_label_h2          = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20)
-style_label             = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5)
-style_label_center      = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5)
-style_button            = Pack(flex=1, padding=5)
-style_input             = Pack(flex=2, padding=5) 
-style_label_input       = Pack(flex=1, padding=5, text_align=LEFT)
-style_table             = Pack(flex=1, padding=5)
-style_switch            = Pack(flex=1, padding=5)
+style_label_h1          = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
+style_label_h2          = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
+style_label             = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#222222')
+style_label_center      = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#222222')
+style_button            = Pack(flex=1, padding=5, color='#222222')
+style_input             = Pack(flex=2, padding=5, color='#222222') 
+style_label_input       = Pack(flex=1, padding=5, text_align=LEFT, color='#222222')
+style_table             = Pack(flex=1, padding=5, color='#222222')
+style_switch            = Pack(flex=1, padding=5, color='#222222')
 
 # Spezifische Styles
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
 style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff')
-style_table_offene_buchungen    = Pack(padding=5, height=200)
-style_table_auswahl             = Pack(padding=5, height=200, flex=1)
+style_table_offene_buchungen    = Pack(padding=5, height=200, color='#222222')
+style_table_auswahl             = Pack(padding=5, height=200, flex=1, color='#222222')
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -181,17 +181,18 @@ class Kontolupe(toga.App):
         self.tabelle_offene_buchungen = toga.Table(
             headings    = ['Info', 'Betrag', 'Datum'],
             accessors   = ['info', 'betrag_euro', 'datum'],
-            data        = self.erzeuge_liste_offene_buchungen(),
             style       = style_table_offene_buchungen,
-            on_activate = self.zeige_info_buchung
+            on_activate = self.zeige_info_buchung,
+            on_select   = self.button_status
         )
         #self.tabelle_offene_buchungen_container.content = self.tabelle_offene_buchungen
         #self.box_startseite_tabelle_offene_buchungen.add(self.tabelle_offene_buchungen_container)
         self.box_startseite_tabelle_offene_buchungen.add(self.tabelle_offene_buchungen)
 
-        # Buttons zur Markierung offener Buchungen als bezahlt/erhalten 
+        # Button zur Markierung offener Buchungen als bezahlt/erhalten 
         self.box_startseite_tabelle_buttons = toga.Box(style=style_box_row)
-        self.box_startseite_tabelle_buttons.add(toga.Button('Markiere als bezahlt/erhalten', on_press=self.bestaetige_bezahlung, style=style_button))
+        self.startseite_button_erledigt = toga.Button('Markiere als bezahlt/erhalten', on_press=self.bestaetige_bezahlung, style=style_button, enabled=False)
+        self.box_startseite_tabelle_buttons.add(self.startseite_button_erledigt)
         self.box_startseite_tabelle_offene_buchungen.add(self.box_startseite_tabelle_buttons)
 
         # Box der offenen Buchungen zur Startseite hinzufügen
@@ -214,12 +215,12 @@ class Kontolupe(toga.App):
 
         # Bereich der Beihilfe-Einreichungen
         label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_label_h2)
-        self.label_start_beihilfe_offen = toga.Label(self.text_beihilfe_todo(), style=style_label_center)
+        self.label_start_beihilfe_offen = toga.Label('', style=style_label_center)
         button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.zeige_seite_liste_beihilfepakete)
-        button_start_beihilfe_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_beihilfepakete_neu)
+        self.button_start_beihilfe_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_beihilfepakete_neu, enabled=False)
         box_startseite_beihilfe_buttons = toga.Box(style=style_box_row)
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
-        box_startseite_beihilfe_buttons.add(button_start_beihilfe_neu)
+        box_startseite_beihilfe_buttons.add(self.button_start_beihilfe_neu)
         box_startseite_beihilfe = toga.Box(style=style_box_column)
         box_startseite_beihilfe.add(label_start_beihilfe)
         box_startseite_beihilfe.add(self.label_start_beihilfe_offen)
@@ -228,12 +229,12 @@ class Kontolupe(toga.App):
 
         # Bereich der PKV-Einreichungen
         label_start_pkv = toga.Label('PKV-Einreichungen', style=style_label_h2)
-        self.label_start_pkv_offen = toga.Label(self.text_pkv_todo(), style=style_label_center)
+        self.label_start_pkv_offen = toga.Label('', style=style_label_center)
         button_start_pkv_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.zeige_seite_liste_pkvpakete)
-        button_start_pkv_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_pkvpakete_neu)
+        self.button_start_pkv_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_pkvpakete_neu, enabled=False)
         box_startseite_pkv_buttons = toga.Box(style=style_box_row)
         box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
-        box_startseite_pkv_buttons.add(button_start_pkv_neu)
+        box_startseite_pkv_buttons.add(self.button_start_pkv_neu)
         box_startseite_pkv = toga.Box(style=style_box_column)
         box_startseite_pkv.add(label_start_pkv)
         box_startseite_pkv.add(self.label_start_pkv_offen)
@@ -242,12 +243,12 @@ class Kontolupe(toga.App):
 
         # Bereich für die Archivierungsfunktion
         label_start_archiv = toga.Label('Archivierung', style=style_label_h2)
-        self.label_start_archiv_offen = toga.Label(self.text_archiv_todo(), style=style_label_center)
-        button_start_archiv = toga.Button('Archivieren', style=style_button, on_press=self.archivieren_bestaetigen)
+        self.button_start_archiv = toga.Button('Archivieren', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
+        self.label_start_archiv_offen = toga.Label('', style=style_label_center)
         box_startseite_archiv = toga.Box(style=style_box_column)
         box_startseite_archiv.add(label_start_archiv)
         box_startseite_archiv.add(self.label_start_archiv_offen)
-        box_startseite_archiv.add(button_start_archiv)
+        box_startseite_archiv.add(self.button_start_archiv)
         self.box_startseite.add(box_startseite_archiv)
 
     def zeige_startseite(self, widget):
@@ -261,8 +262,36 @@ class Kontolupe(toga.App):
         self.label_start_beihilfe_offen.text = self.text_beihilfe_todo()
         self.label_start_pkv_offen.text = self.text_pkv_todo()
 
+        # Button zum Markieren von Buchungen als bezahlt/erhalten aktivieren oder deaktivieren,
+        self.startseite_button_erledigt.enabled = False
+
         # Tabelle mit deaktivierbaren Buchungen aktualisieren
         self.label_start_archiv_offen.text = self.text_archiv_todo()
+
+
+    def button_status(self, widget):
+        """Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons."""
+        status = False
+        if widget.selection is not None:
+            status = True
+        else:
+            status = False
+
+        match widget:
+            case self.tabelle_offene_buchungen:
+                self.startseite_button_erledigt.enabled = status
+            case self.tabelle_arztrechnungen:
+                self.liste_arztrechnungen_button_loeschen.enabled = status
+                self.liste_arztrechnungen_button_bearbeiten.enabled = status
+            case self.tabelle_beihilfepakete:
+                self.seite_liste_beihilfepakete_button_loeschen.enabled = status
+                #self.seite_liste_beihilfepakete_button_bearbeiten.enabled = status
+            case self.tabelle_pkvpakete:
+                self.seite_liste_pkvpakete_button_loeschen.enabled = status
+                #self.seite_liste_pkvpakete_button_bearbeiten.enabled = status
+            case self.tabelle_aerzte:
+                self.seite_liste_aerzte_button_loeschen.enabled = status
+                self.seite_liste_aerzte_button_bearbeiten.enabled = status
 
 
     def zeige_info_buchung(self, widget, row):
@@ -327,7 +356,8 @@ class Kontolupe(toga.App):
             headings    = ['Info', 'Betrag', 'Bezahlt'],
             accessors   = ['info', 'betrag_euro', 'bezahlt_text'],
             data        = self.arztrechnungen_liste,
-            style       = style_table
+            style       = style_table,
+            on_select   = self.button_status,
         )
         #self.tabelle_arztrechnungen_container.content = self.tabelle_arztrechnungen
         #self.box_seite_liste_arztrechnungen.add(self.tabelle_arztrechnungen_container)
@@ -335,9 +365,12 @@ class Kontolupe(toga.App):
 
         # Buttons für die Arztrechnungen
         box_seite_liste_arztrechnungen_buttons = toga.Box(style=style_box_row)
-        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arztrechnung_loeschen, style=style_button))
-        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_arztrechnungen_bearbeiten, style=style_button))
-        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=style_button))
+        self.liste_arztrechnungen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_arztrechnung_loeschen, style=style_button, enabled=False)
+        self.liste_arztrechnungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_arztrechnungen_bearbeiten, style=style_button, enabled=False)
+        self.liste_arztrechnungen_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=style_button)
+        box_seite_liste_arztrechnungen_buttons.add(self.liste_arztrechnungen_button_loeschen)
+        box_seite_liste_arztrechnungen_buttons.add(self.liste_arztrechnungen_button_bearbeiten)
+        box_seite_liste_arztrechnungen_buttons.add(self.liste_arztrechnungen_button_neu)
         self.box_seite_liste_arztrechnungen.add(box_seite_liste_arztrechnungen_buttons)    
 
 
@@ -624,7 +657,8 @@ class Kontolupe(toga.App):
             headings    = ['Einrichtung'], 
             accessors   = ['name'],
             data        = self.aerzte_liste,
-            style       = style_table
+            style       = style_table,
+            on_select   = self.button_status,
         )
         #self.tabelle_aerzte_container.content = self.tabelle_aerzte
         #self.box_seite_liste_aerzte.add(self.tabelle_aerzte_container)
@@ -632,9 +666,12 @@ class Kontolupe(toga.App):
 
         # Buttons für die Ärzten
         box_seite_liste_aerzte_buttons = toga.Box(style=style_box_row)
-        box_seite_liste_aerzte_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arzt_loeschen, style=style_button))
-        box_seite_liste_aerzte_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_aerzte_bearbeiten, style=style_button))
-        box_seite_liste_aerzte_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_aerzte_neu, style=style_button))
+        self.seite_liste_aerzte_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_arzt_loeschen, style=style_button, enabled=False)
+        self.seite_liste_aerzte_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_aerzte_bearbeiten, style=style_button, enabled=False)
+        self.seite_liste_aerzte_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_aerzte_neu, style=style_button)
+        box_seite_liste_aerzte_buttons.add(self.seite_liste_aerzte_button_loeschen)
+        box_seite_liste_aerzte_buttons.add(self.seite_liste_aerzte_button_bearbeiten)
+        box_seite_liste_aerzte_buttons.add(self.seite_liste_aerzte_button_neu)
         self.box_seite_liste_aerzte.add(box_seite_liste_aerzte_buttons)   
 
 
@@ -768,7 +805,8 @@ class Kontolupe(toga.App):
             headings    = ['Datum', 'Betrag', 'Erhalten'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.beihilfepakete_liste,
-            style       = style_table
+            style       = style_table,
+            on_select   = self.button_status,
         )
         #self.tabelle_beihilfepakete_container.content = self.tabelle_beihilfepakete
         #self.box_seite_liste_beihilfepakete.add(self.tabelle_beihilfepakete_container)
@@ -776,9 +814,12 @@ class Kontolupe(toga.App):
 
         # Buttons für die Beihilfepakete
         box_seite_liste_beihilfepakete_buttons = toga.Box(style=style_box_row)
-        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_beihilfepaket_loeschen, style=style_button))
-        #box_seite_liste_beihilfepakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=style_button))
-        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=style_button))
+        self.seite_liste_beihilfepakete_button_loeschen = toga.Button('Zurücksetzen', on_press=self.bestaetige_beihilfepaket_loeschen, style=style_button, enabled=False)
+        box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_loeschen)
+        # self.seite_liste_beihilfepakete_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=style_button, enabled=False)
+        #box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_bearbeiten)
+        self.seite_liste_beihilfepakete_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=style_button)
+        box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_neu)
         self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_buttons)
 
 
@@ -794,26 +835,34 @@ class Kontolupe(toga.App):
             headings    = ['Datum', 'Betrag', 'Erhalten'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.pkvpakete_liste,
-            style       = style_table
+            style       = style_table,
+            on_select   = self.button_status,
         )
         self.tabelle_pkvpakete_container.content = self.tabelle_pkvpakete
         self.box_seite_liste_pkvpakete.add(self.tabelle_pkvpakete_container)
 
         # Buttons für die PKV-Einreichungen
         box_seite_liste_pkvpakete_buttons = toga.Box(style=style_box_row)
-        box_seite_liste_pkvpakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_pkvpaket_loeschen, style=style_button))
-        #box_seite_liste_pkvpakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_pkvpakete_bearbeiten, style=style_button))
-        box_seite_liste_pkvpakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_pkvpakete_neu, style=style_button))
+        self.seite_liste_pkvpakete_button_loeschen = toga.Button('Zurücksetzen', on_press=self.bestaetige_pkvpaket_loeschen, style=style_button, enabled=False)
+        box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_loeschen)
+        # self.seite_liste_pkvpakete_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_pkvpakete_bearbeiten, style=style_button, enabled=False)
+        #box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_bearbeiten)
+        self.seite_liste_pkvpakete_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_pkvpakete_neu, style=style_button)
+        box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_neu)
         self.box_seite_liste_pkvpakete.add(box_seite_liste_pkvpakete_buttons)
 
 
     def zeige_seite_liste_beihilfepakete(self, widget):
         """Zeigt die Seite mit der Liste der Beihilfepakete."""
+        # Zum Setzen des Button Status
+        self.text_beihilfe_todo()
         self.main_window.content = self.box_seite_liste_beihilfepakete
 
     
     def zeige_seite_liste_pkvpakete(self, widget):
         """Zeigt die Seite mit der Liste der PKV-Einreichungen."""
+        # Zum Setzen des Button Status
+        self.text_pkv_todo()
         self.main_window.content = self.box_seite_liste_pkvpakete
 
     
@@ -861,7 +910,7 @@ class Kontolupe(toga.App):
         # Bereich der Buttons
         box_formular_beihilfepakete_buttons = toga.Box(style=style_box_row)
         box_formular_beihilfepakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_beihilfepakete, style=style_button))
-        box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern, style=style_button))
+        box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern_check, style=style_button))
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_buttons)
 
 
@@ -899,7 +948,7 @@ class Kontolupe(toga.App):
         box_formular_pkvpakete_betrag.add(self.input_formular_pkvpakete_betrag)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_betrag)
 
-        # Bereich zur Angabe der Erhaltung
+        # Bereich zur Angabe der Erstattung
         box_formular_pkvpakete_erhalten = toga.Box(style=style_box_row)
         self.input_formular_pkvpakete_erhalten = toga.Switch('Erhalten', style=style_switch)
         box_formular_pkvpakete_erhalten.add(self.input_formular_pkvpakete_erhalten)
@@ -908,7 +957,7 @@ class Kontolupe(toga.App):
         # Bereich der Buttons
         box_formular_pkvpakete_buttons = toga.Box(style=style_box_row)
         box_formular_pkvpakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_pkvpakete, style=style_button))
-        box_formular_pkvpakete_buttons.add(toga.Button('Speichern', on_press=self.pkvpaket_speichern, style=style_button))
+        box_formular_pkvpakete_buttons.add(toga.Button('Speichern', on_press=self.pkvpaket_speichern_check, style=style_button))
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_buttons)
 
 
@@ -1020,6 +1069,28 @@ class Kontolupe(toga.App):
 
         # Zeige die Seite
         self.main_window.content = self.box_seite_formular_pkvpakete
+
+
+    def beihilfepaket_speichern_check(self, widget):
+        """Prüft, ob Rechnungen für die Beihilfe-Einreichungen ausgewählt sind."""
+        if not self.formular_beihilfe_tabelle_arztrechnungen.selection:
+            self.main_window.info_dialog(
+                'Keine Rechnung ausgewählt', 
+                'Es wurde keine Rechnung zum Einreichen ausgewählt.'
+            )
+        else:
+            self.beihilfepaket_speichern(widget)
+
+
+    def pkvpaket_speichern_check(self, widget):
+        """Prüft, ob Rechnungen für die PKV-Einreichungen ausgewählt sind."""
+        if not self.formular_pkv_tabelle_arztrechnungen.selection:
+            self.main_window.info_dialog(
+                'Keine Rechnung ausgewählt', 
+                'Es wurde keine Rechnung zum Einreichen ausgewählt.'
+            )
+        else:
+            self.pkvpaket_speichern(widget)
 
 
     def beihilfepaket_speichern(self, widget):
@@ -1156,6 +1227,8 @@ class Kontolupe(toga.App):
             del self.beihilfepakete[index]
             del self.beihilfepakete_liste[index]
             self.arztrechnungen_aktualisieren()
+            # Zum Setzen des Button Status
+            self.text_beihilfe_todo()
 
 
     def pkvpaket_loeschen(self, widget, result):
@@ -1166,6 +1239,8 @@ class Kontolupe(toga.App):
             del self.pkvpakete[index]
             del self.pkvpakete_liste[index]
             self.arztrechnungen_aktualisieren()
+            # Zum Setzen des Button Status
+            self.text_pkv_todo()
 
 
     def erzeuge_teilliste_arztrechnungen(self, beihilfe=False, pkv=False, beihilfe_id=None, pkv_id=None):
@@ -1271,10 +1346,16 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
+                # Deaktiviere den Button zum Archivieren
+                self.button_start_archiv.enabled = False
                 return 'Keine archivierbaren Buchungen vorhanden.'
             case 1:
+                # Aktiviere den Button zum Archivieren
+                self.button_start_archiv.enabled = True
                 return '1 archivierbare Buchung vorhanden.'
             case _:
+                # Aktiviere den Button zum Archivieren
+                self.button_start_archiv.enabled = True
                 return '{} archivierbare Buchungen vorhanden.'.format(anzahl)
             
 
@@ -1340,10 +1421,16 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
+                self.button_start_beihilfe_neu.enabled = False
+                self.seite_liste_beihilfepakete_button_neu.enabled = False
                 return 'Keine offenen Rechnungen.'
             case 1:
+                self.button_start_beihilfe_neu.enabled = True
+                self.seite_liste_beihilfepakete_button_neu.enabled = True
                 return '1 Rechnung noch nicht eingereicht.'
             case _:
+                self.button_start_beihilfe_neu.enabled = True
+                self.seite_liste_beihilfepakete_button_neu.enabled = True
                 return '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
             
 
@@ -1356,10 +1443,16 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
+                self.button_start_pkv_neu.enabled = False
+                self.seite_liste_pkvpakete_button_neu.enabled = False
                 return 'Keine offenen Rechnungen.'
             case 1:
+                self.button_start_pkv_neu.enabled = True
+                self.seite_liste_pkvpakete_button_neu.enabled = True
                 return '1 Rechnung noch nicht eingereicht.'
             case _:
+                self.button_start_pkv_neu.enabled = True
+                self.seite_liste_pkvpakete_button_neu.enabled = True
                 return '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
             
 
