@@ -448,9 +448,19 @@ class Kontolupe(toga.App):
             self.arztrechnungen.append(neue_arztrechnung)
             self.arztrechnungen_liste_anfuegen(neue_arztrechnung)
         else:
+            # flag ob verknüpfte Einreichungen aktualisiert werden können
+            # True, wenn betrag oder beihilfesatz geändert wurde
+            update_einreichung = False
+            
+            if self.arztrechnungen[self.arztrechnung_b_id].betrag != float(self.input_formular_arztrechnungen_betrag.value):
+                update_einreichung = True
+            if self.arztrechnungen[self.arztrechnung_b_id].beihilfesatz != float(self.input_formular_arztrechnungen_beihilfesatz.value):
+                update_einreichung = True
+
             # Bearbeite die Arztrechnung
             self.arztrechnungen[self.arztrechnung_b_id].rechnungsdatum = self.input_formular_arztrechnungen_rechnungsdatum.value
-            self.arztrechnungen[self.arztrechnung_b_id].arzt_id = self.input_formular_arztrechnungen_arzt.value.db_id
+            if len(self.aerzte_liste) > 0:
+                self.arztrechnungen[self.arztrechnung_b_id].arzt_id = self.input_formular_arztrechnungen_arzt.value.db_id
             self.arztrechnungen[self.arztrechnung_b_id].notiz = self.input_formular_arztrechnungen_notiz.value
             self.arztrechnungen[self.arztrechnung_b_id].betrag = float(self.input_formular_arztrechnungen_betrag.value)
             self.arztrechnungen[self.arztrechnung_b_id].beihilfesatz = float(self.input_formular_arztrechnungen_beihilfesatz.value)
@@ -466,10 +476,59 @@ class Kontolupe(toga.App):
             # Flag zurücksetzen
             self.flag_bearbeite_arztrechnung = False
 
-            # TODO: Aktualisiere verknüpfte Beihilfe- und PKV-Einreichungen
+            # check for a associated beihilfepaket and if there is one then create a confirmation dialog
+            # that asks if the beihilfepaket should be updated
+            if update_einreichung and self.arztrechnungen[self.arztrechnung_b_id].beihilfe_id is not None:
+                self.main_window.confirm_dialog(
+                    'Zugehörige Beihilfe-Einreichung aktualisieren',
+                    'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
+                    on_result=self.beihilfepaket_aktualisieren
+                )
+
+            # the same for the pkvpaket
+            if update_einreichung and self.arztrechnungen[self.arztrechnung_b_id].pkv_id is not None:
+                self.main_window.confirm_dialog(
+                    'Zugehörige PKV-Einreichung aktualisieren',
+                    'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
+                    on_result=self.pkvpaket_aktualisieren
+                )
 
         # Zeige die Liste der Arztrechnungen
         self.zeige_seite_liste_arztrechnungen(widget)
+
+
+    def beihilfepaket_aktualisieren(self, widget, result):
+        """Aktualisiert die Beihilfe-Einreichung einer Arztrechnung."""
+        if result:
+            # find the beihilfepaket
+            for beihilfepaket in self.beihilfepakete:
+                if beihilfepaket.db_id == self.arztrechnungen[self.arztrechnung_b_id].beihilfe_id:
+                    # loop through all arztrechnungen and update the betrag
+                    beihilfepaket.betrag = 0
+                    for arztrechnung in self.arztrechnungen:
+                        if arztrechnung.beihilfe_id == beihilfepaket.db_id:
+                            beihilfepaket.betrag += arztrechnung.betrag * (arztrechnung.beihilfesatz / 100)
+                    # save the beihilfepaket
+                    beihilfepaket.speichern(self.db)
+                    self.beihilfepakete_liste_aendern(beihilfepaket, self.beihilfepakete.index(beihilfepaket))
+                    break
+            
+
+    def pkvpaket_aktualisieren(self, widget, result):
+        """Aktualisiert die PKV-Einreichung einer Arztrechnung."""
+        if result:
+            # find the pkvpaket
+            for pkvpaket in self.pkvpakete:
+                if pkvpaket.db_id == self.arztrechnungen[self.arztrechnung_b_id].pkv_id:
+                    # loop through all arztrechnungen and update the betrag
+                    pkvpaket.betrag = 0
+                    for arztrechnung in self.arztrechnungen:
+                        if arztrechnung.pkv_id == pkvpaket.db_id:
+                            pkvpaket.betrag += arztrechnung.betrag * (1 - (arztrechnung.beihilfesatz / 100))
+                    # save the pkvpaket
+                    pkvpaket.speichern(self.db)
+                    self.pkvpakete_liste_aendern(pkvpaket, self.pkvpakete.index(pkvpaket))
+                    break            
 
 
     def bestaetige_arztrechnung_loeschen(self, widget):
@@ -727,7 +786,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Betrags
         box_formular_beihilfepakete_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_formular_beihilfepakete_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
-        self.input_formular_beihilfepakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2))
+        self.input_formular_beihilfepakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2), readonly=True)
         box_formular_beihilfepakete_betrag.add(self.input_formular_beihilfepakete_betrag)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_betrag)
 
@@ -774,7 +833,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Betrags
         box_formular_pkvpakete_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
         box_formular_pkvpakete_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
-        self.input_formular_pkvpakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2))
+        self.input_formular_pkvpakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2), readonly=True)
         box_formular_pkvpakete_betrag.add(self.input_formular_pkvpakete_betrag)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_betrag)
 
