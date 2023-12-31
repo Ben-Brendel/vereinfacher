@@ -1,7 +1,6 @@
 # Additional resources
 outline.txt
-resources/drafts
-resources/icons
+resources
 src/kontolupe/app_old.py
 src/kontolupe/kontolupe.db
 

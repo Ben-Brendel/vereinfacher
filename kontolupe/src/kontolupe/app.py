@@ -121,6 +121,16 @@ class Kontolupe(toga.App):
             order = 20
         )
 
+        gruppe_tools = toga.Group('Tools', order = 5)
+
+        self.cmd_archivieren = toga.Command(
+            self.archivieren_bestaetigen,
+            'Archivieren',
+            tooltip = 'Archiviere alle bezahlten und erhaltenen Buchungen.',
+            group = gruppe_tools,
+            order = 10
+        )
+
     def berechne_summe_offene_buchungen(self):
         """Berechnet die Summe der offenen Buchungen."""
         
@@ -1634,6 +1644,7 @@ class Kontolupe(toga.App):
         self.commands.add(self.cmd_pkvpakete_neu)
         self.commands.add(self.cmd_aerzte_anzeigen)
         self.commands.add(self.cmd_aerzte_neu)
+        self.commands.add(self.cmd_archivieren)
 
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)      
