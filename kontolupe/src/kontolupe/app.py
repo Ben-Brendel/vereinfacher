@@ -468,7 +468,7 @@ class Kontolupe(toga.App):
 
             # TODO: Aktualisiere verknüpfte Beihilfe- und PKV-Einreichungen
 
-        # Zeige die Startseite
+        # Zeige die Liste der Arztrechnungen
         self.zeige_seite_liste_arztrechnungen(widget)
 
 
@@ -951,7 +951,7 @@ class Kontolupe(toga.App):
         self.arztrechnungen_liste_aktualisieren()
 
         # Wechsel zur Liste der Beihilfepakete
-        self.zeige_seite_liste_beihilfepakete(widget)
+        self.zeige_startseite(widget)
 
 
     def pkvpaket_speichern(self, widget):
@@ -1004,7 +1004,7 @@ class Kontolupe(toga.App):
         self.arztrechnungen_liste_aktualisieren()
 
         # Wechsel zur Liste der PKV-Einreichungen
-        self.zeige_seite_liste_pkvpakete(widget)
+        self.zeige_startseite(widget)
 
 
     def bestaetige_beihilfepaket_loeschen(self, widget):
