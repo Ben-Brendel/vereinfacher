@@ -413,7 +413,7 @@ class Kontolupe(toga.App):
         # Auswahlfeld für den Arzt befüllen
         if arzt_index is not None:
             self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[arzt_index]
-        else:
+        elif len(self.aerzte_liste) > 0:
             self.input_formular_arztrechnungen_arzt.value = self.aerzte_liste[0]
 
         # Setze das Flag
