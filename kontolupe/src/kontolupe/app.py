@@ -11,20 +11,28 @@ from toga.app import AppStartupMethod, OnExitHandler
 from toga.icons import Icon
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 from toga.sources import ListSource
-import itertools
 import datetime
 from kontolupe.buchungen import *
 
-# set localization 
-#import locale
-#locale.setlocale(locale.LC_ALL, '')
+# Allgemeine Styles
+style_box_column        = Pack(direction=COLUMN, alignment=CENTER)
+style_box_row           = Pack(direction=ROW, alignment=CENTER)
+style_scroll_container  = Pack(flex=1)
+style_label_h1          = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=20)
+style_label_h2          = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20)
+style_label             = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5)
+style_label_center      = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5)
+style_button            = Pack(flex=1, padding=5)
+style_input             = Pack(flex=2, padding=5) 
+style_label_input       = Pack(flex=1, padding=5, text_align=LEFT)
+style_table             = Pack(flex=1, padding=5)
+style_switch            = Pack(flex=1, padding=5)
 
-# Styles erzeugen
-style_h1 = Pack(font_size=14, font_weight='bold', text_align=CENTER)
-style_h2 = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding_top=10)
-style_start_summe = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff')
-style_tabelle_offene_buchungen = Pack(padding=10, height=150)
-style_offene_rechnungen = Pack(text_align=CENTER, padding=10)
+# Spezifische Styles
+style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
+style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff')
+style_table_offene_buchungen    = Pack(padding=5, height=200)
+style_table_auswahl             = Pack(padding=5, height=200, flex=1)
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -158,23 +166,23 @@ class Kontolupe(toga.App):
         """Erzeugt die Startseite der Anwendung."""
 
         # Container für die Startseite
-        self.box_startseite = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
-        self.scroll_container_startseite = toga.ScrollContainer(content=self.box_startseite)
+        self.box_startseite = toga.Box(style=style_box_column)
+        self.scroll_container_startseite = toga.ScrollContainer(content=self.box_startseite, style=style_scroll_container)
         
         # Bereich, der die Summe der offenen Buchungen anzeigt
-        self.box_startseite_offen = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8'))
+        self.box_startseite_offen = toga.Box(style=style_box_offene_buchungen)
         self.label_start_summe = toga.Label('Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen()), style=style_start_summe)
         self.box_startseite_offen.add(self.label_start_summe)
         self.box_startseite.add(self.box_startseite_offen)
 
         # Tabelle mit allen offenen Buchungen
-        self.box_startseite_tabelle_offene_buchungen = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
-        #self.tabelle_offene_buchungen_container = toga.ScrollContainer(style=Pack(height=200))
+        self.box_startseite_tabelle_offene_buchungen = toga.Box(style=style_box_column)
+        #self.tabelle_offene_buchungen_container = toga.ScrollContainer(style=style_scroll_container)
         self.tabelle_offene_buchungen = toga.Table(
             headings    = ['Info', 'Betrag', 'Datum'],
             accessors   = ['info', 'betrag_euro', 'datum'],
             data        = self.erzeuge_liste_offene_buchungen(),
-            style       = style_tabelle_offene_buchungen,
+            style       = style_table_offene_buchungen,
             on_activate = self.zeige_info_buchung
         )
         #self.tabelle_offene_buchungen_container.content = self.tabelle_offene_buchungen
@@ -182,8 +190,8 @@ class Kontolupe(toga.App):
         self.box_startseite_tabelle_offene_buchungen.add(self.tabelle_offene_buchungen)
 
         # Buttons zur Markierung offener Buchungen als bezahlt/erhalten 
-        self.box_startseite_tabelle_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        self.box_startseite_tabelle_buttons.add(toga.Button('Markiere als bezahlt/erhalten', on_press=self.bestaetige_bezahlung, style=Pack(flex=1)))
+        self.box_startseite_tabelle_buttons = toga.Box(style=style_box_row)
+        self.box_startseite_tabelle_buttons.add(toga.Button('Markiere als bezahlt/erhalten', on_press=self.bestaetige_bezahlung, style=style_button))
         self.box_startseite_tabelle_offene_buchungen.add(self.box_startseite_tabelle_buttons)
 
         # Box der offenen Buchungen zur Startseite hinzufügen
@@ -191,52 +199,52 @@ class Kontolupe(toga.App):
         
 
         # Bereich der Arztrechnungen
-        label_start_arztrechnungen = toga.Label('Rechnungen', style=style_h2)
-        self.label_start_arztrechnungen_offen = toga.Label(self.text_arztrechnungen_todo(), style=style_offene_rechnungen)
-        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(flex=1))
-        button_start_arztrechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(flex=1))
-        box_startseite_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        label_start_arztrechnungen = toga.Label('Rechnungen', style=style_label_h2)
+        self.label_start_arztrechnungen_offen = toga.Label(self.text_arztrechnungen_todo(), style=style_label_center)
+        button_start_arztrechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_arztrechnungen, style=style_button)
+        button_start_arztrechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=style_button)
+        box_startseite_arztrechnungen_buttons = toga.Box(style=style_box_row)
         box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_anzeigen)
         box_startseite_arztrechnungen_buttons.add(button_start_arztrechnungen_neu)
-        box_startseite_arztrechnungen = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        box_startseite_arztrechnungen = toga.Box(style=style_box_column)
         box_startseite_arztrechnungen.add(label_start_arztrechnungen)
         box_startseite_arztrechnungen.add(self.label_start_arztrechnungen_offen)
         box_startseite_arztrechnungen.add(box_startseite_arztrechnungen_buttons)
         self.box_startseite.add(box_startseite_arztrechnungen)
 
         # Bereich der Beihilfe-Einreichungen
-        label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_h2)
-        self.label_start_beihilfe_offen = toga.Label(self.text_beihilfe_todo(), style=style_offene_rechnungen)
-        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=Pack(flex=1), on_press=self.zeige_seite_liste_beihilfepakete)
-        button_start_beihilfe_neu = toga.Button('Neu', style=Pack(flex=1), on_press=self.zeige_seite_formular_beihilfepakete_neu)
-        box_startseite_beihilfe_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_label_h2)
+        self.label_start_beihilfe_offen = toga.Label(self.text_beihilfe_todo(), style=style_label_center)
+        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.zeige_seite_liste_beihilfepakete)
+        button_start_beihilfe_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_beihilfepakete_neu)
+        box_startseite_beihilfe_buttons = toga.Box(style=style_box_row)
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_neu)
-        box_startseite_beihilfe = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        box_startseite_beihilfe = toga.Box(style=style_box_column)
         box_startseite_beihilfe.add(label_start_beihilfe)
         box_startseite_beihilfe.add(self.label_start_beihilfe_offen)
         box_startseite_beihilfe.add(box_startseite_beihilfe_buttons)
         self.box_startseite.add(box_startseite_beihilfe)
 
         # Bereich der PKV-Einreichungen
-        label_start_pkv = toga.Label('PKV-Einreichungen', style=style_h2)
-        self.label_start_pkv_offen = toga.Label(self.text_pkv_todo(), style=style_offene_rechnungen)
-        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=Pack(flex=1), on_press=self.zeige_seite_liste_pkvpakete)
-        button_start_pkv_neu = toga.Button('Neu', style=Pack(flex=1), on_press=self.zeige_seite_formular_pkvpakete_neu)
-        box_startseite_pkv_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
+        label_start_pkv = toga.Label('PKV-Einreichungen', style=style_label_h2)
+        self.label_start_pkv_offen = toga.Label(self.text_pkv_todo(), style=style_label_center)
+        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.zeige_seite_liste_pkvpakete)
+        button_start_pkv_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_pkvpakete_neu)
+        box_startseite_pkv_buttons = toga.Box(style=style_box_row)
         box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
         box_startseite_pkv_buttons.add(button_start_pkv_neu)
-        box_startseite_pkv = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        box_startseite_pkv = toga.Box(style=style_box_column)
         box_startseite_pkv.add(label_start_pkv)
         box_startseite_pkv.add(self.label_start_pkv_offen)
         box_startseite_pkv.add(box_startseite_pkv_buttons)
         self.box_startseite.add(box_startseite_pkv)
 
         # Bereich für die Archivierungsfunktion
-        label_start_archiv = toga.Label('Archivierung', style=style_h2)
-        self.label_start_archiv_offen = toga.Label(self.text_archiv_todo(), style=style_offene_rechnungen)
-        button_start_archiv = toga.Button('Archivieren', style=Pack(flex=1), on_press=self.archivieren_bestaetigen)
-        box_startseite_archiv = toga.Box(style=Pack(direction=COLUMN, alignment=CENTER))
+        label_start_archiv = toga.Label('Archivierung', style=style_label_h2)
+        self.label_start_archiv_offen = toga.Label(self.text_archiv_todo(), style=style_label_center)
+        button_start_archiv = toga.Button('Archivieren', style=style_button, on_press=self.archivieren_bestaetigen)
+        box_startseite_archiv = toga.Box(style=style_box_column)
         box_startseite_archiv.add(label_start_archiv)
         box_startseite_archiv.add(self.label_start_archiv_offen)
         box_startseite_archiv.add(button_start_archiv)
@@ -309,26 +317,27 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_liste_arztrechnungen(self):
         """Erzeugt die Seite, auf der die Arztrechnungen angezeigt werden."""
-        self.box_seite_liste_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
+        self.box_seite_liste_arztrechnungen = toga.Box(style=style_box_column)
         self.box_seite_liste_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_arztrechnungen.add(toga.Label('Rechnungen', style=style_h1))
+        self.box_seite_liste_arztrechnungen.add(toga.Label('Rechnungen', style=style_label_h1))
 
         # Tabelle mit den Arztrechnungen
-        self.tabelle_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
+        #self.tabelle_arztrechnungen_container = toga.ScrollContainer(style=style_scroll_container)
         self.tabelle_arztrechnungen = toga.Table(
-            headings    = ['Info', 'Betrag', 'Bezahlt', 'Beihilfe', 'PKV'],
-            accessors   = ['info', 'betrag_euro', 'bezahlt_text', 'beihilfe_eingereicht', 'pkv_eingereicht'],
+            headings    = ['Info', 'Betrag', 'Bezahlt'],
+            accessors   = ['info', 'betrag_euro', 'bezahlt_text'],
             data        = self.arztrechnungen_liste,
-            style=Pack(width=600, flex=1)
+            style       = style_table
         )
-        self.tabelle_arztrechnungen_container.content = self.tabelle_arztrechnungen
-        self.box_seite_liste_arztrechnungen.add(self.tabelle_arztrechnungen_container)
+        #self.tabelle_arztrechnungen_container.content = self.tabelle_arztrechnungen
+        #self.box_seite_liste_arztrechnungen.add(self.tabelle_arztrechnungen_container)
+        self.box_seite_liste_arztrechnungen.add(self.tabelle_arztrechnungen)
 
         # Buttons für die Arztrechnungen
-        box_seite_liste_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arztrechnung_loeschen, style=Pack(flex=1)))
-        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_arztrechnungen_bearbeiten, style=Pack(flex=1)))
-        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=Pack(flex=1)))
+        box_seite_liste_arztrechnungen_buttons = toga.Box(style=style_box_row)
+        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arztrechnung_loeschen, style=style_button))
+        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_arztrechnungen_bearbeiten, style=style_button))
+        box_seite_liste_arztrechnungen_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_arztrechnungen_neu, style=style_button))
         self.box_seite_liste_arztrechnungen.add(box_seite_liste_arztrechnungen_buttons)    
 
 
@@ -339,66 +348,65 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_formular_arztrechnungen(self):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Arztrechnung."""
-        self.scroll_container_formular_arztrechnungen = toga.ScrollContainer(style=Pack(flex=1))
-        self.box_seite_formular_arztrechnungen = toga.Box(style=Pack(direction=COLUMN))
+        self.scroll_container_formular_arztrechnungen = toga.ScrollContainer(style=style_scroll_container)
+        self.box_seite_formular_arztrechnungen = toga.Box(style=style_box_column)
         self.scroll_container_formular_arztrechnungen.content = self.box_seite_formular_arztrechnungen
-        self.box_seite_formular_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_arztrechnungen))
-        self.label_formular_arztrechnungen = toga.Label('Neue Rechnung', style=style_h1)
+        self.box_seite_formular_arztrechnungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_arztrechnungen, style=style_button))
+        self.label_formular_arztrechnungen = toga.Label('Neue Rechnung', style=style_label_h1)
         self.box_seite_formular_arztrechnungen.add(self.label_formular_arztrechnungen)
 
         # Bereich zur Eingabe des Rechnungsdatums
-        box_formular_arztrechnungen_rechnungsdatum = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=Pack(flex=1)))
-        self.input_formular_arztrechnungen_rechnungsdatum = toga.DateInput(style=Pack(flex=2))
+        box_formular_arztrechnungen_rechnungsdatum = toga.Box(style=style_box_row)
+        box_formular_arztrechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=style_label_input))
+        self.input_formular_arztrechnungen_rechnungsdatum = toga.DateInput(style=style_input)
         box_formular_arztrechnungen_rechnungsdatum.add(self.input_formular_arztrechnungen_rechnungsdatum)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_rechnungsdatum)
 
         # Bereich zur Eingabe des Betrags
-        box_formular_arztrechnungen_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
-        self.input_formular_arztrechnungen_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2))
+        box_formular_arztrechnungen_betrag = toga.Box(style=style_box_row)
+        box_formular_arztrechnungen_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
+        self.input_formular_arztrechnungen_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=style_input)
         box_formular_arztrechnungen_betrag.add(self.input_formular_arztrechnungen_betrag)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_betrag)
 
         # Bereich zur Auswahl des Arztes
-        box_formular_arztrechnungen_arzt = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_arzt.add(toga.Label('Einrichtung: ', style=Pack(flex=1)))
-        self.input_formular_arztrechnungen_arzt = toga.Selection(items=self.aerzte_liste, accessor='name', style=Pack(flex=2))
+        box_formular_arztrechnungen_arzt = toga.Box(style=style_box_row)
+        box_formular_arztrechnungen_arzt.add(toga.Label('Einrichtung: ', style=style_label_input))
+        self.input_formular_arztrechnungen_arzt = toga.Selection(items=self.aerzte_liste, accessor='name', style=style_input)
         box_formular_arztrechnungen_arzt.add(self.input_formular_arztrechnungen_arzt)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_arzt)
 
         # Bereich zur Eingabe der Notiz
-        box_formular_arztrechnungen_notiz = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_notiz.add(toga.Label('Notiz: ', style=Pack(flex=1)))
-        self.input_formular_arztrechnungen_notiz = toga.TextInput(style=Pack(flex=2))
+        box_formular_arztrechnungen_notiz = toga.Box(style=style_box_row)
+        box_formular_arztrechnungen_notiz.add(toga.Label('Notiz: ', style=style_label_input))
+        self.input_formular_arztrechnungen_notiz = toga.TextInput(style=style_input)
         box_formular_arztrechnungen_notiz.add(self.input_formular_arztrechnungen_notiz)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_notiz)
 
         # Bereich zur Auswahl des Beihilfesatzes
-        box_formular_arztrechnungen_beihilfesatz = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=Pack(flex=1)))
-        self.input_formular_arztrechnungen_beihilfesatz = toga.NumberInput(min=0, max=100, step=10, value=0, style=Pack(flex=2))
+        box_formular_arztrechnungen_beihilfesatz = toga.Box(style=style_box_row)
+        box_formular_arztrechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
+        self.input_formular_arztrechnungen_beihilfesatz = toga.NumberInput(min=0, max=100, step=10, value=0, style=style_input)
         box_formular_arztrechnungen_beihilfesatz.add(self.input_formular_arztrechnungen_beihilfesatz)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_beihilfesatz)
 
         # Bereich zur Eingabe des Buchungsdatums
-        box_formular_arztrechnungen_buchungsdatum = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_buchungsdatum.add(toga.Label('Datum Überweisung: ', style=Pack(flex=1)))
-        self.input_formular_arztrechnungen_buchungsdatum = toga.DateInput(style=Pack(flex=2))
+        box_formular_arztrechnungen_buchungsdatum = toga.Box(style=style_box_row)
+        box_formular_arztrechnungen_buchungsdatum.add(toga.Label('Datum Überweisung: ', style=style_label_input))
+        self.input_formular_arztrechnungen_buchungsdatum = toga.DateInput(style=style_input)
         box_formular_arztrechnungen_buchungsdatum.add(self.input_formular_arztrechnungen_buchungsdatum)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_buchungsdatum)
 
         # Bereich zur Angabe der Bezahlung
-        box_formular_arztrechnungen_bezahlt = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        #box_formular_arztrechnungen_bezahlt.add(toga.Label('Bezahlt: ', style=Pack(flex=1)))
-        self.input_formular_arztrechnungen_bezahlt = toga.Switch('Bezahlt')
+        box_formular_arztrechnungen_bezahlt = toga.Box(style=style_box_row)
+        self.input_formular_arztrechnungen_bezahlt = toga.Switch('Bezahlt', style=style_switch)
         box_formular_arztrechnungen_bezahlt.add(self.input_formular_arztrechnungen_bezahlt)
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_bezahlt)
 
         # Bereich der Buttons
-        box_formular_arztrechnungen_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_arztrechnungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_arztrechnungen, style=Pack(flex=1)))
-        box_formular_arztrechnungen_buttons.add(toga.Button('Speichern', on_press=self.arztrechnung_speichern, style=Pack(flex=1)))
+        box_formular_arztrechnungen_buttons = toga.Box(style=style_box_row)
+        box_formular_arztrechnungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_arztrechnungen, style=style_button))
+        box_formular_arztrechnungen_buttons.add(toga.Button('Speichern', on_press=self.arztrechnung_speichern, style=style_button))
         self.box_seite_formular_arztrechnungen.add(box_formular_arztrechnungen_buttons)
 
 
@@ -605,27 +613,28 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_liste_aerzte(self):
         """Erzeugt die Seite, auf der die Ärzte angezeigt werden."""
-        self.box_seite_liste_aerzte = toga.Box(style=Pack(direction=COLUMN))
-        self.box_seite_liste_aerzte.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_aerzte.add(toga.Label('Einrichtungen', style=style_h1))
+        self.box_seite_liste_aerzte = toga.Box(style=style_box_column)
+        self.box_seite_liste_aerzte.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
+        self.box_seite_liste_aerzte.add(toga.Label('Einrichtungen', style=style_label_h1))
 
         # Tabelle mit den Ärzten
 
-        self.tabelle_aerzte_container = toga.ScrollContainer(style=Pack(flex=1))
+        #self.tabelle_aerzte_container = toga.ScrollContainer(style=style_scroll_container)
         self.tabelle_aerzte = toga.Table(
             headings    = ['Einrichtung'], 
             accessors   = ['name'],
             data        = self.aerzte_liste,
-            style       = Pack(flex=1)
+            style       = style_table
         )
-        self.tabelle_aerzte_container.content = self.tabelle_aerzte
-        self.box_seite_liste_aerzte.add(self.tabelle_aerzte_container)
+        #self.tabelle_aerzte_container.content = self.tabelle_aerzte
+        #self.box_seite_liste_aerzte.add(self.tabelle_aerzte_container)
+        self.box_seite_liste_aerzte.add(self.tabelle_aerzte)
 
         # Buttons für die Ärzten
-        box_seite_liste_aerzte_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_seite_liste_aerzte_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arzt_loeschen, style=Pack(flex=1)))
-        box_seite_liste_aerzte_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_aerzte_bearbeiten, style=Pack(flex=1)))
-        box_seite_liste_aerzte_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_aerzte_neu, style=Pack(flex=1)))
+        box_seite_liste_aerzte_buttons = toga.Box(style=style_box_row)
+        box_seite_liste_aerzte_buttons.add(toga.Button('Löschen', on_press=self.bestaetige_arzt_loeschen, style=style_button))
+        box_seite_liste_aerzte_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_aerzte_bearbeiten, style=style_button))
+        box_seite_liste_aerzte_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_aerzte_neu, style=style_button))
         self.box_seite_liste_aerzte.add(box_seite_liste_aerzte_buttons)   
 
 
@@ -636,22 +645,22 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_formular_aerzte(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten eines Arztes."""
-        self.box_seite_formular_aerzte = toga.Box(style=Pack(direction=COLUMN))
-        self.box_seite_formular_aerzte.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_aerzte))
-        self.label_formular_aerzte = toga.Label('Neue Einrichtung', style=style_h1)
+        self.box_seite_formular_aerzte = toga.Box(style=style_box_column)
+        self.box_seite_formular_aerzte.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_aerzte, style=style_button))
+        self.label_formular_aerzte = toga.Label('Neue Einrichtung', style=style_label_h1)
         self.box_seite_formular_aerzte.add(self.label_formular_aerzte)
 
         # Bereich zur Eingabe des Namens
-        box_formular_aerzte_name = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_aerzte_name.add(toga.Label('Name der Einrichtung: ', style=Pack(flex=1)))
-        self.input_formular_aerzte_name = toga.TextInput(style=Pack(flex=2))
+        box_formular_aerzte_name = toga.Box(style=style_box_row)
+        box_formular_aerzte_name.add(toga.Label('Name der Einrichtung: ', style=style_label_input))
+        self.input_formular_aerzte_name = toga.TextInput(style=style_input)
         box_formular_aerzte_name.add(self.input_formular_aerzte_name)
         self.box_seite_formular_aerzte.add(box_formular_aerzte_name)
 
         # Bereich der Buttons
-        box_formular_aerzte_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_aerzte_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_aerzte, style=Pack(flex=1)))
-        box_formular_aerzte_buttons.add(toga.Button('Speichern', on_press=self.arzt_speichern, style=Pack(flex=1)))
+        box_formular_aerzte_buttons = toga.Box(style=style_box_row)
+        box_formular_aerzte_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_aerzte, style=style_button))
+        box_formular_aerzte_buttons.add(toga.Button('Speichern', on_press=self.arzt_speichern, style=style_button))
         self.box_seite_formular_aerzte.add(box_formular_aerzte_buttons)
 
 
@@ -749,51 +758,52 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_liste_beihilfepakete(self):
         """Erzeugt die Seite, auf der die Beihilfe-Einreichungen angezeigt werden."""
-        self.box_seite_liste_beihilfepakete = toga.Box(style=Pack(direction=COLUMN))
-        self.box_seite_liste_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_beihilfepakete.add(toga.Label('Beihilfe-Einreichungen', style=style_h1))
+        self.box_seite_liste_beihilfepakete = toga.Box(style=style_box_column)
+        self.box_seite_liste_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
+        self.box_seite_liste_beihilfepakete.add(toga.Label('Beihilfe-Einreichungen', style=style_label_h1))
 
         # Tabelle mit den Beihilfepaketen
-        self.tabelle_beihilfepakete_container = toga.ScrollContainer(style=Pack(flex=1))
+        #self.tabelle_beihilfepakete_container = toga.ScrollContainer(style=style_scroll_container)
         self.tabelle_beihilfepakete = toga.Table(
             headings    = ['Datum', 'Betrag', 'Erhalten'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.beihilfepakete_liste,
-            style       = Pack(flex=1)
+            style       = style_table
         )
-        self.tabelle_beihilfepakete_container.content = self.tabelle_beihilfepakete
-        self.box_seite_liste_beihilfepakete.add(self.tabelle_beihilfepakete_container)
+        #self.tabelle_beihilfepakete_container.content = self.tabelle_beihilfepakete
+        #self.box_seite_liste_beihilfepakete.add(self.tabelle_beihilfepakete_container)
+        self.box_seite_liste_beihilfepakete.add(self.tabelle_beihilfepakete)
 
         # Buttons für die Beihilfepakete
-        box_seite_liste_beihilfepakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_beihilfepaket_loeschen, style=Pack(flex=1)))
-        #box_seite_liste_beihilfepakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=Pack(flex=1)))
-        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=Pack(flex=1)))
+        box_seite_liste_beihilfepakete_buttons = toga.Box(style=style_box_row)
+        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_beihilfepaket_loeschen, style=style_button))
+        #box_seite_liste_beihilfepakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=style_button))
+        box_seite_liste_beihilfepakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=style_button))
         self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_buttons)
 
 
     def erzeuge_seite_liste_pkvpakete(self):
         """Erzeugt die Seite, auf der die PKV-Einreichungen angezeigt werden."""
-        self.box_seite_liste_pkvpakete = toga.Box(style=Pack(direction=COLUMN))
-        self.box_seite_liste_pkvpakete.add(toga.Button('Zurück', on_press=self.zeige_startseite))
-        self.box_seite_liste_pkvpakete.add(toga.Label('PKV-Einreichungen', style=style_h1))
+        self.box_seite_liste_pkvpakete = toga.Box(style=style_box_column)
+        self.box_seite_liste_pkvpakete.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
+        self.box_seite_liste_pkvpakete.add(toga.Label('PKV-Einreichungen', style=style_label_h1))
 
         # Tabelle mit den PKV-Einreichungen
-        self.tabelle_pkvpakete_container = toga.ScrollContainer(style=Pack(flex=1))
+        self.tabelle_pkvpakete_container = toga.ScrollContainer(style=style_scroll_container)
         self.tabelle_pkvpakete = toga.Table(
             headings    = ['Datum', 'Betrag', 'Erhalten'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.pkvpakete_liste,
-            style       = Pack(flex=1)
+            style       = style_table
         )
         self.tabelle_pkvpakete_container.content = self.tabelle_pkvpakete
         self.box_seite_liste_pkvpakete.add(self.tabelle_pkvpakete_container)
 
         # Buttons für die PKV-Einreichungen
-        box_seite_liste_pkvpakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_seite_liste_pkvpakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_pkvpaket_loeschen, style=Pack(flex=1)))
-        #box_seite_liste_pkvpakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_pkvpakete_bearbeiten, style=Pack(flex=1)))
-        box_seite_liste_pkvpakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_pkvpakete_neu, style=Pack(flex=1)))
+        box_seite_liste_pkvpakete_buttons = toga.Box(style=style_box_row)
+        box_seite_liste_pkvpakete_buttons.add(toga.Button('Zurücksetzen', on_press=self.bestaetige_pkvpaket_loeschen, style=style_button))
+        #box_seite_liste_pkvpakete_buttons.add(toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_pkvpakete_bearbeiten, style=style_button))
+        box_seite_liste_pkvpakete_buttons.add(toga.Button('Neu', on_press=self.zeige_seite_formular_pkvpakete_neu, style=style_button))
         self.box_seite_liste_pkvpakete.add(box_seite_liste_pkvpakete_buttons)
 
 
@@ -809,95 +819,96 @@ class Kontolupe(toga.App):
     
     def erzeuge_seite_formular_beihilfepakete(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Beihilfe-Einreichung."""
-        self.box_seite_formular_beihilfepakete = toga.Box(style=Pack(direction=COLUMN))
-        self.box_seite_formular_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_beihilfepakete))
-        self.label_formular_beihilfepakete = toga.Label('Neue Beihilfe-Einreichung', style=style_h1)
+        self.box_seite_formular_beihilfepakete = toga.Box(style=style_box_column)
+        self.box_seite_formular_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_beihilfepakete, style=style_button))
+        self.label_formular_beihilfepakete = toga.Label('Neue Beihilfe-Einreichung', style=style_label_h1)
         self.box_seite_formular_beihilfepakete.add(self.label_formular_beihilfepakete)
 
         # Bereich zur Eingabe des Datums
-        box_formular_beihilfepakete_datum = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_beihilfepakete_datum.add(toga.Label('Datum: ', style=Pack(flex=1)))
-        self.input_formular_beihilfepakete_datum = toga.DateInput(style=Pack(flex=2))
+        box_formular_beihilfepakete_datum = toga.Box(style=style_box_row)
+        box_formular_beihilfepakete_datum.add(toga.Label('Datum: ', style=style_label_input))
+        self.input_formular_beihilfepakete_datum = toga.DateInput(style=style_input)
         box_formular_beihilfepakete_datum.add(self.input_formular_beihilfepakete_datum)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_datum)
 
         # Bereich zur Auswahl der zugehörigen Arztrechnungen
-        self.formular_beihilfepakete_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
+        #self.formular_beihilfepakete_arztrechnungen_container = toga.ScrollContainer(style=style_scroll_container)
         self.formular_beihilfe_tabelle_arztrechnungen = toga.Table(
             headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
             accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
             data            = self.erzeuge_teilliste_arztrechnungen(beihilfe=True),
             multiple_select = True,
             on_select       = self.beihilfe_tabelle_arztrechnungen_auswahl_geaendert,   
-            style           = Pack(height=300, flex=1)
+            style           = style_table_auswahl
         )
-        self.formular_beihilfepakete_arztrechnungen_container.content = self.formular_beihilfe_tabelle_arztrechnungen
-        self.box_seite_formular_beihilfepakete.add(self.formular_beihilfepakete_arztrechnungen_container)
+        #self.formular_beihilfepakete_arztrechnungen_container.content = self.formular_beihilfe_tabelle_arztrechnungen
+        #self.box_seite_formular_beihilfepakete.add(self.formular_beihilfepakete_arztrechnungen_container)
+        self.box_seite_formular_beihilfepakete.add(self.formular_beihilfe_tabelle_arztrechnungen)
 
         # Bereich zur Eingabe des Betrags
-        box_formular_beihilfepakete_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_beihilfepakete_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
-        self.input_formular_beihilfepakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2), readonly=True)
+        box_formular_beihilfepakete_betrag = toga.Box(style=style_box_row)
+        box_formular_beihilfepakete_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
+        self.input_formular_beihilfepakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=style_input, readonly=True)
         box_formular_beihilfepakete_betrag.add(self.input_formular_beihilfepakete_betrag)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_betrag)
 
-        # Bereich zur Angabe der Erhaltung
-        box_formular_beihilfepakete_erhalten = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        self.input_formular_beihilfepakete_erhalten = toga.Switch('Erhalten')
+        # Bereich zur Angabe der Erstattung
+        box_formular_beihilfepakete_erhalten = toga.Box(style=style_box_row)
+        self.input_formular_beihilfepakete_erhalten = toga.Switch('Erstattet', style=style_switch)
         box_formular_beihilfepakete_erhalten.add(self.input_formular_beihilfepakete_erhalten)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_erhalten)
 
         # Bereich der Buttons
-        box_formular_beihilfepakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_beihilfepakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_beihilfepakete, style=Pack(flex=1)))
-        box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern, style=Pack(flex=1)))
+        box_formular_beihilfepakete_buttons = toga.Box(style=style_box_row)
+        box_formular_beihilfepakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_beihilfepakete, style=style_button))
+        box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern, style=style_button))
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_buttons)
 
 
     def erzeuge_seite_formular_pkvpakete(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer PKV-Einreichung."""
-        self.box_seite_formular_pkvpakete = toga.Box(style=Pack(direction=COLUMN))
-        self.box_seite_formular_pkvpakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_pkvpakete))
-        self.label_formular_pkvpakete = toga.Label('Neue PKV-Einreichung', style=style_h1)
+        self.box_seite_formular_pkvpakete = toga.Box(style=style_box_column)
+        self.box_seite_formular_pkvpakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_pkvpakete, style=style_button))
+        self.label_formular_pkvpakete = toga.Label('Neue PKV-Einreichung', style=style_label_h1)
         self.box_seite_formular_pkvpakete.add(self.label_formular_pkvpakete)
 
         # Bereich zur Eingabe des Datums
-        box_formular_pkvpakete_datum = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_pkvpakete_datum.add(toga.Label('Datum: ', style=Pack(flex=1)))
-        self.input_formular_pkvpakete_datum = toga.DateInput(style=Pack(flex=2))
+        box_formular_pkvpakete_datum = toga.Box(style=style_box_row)
+        box_formular_pkvpakete_datum.add(toga.Label('Datum: ', style=style_label_input))
+        self.input_formular_pkvpakete_datum = toga.DateInput(style=style_input)
         box_formular_pkvpakete_datum.add(self.input_formular_pkvpakete_datum)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_datum)
 
         # Bereich zur Auswahl der zugehörigen Arztrechnungen
-        self.formular_pkvpakete_arztrechnungen_container = toga.ScrollContainer(style=Pack(flex=1))
+        self.formular_pkvpakete_arztrechnungen_container = toga.ScrollContainer(style=style_scroll_container)
         self.formular_pkv_tabelle_arztrechnungen = toga.Table(
             headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
             accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
             data            = self.erzeuge_teilliste_arztrechnungen(pkv=True),
             multiple_select = True,
             on_select       = self.pkv_tabelle_arztrechnungen_auswahl_geaendert,   
-            style           = Pack(height=300, flex=1)
+            style           = style_table_auswahl
         )
         self.formular_pkvpakete_arztrechnungen_container.content = self.formular_pkv_tabelle_arztrechnungen
         self.box_seite_formular_pkvpakete.add(self.formular_pkvpakete_arztrechnungen_container)
 
         # Bereich zur Eingabe des Betrags
-        box_formular_pkvpakete_betrag = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_pkvpakete_betrag.add(toga.Label('Betrag in €: ', style=Pack(flex=1)))
-        self.input_formular_pkvpakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=Pack(flex=2), readonly=True)
+        box_formular_pkvpakete_betrag = toga.Box(style=style_box_row)
+        box_formular_pkvpakete_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
+        self.input_formular_pkvpakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=style_input, readonly=True)
         box_formular_pkvpakete_betrag.add(self.input_formular_pkvpakete_betrag)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_betrag)
 
         # Bereich zur Angabe der Erhaltung
-        box_formular_pkvpakete_erhalten = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        self.input_formular_pkvpakete_erhalten = toga.Switch('Erhalten')
+        box_formular_pkvpakete_erhalten = toga.Box(style=style_box_row)
+        self.input_formular_pkvpakete_erhalten = toga.Switch('Erhalten', style=style_switch)
         box_formular_pkvpakete_erhalten.add(self.input_formular_pkvpakete_erhalten)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_erhalten)
 
         # Bereich der Buttons
-        box_formular_pkvpakete_buttons = toga.Box(style=Pack(direction=ROW, alignment=CENTER))
-        box_formular_pkvpakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_pkvpakete, style=Pack(flex=1)))
-        box_formular_pkvpakete_buttons.add(toga.Button('Speichern', on_press=self.pkvpaket_speichern, style=Pack(flex=1)))
+        box_formular_pkvpakete_buttons = toga.Box(style=style_box_row)
+        box_formular_pkvpakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_pkvpakete, style=style_button))
+        box_formular_pkvpakete_buttons.add(toga.Button('Speichern', on_press=self.pkvpaket_speichern, style=style_button))
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_buttons)
 
 
@@ -1758,24 +1769,6 @@ class Kontolupe(toga.App):
 
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)      
-
-        # Alle Widgets in eine Liste packen
-        all_children = itertools.chain(
-            self.box_startseite.children,
-            self.box_seite_liste_arztrechnungen.children,
-            self.box_seite_formular_arztrechnungen.children,
-            self.box_seite_liste_aerzte.children,
-            self.box_seite_formular_aerzte.children,
-            self.box_seite_liste_beihilfepakete.children,
-            self.box_seite_formular_beihilfepakete.children,
-            self.box_seite_liste_pkvpakete.children,
-            self.box_seite_formular_pkvpakete.children
-        )           
-
-        # Alle Widgets mit Padding versehen
-        for w in all_children:
-            if w != self.label_start_summe:
-                w.style.padding = 10 
 
         # Zeige die Startseite
         self.zeige_startseite(None)
