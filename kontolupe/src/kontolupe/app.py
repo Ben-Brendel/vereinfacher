@@ -174,7 +174,8 @@ class Kontolupe(toga.App):
             headings    = ['Info', 'Betrag', 'Datum'],
             accessors   = ['info', 'betrag_euro', 'datum'],
             data        = self.erzeuge_liste_offene_buchungen(),
-            style       = style_tabelle_offene_buchungen
+            style       = style_tabelle_offene_buchungen,
+            on_activate = self.zeige_info_buchung
         )
         #self.tabelle_offene_buchungen_container.content = self.tabelle_offene_buchungen
         #self.box_startseite_tabelle_offene_buchungen.add(self.tabelle_offene_buchungen_container)
@@ -254,6 +255,56 @@ class Kontolupe(toga.App):
 
         # Tabelle mit deaktivierbaren Buchungen aktualisieren
         self.label_start_archiv_offen.text = self.text_archiv_todo()
+
+
+    def zeige_info_buchung(self, widget, row):
+        """Zeigt die Info einer Buchung."""
+        
+        titel = ''
+        inhalt = ''
+
+        match row.typ:
+            case 'Arztrechnung':
+                # Finde die gewählte Arztrechnung in self.arztrechnungen_liste
+                for arztrechnung in self.arztrechnungen_liste:
+                    if arztrechnung.db_id == row.db_id:
+                        titel = 'Rechnung'
+                        inhalt = 'Vom {} über {:.2f} €'.format(arztrechnung.rechnungsdatum, arztrechnung.betrag)
+                        inhalt += '\n\nEinrichtung: {}'.format(arztrechnung.arzt_name)
+                        inhalt += '\nNotiz: {}'.format(arztrechnung.notiz)
+                        inhalt += '\nBeihilfesatz: {:.0f} %'.format(arztrechnung.beihilfesatz)
+                        if arztrechnung.buchungsdatum:
+                            inhalt += '\nBuchungsdatum: {}'.format(arztrechnung.buchungsdatum)
+                        else:
+                            inhalt += '\nBuchungsdatum: -'
+                        break
+            case 'Beihilfe':
+                # Finde die gewählte Beihilfe in self.beihilfepakete_liste
+                for beihilfepaket in self.beihilfepakete_liste:
+                    if beihilfepaket.db_id == row.db_id:
+                        titel = 'Beihilfe-Einreichung'
+                        inhalt = 'Vom {} über {:.2f} €'.format(beihilfepaket.datum, beihilfepaket.betrag)
+                        # Liste alle Arztrechnungen auf, die zu diesem Beihilfepaket gehören
+                        inhalt += '\n\nZugehörige Rechnungen:'
+                        for arztrechnung in self.arztrechnungen_liste:
+                            if arztrechnung.beihilfe_id == beihilfepaket.db_id:
+                                inhalt += '\n- {}\n   vom {} über {:.2f} €'.format(arztrechnung.info, arztrechnung.rechnungsdatum, arztrechnung.betrag)
+                        break
+
+            case 'PKV':
+                # Finde die gewählte PKV in self.pkvpakete_liste
+                for pkvpaket in self.pkvpakete_liste:
+                    if pkvpaket.db_id == row.db_id:
+                        titel = 'PKV-Einreichung'
+                        inhalt = 'Vom {} über {:.2f} €'.format(pkvpaket.datum, pkvpaket.betrag)
+                        # Liste alle Arztrechnungen auf, die zu diesem PKV-Paket gehören
+                        inhalt += '\n\nZugehörige Rechnungen:'
+                        for arztrechnung in self.arztrechnungen_liste:
+                            if arztrechnung.pkv_id == pkvpaket.db_id:
+                                inhalt += '\n- {}\n   vom {} über {:.2f} €'.format(arztrechnung.info, arztrechnung.rechnungsdatum, arztrechnung.betrag)
+                        break
+
+        self.main_window.info_dialog(titel, inhalt)
 
 
     def erzeuge_seite_liste_arztrechnungen(self):
