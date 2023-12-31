@@ -1313,7 +1313,7 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
-                return 'Alle Rechnungen bezahlt.'
+                return 'Keine offenen Rechnungen.'
             case 1:
                 return '1 Rechnung noch nicht bezahlt.'
             case _:
@@ -1329,7 +1329,7 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
-                return 'Alle Rechnungen eingereicht.'
+                return 'Keine offenen Rechnungen.'
             case 1:
                 return '1 Rechnung noch nicht eingereicht.'
             case _:
@@ -1345,7 +1345,7 @@ class Kontolupe(toga.App):
 
         match anzahl:
             case 0:
-                return 'Alle Rechnungen eingereicht.'
+                return 'Keine offenen Rechnungen.'
             case 1:
                 return '1 Rechnung noch nicht eingereicht.'
             case _:
