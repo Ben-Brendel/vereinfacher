@@ -7,8 +7,6 @@ Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen
 """
 
 import toga
-from toga.app import AppStartupMethod, OnExitHandler
-from toga.icons import Icon
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 from toga.sources import ListSource
 import datetime
@@ -64,7 +62,8 @@ class Kontolupe(toga.App):
             'Rechnungen anzeigen',
             tooltip = 'Zeigt die Liste der Rechnungen an.',
             group = gruppe_arztrechnungen,
-            order = 10
+            order = 10,
+            enabled=True
         )
 
         self.cmd_arztrechnungen_neu = toga.Command(
@@ -72,7 +71,8 @@ class Kontolupe(toga.App):
             'Neue Rechnung',
             tooltip = 'Erstellt eine neue Rechnung.',
             group = gruppe_arztrechnungen,
-            order = 20
+            order = 20,
+            enabled=True
         )
 
         gruppe_beihilfepakete = toga.Group('Beihilfe-Einreichungen', order = 2)
@@ -82,7 +82,8 @@ class Kontolupe(toga.App):
             'Beihilfe-Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
             group = gruppe_beihilfepakete,
-            order = 10
+            order = 10,
+            enabled=True
         )
 
         self.cmd_beihilfepakete_neu = toga.Command(
@@ -90,7 +91,8 @@ class Kontolupe(toga.App):
             'Neue Beihilfe-Einreichung',
             tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
             group = gruppe_beihilfepakete,
-            order = 20
+            order = 20,
+            enabled=False
         )
 
         gruppe_pkvpakete = toga.Group('PKV-Einreichungen', order = 3)
@@ -100,7 +102,8 @@ class Kontolupe(toga.App):
             'PKV-Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
             group = gruppe_pkvpakete,
-            order = 10
+            order = 10,
+            enabled=True
         )
 
         self.cmd_pkvpakete_neu = toga.Command(
@@ -108,7 +111,8 @@ class Kontolupe(toga.App):
             'Neue PKV-Einreichung',
             tooltip = 'Erstellt eine neue PKV-Einreichung.',
             group = gruppe_pkvpakete,
-            order = 20
+            order = 20,
+            enabled=False
         )
 
         gruppe_aerzte = toga.Group('Einrichtungen', order = 4)
@@ -118,7 +122,8 @@ class Kontolupe(toga.App):
             'Einrichtungen anzeigen',
             tooltip = 'Zeigt die Liste der Einrichtungen an.',
             group = gruppe_aerzte,
-            order = 10
+            order = 10,
+            enabled=True
         )
 
         self.cmd_aerzte_neu = toga.Command(
@@ -126,7 +131,8 @@ class Kontolupe(toga.App):
             'Neue Einrichtung',
             tooltip = 'Erstellt eine neue Einrichtung.',
             group = gruppe_aerzte,
-            order = 20
+            order = 20,
+            enabled=True
         )
 
         gruppe_tools = toga.Group('Tools', order = 5)
@@ -136,7 +142,8 @@ class Kontolupe(toga.App):
             'Archivieren',
             tooltip = 'Archiviere alle bezahlten und erhaltenen Buchungen.',
             group = gruppe_tools,
-            order = 10
+            order = 10,
+            enabled=False
         )
 
     def berechne_summe_offene_buchungen(self):
@@ -1348,14 +1355,17 @@ class Kontolupe(toga.App):
             case 0:
                 # Deaktiviere den Button zum Archivieren
                 self.button_start_archiv.enabled = False
+                self.cmd_archivieren.enabled = False
                 return 'Keine archivierbaren Buchungen vorhanden.'
             case 1:
                 # Aktiviere den Button zum Archivieren
                 self.button_start_archiv.enabled = True
+                self.cmd_archivieren.enabled = True
                 return '1 archivierbare Buchung vorhanden.'
             case _:
                 # Aktiviere den Button zum Archivieren
                 self.button_start_archiv.enabled = True
+                self.cmd_archivieren.enabled = True
                 return '{} archivierbare Buchungen vorhanden.'.format(anzahl)
             
 
@@ -1413,7 +1423,7 @@ class Kontolupe(toga.App):
     
 
     def text_beihilfe_todo(self):
-        """Ermittle den Anzeigetext mit der Anzahl der noch nicht bei der Beihilfe eingereichten Arztrechnungen."""
+        """Ermittle den Anzeigetext mit der Anzahl der noch nicht bei der Beihilfe eingereichten Rechnungen und setzt den Status der zugehörigen Buttons."""
         anzahl = 0
         for arztrechnung in self.arztrechnungen:
             if not arztrechnung.beihilfe_id:
@@ -1423,19 +1433,22 @@ class Kontolupe(toga.App):
             case 0:
                 self.button_start_beihilfe_neu.enabled = False
                 self.seite_liste_beihilfepakete_button_neu.enabled = False
+                self.cmd_beihilfepakete_neu.enabled = False
                 return 'Keine offenen Rechnungen.'
             case 1:
                 self.button_start_beihilfe_neu.enabled = True
                 self.seite_liste_beihilfepakete_button_neu.enabled = True
+                self.cmd_beihilfepakete_neu.enabled = True
                 return '1 Rechnung noch nicht eingereicht.'
             case _:
                 self.button_start_beihilfe_neu.enabled = True
                 self.seite_liste_beihilfepakete_button_neu.enabled = True
+                self.cmd_beihilfepakete_neu.enabled = True
                 return '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
             
 
     def text_pkv_todo(self):
-        """Ermittle den Anzeigetext mit der Anzahl der noch nicht bei der PKV eingereichten Arztrechnungen."""
+        """Ermittle den Anzeigetext mit der Anzahl der noch nicht bei der PKV eingereichten Rechnungen und setzt den Status der zugehörigen Buttons."""
         anzahl = 0
         for arztrechnung in self.arztrechnungen:
             if not arztrechnung.pkv_id:
@@ -1445,14 +1458,17 @@ class Kontolupe(toga.App):
             case 0:
                 self.button_start_pkv_neu.enabled = False
                 self.seite_liste_pkvpakete_button_neu.enabled = False
+                self.cmd_pkvpakete_neu.enabled = False
                 return 'Keine offenen Rechnungen.'
             case 1:
                 self.button_start_pkv_neu.enabled = True
                 self.seite_liste_pkvpakete_button_neu.enabled = True
+                self.cmd_pkvpakete_neu.enabled = True
                 return '1 Rechnung noch nicht eingereicht.'
             case _:
                 self.button_start_pkv_neu.enabled = True
                 self.seite_liste_pkvpakete_button_neu.enabled = True
+                self.cmd_pkvpakete_neu.enabled = True
                 return '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
             
 

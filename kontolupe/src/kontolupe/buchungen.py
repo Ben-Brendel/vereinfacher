@@ -1,7 +1,6 @@
 """Definition der Klassen der verschiedenen Buchungsarten."""
 
 from pathlib import Path
-import datetime
 import sqlite3 as sql
 
 
