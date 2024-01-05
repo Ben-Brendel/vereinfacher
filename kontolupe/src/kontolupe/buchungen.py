@@ -9,8 +9,8 @@ class Datenbank:
 
     def __init__(self):
         """Initialisierung der Datenbank."""
-        #self.db_path = Path('/data/data/net.biberwerk.kontolupe/kontolupe.db')
-        self.db_path = Path('kontolupe.db')
+        self.db_path = Path('/data/data/net.biberwerk.kontolupe/kontolupe.db')
+        #self.db_path = Path('kontolupe.db')
 
         # lösche die Datei der Datenbank
         #self.db_path.unlink()
@@ -514,7 +514,7 @@ class BeihilfePaket:
 
     def __str__(self):
         """Ausgabe der Beihilfe-Einreichung."""
-        return f"Beihilfe-Einreichung: {self.db_id}\nDatum: {self.datum}\nBetrag: {self.betrag} €\nErhalten: {self.erhalten}"
+        return f"Beihilfe-Einreichung: {self.db_id}\nDatum: {self.datum}\nBetrag: {self.betrag} €\nErstattet: {self.erhalten}"
         
 
 class PKVPaket:
@@ -556,7 +556,7 @@ class PKVPaket:
 
     def __str__(self):
         """Ausgabe der PKV-Einreichung."""
-        return f"PKV-Einreichung: {self.db_id}\nDatum: {self.datum}\nBetrag: {self.betrag} €\nErhalten: {self.erhalten}"
+        return f"PKV-Einreichung: {self.db_id}\nDatum: {self.datum}\nBetrag: {self.betrag} €\nErstattet: {self.erhalten}"
 
 
 class Arzt:
@@ -582,4 +582,3 @@ class Arzt:
     def __str__(self):
         """Ausgabe des Arztes."""
         return f"ID: {self.db_id}\nArzt: {self.name}"
-
