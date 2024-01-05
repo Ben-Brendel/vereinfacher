@@ -267,6 +267,31 @@ class Kontolupe(toga.App):
                 summe += pkvpaket.betrag
 
         return summe
+    
+
+    def button_status(self, widget):
+        """Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons."""
+        status = False
+        if widget.selection is not None:
+            status = True
+        else:
+            status = False
+
+        match widget:
+            case self.tabelle_offene_buchungen:
+                self.startseite_button_erledigt.enabled = status
+            case self.tabelle_rechnungen:
+                self.liste_rechnungen_button_loeschen.enabled = status
+                self.liste_rechnungen_button_bearbeiten.enabled = status
+            case self.tabelle_beihilfepakete:
+                self.seite_liste_beihilfepakete_button_loeschen.enabled = status
+                #self.seite_liste_beihilfepakete_button_bearbeiten.enabled = status
+            case self.tabelle_pkvpakete:
+                self.seite_liste_pkvpakete_button_loeschen.enabled = status
+                #self.seite_liste_pkvpakete_button_bearbeiten.enabled = status
+            case self.tabelle_aerzte:
+                self.seite_liste_aerzte_button_loeschen.enabled = status
+                self.seite_liste_aerzte_button_bearbeiten.enabled = status
 
 
     def erzeuge_startseite(self):
@@ -354,36 +379,12 @@ class Kontolupe(toga.App):
         box_startseite_archiv.add(self.button_start_archiv)
         self.box_startseite.add(box_startseite_archiv)
 
+
     def zeige_startseite(self, widget):
         """Zurück zur Startseite."""
         
         self.update_app(widget)
         self.main_window.content = self.scroll_container_startseite
-
-
-    def button_status(self, widget):
-        """Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons."""
-        status = False
-        if widget.selection is not None:
-            status = True
-        else:
-            status = False
-
-        match widget:
-            case self.tabelle_offene_buchungen:
-                self.startseite_button_erledigt.enabled = status
-            case self.tabelle_rechnungen:
-                self.liste_rechnungen_button_loeschen.enabled = status
-                self.liste_rechnungen_button_bearbeiten.enabled = status
-            case self.tabelle_beihilfepakete:
-                self.seite_liste_beihilfepakete_button_loeschen.enabled = status
-                #self.seite_liste_beihilfepakete_button_bearbeiten.enabled = status
-            case self.tabelle_pkvpakete:
-                self.seite_liste_pkvpakete_button_loeschen.enabled = status
-                #self.seite_liste_pkvpakete_button_bearbeiten.enabled = status
-            case self.tabelle_aerzte:
-                self.seite_liste_aerzte_button_loeschen.enabled = status
-                self.seite_liste_aerzte_button_bearbeiten.enabled = status
 
 
     def zeige_info_buchung(self, widget, row):
@@ -617,6 +618,10 @@ class Kontolupe(toga.App):
             # Füge die Arztrechnung der Liste hinzu
             self.rechnungen.append(neue_rechnung)
             self.rechnungen_liste_anfuegen(neue_rechnung)
+
+            # Kehrt zurück zur Startseite
+            self.update_app(widget)
+            self.zeige_startseite(widget)
         else:
             # flag ob verknüpfte Einreichungen aktualisiert werden können
             # True, wenn betrag oder beihilfesatz geändert wurde
@@ -664,9 +669,9 @@ class Kontolupe(toga.App):
                     on_result=self.pkvpaket_aktualisieren
                 )
 
-        # Zeige die Liste der Arztrechnungen
-        self.update_app(widget)
-        self.zeige_seite_liste_rechnungen(widget)
+            # Zeigt die Liste der Rechnungen an.
+            self.update_app(widget)
+            self.zeige_seite_liste_rechnungen(widget)
 
 
     def beihilfepaket_aktualisieren(self, widget, result):
