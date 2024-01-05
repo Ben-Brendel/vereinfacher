@@ -9,8 +9,8 @@ class Datenbank:
 
     def __init__(self):
         """Initialisierung der Datenbank."""
-        self.db_path = Path('/data/data/net.biberwerk.kontolupe/kontolupe.db')
-        #self.db_path = Path('kontolupe.db')
+        #self.db_path = Path('/data/data/net.biberwerk.kontolupe/kontolupe.db')
+        self.db_path = Path('kontolupe.db')
 
         # lösche die Datei der Datenbank
         #self.db_path.unlink()
@@ -64,7 +64,7 @@ class Datenbank:
         connection.commit()
         connection.close()
 
-    def neue_arztrechnung(self, arztrechnung):
+    def neue_rechnung(self, rechnung):
         """Einfügen einer neuen Arztrechnung in die Datenbank."""
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
@@ -82,15 +82,15 @@ class Datenbank:
             beihilfe_id,
             pkv_id
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
-            arztrechnung.betrag,
-            arztrechnung.arzt_id,
-            arztrechnung.rechnungsdatum,
-            arztrechnung.notiz,
-            arztrechnung.beihilfesatz,
-            arztrechnung.aktiv,
-            arztrechnung.bezahlt,
-            arztrechnung.beihilfe_id,
-            arztrechnung.pkv_id
+            rechnung.betrag,
+            rechnung.arzt_id,
+            rechnung.rechnungsdatum,
+            rechnung.notiz,
+            rechnung.beihilfesatz,
+            rechnung.aktiv,
+            rechnung.bezahlt,
+            rechnung.beihilfe_id,
+            rechnung.pkv_id
         ))
 
         # id der neuen Buchung abfragen
@@ -180,7 +180,7 @@ class Datenbank:
 
         return db_id
     
-    def aendere_arztrechnung(self, arztrechnung):
+    def aendere_rechnung(self, rechnung):
         """Ändern einer Arztrechnung in der Datenbank."""
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
@@ -198,16 +198,16 @@ class Datenbank:
             beihilfe_id = ?,
             pkv_id = ?
         WHERE id = ?""", (
-            arztrechnung.betrag,
-            arztrechnung.arzt_id,
-            arztrechnung.rechnungsdatum,
-            arztrechnung.notiz,
-            arztrechnung.beihilfesatz,
-            arztrechnung.aktiv,
-            arztrechnung.bezahlt,
-            arztrechnung.beihilfe_id,
-            arztrechnung.pkv_id,
-            arztrechnung.db_id
+            rechnung.betrag,
+            rechnung.arzt_id,
+            rechnung.rechnungsdatum,
+            rechnung.notiz,
+            rechnung.beihilfesatz,
+            rechnung.aktiv,
+            rechnung.bezahlt,
+            rechnung.beihilfe_id,
+            rechnung.pkv_id,
+            rechnung.db_id
         ))
 
         # Datenbankverbindung schließen
@@ -280,7 +280,7 @@ class Datenbank:
         connection.commit()
         connection.close()
 
-    def loesche_arztrechnung(self, arztrechnung):
+    def loesche_rechnung(self, rechnung):
         """Löschen einer Arztrechnung aus der Datenbank."""
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
@@ -288,7 +288,7 @@ class Datenbank:
 
         # Daten löschen
         cursor.execute("""DELETE FROM arztrechnungen WHERE id = ?""", (
-            arztrechnung.db_id,
+            rechnung.db_id,
         ))
 
         # Datenbankverbindung schließen
@@ -340,7 +340,7 @@ class Datenbank:
         connection.commit()
         connection.close()
 
-    def lade_arztrechnungen(self):
+    def lade_rechnungen(self):
         """Laden der Arztrechnungen aus der Datenbank."""
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
@@ -350,24 +350,24 @@ class Datenbank:
         cursor.execute("""SELECT * FROM arztrechnungen WHERE aktiv = 1""")
         db_result = cursor.fetchall()
 
-        # arztrechnungen in Arztrechnung-Objekte umwandeln
-        arztrechnungen = [Arztrechnung() for r in db_result]
-        for i, arztrechnung in enumerate(arztrechnungen):
-            arztrechnung.db_id = db_result[i][0]
-            arztrechnung.betrag = db_result[i][1]
-            arztrechnung.arzt_id = db_result[i][2]
-            arztrechnung.rechnungsdatum = db_result[i][3]
-            arztrechnung.notiz = db_result[i][4]
-            arztrechnung.beihilfesatz = db_result[i][5]
-            arztrechnung.aktiv = db_result[i][6]
-            arztrechnung.bezahlt = db_result[i][7]
-            arztrechnung.beihilfe_id = db_result[i][8]
-            arztrechnung.pkv_id = db_result[i][9]
+        # rechnungen in Arztrechnung-Objekte umwandeln
+        rechnungen = [Arztrechnung() for r in db_result]
+        for i, rechnung in enumerate(rechnungen):
+            rechnung.db_id = db_result[i][0]
+            rechnung.betrag = db_result[i][1]
+            rechnung.arzt_id = db_result[i][2]
+            rechnung.rechnungsdatum = db_result[i][3]
+            rechnung.notiz = db_result[i][4]
+            rechnung.beihilfesatz = db_result[i][5]
+            rechnung.aktiv = db_result[i][6]
+            rechnung.bezahlt = db_result[i][7]
+            rechnung.beihilfe_id = db_result[i][8]
+            rechnung.pkv_id = db_result[i][9]
 
         # Datenbankverbindung schließen
         connection.close()
 
-        return arztrechnungen
+        return rechnungen
     
     def lade_beihilfepakete(self):
         """Laden der Beihilfepakete aus der Datenbank."""
@@ -458,15 +458,15 @@ class Arztrechnung:
 
     def neu(self, db):
         """Neue Arztrechnung erstellen."""
-        self.db_id = db.neue_arztrechnung(self)
+        self.db_id = db.neue_rechnung(self)
 
     def speichern(self, db):
         """Speichern der Arztrechnung in der Datenbank."""
-        db.aendere_arztrechnung(self)
+        db.aendere_rechnung(self)
 
     def loeschen(self, db):
         """Löschen der Arztrechnung aus der Datenbank."""
-        db.loesche_arztrechnung(self)
+        db.loesche_rechnung(self)
 
     def __str__(self):
         """Ausgabe der Arztrechnung."""
