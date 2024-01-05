@@ -1,7 +1,7 @@
 """
-Behalte den Überblick über Deine Arztrechnungen, wenn Du beihilfeberechtigt bist.
+Behalte den Überblick über Deine Rechnungen, Beihilfe- und PKV-Erstattungen.
 
-Mit Kontolupe kannst Du Deine Arztrechnungen erfassen und verwalten.
+Mit Kontolupe kannst Du Deine Gesundheits-Rechnungen erfassen und verwalten.
 Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen
 überwachen. Die App ist für die private Nutzung kostenlos.
 """
