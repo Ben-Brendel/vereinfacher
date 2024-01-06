@@ -534,7 +534,7 @@ class Kontolupe(toga.App):
         self.main_window.content = self.scroll_container_formular_rechnungen
 
 
-    def rechnung_speichern(self, widget):
+    async def rechnung_speichern(self, widget):
         """Erstellt und speichert eine neue Arztrechnung."""
 
         if not self.flag_bearbeite_rechnung:
@@ -592,7 +592,7 @@ class Kontolupe(toga.App):
             # Überprüfe ob eine verknüpfte Beihilfe-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
             if update_einreichung and self.rechnungen[self.rechnung_b_id].beihilfe_id is not None:
-                self.main_window.confirm_dialog(
+                await self.main_window.confirm_dialog(
                     'Zugehörige Beihilfe-Einreichung aktualisieren',
                     'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
                     on_result=self.beihilfepaket_aktualisieren
@@ -601,7 +601,7 @@ class Kontolupe(toga.App):
             # Überprüfe ob eine verknüpfte PKV-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
             if update_einreichung and self.rechnungen[self.rechnung_b_id].pkv_id is not None:
-                self.main_window.confirm_dialog(
+                await self.main_window.confirm_dialog(
                     'Zugehörige PKV-Einreichung aktualisieren',
                     'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
                     on_result=self.pkvpaket_aktualisieren
