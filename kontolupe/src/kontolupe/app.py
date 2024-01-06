@@ -21,7 +21,7 @@ style_label_h2                  = Pack(font_size=11, font_weight='bold', text_al
 style_label                     = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#222222')
 style_label_center              = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#222222')
 style_button                    = Pack(flex=1, padding=5, color='#222222')
-style_input                     = Pack(flex=2, padding=5, color='#222222') 
+style_input                     = Pack(flex=1, padding=5, color='#222222') 
 style_label_input               = Pack(flex=1, padding=5, text_align=LEFT, color='#222222')
 style_table                     = Pack(flex=1, padding=5, color='#222222')
 style_switch                    = Pack(flex=1, padding=5, color='#222222')
@@ -29,7 +29,7 @@ style_switch                    = Pack(flex=1, padding=5, color='#222222')
 # Spezifische Styles
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
 style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff', background_color='#368ba8')
-style_table_offene_buchungen    = Pack(padding=5, height=200, color='#222222')
+style_table_offene_buchungen    = Pack(flex=1, padding=5, height=200, color='#222222')
 style_table_auswahl             = Pack(padding=5, height=200, flex=1, color='#222222')
 
 class Kontolupe(toga.App):
