@@ -544,17 +544,8 @@ class Kontolupe(toga.App):
             if len(self.aerzte_liste) > 0:
                 neue_rechnung.arzt_id = self.input_formular_rechnungen_arzt.value.db_id
             neue_rechnung.notiz = self.input_formular_rechnungen_notiz.value
-            
-            if self.input_formular_rechnungen_betrag.value == '':
-                neue_rechnung.betrag = 0
-            else:
-                neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.'))
-
-            if self.input_formular_rechnungen_beihilfesatz.value == '':
-                neue_rechnung.beihilfesatz = 0
-            else:
-                neue_rechnung.beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value)
-
+            neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
+            neue_rechnung.beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value or 0)
             neue_rechnung.buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             neue_rechnung.bezahlt = self.input_formular_rechnungen_bezahlt.value
 
@@ -584,17 +575,8 @@ class Kontolupe(toga.App):
             if len(self.aerzte_liste) > 0:
                 self.rechnungen[self.rechnung_b_id].arzt_id = self.input_formular_rechnungen_arzt.value.db_id
             self.rechnungen[self.rechnung_b_id].notiz = self.input_formular_rechnungen_notiz.value
-            
-            if self.input_formular_rechnungen_betrag.value == '':
-                self.rechnungen[self.rechnung_b_id].betrag = 0
-            else:
-                self.rechnungen[self.rechnung_b_id].betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.'))
-            
-            if self.input_formular_rechnungen_beihilfesatz.value == '':
-                self.rechnungen[self.rechnung_b_id].beihilfesatz = 0
-            else:
-                self.rechnungen[self.rechnung_b_id].beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value)
-
+            self.rechnungen[self.rechnung_b_id].betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
+            self.rechnungen[self.rechnung_b_id].beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value or 0)
             self.rechnungen[self.rechnung_b_id].buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             self.rechnungen[self.rechnung_b_id].bezahlt = self.input_formular_rechnungen_bezahlt.value
 
