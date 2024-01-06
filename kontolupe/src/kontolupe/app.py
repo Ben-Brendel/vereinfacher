@@ -210,10 +210,7 @@ class Kontolupe(toga.App):
         if eingabe.count(',') > 1:
             eingabe = eingabe.replace(',', '', eingabe.count(',') - 1)
 
-        if eingabe != '':
-            widget.value = eingabe
-        else:
-            widget.value = 0
+        widget.value = eingabe
 
         # replace , with .
         eingabe = eingabe.replace(',', '.')
@@ -221,7 +218,21 @@ class Kontolupe(toga.App):
         try:
             float(eingabe)
         except ValueError:
-            widget.value = 0
+            widget.value = ''
+
+    
+    def eingabe_prozent(self, widget):
+        """Prüft, ob die Eingabe eine ganze Zahl zwischen 0 und 100 ist und korrigiert sie entsprechend."""
+
+        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein , sind.
+        eingabe = ''.join(c for c in widget.value if c in '0123456789')
+
+        if eingabe == '':
+            widget.value = ''
+        elif int(eingabe) > 100:
+            widget.value = '100'
+        else:
+            widget.value = eingabe
 
 
     def erzeuge_startseite(self):
@@ -439,7 +450,7 @@ class Kontolupe(toga.App):
         # Bereich zur Auswahl des Beihilfesatzes
         box_formular_rechnungen_beihilfesatz = toga.Box(style=style_box_row)
         box_formular_rechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
-        self.input_formular_rechnungen_beihilfesatz = toga.NumberInput(min=0, max=100, step=10, value=0, style=style_input)
+        self.input_formular_rechnungen_beihilfesatz = toga.TextInput(style=style_input, on_change=self.eingabe_prozent)
         box_formular_rechnungen_beihilfesatz.add(self.input_formular_rechnungen_beihilfesatz)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_beihilfesatz)
 
@@ -467,11 +478,11 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Erstellen einer Arztrechnung."""
         
         # Setze die Eingabefelder zurück
-        self.input_formular_rechnungen_betrag.value = 0
+        self.input_formular_rechnungen_betrag.value = ''
         self.input_formular_rechnungen_rechnungsdatum.value = None
         if len(self.aerzte_liste) > 0:
             self.input_formular_rechnungen_arzt.value = self.aerzte_liste[0]
-        self.input_formular_rechnungen_beihilfesatz.value = 0
+        self.input_formular_rechnungen_beihilfesatz.value = ''
         self.input_formular_rechnungen_notiz.value = ''
         self.input_formular_rechnungen_buchungsdatum.value = None
         self.input_formular_rechnungen_bezahlt.value = False
@@ -502,7 +513,7 @@ class Kontolupe(toga.App):
         # Befülle die Eingabefelder
         self.input_formular_rechnungen_betrag.value = format(float(self.rechnungen[self.rechnung_b_id].betrag), '.2f').replace('.', ',')
         self.input_formular_rechnungen_rechnungsdatum.value = self.rechnungen[self.rechnung_b_id].rechnungsdatum
-        self.input_formular_rechnungen_beihilfesatz.value = self.rechnungen[self.rechnung_b_id].beihilfesatz
+        self.input_formular_rechnungen_beihilfesatz.value = str(int(self.rechnungen[self.rechnung_b_id].beihilfesatz))
         self.input_formular_rechnungen_notiz.value = self.rechnungen[self.rechnung_b_id].notiz
         self.input_formular_rechnungen_buchungsdatum.value = self.rechnungen[self.rechnung_b_id].buchungsdatum
         self.input_formular_rechnungen_bezahlt.value = self.rechnungen[self.rechnung_b_id].bezahlt
@@ -533,11 +544,17 @@ class Kontolupe(toga.App):
             if len(self.aerzte_liste) > 0:
                 neue_rechnung.arzt_id = self.input_formular_rechnungen_arzt.value.db_id
             neue_rechnung.notiz = self.input_formular_rechnungen_notiz.value
+            
             if self.input_formular_rechnungen_betrag.value == '':
                 neue_rechnung.betrag = 0
             else:
                 neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.'))
-            neue_rechnung.beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value)
+
+            if self.input_formular_rechnungen_beihilfesatz.value == '':
+                neue_rechnung.beihilfesatz = 0
+            else:
+                neue_rechnung.beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value)
+
             neue_rechnung.buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             neue_rechnung.bezahlt = self.input_formular_rechnungen_bezahlt.value
 
@@ -563,14 +580,21 @@ class Kontolupe(toga.App):
 
             # Bearbeite die Arztrechnung
             self.rechnungen[self.rechnung_b_id].rechnungsdatum = self.input_formular_rechnungen_rechnungsdatum.value
+            
             if len(self.aerzte_liste) > 0:
                 self.rechnungen[self.rechnung_b_id].arzt_id = self.input_formular_rechnungen_arzt.value.db_id
             self.rechnungen[self.rechnung_b_id].notiz = self.input_formular_rechnungen_notiz.value
+            
             if self.input_formular_rechnungen_betrag.value == '':
                 self.rechnungen[self.rechnung_b_id].betrag = 0
             else:
                 self.rechnungen[self.rechnung_b_id].betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.'))
-            self.rechnungen[self.rechnung_b_id].beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value)
+            
+            if self.input_formular_rechnungen_beihilfesatz.value == '':
+                self.rechnungen[self.rechnung_b_id].beihilfesatz = 0
+            else:
+                self.rechnungen[self.rechnung_b_id].beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value)
+
             self.rechnungen[self.rechnung_b_id].buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             self.rechnungen[self.rechnung_b_id].bezahlt = self.input_formular_rechnungen_bezahlt.value
 
