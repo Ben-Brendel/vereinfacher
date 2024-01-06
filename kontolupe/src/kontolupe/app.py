@@ -1855,13 +1855,6 @@ class Kontolupe(toga.App):
 
     def startup(self):
         """Laden der Daten, Erzeugen der GUI-Elemente und des Hauptfensters."""
-        self.db = Datenbank()
-
-        # Lade alle Daten aus der Datenbank
-        self.rechnungen = self.db.lade_rechnungen()
-        self.aerzte = self.db.lade_aerzte()
-        self.beihilfepakete = self.db.lade_beihilfepakete()
-        self.pkvpakete = self.db.lade_pkvpakete()
 
         # Erzeuge die Menüleiste
         gruppe_rechnungen = toga.Group('Rechnungen', order = 1)
@@ -1954,6 +1947,15 @@ class Kontolupe(toga.App):
             order = 10,
             enabled=False
         )
+
+        # Datenbank initialisieren
+        self.db = Datenbank()
+
+        # Lade alle Daten aus der Datenbank
+        self.rechnungen = self.db.lade_rechnungen()
+        self.aerzte = self.db.lade_aerzte()
+        self.beihilfepakete = self.db.lade_beihilfepakete()
+        self.pkvpakete = self.db.lade_pkvpakete()
 
         # Erzeuge die ListSources für die GUI
         self.rechnungen_liste_erzeugen()

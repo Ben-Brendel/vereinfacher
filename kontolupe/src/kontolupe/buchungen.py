@@ -2,6 +2,7 @@
 
 from pathlib import Path
 import sqlite3 as sql
+import os
 
 
 class Datenbank:
@@ -10,7 +11,7 @@ class Datenbank:
     def __init__(self):
         """Initialisierung der Datenbank."""
         #self.db_path = Path('/data/data/net.biberwerk.kontolupe/kontolupe.db')
-        self.db_path = Path('kontolupe.db')
+        self.db_path = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe/kontolupe.db')
 
         # lösche die Datei der Datenbank
         #self.db_path.unlink()
@@ -41,6 +42,7 @@ class Datenbank:
                 ('rechnungsdatum', 'TEXT'),
                 ('notiz', 'TEXT'),
                 ('beihilfesatz', 'REAL'),
+                ('buchungsdatum', 'TEXT'),
                 ('aktiv', 'INTEGER'),
                 ('bezahlt', 'INTEGER'),
                 ('beihilfe_id', 'INTEGER REFERENCES beihilfepakete(id)'),
@@ -106,16 +108,18 @@ class Datenbank:
             rechnungsdatum,
             notiz,
             beihilfesatz,
+            buchungsdatum,
             aktiv,
             bezahlt,
             beihilfe_id,
             pkv_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
             rechnung.betrag,
             rechnung.arzt_id,
             rechnung.rechnungsdatum,
             rechnung.notiz,
             rechnung.beihilfesatz,
+            rechnung.buchungsdatum,
             rechnung.aktiv,
             rechnung.bezahlt,
             rechnung.beihilfe_id,
@@ -222,6 +226,7 @@ class Datenbank:
             rechnungsdatum = ?,
             notiz = ?,
             beihilfesatz = ?,
+            buchungsdatum = ?,
             aktiv = ?,
             bezahlt = ?,
             beihilfe_id = ?,
@@ -232,6 +237,7 @@ class Datenbank:
             rechnung.rechnungsdatum,
             rechnung.notiz,
             rechnung.beihilfesatz,
+            rechnung.buchungsdatum,
             rechnung.aktiv,
             rechnung.bezahlt,
             rechnung.beihilfe_id,
@@ -379,19 +385,24 @@ class Datenbank:
         cursor.execute("""SELECT * FROM arztrechnungen WHERE aktiv = 1""")
         db_result = cursor.fetchall()
 
-        # rechnungen in Arztrechnung-Objekte umwandeln
-        rechnungen = [Arztrechnung() for r in db_result]
-        for i, rechnung in enumerate(rechnungen):
-            rechnung.db_id = db_result[i][0]
-            rechnung.betrag = db_result[i][1]
-            rechnung.arzt_id = db_result[i][2]
-            rechnung.rechnungsdatum = db_result[i][3]
-            rechnung.notiz = db_result[i][4]
-            rechnung.beihilfesatz = db_result[i][5]
-            rechnung.aktiv = db_result[i][6]
-            rechnung.bezahlt = db_result[i][7]
-            rechnung.beihilfe_id = db_result[i][8]
-            rechnung.pkv_id = db_result[i][9]
+        # Speichere die Daten in einem Dictionary
+        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
+
+        rechnungen = []
+        for row in ergebnis:
+            rechnung = Arztrechnung()
+            rechnung.db_id = row['id']
+            rechnung.betrag = row['betrag']
+            rechnung.arzt_id = row['arzt']
+            rechnung.rechnungsdatum = row['rechnungsdatum']
+            rechnung.notiz = row['notiz']
+            rechnung.beihilfesatz = row['beihilfesatz']
+            rechnung.buchungsdatum = row['buchungsdatum']
+            rechnung.aktiv = row['aktiv']
+            rechnung.bezahlt = row['bezahlt']
+            rechnung.beihilfe_id = row['beihilfe_id']
+            rechnung.pkv_id = row['pkv_id']
+            rechnungen.append(rechnung)
 
         # Datenbankverbindung schließen
         connection.close()
@@ -408,14 +419,19 @@ class Datenbank:
         cursor.execute("""SELECT * FROM beihilfepakete WHERE aktiv = 1""")
         db_result = cursor.fetchall()
 
+        # Speichere die Daten in einem Dictionary
+        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
+
         # beihilfepakete in BeihilfePaket-Objekte umwandeln
-        beihilfepakete = [BeihilfePaket() for r in db_result]
-        for i, beihilfepaket in enumerate(beihilfepakete):
-            beihilfepaket.db_id = db_result[i][0]
-            beihilfepaket.betrag = db_result[i][1]
-            beihilfepaket.datum = db_result[i][2]
-            beihilfepaket.aktiv = db_result[i][3]
-            beihilfepaket.erhalten = db_result[i][4]
+        beihilfepakete = []
+        for row in ergebnis:
+            beihilfepaket = BeihilfePaket()
+            beihilfepaket.db_id = row['id']
+            beihilfepaket.betrag = row['betrag']
+            beihilfepaket.datum = row['datum']
+            beihilfepaket.aktiv = row['aktiv']
+            beihilfepaket.erhalten = row['erhalten']
+            beihilfepakete.append(beihilfepaket)
 
         # Datenbankverbindung schließen
         connection.close()
@@ -432,14 +448,19 @@ class Datenbank:
         cursor.execute("""SELECT * FROM pkvpakete WHERE aktiv = 1""")
         db_result = cursor.fetchall()
 
+        # Speichere die Daten in einem Dictionary
+        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
+
         # pkvpakete in PKVPaket-Objekte umwandeln
-        pkvpakete = [PKVPaket() for r in db_result]
-        for i, pkvpaket in enumerate(pkvpakete):
-            pkvpaket.db_id = db_result[i][0]
-            pkvpaket.betrag = db_result[i][1]
-            pkvpaket.datum = db_result[i][2]
-            pkvpaket.aktiv = db_result[i][3]
-            pkvpaket.erhalten = db_result[i][4]
+        pkvpakete = []
+        for row in ergebnis:
+            pkvpaket = PKVPaket()
+            pkvpaket.db_id = row['id']
+            pkvpaket.betrag = row['betrag']
+            pkvpaket.datum = row['datum']
+            pkvpaket.aktiv = row['aktiv']
+            pkvpaket.erhalten = row['erhalten']
+            pkvpakete.append(pkvpaket)
 
         # Datenbankverbindung schließen
         connection.close()
@@ -456,11 +477,16 @@ class Datenbank:
         cursor.execute("""SELECT * FROM aerzte""")
         db_result = cursor.fetchall()
 
+        # Speichere die Daten in einem Dictionary
+        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
+
         # aerzte in Arzt-Objekte umwandeln
-        aerzte = [Arzt() for r in db_result]
-        for i, arzt in enumerate(aerzte):
-            arzt.db_id = db_result[i][0]
-            arzt.name = db_result[i][1]
+        aerzte = []
+        for row in ergebnis:
+            arzt = Arzt()
+            arzt.db_id = row['id']
+            arzt.name = row['name']
+            aerzte.append(arzt)
 
         # Datenbankverbindung schließen
         connection.close()
@@ -499,7 +525,14 @@ class Arztrechnung:
 
     def __str__(self):
         """Ausgabe der Arztrechnung."""
-        return f"Arztrechnung: {self.db_id}\nArzt: {self.arzt_id}\nBetrag: {self.betrag} €\nRechnungsdatum: {self.rechnungsdatum}\nNotiz: {self.notiz}\nBeihilfesatz: {self.beihilfesatz} %\nBezahlt: {self.bezahlt}"
+        return (f"Arztrechnung: {self.db_id}\n"
+            f"Arzt: {self.arzt_id}\n"
+            f"Betrag: {self.betrag} €\n"
+            f"Rechnungsdatum: {self.rechnungsdatum}\n"
+            f"Buchungsdatum: {self.buchungsdatum}\n"
+            f"Notiz: {self.notiz}\n"
+            f"Beihilfesatz: {self.beihilfesatz} %\n"
+            f"Bezahlt: {self.bezahlt}")
     
 
 class BeihilfePaket:
@@ -543,7 +576,10 @@ class BeihilfePaket:
 
     def __str__(self):
         """Ausgabe der Beihilfe-Einreichung."""
-        return f"Beihilfe-Einreichung: {self.db_id}\nDatum: {self.datum}\nBetrag: {self.betrag} €\nErstattet: {self.erhalten}"
+        return (f"Beihilfe-Einreichung: {self.db_id}\n"
+            f"Datum: {self.datum}\n"
+            f"Betrag: {self.betrag} €\n"
+            f"Erstattet: {self.erhalten}")
         
 
 class PKVPaket:
@@ -585,7 +621,10 @@ class PKVPaket:
 
     def __str__(self):
         """Ausgabe der PKV-Einreichung."""
-        return f"PKV-Einreichung: {self.db_id}\nDatum: {self.datum}\nBetrag: {self.betrag} €\nErstattet: {self.erhalten}"
+        return (f"PKV-Einreichung: {self.db_id}\n"
+            f"Datum: {self.datum}\n"
+            f"Betrag: {self.betrag} €\n"
+            f"Erstattet: {self.erhalten}")
 
 
 class Arzt:
@@ -610,4 +649,5 @@ class Arzt:
 
     def __str__(self):
         """Ausgabe des Arztes."""
-        return f"ID: {self.db_id}\nArzt: {self.name}"
+        return (f"ID: {self.db_id}\n"
+            f"Arzt: {self.name}")
