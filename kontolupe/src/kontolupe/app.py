@@ -137,6 +137,29 @@ class Kontolupe(toga.App):
                 self.cmd_archivieren.enabled = True
                 self.label_start_archiv_offen.text = '{} archivierbare Buchungen vorhanden.'.format(anzahl)
 
+        # Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons.
+        status = False
+        if widget and type(widget) == toga.Table and widget.selection is not None:
+            status = True
+        else:
+            status = False
+
+        match widget:
+            case self.tabelle_offene_buchungen:
+                self.startseite_button_erledigt.enabled = status
+            case self.tabelle_rechnungen:
+                self.liste_rechnungen_button_loeschen.enabled = status
+                self.liste_rechnungen_button_bearbeiten.enabled = status
+            case self.tabelle_beihilfepakete:
+                self.seite_liste_beihilfepakete_button_loeschen.enabled = status
+                #self.seite_liste_beihilfepakete_button_bearbeiten.enabled = status
+            case self.tabelle_pkvpakete:
+                self.seite_liste_pkvpakete_button_loeschen.enabled = status
+                #self.seite_liste_pkvpakete_button_bearbeiten.enabled = status
+            case self.tabelle_aerzte:
+                self.seite_liste_aerzte_button_loeschen.enabled = status
+                self.seite_liste_aerzte_button_bearbeiten.enabled = status
+
     
     def index_auswahl(self, widget):
         """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
@@ -174,31 +197,6 @@ class Kontolupe(toga.App):
                 summe += pkvpaket.betrag
 
         return summe
-    
-
-    def button_status(self, widget):
-        """Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons."""
-        status = False
-        if widget.selection is not None:
-            status = True
-        else:
-            status = False
-
-        match widget:
-            case self.tabelle_offene_buchungen:
-                self.startseite_button_erledigt.enabled = status
-            case self.tabelle_rechnungen:
-                self.liste_rechnungen_button_loeschen.enabled = status
-                self.liste_rechnungen_button_bearbeiten.enabled = status
-            case self.tabelle_beihilfepakete:
-                self.seite_liste_beihilfepakete_button_loeschen.enabled = status
-                #self.seite_liste_beihilfepakete_button_bearbeiten.enabled = status
-            case self.tabelle_pkvpakete:
-                self.seite_liste_pkvpakete_button_loeschen.enabled = status
-                #self.seite_liste_pkvpakete_button_bearbeiten.enabled = status
-            case self.tabelle_aerzte:
-                self.seite_liste_aerzte_button_loeschen.enabled = status
-                self.seite_liste_aerzte_button_bearbeiten.enabled = status
 
 
     def erzeuge_startseite(self):
@@ -221,7 +219,7 @@ class Kontolupe(toga.App):
             accessors   = ['info', 'betrag_euro', 'datum'],
             style       = style_table_offene_buchungen,
             on_activate = self.zeige_info_buchung,
-            on_select   = self.button_status
+            on_select   = self.update_app
         )
         self.box_startseite_tabelle_offene_buchungen.add(self.tabelle_offene_buchungen)
 
@@ -357,7 +355,7 @@ class Kontolupe(toga.App):
             accessors   = ['info', 'betrag_euro', 'bezahlt_text'],
             data        = self.rechnungen_liste,
             style       = style_table,
-            on_select   = self.button_status,
+            on_select   = self.update_app,
         )
         #self.tabelle_rechnungen_container.content = self.tabelle_rechnungen
         #self.box_seite_liste_rechnungen.add(self.tabelle_rechnungen_container)
@@ -670,7 +668,7 @@ class Kontolupe(toga.App):
             accessors   = ['name'],
             data        = self.aerzte_liste,
             style       = style_table,
-            on_select   = self.button_status,
+            on_select   = self.update_app,
         )
         self.box_seite_liste_aerzte.add(self.tabelle_aerzte)
 
@@ -816,7 +814,7 @@ class Kontolupe(toga.App):
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.beihilfepakete_liste,
             style       = style_table,
-            on_select   = self.button_status,
+            on_select   = self.update_app,
         )
         self.box_seite_liste_beihilfepakete.add(self.tabelle_beihilfepakete)
 
@@ -844,7 +842,7 @@ class Kontolupe(toga.App):
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.pkvpakete_liste,
             style       = style_table,
-            on_select   = self.button_status,
+            on_select   = self.update_app,
         )
         self.tabelle_pkvpakete_container.content = self.tabelle_pkvpakete
         self.box_seite_liste_pkvpakete.add(self.tabelle_pkvpakete_container)
