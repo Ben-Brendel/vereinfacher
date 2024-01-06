@@ -75,40 +75,18 @@ class Datenbank:
             for column in columns:
                 Datenbank.__add_column_if_not_exists(cursor, table_name, column[0], column[1])
 
-        # # Tabellen erstellen
-        # cursor.execute("""CREATE TABLE IF NOT EXISTS arztrechnungen (
-        #     id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #     betrag REAL,
-        #     arzt INTEGER REFERENCES aerzte(id),
-        #     rechnungsdatum TEXT,
-        #     notiz TEXT,
-        #     beihilfesatz REAL,
-        #     aktiv INTEGER,
-        #     bezahlt INTEGER,
-        #     beihilfe_id INTEGER REFERENCES beihilfepakete(id),
-        #     pkv_id INTEGER REFERENCES pkvpakete(id)
-        # )""")
-
-        # cursor.execute("""CREATE TABLE IF NOT EXISTS beihilfepakete (
-        #     id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #     betrag REAL,
-        #     datum TEXT,
-        #     aktiv INTEGER,
-        #     erhalten INTEGER
-        # )""")
-
-        # cursor.execute("""CREATE TABLE IF NOT EXISTS pkvpakete (
-        #     id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #     betrag REAL,
-        #     datum TEXT,
-        #     aktiv INTEGER,
-        #     erhalten INTEGER
-        # )""")
-
-        # cursor.execute("""CREATE TABLE IF NOT EXISTS aerzte (
-        #     id INTEGER PRIMARY KEY AUTOINCREMENT,
-        #     name TEXT
-        # )""")
+        # validate all datum entries in the tables
+        # check if they are in the format YYYY-MM-DD
+        # and change them from the format YYYY-MM-DD to DD.MM.YYYY
+        for table_name, columns in tables.items():
+            if 'datum' in [column[0] for column in columns]:
+                cursor.execute(f"SELECT id, datum FROM {table_name}")
+                db_result = cursor.fetchall()
+                for row in db_result:
+                    if row[1] is not None:
+                        if len(row[1].split('-')) == 3:
+                            datum = f"{row[1].split('-')[2]}.{row[1].split('-')[1]}.{row[1].split('-')[0]}"
+                            cursor.execute(f"UPDATE {table_name} SET datum = ? WHERE id = ?", (datum, row[0]))
 
         # Datenbankverbindung schließen
         connection.commit()
