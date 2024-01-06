@@ -539,7 +539,7 @@ class Kontolupe(toga.App):
         # Bereich der Buttons
         box_formular_rechnungen_buttons = toga.Box(style=style_box_row)
         box_formular_rechnungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_rechnungen, style=style_button))
-        box_formular_rechnungen_buttons.add(toga.Button('Speichern', on_press=self.rechnung_speichern, style=style_button))
+        box_formular_rechnungen_buttons.add(toga.Button('Speichern', on_press=self.rechnung_speichern_check, style=style_button))
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_buttons)
 
 
@@ -601,6 +601,34 @@ class Kontolupe(toga.App):
 
         # Zeige die Seite
         self.main_window.content = self.scroll_container_formular_rechnungen
+
+
+    async def rechnung_speichern_check(self, widget):
+        """Prüft, ob die Arztrechnung gespeichert werden soll."""
+
+        nachricht = ''
+
+        # Prüfe, ob ein Rechnungsdatum eingegeben wurde
+        if self.input_formular_rechnungen_rechnungsdatum.value == '':
+            nachricht += 'Bitte gib ein Rechnungsdatum ein.\n'
+
+        # Prüfe, ob ein Betrag eingegeben wurde
+        if self.input_formular_rechnungen_betrag.value == '':
+            nachricht += 'Bitte gib einen Betrag ein.\n'
+
+        # Prüfe, ob ein Arzt ausgewählt wurde
+        if len(self.aerzte_liste) > 0:
+            if self.input_formular_rechnungen_arzt.value is None:
+                nachricht += 'Bitte wähle eine Einrichtung aus.\n'
+
+        # Prüfe, ob ein Beihilfesatz eingegeben wurde
+        if self.input_formular_rechnungen_beihilfesatz.value == '':
+            nachricht += 'Bitte gib einen Beihilfesatz ein.\n'
+                
+        if nachricht != '':
+            self.main_window.error_dialog('Fehler', nachricht)
+        else:
+            await self.rechnung_speichern(widget)
 
 
     async def rechnung_speichern(self, widget):
