@@ -12,18 +12,18 @@ from toga.sources import ListSource
 from kontolupe.buchungen import *
 
 # Allgemeine Styles
-style_box_column        = Pack(direction=COLUMN, alignment=CENTER)
-style_box_row           = Pack(direction=ROW, alignment=CENTER)
-style_scroll_container  = Pack(flex=1)
-style_label_h1          = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
-style_label_h2          = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
-style_label             = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#222222')
-style_label_center      = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#222222')
-style_button            = Pack(flex=1, padding=5, color='#222222')
-style_input             = Pack(flex=2, padding=5, color='#222222') 
-style_label_input       = Pack(flex=1, padding=5, text_align=LEFT, color='#222222')
-style_table             = Pack(flex=1, padding=5, color='#222222')
-style_switch            = Pack(flex=1, padding=5, color='#222222')
+style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
+style_box_row                   = Pack(direction=ROW, alignment=CENTER)
+style_scroll_container          = Pack(flex=1)
+style_label_h1                  = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
+style_label_h2                  = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
+style_label                     = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#222222')
+style_label_center              = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#222222')
+style_button                    = Pack(flex=1, padding=5, color='#222222')
+style_input                     = Pack(flex=2, padding=5, color='#222222') 
+style_label_input               = Pack(flex=1, padding=5, text_align=LEFT, color='#222222')
+style_table                     = Pack(flex=1, padding=5, color='#222222')
+style_switch                    = Pack(flex=1, padding=5, color='#222222')
 
 # Spezifische Styles
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
@@ -1758,16 +1758,6 @@ class Kontolupe(toga.App):
         self.beihilfepakete = self.db.lade_beihilfepakete()
         self.pkvpakete = self.db.lade_pkvpakete()
 
-        # Icons und Images definieren
-        # icon_stift = toga.Icon(self.paths.app / 'resources/stift-schwarz.png')
-        # icon_doktor = toga.Icon(self.paths.app / 'resources/doktor-schwarz.png')
-        # icon_paket = toga.Icon(self.paths.app / 'resources/paket-schwarz.png')
-        # icon_haken = toga.Icon(self.paths.app / 'resources/haken-schwarz.png')
-        # self.icon_haken_gruen = toga.Icon(self.paths.app / 'resources/haken-gruen.png')
-        # self.icon_paket_rot = toga.Icon(self.paths.app / 'resources/paket-rot.png')
-        # self.image_haken_gruen = Path(self.paths.app / 'resources/haken-gruen.png')
-        # self.image_paket_rot = Path(self.paths.app / 'resources/paket-rot.png')
-
         # Erzeuge die Menüleiste
         gruppe_rechnungen = toga.Group('Rechnungen', order = 1)
 
@@ -1784,7 +1774,6 @@ class Kontolupe(toga.App):
             self.zeige_seite_formular_rechnungen_neu,
             'Neue Rechnung',
             tooltip = 'Erstellt eine neue Rechnung.',
-            #icon = icon_stift,
             group = gruppe_rechnungen,
             order = 20,
             enabled=True
