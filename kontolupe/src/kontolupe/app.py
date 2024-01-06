@@ -9,6 +9,7 @@ Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen
 import toga
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 from toga.sources import ListSource
+from toga.validators import *
 from kontolupe.buchungen import *
 
 # Allgemeine Styles
