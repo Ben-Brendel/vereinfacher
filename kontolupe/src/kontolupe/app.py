@@ -9,7 +9,6 @@ Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen
 import toga
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 from toga.sources import ListSource
-import datetime
 from kontolupe.buchungen import *
 
 # Allgemeine Styles
@@ -28,7 +27,7 @@ style_switch            = Pack(flex=1, padding=5, color='#222222')
 
 # Spezifische Styles
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
-style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff')
+style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff', background_color='#368ba8')
 style_table_offene_buchungen    = Pack(padding=5, height=200, color='#222222')
 style_table_auswahl             = Pack(padding=5, height=200, flex=1, color='#222222')
 
@@ -53,98 +52,6 @@ class Kontolupe(toga.App):
         # Hilfsvariablen zur Bearbeitung der PKV-Pakete
         self.flag_bearbeite_pkvpaket = False
         self.pkvpaket_b_id = 0
-
-        # Erzeuge die Menüleiste
-        gruppe_rechnungen = toga.Group('Rechnungen', order = 1)
-
-        self.cmd_rechnungen_anzeigen = toga.Command(
-            self.zeige_seite_liste_rechnungen,
-            'Rechnungen anzeigen',
-            tooltip = 'Zeigt die Liste der Rechnungen an.',
-            group = gruppe_rechnungen,
-            order = 10,
-            enabled=True
-        )
-
-        self.cmd_rechnungen_neu = toga.Command(
-            self.zeige_seite_formular_rechnungen_neu,
-            'Neue Rechnung',
-            tooltip = 'Erstellt eine neue Rechnung.',
-            group = gruppe_rechnungen,
-            order = 20,
-            enabled=True
-        )
-
-        gruppe_beihilfepakete = toga.Group('Beihilfe-Einreichungen', order = 2)
-
-        self.cmd_beihilfepakete_anzeigen = toga.Command(
-            self.zeige_seite_liste_beihilfepakete,
-            'Beihilfe-Einreichungen anzeigen',
-            tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
-            group = gruppe_beihilfepakete,
-            order = 10,
-            enabled=True
-        )
-
-        self.cmd_beihilfepakete_neu = toga.Command(
-            self.zeige_seite_formular_beihilfepakete_neu,
-            'Neue Beihilfe-Einreichung',
-            tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
-            group = gruppe_beihilfepakete,
-            order = 20,
-            enabled=False
-        )
-
-        gruppe_pkvpakete = toga.Group('PKV-Einreichungen', order = 3)
-
-        self.cmd_pkvpakete_anzeigen = toga.Command(
-            self.zeige_seite_liste_pkvpakete,
-            'PKV-Einreichungen anzeigen',
-            tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
-            group = gruppe_pkvpakete,
-            order = 10,
-            enabled=True
-        )
-
-        self.cmd_pkvpakete_neu = toga.Command(
-            self.zeige_seite_formular_pkvpakete_neu,
-            'Neue PKV-Einreichung',
-            tooltip = 'Erstellt eine neue PKV-Einreichung.',
-            group = gruppe_pkvpakete,
-            order = 20,
-            enabled=False
-        )
-
-        gruppe_aerzte = toga.Group('Einrichtungen', order = 4)
-
-        self.cmd_aerzte_anzeigen = toga.Command(
-            self.zeige_seite_liste_aerzte,
-            'Einrichtungen anzeigen',
-            tooltip = 'Zeigt die Liste der Einrichtungen an.',
-            group = gruppe_aerzte,
-            order = 10,
-            enabled=True
-        )
-
-        self.cmd_aerzte_neu = toga.Command(
-            self.zeige_seite_formular_aerzte_neu,
-            'Neue Einrichtung',
-            tooltip = 'Erstellt eine neue Einrichtung.',
-            group = gruppe_aerzte,
-            order = 20,
-            enabled=True
-        )
-
-        gruppe_tools = toga.Group('Tools', order = 5)
-
-        self.cmd_archivieren = toga.Command(
-            self.archivieren_bestaetigen,
-            'Archivieren',
-            tooltip = 'Archiviere alle bezahlten und erhaltenen Buchungen.',
-            group = gruppe_tools,
-            order = 10,
-            enabled=False
-        )
 
 
     def update_app(self, widget):
@@ -1855,6 +1762,106 @@ class Kontolupe(toga.App):
         self.aerzte = self.db.lade_aerzte()
         self.beihilfepakete = self.db.lade_beihilfepakete()
         self.pkvpakete = self.db.lade_pkvpakete()
+
+        # Icons definieren
+        icon_stift = toga.Icon(self.paths.app / 'resources/stift-schwarz.png')
+        icon_doktor = toga.Icon(self.paths.app / 'resources/doktor-schwarz.png')
+        icon_paket = toga.Icon(self.paths.app / 'resources/paket-schwarz.png')
+        icon_haken = toga.Icon(self.paths.app / 'resources/haken-schwarz.png')
+        self.icon_haken_gruen = toga.Icon(self.paths.app / 'resources/haken-gruen.png')
+
+        # Erzeuge die Menüleiste
+        gruppe_rechnungen = toga.Group('Rechnungen', order = 1)
+
+        self.cmd_rechnungen_anzeigen = toga.Command(
+            self.zeige_seite_liste_rechnungen,
+            'Rechnungen anzeigen',
+            tooltip = 'Zeigt die Liste der Rechnungen an.',
+            group = gruppe_rechnungen,
+            order = 10,
+            enabled=True
+        )
+
+        self.cmd_rechnungen_neu = toga.Command(
+            self.zeige_seite_formular_rechnungen_neu,
+            'Neue Rechnung',
+            tooltip = 'Erstellt eine neue Rechnung.',
+            icon = icon_stift,
+            group = gruppe_rechnungen,
+            order = 20,
+            enabled=True
+        )
+
+        gruppe_beihilfepakete = toga.Group('Beihilfe-Einreichungen', order = 2)
+
+        self.cmd_beihilfepakete_anzeigen = toga.Command(
+            self.zeige_seite_liste_beihilfepakete,
+            'Beihilfe-Einreichungen anzeigen',
+            tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
+            group = gruppe_beihilfepakete,
+            order = 10,
+            enabled=True
+        )
+
+        self.cmd_beihilfepakete_neu = toga.Command(
+            self.zeige_seite_formular_beihilfepakete_neu,
+            'Neue Beihilfe-Einreichung',
+            tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
+            group = gruppe_beihilfepakete,
+            order = 20,
+            enabled=False
+        )
+
+        gruppe_pkvpakete = toga.Group('PKV-Einreichungen', order = 3)
+
+        self.cmd_pkvpakete_anzeigen = toga.Command(
+            self.zeige_seite_liste_pkvpakete,
+            'PKV-Einreichungen anzeigen',
+            tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
+            group = gruppe_pkvpakete,
+            order = 10,
+            enabled=True
+        )
+
+        self.cmd_pkvpakete_neu = toga.Command(
+            self.zeige_seite_formular_pkvpakete_neu,
+            'Neue PKV-Einreichung',
+            tooltip = 'Erstellt eine neue PKV-Einreichung.',
+            group = gruppe_pkvpakete,
+            order = 20,
+            enabled=False
+        )
+
+        gruppe_aerzte = toga.Group('Einrichtungen', order = 4)
+
+        self.cmd_aerzte_anzeigen = toga.Command(
+            self.zeige_seite_liste_aerzte,
+            'Einrichtungen anzeigen',
+            tooltip = 'Zeigt die Liste der Einrichtungen an.',
+            group = gruppe_aerzte,
+            order = 10,
+            enabled=True
+        )
+
+        self.cmd_aerzte_neu = toga.Command(
+            self.zeige_seite_formular_aerzte_neu,
+            'Neue Einrichtung',
+            tooltip = 'Erstellt eine neue Einrichtung.',
+            group = gruppe_aerzte,
+            order = 20,
+            enabled=True
+        )
+
+        gruppe_tools = toga.Group('Tools', order = 5)
+
+        self.cmd_archivieren = toga.Command(
+            self.archivieren_bestaetigen,
+            'Archivieren',
+            tooltip = 'Archiviere alle bezahlten und erhaltenen Buchungen.',
+            group = gruppe_tools,
+            order = 10,
+            enabled=False
+        )
 
         # Erzeuge die ListSources für die GUI
         self.rechnungen_liste_erzeugen()
