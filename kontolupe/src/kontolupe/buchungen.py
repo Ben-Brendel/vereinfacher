@@ -18,47 +18,97 @@ class Datenbank:
         # Datenbank erstellen
         self.create_db()
 
+    def __add_column_if_not_exists(cursor, table_name, new_column, column_type):
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        if not any(row[1] == new_column for row in cursor.fetchall()):
+            cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
+
     def create_db(self):
-        """Erstellen der Datenbank."""
+        """Erstellen und Update der Datenbank."""
         
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
 
-        # Tabellen erstellen
-        cursor.execute("""CREATE TABLE IF NOT EXISTS arztrechnungen (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            betrag REAL,
-            arzt INTEGER REFERENCES aerzte(id),
-            rechnungsdatum TEXT,
-            notiz TEXT,
-            beihilfesatz REAL,
-            aktiv INTEGER,
-            bezahlt INTEGER,
-            beihilfe_id INTEGER REFERENCES beihilfepakete(id),
-            pkv_id INTEGER REFERENCES pkvpakete(id)
-        )""")
+        # create a dictionary with table names as keys and a list of tuples
+        # with column names and column types as values
 
-        cursor.execute("""CREATE TABLE IF NOT EXISTS beihilfepakete (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            betrag REAL,
-            datum TEXT,
-            aktiv INTEGER,
-            erhalten INTEGER
-        )""")
+        tables = {
+            'arztrechnungen': [
+                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
+                ('betrag', 'REAL'),
+                ('arzt', 'INTEGER REFERENCES aerzte(id)'),
+                ('rechnungsdatum', 'TEXT'),
+                ('notiz', 'TEXT'),
+                ('beihilfesatz', 'REAL'),
+                ('aktiv', 'INTEGER'),
+                ('bezahlt', 'INTEGER'),
+                ('beihilfe_id', 'INTEGER REFERENCES beihilfepakete(id)'),
+                ('pkv_id', 'INTEGER REFERENCES pkvpakete(id)')
+            ],
+            'beihilfepakete': [
+                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
+                ('betrag', 'REAL'),
+                ('datum', 'TEXT'),
+                ('aktiv', 'INTEGER'),
+                ('erhalten', 'INTEGER')
+            ],
+            'pkvpakete': [
+                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
+                ('betrag', 'REAL'),
+                ('datum', 'TEXT'),
+                ('aktiv', 'INTEGER'),
+                ('erhalten', 'INTEGER')
+            ],
+            'aerzte': [
+                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
+                ('name', 'TEXT')
+            ]
+        }
 
-        cursor.execute("""CREATE TABLE IF NOT EXISTS pkvpakete (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            betrag REAL,
-            datum TEXT,
-            aktiv INTEGER,
-            erhalten INTEGER
-        )""")
+        # create tables if they don't exist
+        for table_name, columns in tables.items():
+            cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{column[0]} {column[1]}' for column in columns])})")
 
-        cursor.execute("""CREATE TABLE IF NOT EXISTS aerzte (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT
-        )""")
+        # add columns if they don't exist
+        for table_name, columns in tables.items():
+            for column in columns:
+                Datenbank.__add_column_if_not_exists(cursor, table_name, column[0], column[1])
+
+        # # Tabellen erstellen
+        # cursor.execute("""CREATE TABLE IF NOT EXISTS arztrechnungen (
+        #     id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #     betrag REAL,
+        #     arzt INTEGER REFERENCES aerzte(id),
+        #     rechnungsdatum TEXT,
+        #     notiz TEXT,
+        #     beihilfesatz REAL,
+        #     aktiv INTEGER,
+        #     bezahlt INTEGER,
+        #     beihilfe_id INTEGER REFERENCES beihilfepakete(id),
+        #     pkv_id INTEGER REFERENCES pkvpakete(id)
+        # )""")
+
+        # cursor.execute("""CREATE TABLE IF NOT EXISTS beihilfepakete (
+        #     id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #     betrag REAL,
+        #     datum TEXT,
+        #     aktiv INTEGER,
+        #     erhalten INTEGER
+        # )""")
+
+        # cursor.execute("""CREATE TABLE IF NOT EXISTS pkvpakete (
+        #     id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #     betrag REAL,
+        #     datum TEXT,
+        #     aktiv INTEGER,
+        #     erhalten INTEGER
+        # )""")
+
+        # cursor.execute("""CREATE TABLE IF NOT EXISTS aerzte (
+        #     id INTEGER PRIMARY KEY AUTOINCREMENT,
+        #     name TEXT
+        # )""")
 
         # Datenbankverbindung schließen
         connection.commit()
