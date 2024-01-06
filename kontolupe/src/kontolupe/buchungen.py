@@ -79,14 +79,15 @@ class Datenbank:
         # check if they are in the format YYYY-MM-DD
         # and change them from the format YYYY-MM-DD to DD.MM.YYYY
         for table_name, columns in tables.items():
-            if 'datum' in [column[0] for column in columns]:
-                cursor.execute(f"SELECT id, datum FROM {table_name}")
-                db_result = cursor.fetchall()
-                for row in db_result:
-                    if row[1] is not None:
-                        if len(row[1].split('-')) == 3:
-                            datum = f"{row[1].split('-')[2]}.{row[1].split('-')[1]}.{row[1].split('-')[0]}"
-                            cursor.execute(f"UPDATE {table_name} SET datum = ? WHERE id = ?", (datum, row[0]))
+            for column in columns:
+                if 'datum' in column[0]:
+                    cursor.execute(f"SELECT id, {column[0]} FROM {table_name}")
+                    db_result = cursor.fetchall()
+                    for row in db_result:
+                        if row[1] is not None:
+                            if len(row[1].split('-')) == 3:
+                                datum = f"{row[1].split('-')[2]}.{row[1].split('-')[1]}.{row[1].split('-')[0]}"
+                                cursor.execute(f"UPDATE {table_name} SET {column[0]} = ? WHERE id = ?", (datum, row[0]))
 
         # Datenbankverbindung schließen
         connection.commit()

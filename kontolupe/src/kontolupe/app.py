@@ -251,7 +251,25 @@ class Kontolupe(toga.App):
             error = False            
             # check if there are 3 parts
             if widget.value.count('.') != 2:
-                error = True
+                # check if the entry is numeric
+                if not widget.value.isnumeric():
+                    error = True
+                # check if the entry is 6 digits long and insert 20 after the first four digits
+                elif len(widget.value) == 6:
+                    widget.value = widget.value[:4] + '20' + widget.value[4:]
+                elif len(widget.value) != 8:
+                    error = True
+            
+                if not error:
+                    # add a . after the first two digits and after the second two digits
+                    widget.value = widget.value[:2] + '.' + widget.value[2:4] + '.' + widget.value[4:]
+                
+                # check if the date is valid
+                try:
+                    datetime.strptime(widget.value, '%d.%m.%Y')
+                except ValueError:
+                    error = True
+
             else:
                 # check if all parts are numbers
                 parts = widget.value.split('.')
