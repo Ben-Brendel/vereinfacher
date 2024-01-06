@@ -492,7 +492,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Rechnungsdatums
         box_formular_rechnungen_rechnungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=style_label_input))
-        self.input_formular_rechnungen_rechnungsdatum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum)
+        self.input_formular_rechnungen_rechnungsdatum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_rechnungen_rechnungsdatum.add(self.input_formular_rechnungen_rechnungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_rechnungsdatum)
 
@@ -526,7 +526,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Buchungsdatums
         box_formular_rechnungen_buchungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_buchungsdatum.add(toga.Label('Datum Überweisung: ', style=style_label_input))
-        self.input_formular_rechnungen_buchungsdatum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum)
+        self.input_formular_rechnungen_buchungsdatum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_rechnungen_buchungsdatum.add(self.input_formular_rechnungen_buchungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_buchungsdatum)
 
@@ -984,7 +984,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Datums
         box_formular_beihilfepakete_datum = toga.Box(style=style_box_row)
         box_formular_beihilfepakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_beihilfepakete_datum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum)
+        self.input_formular_beihilfepakete_datum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_beihilfepakete_datum.add(self.input_formular_beihilfepakete_datum)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_datum)
 
@@ -1029,7 +1029,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Datums
         box_formular_pkvpakete_datum = toga.Box(style=style_box_row)
         box_formular_pkvpakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_pkvpakete_datum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum)
+        self.input_formular_pkvpakete_datum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_pkvpakete_datum.add(self.input_formular_pkvpakete_datum)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_datum)
 
