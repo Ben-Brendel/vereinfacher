@@ -11,6 +11,7 @@ from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 from toga.sources import ListSource
 from toga.validators import *
 from kontolupe.buchungen import *
+from datetime import datetime
 
 # Allgemeine Styles
 style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
@@ -235,6 +236,56 @@ class Kontolupe(toga.App):
             widget.value = eingabe
 
 
+    def eingabe_datum(self, widget):
+        """Prüft, ob die Eingabe nur Zahlen oder ein . ist."""
+
+        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein . sind.
+        eingabe = ''.join(c for c in widget.value if c in '0123456789.')
+        widget.value = eingabe
+
+
+    def pruefe_datum(self, widget):
+        """ Prüft, ob die Eingabe ein gültiges Datum ist."""
+
+        if widget.value != '':
+            error = False            
+            # check if there are 3 parts
+            if widget.value.count('.') != 2:
+                error = True
+            else:
+                # check if all parts are numbers
+                parts = widget.value.split('.')
+                for part in parts:
+                    if not part.isnumeric():
+                        error = True
+                        break
+                
+                # first and second part must be two digits long, if not add a leading 0
+                if not error and len(parts[0]) != 2:
+                    parts[0] = '0' + parts[0]
+                if not error and len(parts[1]) != 2:
+                    parts[1] = '0' + parts[1]
+                # third part must be 4 or 2 digits long. if 2 digits long, add 20 to the beginning
+                if not error and len(parts[2]) == 2:
+                    parts[2] = '20' + parts[2]
+                elif not error and len(parts[2]) != 4:
+                    error = True
+
+                # put the parts back together
+                if not error:
+                    widget.value = '.'.join(parts)
+                
+                # check if the date is valid
+                try:
+                    datetime.strptime(widget.value, '%d.%m.%Y')
+                except ValueError:
+                    error = True
+
+            if error:
+                self.main_window.error_dialog('Fehler', 'Kein gültiges Datum eingegeben.')
+                widget.value = ''
+
+
     def erzeuge_startseite(self):
         """Erzeugt die Startseite der Anwendung."""
 
@@ -423,7 +474,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Rechnungsdatums
         box_formular_rechnungen_rechnungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=style_label_input))
-        self.input_formular_rechnungen_rechnungsdatum = toga.DateInput(style=style_input)
+        self.input_formular_rechnungen_rechnungsdatum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum)
         box_formular_rechnungen_rechnungsdatum.add(self.input_formular_rechnungen_rechnungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_rechnungsdatum)
 
@@ -457,7 +508,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Buchungsdatums
         box_formular_rechnungen_buchungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_buchungsdatum.add(toga.Label('Datum Überweisung: ', style=style_label_input))
-        self.input_formular_rechnungen_buchungsdatum = toga.DateInput(style=style_input)
+        self.input_formular_rechnungen_buchungsdatum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum)
         box_formular_rechnungen_buchungsdatum.add(self.input_formular_rechnungen_buchungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_buchungsdatum)
 
@@ -479,12 +530,12 @@ class Kontolupe(toga.App):
         
         # Setze die Eingabefelder zurück
         self.input_formular_rechnungen_betrag.value = ''
-        self.input_formular_rechnungen_rechnungsdatum.value = None
+        self.input_formular_rechnungen_rechnungsdatum.value = ''
         if len(self.aerzte_liste) > 0:
             self.input_formular_rechnungen_arzt.value = self.aerzte_liste[0]
         self.input_formular_rechnungen_beihilfesatz.value = ''
         self.input_formular_rechnungen_notiz.value = ''
-        self.input_formular_rechnungen_buchungsdatum.value = None
+        self.input_formular_rechnungen_buchungsdatum.value = ''
         self.input_formular_rechnungen_bezahlt.value = False
 
         # Zurücksetzen des Flags
@@ -915,7 +966,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Datums
         box_formular_beihilfepakete_datum = toga.Box(style=style_box_row)
         box_formular_beihilfepakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_beihilfepakete_datum = toga.DateInput(style=style_input)
+        self.input_formular_beihilfepakete_datum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum)
         box_formular_beihilfepakete_datum.add(self.input_formular_beihilfepakete_datum)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_datum)
 
@@ -960,7 +1011,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Datums
         box_formular_pkvpakete_datum = toga.Box(style=style_box_row)
         box_formular_pkvpakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_pkvpakete_datum = toga.DateInput(style=style_input)
+        self.input_formular_pkvpakete_datum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum)
         box_formular_pkvpakete_datum.add(self.input_formular_pkvpakete_datum)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_datum)
 
@@ -1021,7 +1072,7 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Erstellen eines Beihilfepakets."""
         # Setze die Eingabefelder zurück
         self.input_formular_beihilfepakete_betrag.value = ''
-        self.input_formular_beihilfepakete_datum.value = None
+        self.input_formular_beihilfepakete_datum.value = datetime.now().strftime('%d.%m.%Y')
         self.input_formular_beihilfepakete_erhalten.value = False
         self.formular_beihilfe_tabelle_rechnungen.data = self.erzeuge_teilliste_rechnungen(beihilfe=True)
 
@@ -1039,7 +1090,7 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Erstellen einer PKV-Einreichung."""
         # Setze die Eingabefelder zurück
         self.input_formular_pkvpakete_betrag.value = ''
-        self.input_formular_pkvpakete_datum.value = None
+        self.input_formular_pkvpakete_datum.value = datetime.now().strftime('%d.%m.%Y')
         self.input_formular_pkvpakete_erhalten.value = False
         self.formular_pkv_tabelle_rechnungen.data = self.erzeuge_teilliste_rechnungen(pkv=True)
 
@@ -1314,7 +1365,7 @@ class Kontolupe(toga.App):
                 data.append({
                 'db_id': rechnung.db_id,
                 'betrag': rechnung.betrag,
-                'betrag_euro': '{:.2f} €'.format(rechnung.betrag),
+                'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                 'rechnungsdatum': rechnung.rechnungsdatum,
                 'arzt_id': rechnung.arzt_id,
                 'notiz': rechnung.notiz,
