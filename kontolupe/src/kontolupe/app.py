@@ -30,7 +30,7 @@ style_switch                    = Pack(flex=1, padding=5, color='#222222')
 # Spezifische Styles
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
 style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff', background_color='#368ba8')
-style_table_offene_buchungen    = Pack(flex=1, padding=5, height=200, color='#222222')
+style_table_offene_buchungen    = Pack(padding=5, height=200, color='#222222')
 style_table_auswahl             = Pack(padding=5, height=200, flex=1, color='#222222')
 
 class Kontolupe(toga.App):
@@ -63,7 +63,8 @@ class Kontolupe(toga.App):
         self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen())
 
         # Tabelle mit offenen Buchungen aktualisieren
-        self.tabelle_offene_buchungen.data = self.erzeuge_liste_offene_buchungen()
+        if widget != self.tabelle_offene_buchungen:
+            self.tabelle_offene_buchungen.data = self.erzeuge_liste_offene_buchungen()
 
         # Button zum Markieren von Buchungen als bezahlt/erhalten aktivieren oder deaktivieren,
         self.startseite_button_erledigt.enabled = False
@@ -246,6 +247,9 @@ class Kontolupe(toga.App):
 
     def pruefe_datum(self, widget):
         """ Prüft, ob die Eingabe ein gültiges Datum ist."""
+
+        eingabe = ''.join(c for c in widget.value if c in '0123456789.')
+        widget.value = eingabe
 
         if widget.value != '':
             error = False            
@@ -492,13 +496,13 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Rechnungsdatums
         box_formular_rechnungen_rechnungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=style_label_input))
-        self.input_formular_rechnungen_rechnungsdatum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
+        self.input_formular_rechnungen_rechnungsdatum = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_rechnungen_rechnungsdatum.add(self.input_formular_rechnungen_rechnungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_rechnungsdatum)
 
         box_formular_rechnungen_betrag = toga.Box(style=style_box_row)
         box_formular_rechnungen_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_change=self.eingabe_zahl)
+        self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_lose_focus=self.eingabe_zahl)
         box_formular_rechnungen_betrag.add(self.input_formular_rechnungen_betrag)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_betrag)
 
@@ -519,14 +523,14 @@ class Kontolupe(toga.App):
         # Bereich zur Auswahl des Beihilfesatzes
         box_formular_rechnungen_beihilfesatz = toga.Box(style=style_box_row)
         box_formular_rechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
-        self.input_formular_rechnungen_beihilfesatz = toga.TextInput(style=style_input, on_change=self.eingabe_prozent)
+        self.input_formular_rechnungen_beihilfesatz = toga.TextInput(style=style_input, on_lose_focus=self.eingabe_prozent)
         box_formular_rechnungen_beihilfesatz.add(self.input_formular_rechnungen_beihilfesatz)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_beihilfesatz)
 
         # Bereich zur Eingabe des Buchungsdatums
         box_formular_rechnungen_buchungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_buchungsdatum.add(toga.Label('Datum Überweisung: ', style=style_label_input))
-        self.input_formular_rechnungen_buchungsdatum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
+        self.input_formular_rechnungen_buchungsdatum = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_rechnungen_buchungsdatum.add(self.input_formular_rechnungen_buchungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_buchungsdatum)
 
@@ -1012,7 +1016,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Datums
         box_formular_beihilfepakete_datum = toga.Box(style=style_box_row)
         box_formular_beihilfepakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_beihilfepakete_datum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
+        self.input_formular_beihilfepakete_datum = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_beihilfepakete_datum.add(self.input_formular_beihilfepakete_datum)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_datum)
 
@@ -1057,7 +1061,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Datums
         box_formular_pkvpakete_datum = toga.Box(style=style_box_row)
         box_formular_pkvpakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_pkvpakete_datum = toga.TextInput(style=style_input, on_change=self.eingabe_datum, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
+        self.input_formular_pkvpakete_datum = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_pkvpakete_datum.add(self.input_formular_pkvpakete_datum)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_datum)
 
