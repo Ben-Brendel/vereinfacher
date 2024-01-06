@@ -349,7 +349,6 @@ class Kontolupe(toga.App):
         self.box_seite_liste_rechnungen.add(toga.Label('Rechnungen', style=style_label_h1))
 
         # Tabelle mit den Arztrechnungen
-        #self.tabelle_rechnungen_container = toga.ScrollContainer(style=style_scroll_container)
         self.tabelle_rechnungen = toga.Table(
             headings    = ['Info', 'Betrag', 'Bezahlt'],
             accessors   = ['info', 'betrag_euro', 'bezahlt_text'],
@@ -357,8 +356,6 @@ class Kontolupe(toga.App):
             style       = style_table,
             on_select   = self.update_app,
         )
-        #self.tabelle_rechnungen_container.content = self.tabelle_rechnungen
-        #self.box_seite_liste_rechnungen.add(self.tabelle_rechnungen_container)
         self.box_seite_liste_rechnungen.add(self.tabelle_rechnungen)
 
         # Buttons für die Arztrechnungen
