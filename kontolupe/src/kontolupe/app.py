@@ -951,7 +951,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Betrags
         box_formular_beihilfepakete_betrag = toga.Box(style=style_box_row)
         box_formular_beihilfepakete_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        self.input_formular_beihilfepakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=style_input, readonly=True)
+        self.input_formular_beihilfepakete_betrag = toga.TextInput(style=style_input, readonly=True)
         box_formular_beihilfepakete_betrag.add(self.input_formular_beihilfepakete_betrag)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_betrag)
 
@@ -998,7 +998,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Betrags
         box_formular_pkvpakete_betrag = toga.Box(style=style_box_row)
         box_formular_pkvpakete_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        self.input_formular_pkvpakete_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=style_input, readonly=True)
+        self.input_formular_pkvpakete_betrag = toga.TextInput(style=style_input, readonly=True)
         box_formular_pkvpakete_betrag.add(self.input_formular_pkvpakete_betrag)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_betrag)
 
@@ -1022,7 +1022,7 @@ class Kontolupe(toga.App):
             for rg in self.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
                     summe += rg.betrag * rg.beihilfesatz / 100
-        self.input_formular_beihilfepakete_betrag.value = summe
+        self.input_formular_beihilfepakete_betrag.value = format(summe, '.2f').replace('.', ',')
 
 
     def pkv_tabelle_rechnungen_auswahl_geaendert(self, widget):
@@ -1032,13 +1032,13 @@ class Kontolupe(toga.App):
             for rg in self.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
                     summe += rg.betrag * (100 - rg.beihilfesatz) / 100
-        self.input_formular_pkvpakete_betrag.value = summe
+        self.input_formular_pkvpakete_betrag.value = format(summe, '.2f').replace('.', ',')
 
 
     def zeige_seite_formular_beihilfepakete_neu(self, widget):
         """Zeigt die Seite zum Erstellen eines Beihilfepakets."""
         # Setze die Eingabefelder zurück
-        self.input_formular_beihilfepakete_betrag.value = 0
+        self.input_formular_beihilfepakete_betrag.value = ''
         self.input_formular_beihilfepakete_datum.value = None
         self.input_formular_beihilfepakete_erhalten.value = False
         self.formular_beihilfe_tabelle_rechnungen.data = self.erzeuge_teilliste_rechnungen(beihilfe=True)
@@ -1056,7 +1056,7 @@ class Kontolupe(toga.App):
     def zeige_seite_formular_pkvpakete_neu(self, widget):
         """Zeigt die Seite zum Erstellen einer PKV-Einreichung."""
         # Setze die Eingabefelder zurück
-        self.input_formular_pkvpakete_betrag.value = 0
+        self.input_formular_pkvpakete_betrag.value = ''
         self.input_formular_pkvpakete_datum.value = None
         self.input_formular_pkvpakete_erhalten.value = False
         self.formular_pkv_tabelle_rechnungen.data = self.erzeuge_teilliste_rechnungen(pkv=True)
@@ -1077,7 +1077,7 @@ class Kontolupe(toga.App):
         self.beihilfepaket_b_id = self.index_auswahl(self.tabelle_beihilfepakete)
 
         # Befülle die Eingabefelder
-        self.input_formular_beihilfepakete_betrag.value = self.beihilfepakete[self.beihilfepaket_b_id].betrag
+        self.input_formular_beihilfepakete_betrag.value = format(self.beihilfepakete[self.beihilfepaket_b_id].betrag, '.2f').replace('.', ',')
         self.input_formular_beihilfepakete_datum.value = self.beihilfepakete[self.beihilfepaket_b_id].datum
         self.input_formular_beihilfepakete_erhalten.value = self.beihilfepakete[self.beihilfepaket_b_id].erhalten
 
@@ -1107,7 +1107,7 @@ class Kontolupe(toga.App):
         self.pkvpaket_b_id = self.index_auswahl(self.tabelle_pkvpakete)
 
         # Befülle die Eingabefelder
-        self.input_formular_pkvpakete_betrag.value = self.pkvpakete[self.pkvpaket_b_id].betrag
+        self.input_formular_pkvpakete_betrag.value = format(self.pkvpakete[self.pkvpaket_b_id].betrag, '.2f').replace('.', ',')
         self.input_formular_pkvpakete_datum.value = self.pkvpakete[self.pkvpaket_b_id].datum
         self.input_formular_pkvpakete_erhalten.value = self.pkvpakete[self.pkvpaket_b_id].erhalten
 
@@ -1154,7 +1154,7 @@ class Kontolupe(toga.App):
             # Erstelle ein neues Beihilfepaket
             neues_beihilfepaket = BeihilfePaket()
             neues_beihilfepaket.datum = self.input_formular_beihilfepakete_datum.value
-            neues_beihilfepaket.betrag = float(self.input_formular_beihilfepakete_betrag.value)
+            neues_beihilfepaket.betrag = float(self.input_formular_beihilfepakete_betrag.value.replace(',', '.') or 0)
             neues_beihilfepaket.erhalten = self.input_formular_beihilfepakete_erhalten.value
 
             # Speichere das Beihilfepaket in der Datenbank
@@ -1174,7 +1174,7 @@ class Kontolupe(toga.App):
         else:
             # Bearbeite das Beihilfepaket
             self.beihilfepakete[self.beihilfepaket_b_id].datum = self.input_formular_beihilfepakete_datum.value
-            self.beihilfepakete[self.beihilfepaket_b_id].betrag = float(self.input_formular_beihilfepakete_betrag.value)
+            self.beihilfepakete[self.beihilfepaket_b_id].betrag = float(self.input_formular_beihilfepakete_betrag.value.replace(',', '.') or 0)
             self.beihilfepakete[self.beihilfepaket_b_id].erhalten = self.input_formular_beihilfepakete_erhalten.value
 
             # Speichere das Beihilfepaket in der Datenbank
@@ -1208,7 +1208,7 @@ class Kontolupe(toga.App):
             # Erstelle ein neues PKV-Paket
             neues_pkvpaket = PKVPaket()
             neues_pkvpaket.datum = self.input_formular_pkvpakete_datum.value
-            neues_pkvpaket.betrag = float(self.input_formular_pkvpakete_betrag.value)
+            neues_pkvpaket.betrag = float(self.input_formular_pkvpakete_betrag.value.replace(',', '.') or 0)
             neues_pkvpaket.erhalten = self.input_formular_pkvpakete_erhalten.value
 
             # Speichere das PKV-Einreichung in der Datenbank
@@ -1228,7 +1228,7 @@ class Kontolupe(toga.App):
         else:
             # Bearbeite das PKV-Paket
             self.pkvpakete[self.pkvpaket_b_id].datum = self.input_formular_pkvpakete_datum.value
-            self.pkvpakete[self.pkvpaket_b_id].betrag = float(self.input_formular_pkvpakete_betrag.value)
+            self.pkvpakete[self.pkvpaket_b_id].betrag = float(self.input_formular_pkvpakete_betrag.value.replace(',', '.') or 0)
             self.pkvpakete[self.pkvpaket_b_id].erhalten = self.input_formular_pkvpakete_erhalten.value
 
             # Speichere das PKV-Einreichung in der Datenbank
