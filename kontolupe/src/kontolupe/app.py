@@ -1758,12 +1758,15 @@ class Kontolupe(toga.App):
         self.beihilfepakete = self.db.lade_beihilfepakete()
         self.pkvpakete = self.db.lade_pkvpakete()
 
-        # Icons definieren
-        icon_stift = toga.Icon(self.paths.app / 'resources/stift-schwarz.png')
-        icon_doktor = toga.Icon(self.paths.app / 'resources/doktor-schwarz.png')
-        icon_paket = toga.Icon(self.paths.app / 'resources/paket-schwarz.png')
-        icon_haken = toga.Icon(self.paths.app / 'resources/haken-schwarz.png')
-        self.icon_haken_gruen = toga.Icon(self.paths.app / 'resources/haken-gruen.png')
+        # Icons und Images definieren
+        # icon_stift = toga.Icon(self.paths.app / 'resources/stift-schwarz.png')
+        # icon_doktor = toga.Icon(self.paths.app / 'resources/doktor-schwarz.png')
+        # icon_paket = toga.Icon(self.paths.app / 'resources/paket-schwarz.png')
+        # icon_haken = toga.Icon(self.paths.app / 'resources/haken-schwarz.png')
+        # self.icon_haken_gruen = toga.Icon(self.paths.app / 'resources/haken-gruen.png')
+        # self.icon_paket_rot = toga.Icon(self.paths.app / 'resources/paket-rot.png')
+        # self.image_haken_gruen = Path(self.paths.app / 'resources/haken-gruen.png')
+        # self.image_paket_rot = Path(self.paths.app / 'resources/paket-rot.png')
 
         # Erzeuge die Menüleiste
         gruppe_rechnungen = toga.Group('Rechnungen', order = 1)
@@ -1781,7 +1784,7 @@ class Kontolupe(toga.App):
             self.zeige_seite_formular_rechnungen_neu,
             'Neue Rechnung',
             tooltip = 'Erstellt eine neue Rechnung.',
-            icon = icon_stift,
+            #icon = icon_stift,
             group = gruppe_rechnungen,
             order = 20,
             enabled=True
