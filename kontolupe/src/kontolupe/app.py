@@ -198,6 +198,30 @@ class Kontolupe(toga.App):
                 summe += pkvpaket.betrag
 
         return summe
+    
+
+    def eingabe_zahl(self, widget):
+        """Prüft, ob die Eingabe eine Zahl ist und korrigiert sie entsprechend."""
+
+        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein , sind.
+        eingabe = ''.join(c for c in widget.value if c in '0123456789,')
+        
+        # entferne alle , außer dem letzten
+        if eingabe.count(',') > 1:
+            eingabe = eingabe.replace(',', '', eingabe.count(',') - 1)
+
+        if eingabe != '':
+            widget.value = eingabe
+        else:
+            widget.value = 0
+
+        # replace , with .
+        eingabe = eingabe.replace(',', '.')
+
+        try:
+            float(eingabe)
+        except ValueError:
+            widget.value = 0
 
 
     def erzeuge_startseite(self):
@@ -392,10 +416,9 @@ class Kontolupe(toga.App):
         box_formular_rechnungen_rechnungsdatum.add(self.input_formular_rechnungen_rechnungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_rechnungsdatum)
 
-        # Bereich zur Eingabe des Betrags
         box_formular_rechnungen_betrag = toga.Box(style=style_box_row)
         box_formular_rechnungen_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        self.input_formular_rechnungen_betrag = toga.NumberInput(min=0, step=0.01, value=0, style=style_input)
+        self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_change=self.eingabe_zahl)
         box_formular_rechnungen_betrag.add(self.input_formular_rechnungen_betrag)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_betrag)
 
@@ -477,7 +500,7 @@ class Kontolupe(toga.App):
                 break
 
         # Befülle die Eingabefelder
-        self.input_formular_rechnungen_betrag.value = self.rechnungen[self.rechnung_b_id].betrag
+        self.input_formular_rechnungen_betrag.value = format(float(self.rechnungen[self.rechnung_b_id].betrag), '.2f').replace('.', ',')
         self.input_formular_rechnungen_rechnungsdatum.value = self.rechnungen[self.rechnung_b_id].rechnungsdatum
         self.input_formular_rechnungen_beihilfesatz.value = self.rechnungen[self.rechnung_b_id].beihilfesatz
         self.input_formular_rechnungen_notiz.value = self.rechnungen[self.rechnung_b_id].notiz
@@ -510,7 +533,10 @@ class Kontolupe(toga.App):
             if len(self.aerzte_liste) > 0:
                 neue_rechnung.arzt_id = self.input_formular_rechnungen_arzt.value.db_id
             neue_rechnung.notiz = self.input_formular_rechnungen_notiz.value
-            neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value)
+            if self.input_formular_rechnungen_betrag.value == '':
+                neue_rechnung.betrag = 0
+            else:
+                neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.'))
             neue_rechnung.beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value)
             neue_rechnung.buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             neue_rechnung.bezahlt = self.input_formular_rechnungen_bezahlt.value
@@ -530,7 +556,7 @@ class Kontolupe(toga.App):
             # True, wenn betrag oder beihilfesatz geändert wurde
             update_einreichung = False
             
-            if self.rechnungen[self.rechnung_b_id].betrag != float(self.input_formular_rechnungen_betrag.value):
+            if self.rechnungen[self.rechnung_b_id].betrag != float(self.input_formular_rechnungen_betrag.value.replace(',', '.')):
                 update_einreichung = True
             if self.rechnungen[self.rechnung_b_id].beihilfesatz != float(self.input_formular_rechnungen_beihilfesatz.value):
                 update_einreichung = True
@@ -540,7 +566,10 @@ class Kontolupe(toga.App):
             if len(self.aerzte_liste) > 0:
                 self.rechnungen[self.rechnung_b_id].arzt_id = self.input_formular_rechnungen_arzt.value.db_id
             self.rechnungen[self.rechnung_b_id].notiz = self.input_formular_rechnungen_notiz.value
-            self.rechnungen[self.rechnung_b_id].betrag = float(self.input_formular_rechnungen_betrag.value)
+            if self.input_formular_rechnungen_betrag.value == '':
+                self.rechnungen[self.rechnung_b_id].betrag = 0
+            else:
+                self.rechnungen[self.rechnung_b_id].betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.'))
             self.rechnungen[self.rechnung_b_id].beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value)
             self.rechnungen[self.rechnung_b_id].buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             self.rechnungen[self.rechnung_b_id].bezahlt = self.input_formular_rechnungen_bezahlt.value
@@ -1473,7 +1502,7 @@ class Kontolupe(toga.App):
                 offene_buchungen_liste.append({
                     'db_id': rechnung.db_id,
                     'typ': 'Arztrechnung',
-                    'betrag_euro': '-{:.2f} €'.format(rechnung.betrag),
+                    'betrag_euro': '-{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                     'datum': rechnung.buchungsdatum,
                     'info': self.arzt_name(rechnung.arzt_id) + ' - ' + rechnung.notiz
                 })
@@ -1483,7 +1512,7 @@ class Kontolupe(toga.App):
                 offene_buchungen_liste.append({
                     'db_id': beihilfepaket.db_id,
                     'typ': 'Beihilfe',
-                    'betrag_euro': '+{:.2f} €'.format(beihilfepaket.betrag),
+                    'betrag_euro': '+{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
                     'datum': beihilfepaket.datum,
                     'info': 'Beihilfe-Einreichung'
                 })
@@ -1493,7 +1522,7 @@ class Kontolupe(toga.App):
                 offene_buchungen_liste.append({
                     'db_id': pkvpaket.db_id,
                     'typ': 'PKV',
-                    'betrag_euro': '+{:.2f} €'.format(pkvpaket.betrag),
+                    'betrag_euro': '+{:.2f} €'.format(pkvpaket.betrag).replace('.', ','),
                     'datum': pkvpaket.datum,
                     'info': 'PKV-Einreichung'
                 })
@@ -1572,7 +1601,7 @@ class Kontolupe(toga.App):
         self.rechnungen_liste.append({
                 'db_id': rechnung.db_id,
                 'betrag': rechnung.betrag,
-                'betrag_euro': '{:.2f} €'.format(rechnung.betrag),
+                'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                 'rechnungsdatum': rechnung.rechnungsdatum,
                 'arzt_id': rechnung.arzt_id,
                 'notiz': rechnung.notiz,
@@ -1672,7 +1701,7 @@ class Kontolupe(toga.App):
         self.beihilfepakete_liste.append({
                 'db_id': beihilfepaket.db_id,
                 'betrag': beihilfepaket.betrag,
-                'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag),
+                'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
                 'datum': beihilfepaket.datum,
                 'erhalten': beihilfepaket.erhalten,
                 'erhalten_text': 'Ja' if beihilfepaket.erhalten else 'Nein'
@@ -1684,7 +1713,7 @@ class Kontolupe(toga.App):
         self.pkvpakete_liste.append({
                 'db_id': pkvpaket.db_id,
                 'betrag': pkvpaket.betrag,
-                'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag),
+                'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag).replace('.', ','),
                 'datum': pkvpaket.datum,
                 'erhalten': pkvpaket.erhalten,
                 'erhalten_text': 'Ja' if pkvpaket.erhalten else 'Nein'
@@ -1696,7 +1725,7 @@ class Kontolupe(toga.App):
         self.rechnungen_liste[rg_id] = {
                 'db_id': rechnung.db_id,
                 'betrag': rechnung.betrag,
-                'betrag_euro': '{:.2f} €'.format(rechnung.betrag),
+                'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                 'rechnungsdatum': rechnung.rechnungsdatum,
                 'arzt_id': rechnung.arzt_id,
                 'notiz': rechnung.notiz,
@@ -1730,7 +1759,7 @@ class Kontolupe(toga.App):
         self.beihilfepakete_liste[beihilfepaket_id] = {
                 'db_id': beihilfepaket.db_id,
                 'betrag': beihilfepaket.betrag,
-                'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag),
+                'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
                 'datum': beihilfepaket.datum,
                 'erhalten': beihilfepaket.erhalten,
                 'erhalten_text': 'Ja' if beihilfepaket.erhalten else 'Nein'
@@ -1742,7 +1771,7 @@ class Kontolupe(toga.App):
         self.pkvpakete_liste[pkvpaket_id] = {
                 'db_id': pkvpaket.db_id,
                 'betrag': pkvpaket.betrag,
-                'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag),
+                'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag).replace('.', ','),
                 'datum': pkvpaket.datum,
                 'erhalten': pkvpaket.erhalten,
                 'erhalten_text': 'Ja' if pkvpaket.erhalten else 'Nein'
