@@ -223,7 +223,7 @@ class Datenbank:
         # Daten ändern
         cursor.execute("""UPDATE arztrechnungen SET
             betrag = ?,
-            arzt = ?,
+            arzt_id = ?,
             rechnungsdatum = ?,
             notiz = ?,
             beihilfesatz = ?,

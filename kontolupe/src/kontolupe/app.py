@@ -673,6 +673,9 @@ class Kontolupe(toga.App):
         # Prüfe, ob ein Beihilfesatz eingegeben wurde
         if not self.pruefe_prozent(self.input_formular_rechnungen_beihilfesatz):
             nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
+
+        if not self.pruefe_datum(self.input_formular_rechnungen_buchungsdatum):
+            nachricht += 'Bitte gib ein gültiges Buchungsdatum ein.\n'
                 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
