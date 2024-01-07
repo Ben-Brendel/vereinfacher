@@ -2,7 +2,8 @@
 
 from pathlib import Path
 import sqlite3 as sql
-import os
+import shutil
+from datetime import datetime
 
 
 class Datenbank:
@@ -10,15 +11,14 @@ class Datenbank:
 
     def __init__(self):
         """Initialisierung der Datenbank."""
-        self.db_path = Path('/data/data/net.biberwerk.kontolupe/kontolupe.db')
-        #self.db_path = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe/kontolupe.db')
-
-        # lösche die Datei der Datenbank
-        #self.db_path.unlink()
+        #self.db_dir = Path('/data/data/net.biberwerk.kontolupe')
+        self.db_dir = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe')
+        
+        self.db_path = self.db_dir / 'kontolupe.db'
 
         # Dictionary mit den Tabellen und Spalten der Datenbank erstellen
         self.__tables = {
-            'arztrechnungen': [
+            'rechnungen': [
                 ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
                 ('betrag', 'REAL'),
                 ('arzt_id', 'INTEGER'),
@@ -51,39 +51,146 @@ class Datenbank:
             ]
         }
 
+        # Dictionary, welches die umzubenennenden Spalten enthält, falls sie noch nicht umbenannt wurden
+        # Ihre Daten werden von der alten Spalte in die neue Spalte kopiert und
+        # die alte Spalte gelöscht
+        self.__table_columns_rename = {
+            'arztrechnungen': [
+                ('arzt', 'arzt_id', 'INTEGER')
+            ]
+        }
+
+        # Liste, welche die umzubenennden Tabellen enthält, falls sie noch nicht umbenannt wurden
+        # Ihre Daten werden von der alten Tabelle in die neue Tabelle kopiert und
+        # die alte Tabelle gelöscht
+        self.__tables_rename = [
+            ('arztrechnungen', 'rechnungen')
+        ]
+
         # Datenbank-Datei initialisieren
         self.__create_db()
 
-    def __add_column_if_not_exists(cursor, table_name, new_column, column_type):
+    def __get_column_type(self, table_name, column_name):
+        for column in self.__tables[table_name]:
+            if column[0] == column_name:
+                return column[1]
+        return None  # return None if the column is not found
+
+    def __new_table_name(self, old_table):
+        """returns the new table name for the old_table"""
+        new_table = self.__new_table_name_iter(old_table)
+        while new_table != old_table:
+            next_table = self.__new_table_name_iter(new_table)
+            if next_table == new_table:
+                break
+            new_table = next_table
+        return new_table
+    
+    def __new_table_name_iter(self, old_table):
+        """returns the new table name for the old_table"""
+        for table in self.__tables_rename:
+            if table[0] == old_table:
+                return table[1]
+        return old_table
+
+    def __create_backup(self):
+        """Erstellen eines Backups der Datenbank."""
+        # Get the current date and time, formatted as a string
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+        # Create the backup path with the timestamp
+        backup_path = self.db_dir / Path(f'kontolupe_{timestamp}.db.backup')
+        if backup_path.exists():
+            backup_path.unlink()
+        shutil.copy2(self.db_path, backup_path)
+        print(f'Created backup {backup_path}')
+
+    def __delete_backups(self):
+        """Löschen aller Backups der Datenbank."""
+        for file in self.db_dir.glob('kontolupe_*.db.backup'):
+            print(f'Deleting backup {file}')
+            file.unlink()
+
+    def __create_table_if_not_exists(self, cursor, table_name, columns):
+        cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{column[0]} {column[1]}' for column in columns])})")
+
+    def __add_column_if_not_exists(self, cursor, table_name, new_column, column_type):
         cursor.execute(f"PRAGMA table_info({table_name})")
         if not any(row[1] == new_column for row in cursor.fetchall()):
             cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
 
+    def __copy_column_and_delete(self, cursor, table_name, old_column, new_column):
+        # Check if table_name exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
+        if not cursor.fetchone():
+            return  # table_name doesn't exist, so return early
+
+        # Check if old_column exists
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        result = cursor.fetchall()
+        if any(row[1] == old_column for row in result):
+            # check if new_column exists if not create it
+            # look up the type of the new column in the self.__tables dictionary 
+            # using the new table name
+            if not any(row[1] == new_column for row in result):
+                cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {self.__get_column_type(self.__new_table_name(table_name), new_column)}")
+
+            cursor.execute(f"SELECT id, {old_column} FROM {table_name}")
+            db_result = cursor.fetchall()
+            for row in db_result:
+                cursor.execute(f"UPDATE {table_name} SET {new_column} = ? WHERE id = ?", (row[1], row[0]))
+            cursor.execute(f"ALTER TABLE {table_name} DROP COLUMN {old_column}")
+
+    def __copy_table_and_delete(self, cursor, old_table, new_table):
+        # Check if old_table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (old_table,))
+        if not cursor.fetchone():
+            return  # old_table doesn't exist, so return early
+
+        # Get the schema of old_table
+        cursor.execute(f"PRAGMA table_info({old_table})")
+        columns_info = cursor.fetchall()
+        column_names = [column[1] for column in columns_info]  # Get the column names
+
+        # Copy rows from old_table to new_table
+        cursor.execute(f"SELECT * FROM {old_table}")
+        db_result = cursor.fetchall()
+        for row in db_result:
+            # Create a dictionary where keys are column names and values are row values
+            row_dict = dict(zip(column_names, row))
+            # Create a string of column names and a string of corresponding placeholders
+            columns_str = ', '.join(column_names)
+            placeholders_str = ', '.join(['?' for _ in column_names])
+            # Insert the row into the new table
+            cursor.execute(f"INSERT INTO {new_table} ({columns_str}) VALUES ({placeholders_str})", list(row_dict.values()))
+
+        # Drop old_table
+        cursor.execute(f"DROP TABLE {old_table}")
+
     def __create_db(self):
         """Erstellen und Update der Datenbank."""
+
+        # Backup erstellen
+        self.__create_backup()
         
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
 
-        # create tables if they don't exist
+        # Update-Routine zur Aktualisierung der Datenbankstruktur
         for table_name, columns in self.__tables.items():
-            cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{column[0]} {column[1]}' for column in columns])})")
-
-        # add columns if they don't exist
-        for table_name, columns in self.__tables.items():
+            Datenbank.__create_table_if_not_exists(self, cursor, table_name, columns)
             for column in columns:
-                Datenbank.__add_column_if_not_exists(cursor, table_name, column[0], column[1])
+                Datenbank.__add_column_if_not_exists(self, cursor, table_name, column[0], column[1])
         
-        # update the column 'arzt' to 'arzt_id' in the table 'arztrechnungen' if it exists
-        # copy the values from the column 'arzt' to the column 'arzt_id' and drop it afterwards
-        cursor.execute(f"PRAGMA table_info(arztrechnungen)")
-        if any(row[1] == 'arzt' for row in cursor.fetchall()):
-            cursor.execute(f"SELECT id, arzt FROM arztrechnungen")
-            db_result = cursor.fetchall()
-            for row in db_result:
-                cursor.execute(f"UPDATE arztrechnungen SET arzt_id = ? WHERE id = ?", (row[1], row[0]))
-            cursor.execute(f"ALTER TABLE arztrechnungen DROP COLUMN arzt")
+        # Update-Routine zur Migration der Daten in die neue Datenbankstruktur
+        for table_name, columns in self.__table_columns_rename.items():
+            for column in columns:
+                Datenbank.__copy_column_and_delete(self, cursor, table_name, column[0], column[1])
+
+        # Update-Routine zur Umbenennung der Tabellen
+        for table in self.__tables_rename:
+            Datenbank.__copy_table_and_delete(self, cursor, table[0], self.__new_table_name(table[0]))            
 
         # validate all datum entries in the tables
         # check if they are in the format YYYY-MM-DD
@@ -181,7 +288,7 @@ class Datenbank:
         result = []
         for row in ergebnis:
             match table:
-                case 'arztrechnungen':
+                case 'rechnungen':
                     element = Arztrechnung()
                 case 'beihilfepakete':
                     element = BeihilfePaket()
@@ -206,8 +313,8 @@ class Datenbank:
         return result
 
     def neue_rechnung(self, rechnung):
-        """Einfügen einer neuen Arztrechnung in die Datenbank."""
-        return self.__new_element('arztrechnungen', rechnung)
+        """Einfügen einer neuen Rechnung in die Datenbank."""
+        return self.__new_element('rechnungen', rechnung)
     
     def neues_beihilfepaket(self, beihilfepaket):
         """Einfügen eines neuen Beihilfepakets in die Datenbank."""
@@ -222,8 +329,8 @@ class Datenbank:
         return self.__new_element('aerzte', arzt)
     
     def aendere_rechnung(self, rechnung):
-        """Ändern einer Arztrechnung in der Datenbank."""
-        self.__change_element('arztrechnungen', rechnung)
+        """Ändern einer Rechnung in der Datenbank."""
+        self.__change_element('rechnungen', rechnung)
 
     def aendere_beihilfepaket(self, beihilfepaket):
         """Ändern eines Beihilfepakets in der Datenbank."""
@@ -238,8 +345,8 @@ class Datenbank:
         self.__change_element('aerzte', arzt)
 
     def loesche_rechnung(self, rechnung):
-        """Löschen einer Arztrechnung aus der Datenbank."""
-        self.__delete_element('arztrechnungen', rechnung)
+        """Löschen einer Rechnung aus der Datenbank."""
+        self.__delete_element('rechnungen', rechnung)
 
     def loesche_beihilfepaket(self, beihilfepaket):
         """Löschen eines Beihilfepakets aus der Datenbank."""
@@ -255,7 +362,7 @@ class Datenbank:
 
     def lade_rechnungen(self):
         """Laden der Rechnungen aus der Datenbank."""
-        return self.__load_data('arztrechnungen', only_active=True)
+        return self.__load_data('rechnungen', only_active=True)
     
     def lade_beihilfepakete(self):
         """Laden der Beihilfepakete aus der Datenbank."""
