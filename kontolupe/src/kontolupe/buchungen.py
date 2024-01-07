@@ -21,7 +21,7 @@ class Datenbank:
             'rechnungen': [
                 ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
                 ('betrag', 'REAL'),
-                ('arzt_id', 'INTEGER'),
+                ('einrichtung_id', 'INTEGER'),
                 ('rechnungsdatum', 'TEXT'),
                 ('notiz', 'TEXT'),
                 ('beihilfesatz', 'REAL'),
@@ -57,7 +57,11 @@ class Datenbank:
         # Bei nachfolgenden Umbenennungen der Tabelle, müssen auch die alten Tabellen die neuen Spaltennamen enthalten
         self.__table_columns_rename = {
             'arztrechnungen': [
-                ('arzt', 'arzt_id', 'INTEGER')
+                ('arzt', 'arzt_id', 'INTEGER'),
+                ('arzt_id', 'einrichtung_id', 'INTEGER')
+            ],
+            'rechnungen': [
+                ('arzt_id', 'einrichtung_id', 'INTEGER')
             ]
         }
 
@@ -389,7 +393,7 @@ class Arztrechnung:
         self.db_id = None
         self.betrag = 0
         self.rechnungsdatum = None
-        self.arzt_id = None
+        self.einrichtung_id = None
         self.notiz = None
         self.beihilfesatz = None
         self.buchungsdatum = None

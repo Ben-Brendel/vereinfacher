@@ -624,7 +624,7 @@ class Kontolupe(toga.App):
         # Ermittle den Index des Arztes in der Ärzteliste
         arzt_index = None
         for i, arzt in enumerate(self.aerzte):
-            if arzt.db_id == self.rechnungen[self.rechnung_b_id].arzt_id:
+            if arzt.db_id == self.rechnungen[self.rechnung_b_id].einrichtung_id:
                 arzt_index = i
                 break
 
@@ -691,7 +691,7 @@ class Kontolupe(toga.App):
             neue_rechnung = Arztrechnung()
             neue_rechnung.rechnungsdatum = self.input_formular_rechnungen_rechnungsdatum.value
             if len(self.aerzte_liste) > 0:
-                neue_rechnung.arzt_id = self.input_formular_rechnungen_arzt.value.db_id
+                neue_rechnung.einrichtung_id = self.input_formular_rechnungen_arzt.value.db_id
             neue_rechnung.notiz = self.input_formular_rechnungen_notiz.value
             neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
             neue_rechnung.beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value or 0)
@@ -722,7 +722,7 @@ class Kontolupe(toga.App):
             self.rechnungen[self.rechnung_b_id].rechnungsdatum = self.input_formular_rechnungen_rechnungsdatum.value
             
             if len(self.aerzte_liste) > 0:
-                self.rechnungen[self.rechnung_b_id].arzt_id = self.input_formular_rechnungen_arzt.value.db_id
+                self.rechnungen[self.rechnung_b_id].einrichtung_id = self.input_formular_rechnungen_arzt.value.db_id
             self.rechnungen[self.rechnung_b_id].notiz = self.input_formular_rechnungen_notiz.value
             self.rechnungen[self.rechnung_b_id].betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
             self.rechnungen[self.rechnung_b_id].beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value or 0)
@@ -1460,7 +1460,7 @@ class Kontolupe(toga.App):
             'betrag', 
             'betrag_euro',
             'rechnungsdatum', 
-            'arzt_id', 
+            'einrichtung_id', 
             'notiz', 
             'arzt_name', 
             'info', 
@@ -1485,10 +1485,10 @@ class Kontolupe(toga.App):
                 'betrag': rechnung.betrag,
                 'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                 'rechnungsdatum': rechnung.rechnungsdatum,
-                'arzt_id': rechnung.arzt_id,
+                'einrichtung_id': rechnung.einrichtung_id,
                 'notiz': rechnung.notiz,
-                'arzt_name': self.arzt_name(rechnung.arzt_id),
-                'info': self.arzt_name(rechnung.arzt_id) + ', ' + rechnung.notiz,
+                'arzt_name': self.arzt_name(rechnung.einrichtung_id),
+                'info': self.arzt_name(rechnung.einrichtung_id) + ', ' + rechnung.notiz,
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
@@ -1502,10 +1502,10 @@ class Kontolupe(toga.App):
 
         return data
 
-    def arzt_name(self, arzt_id):
+    def arzt_name(self, einrichtung_id):
         """Ermittelt den Namen eines Arztes anhand seiner Id."""
         for arzt in self.aerzte:
-            if arzt.db_id == arzt_id:
+            if arzt.db_id == einrichtung_id:
                 return arzt.name
         return ''
     
@@ -1679,7 +1679,7 @@ class Kontolupe(toga.App):
                     'typ': 'Rechnung',
                     'betrag_euro': '-{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                     'datum': rechnung.buchungsdatum,
-                    'info': self.arzt_name(rechnung.arzt_id) + ' - ' + rechnung.notiz
+                    'info': self.arzt_name(rechnung.einrichtung_id) + ' - ' + rechnung.notiz
                 })
     
         for beihilfepaket in self.beihilfepakete:
@@ -1711,7 +1711,7 @@ class Kontolupe(toga.App):
             'betrag', 
             'betrag_euro',
             'rechnungsdatum', 
-            'arzt_id', 
+            'einrichtung_id', 
             'notiz', 
             'arzt_name', 
             'info', 
@@ -1778,10 +1778,10 @@ class Kontolupe(toga.App):
                 'betrag': rechnung.betrag,
                 'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                 'rechnungsdatum': rechnung.rechnungsdatum,
-                'arzt_id': rechnung.arzt_id,
+                'einrichtung_id': rechnung.einrichtung_id,
                 'notiz': rechnung.notiz,
-                'arzt_name': self.arzt_name(rechnung.arzt_id),
-                'info': self.arzt_name(rechnung.arzt_id) + ', ' + rechnung.notiz,
+                'arzt_name': self.arzt_name(rechnung.einrichtung_id),
+                'info': self.arzt_name(rechnung.einrichtung_id) + ', ' + rechnung.notiz,
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
@@ -1826,17 +1826,17 @@ class Kontolupe(toga.App):
                     rechnung.pkv_id = None
 
             # Aktualisiere den Arzt
-            if rechnung.arzt_id:
+            if rechnung.einrichtung_id:
                 # Überprüfe ob der Arzt noch existiert
                 arzt_vorhanden = False
                 for arzt in self.aerzte:
-                    if arzt.db_id == rechnung.arzt_id:
+                    if arzt.db_id == rechnung.einrichtung_id:
                         arzt_vorhanden = True
                         break
                 
                 # Wenn der Arzt nicht mehr existiert, setze den Arzt zurück
                 if not arzt_vorhanden:
-                    rechnung.arzt_id = None
+                    rechnung.einrichtung_id = None
             
             # Aktualisierte Arztrechnung speichern
             rechnung.speichern(self.db)
@@ -1902,10 +1902,10 @@ class Kontolupe(toga.App):
                 'betrag': rechnung.betrag,
                 'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                 'rechnungsdatum': rechnung.rechnungsdatum,
-                'arzt_id': rechnung.arzt_id,
+                'einrichtung_id': rechnung.einrichtung_id,
                 'notiz': rechnung.notiz,
-                'arzt_name': self.arzt_name(rechnung.arzt_id),
-                'info': self.arzt_name(rechnung.arzt_id) + ', ' + rechnung.notiz,
+                'arzt_name': self.arzt_name(rechnung.einrichtung_id),
+                'info': self.arzt_name(rechnung.einrichtung_id) + ', ' + rechnung.notiz,
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
@@ -1918,9 +1918,9 @@ class Kontolupe(toga.App):
             }
         
 
-    def aerzte_liste_aendern(self, arzt, arzt_id):
+    def aerzte_liste_aendern(self, arzt, einrichtung_id):
         """Ändert ein Element der Liste der Einrichtungen."""
-        self.aerzte_liste[arzt_id] = {
+        self.aerzte_liste[einrichtung_id] = {
                 'db_id': arzt.db_id,
                 'name': arzt.name,
             }
