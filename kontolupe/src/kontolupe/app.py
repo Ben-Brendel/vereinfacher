@@ -1272,7 +1272,8 @@ class Kontolupe(toga.App):
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
-        self.beihilfepaket_speichern(widget)
+        else:
+            self.beihilfepaket_speichern(widget)
 
 
     def pkvpaket_speichern_check(self, widget):
@@ -1289,7 +1290,8 @@ class Kontolupe(toga.App):
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
-        self.pkvpaket_speichern(widget)
+        else:
+            self.pkvpaket_speichern(widget)
 
 
     def beihilfepaket_speichern(self, widget):
