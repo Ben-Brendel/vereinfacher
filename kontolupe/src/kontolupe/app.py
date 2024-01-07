@@ -2053,7 +2053,7 @@ class Kontolupe(toga.App):
 
         # Lade alle Daten aus der Datenbank
         self.rechnungen = self.db.lade_rechnungen()
-        self.aerzte = self.db.lade_aerzte()
+        self.aerzte = self.db.lade_einrichtungen()
         self.beihilfepakete = self.db.lade_beihilfepakete()
         self.pkvpakete = self.db.lade_pkvpakete()
 

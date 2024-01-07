@@ -45,15 +45,16 @@ class Datenbank:
                 ('aktiv', 'INTEGER'),
                 ('erhalten', 'INTEGER')
             ],
-            'aerzte': [
+            'einrichtungen': [
                 ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
                 ('name', 'TEXT')
             ]
         }
 
         # Dictionary, welches die umzubenennenden Spalten enthält, falls sie noch nicht umbenannt wurden
-        # Ihre Daten werden von der alten Spalte in die neue Spalte kopiert und
-        # die alte Spalte gelöscht
+        # Ihre Daten werden dann von der alten Spalte in die neue Spalte kopiert und
+        # die alte Spalte gelöscht.
+        # Bei nachfolgenden Umbenennungen der Tabelle, müssen auch die alten Tabellen die neuen Spaltennamen enthalten
         self.__table_columns_rename = {
             'arztrechnungen': [
                 ('arzt', 'arzt_id', 'INTEGER')
@@ -62,9 +63,12 @@ class Datenbank:
 
         # Liste, welche die umzubenennden Tabellen enthält, falls sie noch nicht umbenannt wurden
         # Ihre Daten werden von der alten Tabelle in die neue Tabelle kopiert und
-        # die alte Tabelle gelöscht
+        # die alte Tabelle gelöscht.
+        # Diese Liste ist iterativ. Mehrere aufeinanderfolgende Umbenennungen können erfolgen und 
+        # müssen Schritt für Schritt eingetragen werden.
         self.__tables_rename = [
-            ('arztrechnungen', 'rechnungen')
+            ('arztrechnungen', 'rechnungen'),
+            ('aerzte', 'einrichtungen')
         ]
 
         # Datenbank-Datei initialisieren
@@ -294,7 +298,7 @@ class Datenbank:
                     element = BeihilfePaket()
                 case 'pkvpakete':
                     element = PKVPaket()
-                case 'aerzte':
+                case 'einrichtungen':
                     element = Arzt()
 
             # Setze die Attribute des Elements
@@ -324,9 +328,9 @@ class Datenbank:
         """Einfügen eines neuen PKV-Pakets in die Datenbank."""
         return self.__new_element('pkvpakete', pkvpaket)
     
-    def neuer_arzt(self, arzt):
-        """Einfügen eines neuen Arztes in die Datenbank."""
-        return self.__new_element('aerzte', arzt)
+    def neue_einrichtung(self, einrichtung):
+        """Einfügen einer neuen Einrichtung in die Datenbank."""
+        return self.__new_element('einrichtungen', einrichtung)
     
     def aendere_rechnung(self, rechnung):
         """Ändern einer Rechnung in der Datenbank."""
@@ -340,9 +344,9 @@ class Datenbank:
         """Ändern eines PKV-Pakets in der Datenbank."""
         self.__change_element('pkvpakete', pkvpaket)
 
-    def aendere_arzt(self, arzt):
-        """Ändern eines Arztes in der Datenbank."""
-        self.__change_element('aerzte', arzt)
+    def aendere_einrichtung(self, einrichtung):
+        """Ändern einer Einrichtung in der Datenbank."""
+        self.__change_element('einrichtungen', einrichtung)
 
     def loesche_rechnung(self, rechnung):
         """Löschen einer Rechnung aus der Datenbank."""
@@ -356,9 +360,9 @@ class Datenbank:
         """Löschen eines PKV-Pakets aus der Datenbank."""
         self.__delete_element('pkvpakete', pkvpaket)
 
-    def loesche_arzt(self, arzt):
-        """Löschen eines Arztes aus der Datenbank."""
-        self.__delete_element('aerzte', arzt)
+    def loesche_einrichtung(self, einrichtung):
+        """Löschen einer Einrichtung aus der Datenbank."""
+        self.__delete_element('einrichtungen', einrichtung)
 
     def lade_rechnungen(self):
         """Laden der Rechnungen aus der Datenbank."""
@@ -372,9 +376,9 @@ class Datenbank:
         """Laden der PKV-Pakete aus der Datenbank."""
         return self.__load_data('pkvpakete', only_active=True)
     
-    def lade_aerzte(self):
-        """Laden der Ärzte aus der Datenbank."""
-        return self.__load_data('aerzte')
+    def lade_einrichtungen(self):
+        """Laden der Einrichtungen aus der Datenbank."""
+        return self.__load_data('einrichtungen')
 
 
 class Arztrechnung:
@@ -518,26 +522,26 @@ class PKVPaket:
 
 
 class Arzt:
-    """Klasse zur Verwaltung der Ärzte."""
+    """Klasse zur Verwaltung der Einrichtungen."""
     
     def __init__(self):
-        """Initialisierung des Arztes."""
+        """Initialisierung der Einrichtung."""
         self.name = None
         self.db_id = None
 
     def neu(self, db):
-        """Neuen Arzt erstellen."""
-        self.db_id = db.neuer_arzt(self)
+        """Neue Einrichtung erstellen."""
+        self.db_id = db.neue_einrichtung(self)
 
     def speichern(self, db):
-        """Speichern des Arztes in der Datenbank."""
-        db.aendere_arzt(self)
+        """Speichern der Einrichtung in der Datenbank."""
+        db.aendere_einrichtung(self)
 
     def loeschen(self, db):
-        """Löschen des Arztes aus der Datenbank."""
-        db.loesche_arzt(self)
+        """Löschen der Einrichtung aus der Datenbank."""
+        db.loesche_einrichtung(self)
 
     def __str__(self):
-        """Ausgabe des Arztes."""
+        """Ausgabe der Einrichtung."""
         return (f"ID: {self.db_id}\n"
             f"Arzt: {self.name}")
