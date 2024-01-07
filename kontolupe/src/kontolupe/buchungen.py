@@ -103,31 +103,22 @@ class Datenbank:
         connection.commit()
         connection.close()
 
-    def neue_rechnung(self, rechnung):
-        """Einfügen einer neuen Arztrechnung in die Datenbank."""
+    def new_element(self, table, element):
+        """Einfügen eines neuen Elements in die Datenbank."""
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
 
-        # Get the table columns from self.tables
-        columns = self.tables['arztrechnungen']
-
-        # Extract the column names
-        column_names = [column[0] for column in columns]
-
-        # drop the column 'id' from the list and do not assume that it is the first column
+        # Get the columns for the query
+        column_names = [column[0] for column in self.tables[table]]
         column_names.remove('id')
 
-        # Build the SQL query dynamically
-        query = f"""INSERT INTO arztrechnungen ({', '.join(column_names)}) VALUES ({', '.join(['?' for _ in column_names])})"""
-
-        # Build the values tuple dynamically
-        values = tuple(getattr(rechnung, column_name) for column_name in column_names)
+        # Build the SQL query and values tuple dynamically
+        query = f"""INSERT INTO {table} ({', '.join(column_names)}) VALUES ({', '.join(['?' for _ in column_names])})"""
+        values = tuple(getattr(element, column_name) for column_name in column_names)
 
         # Daten einfügen
         cursor.execute(query, values)
-
-        # id der neuen Buchung abfragen
         db_id = cursor.lastrowid
 
         # Datenbankverbindung schließen
@@ -135,84 +126,22 @@ class Datenbank:
         connection.close()
 
         return db_id
+
+    def neue_rechnung(self, rechnung):
+        """Einfügen einer neuen Arztrechnung in die Datenbank."""
+        return self.new_element('arztrechnungen', rechnung)
     
     def neues_beihilfepaket(self, beihilfepaket):
         """Einfügen eines neuen Beihilfepakets in die Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten einfügen
-        cursor.execute("""INSERT INTO beihilfepakete (
-            betrag,
-            datum,
-            aktiv,
-            erhalten
-        ) VALUES (?, ?, ?, ?)""", (
-            beihilfepaket.betrag,
-            beihilfepaket.datum,
-            beihilfepaket.aktiv,
-            beihilfepaket.erhalten
-        ))
-
-        # id der neuen Buchung abfragen
-        db_id = cursor.lastrowid
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
-
-        return db_id
+        return self.new_element('beihilfepakete', beihilfepaket)
     
     def neues_pkvpaket(self, pkvpaket):
         """Einfügen eines neuen PKV-Pakets in die Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten einfügen
-        cursor.execute("""INSERT INTO pkvpakete (
-            betrag,
-            datum,
-            aktiv,
-            erhalten
-        ) VALUES (?, ?, ?, ?)""", (
-            pkvpaket.betrag,
-            pkvpaket.datum,
-            pkvpaket.aktiv,
-            pkvpaket.erhalten
-        ))
-
-        # id der neuen Buchung abfragen
-        db_id = cursor.lastrowid
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
-
-        return db_id
+        return self.new_element('pkvpakete', pkvpaket)
     
     def neuer_arzt(self, arzt):
         """Einfügen eines neuen Arztes in die Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten einfügen
-        cursor.execute("""INSERT INTO aerzte (
-            name
-        ) VALUES (?)""", (
-            arzt.name,
-        ))
-
-        # id der neuen Buchung abfragen
-        db_id = cursor.lastrowid
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
-
-        return db_id
+        return self.new_element('aerzte', arzt)
     
     def aendere_rechnung(self, rechnung):
         """Ändern einer Arztrechnung in der Datenbank."""
