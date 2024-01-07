@@ -1277,13 +1277,19 @@ class Kontolupe(toga.App):
 
     def pkvpaket_speichern_check(self, widget):
         """Prüft, ob Rechnungen für die PKV-Einreichungen ausgewählt sind."""
+        nachricht = ''
+
+        # Prüfe das Datum
+        if not self.pruefe_datum(self.input_formular_pkvpakete_datum):
+            nachricht += 'Das Datum ist nicht korrekt.\n'
+
+        # Prüfe ob Rechnungen ausgewählt wurden
         if not self.formular_pkv_tabelle_rechnungen.selection:
-            self.main_window.info_dialog(
-                'Keine Rechnung ausgewählt', 
-                'Es wurde keine Rechnung zum Einreichen ausgewählt.'
-            )
-        else:
-            self.pkvpaket_speichern(widget)
+            nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
+
+        if nachricht != '':
+            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
+        self.pkvpaket_speichern(widget)
 
 
     def beihilfepaket_speichern(self, widget):
