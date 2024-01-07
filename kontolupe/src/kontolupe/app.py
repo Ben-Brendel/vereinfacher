@@ -219,9 +219,11 @@ class Kontolupe(toga.App):
 
         try:
             float(eingabe)
+            return True
         except ValueError:
             widget.value = ''
-            self.main_window.error_dialog('Fehler', 'Kein gültiger Betrag eingegeben.')
+            #self.main_window.error_dialog('Fehler', 'Kein gültiger Betrag eingegeben.')
+            return False
 
     
     def pruefe_prozent(self, widget):
@@ -236,10 +238,13 @@ class Kontolupe(toga.App):
             if zahl > 100:
                 widget.value = '100'
             if zahl not in range(0, 101, 5):
-                self.main_window.info_dialog('Bitte überprüfen', 'Der Beihilfesatz ist üblicherweise ein Vielfaches von 5 und nicht 0 oder 100.')
+                #self.main_window.info_dialog('Bitte überprüfen', 'Der Beihilfesatz ist üblicherweise ein Vielfaches von 5 und nicht 0 oder 100.')
+                return False
+            return True
         except ValueError:
             widget.value = ''
-            self.main_window.error_dialog('Fehler', 'Kein gültiger Prozentsatz eingegeben.')
+            #self.main_window.error_dialog('Fehler', 'Kein gültiger Prozentsatz eingegeben.')
+            return False
 
 
     def pruefe_datum(self, widget):
@@ -299,10 +304,13 @@ class Kontolupe(toga.App):
                     datetime.strptime(widget.value, '%d.%m.%Y')
                 except ValueError:
                     error = True
+                    
 
             if error:
-                self.main_window.error_dialog('Fehler', 'Kein gültiges Datum eingegeben.')
+                #self.main_window.error_dialog('Fehler', 'Kein gültiges Datum eingegeben.')
                 widget.value = ''
+
+            return not error
 
 
     def erzeuge_startseite(self):
@@ -605,17 +613,17 @@ class Kontolupe(toga.App):
 
 
     async def rechnung_speichern_check(self, widget):
-        """Prüft, ob die Arztrechnung gespeichert werden soll."""
+        """Prüft, ob die Rechnung gespeichert werden soll."""
 
         nachricht = ''
 
         # Prüfe, ob ein Rechnungsdatum eingegeben wurde
-        if self.input_formular_rechnungen_rechnungsdatum.value == '':
-            nachricht += 'Bitte gib ein Rechnungsdatum ein.\n'
+        if not self.pruefe_datum(self.input_formular_rechnungen_rechnungsdatum):
+            nachricht += 'Bitte gib ein gültiges Rechnungsdatum ein.\n'
 
         # Prüfe, ob ein Betrag eingegeben wurde
-        if self.input_formular_rechnungen_betrag.value == '':
-            nachricht += 'Bitte gib einen Betrag ein.\n'
+        if not self.pruefe_zahl(self.input_formular_rechnungen_betrag):
+            nachricht += 'Bitte gib einen gültigen Betrag ein.\n'
 
         # Prüfe, ob ein Arzt ausgewählt wurde
         if len(self.aerzte_liste) > 0:
@@ -623,11 +631,11 @@ class Kontolupe(toga.App):
                 nachricht += 'Bitte wähle eine Einrichtung aus.\n'
 
         # Prüfe, ob ein Beihilfesatz eingegeben wurde
-        if self.input_formular_rechnungen_beihilfesatz.value == '':
-            nachricht += 'Bitte gib einen Beihilfesatz ein.\n'
+        if not self.pruefe_prozent(self.input_formular_rechnungen_beihilfesatz):
+            nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
                 
         if nachricht != '':
-            self.main_window.error_dialog('Fehler', nachricht)
+            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
         else:
             await self.rechnung_speichern(widget)
 
@@ -1206,14 +1214,20 @@ class Kontolupe(toga.App):
 
 
     def beihilfepaket_speichern_check(self, widget):
-        """Prüft, ob Rechnungen für die Beihilfe-Einreichungen ausgewählt sind."""
+        """Prüft, ob die Eingaben für eine neue Beihilfe-Einreichung korrekt sind."""
+
+        nachricht = ''
+
+        # Prüfe das Datum
+        if not self.pruefe_datum(self.input_formular_beihilfepakete_datum):
+            nachricht += 'Das Datum ist nicht korrekt.\n'
+
+        # Prüfe ob Rechnungen ausgewählt wurden
         if not self.formular_beihilfe_tabelle_rechnungen.selection:
-            self.main_window.info_dialog(
-                'Keine Rechnung ausgewählt', 
-                'Es wurde keine Rechnung zum Einreichen ausgewählt.'
-            )
-        else:
-            self.beihilfepaket_speichern(widget)
+            nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
+
+        self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
+        self.beihilfepaket_speichern(widget)
 
 
     def pkvpaket_speichern_check(self, widget):
