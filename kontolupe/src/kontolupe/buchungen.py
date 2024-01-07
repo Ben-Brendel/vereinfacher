@@ -525,14 +525,21 @@ class Arztrechnung:
 
     def __str__(self):
         """Ausgabe der Arztrechnung."""
-        return (f"Arztrechnung: {self.db_id}\n"
-            f"Arzt: {self.arzt_id}\n"
-            f"Betrag: {self.betrag} €\n"
-            f"Rechnungsdatum: {self.rechnungsdatum}\n"
-            f"Buchungsdatum: {self.buchungsdatum}\n"
-            f"Notiz: {self.notiz}\n"
-            f"Beihilfesatz: {self.beihilfesatz} %\n"
-            f"Bezahlt: {self.bezahlt}")
+        ausgabe = 'Rechnung vom {}\n'.format(self.rechnungsdatum)
+        ausgabe += 'Betrag: {:.2f} €\n'.format(self.betrag).replace('.', ',')
+        ausgabe += 'Beihilfesatz: {:.0f} %\n'.format(self.beihilfesatz)
+        ausgabe += 'Einrichtung: {}\n'.format(self.arzt_id)
+        ausgabe += 'Notiz: {}\n'.format(self.notiz)
+        if self.buchungsdatum is not None:
+            ausgabe += 'Buchungsdatum: {}\n'.format(self.buchungsdatum)
+        else:
+            ausgabe += 'Buchungsdatum: -\n'
+        if self.bezahlt:
+            ausgabe += 'Bezahlt: Ja'
+        else:
+            ausgabe += 'Bezahlt: Nein'
+            
+        return ausgabe
     
 
 class BeihilfePaket:

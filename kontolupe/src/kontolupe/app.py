@@ -412,46 +412,55 @@ class Kontolupe(toga.App):
         titel = ''
         inhalt = ''
 
-        match row.typ:
-            case 'Arztrechnung':
-                # Finde die gewählte Arztrechnung in self.rechnungen_liste
-                for rechnung in self.rechnungen_liste:
-                    if rechnung.db_id == row.db_id:
-                        titel = 'Rechnung'
-                        inhalt = 'Vom {} über {:.2f} €'.format(rechnung.rechnungsdatum, rechnung.betrag)
-                        inhalt += '\n\nEinrichtung: {}'.format(rechnung.arzt_name)
-                        inhalt += '\nNotiz: {}'.format(rechnung.notiz)
-                        inhalt += '\nBeihilfesatz: {:.0f} %'.format(rechnung.beihilfesatz)
-                        if rechnung.buchungsdatum:
-                            inhalt += '\nBuchungsdatum: {}'.format(rechnung.buchungsdatum)
-                        else:
-                            inhalt += '\nBuchungsdatum: -'
-                        break
-            case 'Beihilfe':
+        if row.typ == 'Arztrechnung':
+            # Finde die gewählte Arztrechnung in self.rechnungen_liste
+            for rechnung in self.rechnungen_liste:
+                if rechnung.db_id == row.db_id:
+                    titel = 'Rechnung'
+                    inhalt = 'Rechnungsdatum: {}\n'.format(rechnung.rechnungsdatum)
+                    inhalt += 'Betrag: {:.2f} €\n'.format(rechnung.betrag).replace('.', ',')
+                    inhalt += 'Beihilfesatz: {:.0f} %\n\n'.format(rechnung.beihilfesatz)
+                    inhalt += 'Einrichtung: {}\n'.format(rechnung.arzt_name)
+                    inhalt += 'Notiz: {}\n'.format(rechnung.notiz)
+                    if rechnung.buchungsdatum:
+                        inhalt += 'Buchungsdatum: {}\n'.format(rechnung.buchungsdatum)
+                    else:
+                        inhalt += 'Buchungsdatum: -\n'
+                    if rechnung.bezahlt:
+                        inhalt += 'Bezahlt: Ja'
+                    else:
+                        inhalt += 'Bezahlt: Nein'
+                    break
+        elif row.typ == 'Beihilfe' or row.typ == 'PKV':
+            paket = None
+            titel = ''
+            inhalt = ''
+            if row.typ == 'Beihilfe':
+                titel = 'Beihilfe-Einreichung'
                 # Finde die gewählte Beihilfe in self.beihilfepakete_liste
                 for beihilfepaket in self.beihilfepakete_liste:
                     if beihilfepaket.db_id == row.db_id:
-                        titel = 'Beihilfe-Einreichung'
-                        inhalt = 'Vom {} über {:.2f} €'.format(beihilfepaket.datum, beihilfepaket.betrag)
-                        # Liste alle Arztrechnungen auf, die zu diesem Beihilfepaket gehören
-                        inhalt += '\n\nZugehörige Rechnungen:'
-                        for rechnung in self.rechnungen_liste:
-                            if rechnung.beihilfe_id == beihilfepaket.db_id:
-                                inhalt += '\n- {}\n   vom {} über {:.2f} €'.format(rechnung.info, rechnung.rechnungsdatum, rechnung.betrag)
+                        paket = beihilfepaket
                         break
-
-            case 'PKV':
-                # Finde die gewählte PKV in self.pkvpakete_liste
+            else:
+                titel = 'PKV-Einreichung'
                 for pkvpaket in self.pkvpakete_liste:
                     if pkvpaket.db_id == row.db_id:
-                        titel = 'PKV-Einreichung'
-                        inhalt = 'Vom {} über {:.2f} €'.format(pkvpaket.datum, pkvpaket.betrag)
-                        # Liste alle Arztrechnungen auf, die zu diesem PKV-Paket gehören
-                        inhalt += '\n\nZugehörige Rechnungen:'
-                        for rechnung in self.rechnungen_liste:
-                            if rechnung.pkv_id == pkvpaket.db_id:
-                                inhalt += '\n- {}\n   vom {} über {:.2f} €'.format(rechnung.info, rechnung.rechnungsdatum, rechnung.betrag)
+                        paket = pkvpaket
                         break
+
+            inhalt = 'Vom {} '.format(paket.datum)
+            inhalt += 'über {:.2f} €\n\n'.format(paket.betrag).replace('.', ',')
+            
+            # Liste alle Rechnungen auf, die zu diesem Paket gehören
+            inhalt += 'Eingereichte Rechnungen:'
+            for rechnung in self.rechnungen_liste:
+                if (row.typ == 'Beihilfe' and rechnung.beihilfe_id == paket.db_id) or (row.typ == 'PKV' and rechnung.pkv_id == paket.db_id):
+                    inhalt += '\n- {}'.format(rechnung.info)
+                    #inhalt += ', {}'.format(rechnung.rechnungsdatum)
+                    inhalt += ', {:.2f} €'.format(rechnung.betrag).replace('.', ',')
+                    inhalt += ', {:.0f} %'.format(rechnung.beihilfesatz)
+                break
 
         self.main_window.info_dialog(titel, inhalt)
 
@@ -1226,7 +1235,8 @@ class Kontolupe(toga.App):
         if not self.formular_beihilfe_tabelle_rechnungen.selection:
             nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
 
-        self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
+        if nachricht != '':
+            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
         self.beihilfepaket_speichern(widget)
 
 
@@ -1431,7 +1441,7 @@ class Kontolupe(toga.App):
                 'arzt_id': rechnung.arzt_id,
                 'notiz': rechnung.notiz,
                 'arzt_name': self.arzt_name(rechnung.arzt_id),
-                'info': self.arzt_name(rechnung.arzt_id) + ' - ' + rechnung.notiz,
+                'info': self.arzt_name(rechnung.arzt_id) + ', ' + rechnung.notiz,
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
@@ -1724,7 +1734,7 @@ class Kontolupe(toga.App):
                 'arzt_id': rechnung.arzt_id,
                 'notiz': rechnung.notiz,
                 'arzt_name': self.arzt_name(rechnung.arzt_id),
-                'info': self.arzt_name(rechnung.arzt_id) + ' - ' + rechnung.notiz,
+                'info': self.arzt_name(rechnung.arzt_id) + ', ' + rechnung.notiz,
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
@@ -1848,7 +1858,7 @@ class Kontolupe(toga.App):
                 'arzt_id': rechnung.arzt_id,
                 'notiz': rechnung.notiz,
                 'arzt_name': self.arzt_name(rechnung.arzt_id),
-                'info': self.arzt_name(rechnung.arzt_id) + ' - ' + rechnung.notiz,
+                'info': self.arzt_name(rechnung.arzt_id) + ', ' + rechnung.notiz,
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
