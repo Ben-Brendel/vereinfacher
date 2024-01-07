@@ -17,7 +17,7 @@ class Datenbank:
         #self.db_path.unlink()
 
         # Dictionary mit den Tabellen und Spalten der Datenbank erstellen
-        self.tables = {
+        self.__tables = {
             'arztrechnungen': [
                 ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
                 ('betrag', 'REAL'),
@@ -51,15 +51,15 @@ class Datenbank:
             ]
         }
 
-        # Datenbank erstellen
-        self.create_db()
+        # Datenbank-Datei initialisieren
+        self.__create_db()
 
     def __add_column_if_not_exists(cursor, table_name, new_column, column_type):
         cursor.execute(f"PRAGMA table_info({table_name})")
         if not any(row[1] == new_column for row in cursor.fetchall()):
             cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
 
-    def create_db(self):
+    def __create_db(self):
         """Erstellen und Update der Datenbank."""
         
         # Datenbankverbindung herstellen
@@ -67,11 +67,11 @@ class Datenbank:
         cursor = connection.cursor()
 
         # create tables if they don't exist
-        for table_name, columns in self.tables.items():
+        for table_name, columns in self.__tables.items():
             cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{column[0]} {column[1]}' for column in columns])})")
 
         # add columns if they don't exist
-        for table_name, columns in self.tables.items():
+        for table_name, columns in self.__tables.items():
             for column in columns:
                 Datenbank.__add_column_if_not_exists(cursor, table_name, column[0], column[1])
         
@@ -88,7 +88,7 @@ class Datenbank:
         # validate all datum entries in the tables
         # check if they are in the format YYYY-MM-DD
         # and change them from the format YYYY-MM-DD to DD.MM.YYYY
-        # for table_name, columns in self.tables.items():
+        # for table_name, columns in self.__tables.items():
         #     for column in columns:
         #         if 'datum' in column[0]:
         #             cursor.execute(f"SELECT id, {column[0]} FROM {table_name}")
@@ -103,14 +103,14 @@ class Datenbank:
         connection.commit()
         connection.close()
 
-    def new_element(self, table, element):
+    def __new_element(self, table, element):
         """Einfügen eines neuen Elements in die Datenbank."""
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
 
         # Get the columns for the query
-        column_names = [column[0] for column in self.tables[table]]
+        column_names = [column[0] for column in self.__tables[table]]
         column_names.remove('id')
 
         # Build the SQL query and values tuple dynamically
@@ -127,14 +127,14 @@ class Datenbank:
 
         return db_id
     
-    def change_element(self, table, element):
+    def __change_element(self, table, element):
         """Ändern eines Elements in der Datenbank."""
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
 
         # Get the columns for the query
-        column_names = [column[0] for column in self.tables[table]]
+        column_names = [column[0] for column in self.__tables[table]]
         column_names.remove('id')
 
         # Build the SQL query and values tuple dynamically
@@ -149,193 +149,132 @@ class Datenbank:
         connection.commit()
         connection.close()
 
-    def delete_element(self, table, element):
+    def __delete_element(self, table, element):
         """Löschen eines Elements aus der Datenbank."""
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
 
         # Daten löschen
-        cursor.execute(f"""DELETE FROM {table} WHERE id = ?""", (
-            element.db_id,
-        ))
+        cursor.execute(f"""DELETE FROM {table} WHERE id = ?""", (element.db_id,))
 
         # Datenbankverbindung schließen
         connection.commit()
         connection.close()
 
+    def __load_data(self, table, only_active=False):
+        """Laden der Elemente einer Tabelle aus der Datenbank."""
+        # Datenbankverbindung herstellen
+        connection = sql.connect(self.db_path)
+        cursor = connection.cursor()
+
+        # Daten abfragen
+        query = f"""SELECT * FROM {table}"""
+        if only_active:
+            query += f""" WHERE aktiv = 1"""
+        cursor.execute(query)
+        db_result = cursor.fetchall()
+
+        # Speichere die Daten in einem Dictionary
+        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
+
+        result = []
+        for row in ergebnis:
+            match table:
+                case 'arztrechnungen':
+                    element = Arztrechnung()
+                case 'beihilfepakete':
+                    element = BeihilfePaket()
+                case 'pkvpakete':
+                    element = PKVPaket()
+                case 'aerzte':
+                    element = Arzt()
+
+            # Setze die Attribute des Elements
+            for column in self.__tables[table]:
+                if column[0] in row:
+                    if column[0] == 'id':
+                        setattr(element, 'db_id', row[column[0]])
+                    else:
+                        setattr(element, column[0], row[column[0]])
+
+            result.append(element)
+
+        # Datenbankverbindung schließen
+        connection.close()
+
+        return result
+
     def neue_rechnung(self, rechnung):
         """Einfügen einer neuen Arztrechnung in die Datenbank."""
-        return self.new_element('arztrechnungen', rechnung)
+        return self.__new_element('arztrechnungen', rechnung)
     
     def neues_beihilfepaket(self, beihilfepaket):
         """Einfügen eines neuen Beihilfepakets in die Datenbank."""
-        return self.new_element('beihilfepakete', beihilfepaket)
+        return self.__new_element('beihilfepakete', beihilfepaket)
     
     def neues_pkvpaket(self, pkvpaket):
         """Einfügen eines neuen PKV-Pakets in die Datenbank."""
-        return self.new_element('pkvpakete', pkvpaket)
+        return self.__new_element('pkvpakete', pkvpaket)
     
     def neuer_arzt(self, arzt):
         """Einfügen eines neuen Arztes in die Datenbank."""
-        return self.new_element('aerzte', arzt)
+        return self.__new_element('aerzte', arzt)
     
     def aendere_rechnung(self, rechnung):
         """Ändern einer Arztrechnung in der Datenbank."""
-        self.change_element('arztrechnungen', rechnung)
+        self.__change_element('arztrechnungen', rechnung)
 
     def aendere_beihilfepaket(self, beihilfepaket):
         """Ändern eines Beihilfepakets in der Datenbank."""
-        self.change_element('beihilfepakete', beihilfepaket)
+        self.__change_element('beihilfepakete', beihilfepaket)
 
     def aendere_pkvpaket(self, pkvpaket):
         """Ändern eines PKV-Pakets in der Datenbank."""
-        self.change_element('pkvpakete', pkvpaket)
+        self.__change_element('pkvpakete', pkvpaket)
 
     def aendere_arzt(self, arzt):
         """Ändern eines Arztes in der Datenbank."""
-        self.change_element('aerzte', arzt)
+        self.__change_element('aerzte', arzt)
 
     def loesche_rechnung(self, rechnung):
         """Löschen einer Arztrechnung aus der Datenbank."""
-        self.delete_element('arztrechnungen', rechnung)
+        self.__delete_element('arztrechnungen', rechnung)
 
     def loesche_beihilfepaket(self, beihilfepaket):
         """Löschen eines Beihilfepakets aus der Datenbank."""
-        self.delete_element('beihilfepakete', beihilfepaket)
+        self.__delete_element('beihilfepakete', beihilfepaket)
 
     def loesche_pkvpaket(self, pkvpaket):
         """Löschen eines PKV-Pakets aus der Datenbank."""
-        self.delete_element('pkvpakete', pkvpaket)
+        self.__delete_element('pkvpakete', pkvpaket)
 
     def loesche_arzt(self, arzt):
         """Löschen eines Arztes aus der Datenbank."""
-        self.delete_element('aerzte', arzt)
+        self.__delete_element('aerzte', arzt)
 
     def lade_rechnungen(self):
-        """Laden der Arztrechnungen aus der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten abfragen
-        cursor.execute("""SELECT * FROM arztrechnungen WHERE aktiv = 1""")
-        db_result = cursor.fetchall()
-
-        # Speichere die Daten in einem Dictionary
-        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
-
-        rechnungen = []
-        for row in ergebnis:
-            rechnung = Arztrechnung()
-            rechnung.db_id = row['id']
-            rechnung.betrag = row['betrag']
-            rechnung.arzt_id = row['arzt_id']
-            rechnung.rechnungsdatum = row['rechnungsdatum']
-            rechnung.notiz = row['notiz']
-            rechnung.beihilfesatz = row['beihilfesatz']
-            rechnung.buchungsdatum = row['buchungsdatum']
-            rechnung.aktiv = row['aktiv']
-            rechnung.bezahlt = row['bezahlt']
-            rechnung.beihilfe_id = row['beihilfe_id']
-            rechnung.pkv_id = row['pkv_id']
-            rechnungen.append(rechnung)
-
-        # Datenbankverbindung schließen
-        connection.close()
-
-        return rechnungen
+        """Laden der Rechnungen aus der Datenbank."""
+        return self.__load_data('arztrechnungen', only_active=True)
     
     def lade_beihilfepakete(self):
         """Laden der Beihilfepakete aus der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten abfragen
-        cursor.execute("""SELECT * FROM beihilfepakete WHERE aktiv = 1""")
-        db_result = cursor.fetchall()
-
-        # Speichere die Daten in einem Dictionary
-        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
-
-        # beihilfepakete in BeihilfePaket-Objekte umwandeln
-        beihilfepakete = []
-        for row in ergebnis:
-            beihilfepaket = BeihilfePaket()
-            beihilfepaket.db_id = row['id']
-            beihilfepaket.betrag = row['betrag']
-            beihilfepaket.datum = row['datum']
-            beihilfepaket.aktiv = row['aktiv']
-            beihilfepaket.erhalten = row['erhalten']
-            beihilfepakete.append(beihilfepaket)
-
-        # Datenbankverbindung schließen
-        connection.close()
-
-        return beihilfepakete
+        return self.__load_data('beihilfepakete', only_active=True)
     
     def lade_pkvpakete(self):
         """Laden der PKV-Pakete aus der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten abfragen
-        cursor.execute("""SELECT * FROM pkvpakete WHERE aktiv = 1""")
-        db_result = cursor.fetchall()
-
-        # Speichere die Daten in einem Dictionary
-        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
-
-        # pkvpakete in PKVPaket-Objekte umwandeln
-        pkvpakete = []
-        for row in ergebnis:
-            pkvpaket = PKVPaket()
-            pkvpaket.db_id = row['id']
-            pkvpaket.betrag = row['betrag']
-            pkvpaket.datum = row['datum']
-            pkvpaket.aktiv = row['aktiv']
-            pkvpaket.erhalten = row['erhalten']
-            pkvpakete.append(pkvpaket)
-
-        # Datenbankverbindung schließen
-        connection.close()
-
-        return pkvpakete
+        return self.__load_data('pkvpakete', only_active=True)
     
     def lade_aerzte(self):
         """Laden der Ärzte aus der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten abfragen
-        cursor.execute("""SELECT * FROM aerzte""")
-        db_result = cursor.fetchall()
-
-        # Speichere die Daten in einem Dictionary
-        ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
-
-        # aerzte in Arzt-Objekte umwandeln
-        aerzte = []
-        for row in ergebnis:
-            arzt = Arzt()
-            arzt.db_id = row['id']
-            arzt.name = row['name']
-            aerzte.append(arzt)
-
-        # Datenbankverbindung schließen
-        connection.close()
-
-        return aerzte
+        return self.__load_data('aerzte')
 
 
 class Arztrechnung:
-    """Klasse zur Erfassung einer Arztrechnung."""
+    """Klasse zur Erfassung einer Rechnung."""
     
     def __init__(self):
-        """Initialisierung der Arztrechnung."""
+        """Initialisierung der Rechnung."""
         self.db_id = None
         self.betrag = 0
         self.rechnungsdatum = None
@@ -349,19 +288,19 @@ class Arztrechnung:
         self.aktiv = True
 
     def neu(self, db):
-        """Neue Arztrechnung erstellen."""
+        """Neue Rechnung erstellen."""
         self.db_id = db.neue_rechnung(self)
 
     def speichern(self, db):
-        """Speichern der Arztrechnung in der Datenbank."""
+        """Speichern der Rechnung in der Datenbank."""
         db.aendere_rechnung(self)
 
     def loeschen(self, db):
-        """Löschen der Arztrechnung aus der Datenbank."""
+        """Löschen der Rechnung aus der Datenbank."""
         db.loesche_rechnung(self)
 
     def __str__(self):
-        """Ausgabe der Arztrechnung."""
+        """Ausgabe der Rechnung."""
         ausgabe = 'Rechnung vom {}\n'.format(self.rechnungsdatum)
         ausgabe += 'Betrag: {:.2f} €\n'.format(self.betrag).replace('.', ',')
         ausgabe += 'Beihilfesatz: {:.0f} %\n'.format(self.beihilfesatz)
