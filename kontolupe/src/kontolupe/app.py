@@ -253,64 +253,66 @@ class Kontolupe(toga.App):
         eingabe = ''.join(c for c in widget.value if c in '0123456789.')
         widget.value = eingabe
 
-        if widget.value != '':
-            error = False            
-            # check if there are 3 parts
-            if widget.value.count('.') != 2:
-                # check if the entry is numeric
-                if not widget.value.isnumeric():
-                    error = True
-                # check if the entry is 6 digits long and insert 20 after the first four digits
-                elif len(widget.value) == 6:
-                    widget.value = widget.value[:4] + '20' + widget.value[4:]
-                elif len(widget.value) != 8:
-                    error = True
+        if widget.value == '':
+            return True
+
+        error = False            
+        # check if there are 3 parts
+        if widget.value.count('.') != 2:
+            # check if the entry is numeric
+            if not widget.value.isnumeric():
+                error = True
+            # check if the entry is 6 digits long and insert 20 after the first four digits
+            elif len(widget.value) == 6:
+                widget.value = widget.value[:4] + '20' + widget.value[4:]
+            elif len(widget.value) != 8:
+                error = True
+        
+            if not error:
+                # add a . after the first two digits and after the second two digits
+                widget.value = widget.value[:2] + '.' + widget.value[2:4] + '.' + widget.value[4:]
             
-                if not error:
-                    # add a . after the first two digits and after the second two digits
-                    widget.value = widget.value[:2] + '.' + widget.value[2:4] + '.' + widget.value[4:]
-                
-                # check if the date is valid
-                try:
-                    datetime.strptime(widget.value, '%d.%m.%Y')
-                except ValueError:
+            # check if the date is valid
+            try:
+                datetime.strptime(widget.value, '%d.%m.%Y')
+            except ValueError:
+                error = True
+
+        else:
+            # check if all parts are numbers
+            parts = widget.value.split('.')
+            for part in parts:
+                if not part.isnumeric():
                     error = True
+                    break
+            
+            # first and second part must be two digits long, if not add a leading 0
+            if not error and len(parts[0]) != 2:
+                parts[0] = '0' + parts[0]
+            if not error and len(parts[1]) != 2:
+                parts[1] = '0' + parts[1]
+            # third part must be 4 or 2 digits long. if 2 digits long, add 20 to the beginning
+            if not error and len(parts[2]) == 2:
+                parts[2] = '20' + parts[2]
+            elif not error and len(parts[2]) != 4:
+                error = True
 
-            else:
-                # check if all parts are numbers
-                parts = widget.value.split('.')
-                for part in parts:
-                    if not part.isnumeric():
-                        error = True
-                        break
+            # put the parts back together
+            if not error:
+                widget.value = '.'.join(parts)
+            
+            # check if the date is valid
+            try:
+                datetime.strptime(widget.value, '%d.%m.%Y')
+            except ValueError:
+                error = True
                 
-                # first and second part must be two digits long, if not add a leading 0
-                if not error and len(parts[0]) != 2:
-                    parts[0] = '0' + parts[0]
-                if not error and len(parts[1]) != 2:
-                    parts[1] = '0' + parts[1]
-                # third part must be 4 or 2 digits long. if 2 digits long, add 20 to the beginning
-                if not error and len(parts[2]) == 2:
-                    parts[2] = '20' + parts[2]
-                elif not error and len(parts[2]) != 4:
-                    error = True
 
-                # put the parts back together
-                if not error:
-                    widget.value = '.'.join(parts)
-                
-                # check if the date is valid
-                try:
-                    datetime.strptime(widget.value, '%d.%m.%Y')
-                except ValueError:
-                    error = True
-                    
+        if error:
+            #self.main_window.error_dialog('Fehler', 'Kein gültiges Datum eingegeben.')
+            widget.value = ''
 
-            if error:
-                #self.main_window.error_dialog('Fehler', 'Kein gültiges Datum eingegeben.')
-                widget.value = ''
-
-            return not error
+        return not error
 
 
     def erzeuge_startseite(self):
@@ -658,7 +660,7 @@ class Kontolupe(toga.App):
         nachricht = ''
 
         # Prüfe, ob ein Rechnungsdatum eingegeben wurde
-        if not self.pruefe_datum(self.input_formular_rechnungen_rechnungsdatum):
+        if not self.pruefe_datum(self.input_formular_rechnungen_rechnungsdatum) or self.input_formular_rechnungen_rechnungsdatum.value == '':
             nachricht += 'Bitte gib ein gültiges Rechnungsdatum ein.\n'
 
         # Prüfe, ob ein Betrag eingegeben wurde
@@ -674,7 +676,7 @@ class Kontolupe(toga.App):
         if not self.pruefe_prozent(self.input_formular_rechnungen_beihilfesatz):
             nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
-        if not self.input_formular_rechnungen_buchungsdatum == '' and not self.pruefe_datum(self.input_formular_rechnungen_buchungsdatum):
+        if not self.pruefe_datum(self.input_formular_rechnungen_buchungsdatum):
             nachricht += 'Bitte gib ein gültiges Buchungsdatum ein.\n'
                 
         if nachricht != '':

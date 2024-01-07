@@ -11,10 +11,14 @@ class Datenbank:
 
     def __init__(self):
         """Initialisierung der Datenbank."""
-        #self.db_dir = Path('/data/data/net.biberwerk.kontolupe')
-        self.db_dir = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe')
+        self.db_dir = Path('/data/data/net.biberwerk.kontolupe')
+        #self.db_dir = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe')
         
         self.db_path = self.db_dir / 'kontolupe.db'
+
+        # delete database
+        #if self.db_path.exists(): 
+        #    self.db_path.unlink()
 
         # Dictionary mit den Tabellen und Spalten der Datenbank erstellen
         self.__tables = {
@@ -77,6 +81,7 @@ class Datenbank:
 
         # Datenbank-Datei initialisieren
         self.__create_db()
+        self.__delete_backups()
 
     def __get_column_type(self, table_name, column_name):
         for column in self.__tables[table_name]:
@@ -110,8 +115,9 @@ class Datenbank:
         backup_path = self.db_dir / Path(f'kontolupe_{timestamp}.db.backup')
         if backup_path.exists():
             backup_path.unlink()
-        shutil.copy2(self.db_path, backup_path)
-        print(f'Created backup {backup_path}')
+        if self.db_path.exists():
+            shutil.copy2(self.db_path, backup_path)
+            print(f'Created backup {backup_path}')
 
     def __delete_backups(self):
         """Löschen aller Backups der Datenbank."""
