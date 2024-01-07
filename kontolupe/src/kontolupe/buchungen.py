@@ -55,13 +55,11 @@ class Datenbank:
             ]
         }
 
-        # Dictionary, welches die umzubenennenden Spalten enthält, falls sie noch nicht umbenannt wurden
-        # Ihre Daten werden dann von der alten Spalte in die neue Spalte kopiert und
-        # die alte Spalte gelöscht.
-        # Bei nachfolgenden Umbenennungen der Tabelle, müssen auch die alten Tabellen die neuen Spaltennamen enthalten
+        # Dictionary, welches die umzubenennenden Spalten enthält.
+        # Die Spalten werden von einer alten Tabellenversion auf die neueste Tabellenversion migriert.
         self.__table_columns_rename = {
             'arztrechnungen': [
-                ('arzt', 'arzt_id', 'INTEGER'),
+                ('arzt', 'einrichtung_id', 'INTEGER'),
                 ('arzt_id', 'einrichtung_id', 'INTEGER')
             ],
             'rechnungen': [
@@ -69,11 +67,8 @@ class Datenbank:
             ]
         }
 
-        # Liste, welche die umzubenennden Tabellen enthält, falls sie noch nicht umbenannt wurden
-        # Ihre Daten werden von der alten Tabelle in die neue Tabelle kopiert und
-        # die alte Tabelle gelöscht.
-        # Diese Liste ist iterativ. Mehrere aufeinanderfolgende Umbenennungen können erfolgen und 
-        # müssen Schritt für Schritt eingetragen werden.
+        # Liste, welche die umzubenennden Tabellen enthält.
+        # Die Tabellen werden schrittweise von einer alten Tabellenversion auf die neueste Tabellenversion migriert.
         self.__tables_rename = [
             ('arztrechnungen', 'rechnungen'),
             ('aerzte', 'einrichtungen')
@@ -81,7 +76,6 @@ class Datenbank:
 
         # Datenbank-Datei initialisieren
         self.__create_db()
-        self.__delete_backups()
 
     def __get_column_type(self, table_name, column_name):
         for column in self.__tables[table_name]:
@@ -133,7 +127,7 @@ class Datenbank:
         if not any(row[1] == new_column for row in cursor.fetchall()):
             cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
 
-    def __copy_column_and_delete(self, cursor, table_name, old_column, new_column):
+    def __copy_column(self, cursor, table_name, old_column, new_column):
         # Check if table_name exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
         if not cursor.fetchone():
@@ -153,7 +147,6 @@ class Datenbank:
             db_result = cursor.fetchall()
             for row in db_result:
                 cursor.execute(f"UPDATE {table_name} SET {new_column} = ? WHERE id = ?", (row[1], row[0]))
-            cursor.execute(f"ALTER TABLE {table_name} DROP COLUMN {old_column}")
 
     def __copy_table_and_delete(self, cursor, old_table, new_table):
         # Check if old_table exists
@@ -166,8 +159,14 @@ class Datenbank:
         columns_info = cursor.fetchall()
         column_names = [column[1] for column in columns_info]  # Get the column names
 
+        # Remove the columns from column_names that are not in the new table
+        for column in columns_info:
+            if not any(column[1] == column_name for column_name in [column[0] for column in self.__tables[new_table]]):
+                column_names.remove(column[1])
+
         # Copy rows from old_table to new_table
-        cursor.execute(f"SELECT * FROM {old_table}")
+        # select only the columns that are in the new table
+        cursor.execute(f"SELECT {', '.join(column_names)} FROM {old_table}")
         db_result = cursor.fetchall()
         for row in db_result:
             # Create a dictionary where keys are column names and values are row values
@@ -185,40 +184,51 @@ class Datenbank:
         """Erstellen und Update der Datenbank."""
 
         # Backup erstellen
-        self.__create_backup()
+        # check if database exists and is structured correctly
+        # if not create a backup
+        if self.db_path.exists():
+            # Datenbankverbindung herstellen
+            connection = sql.connect(self.db_path)
+            cursor = connection.cursor()
+
+            # check if database is structured correctly
+            is_correct = True
+            for table_name, columns in self.__tables.items():
+                cursor.execute(f"PRAGMA table_info({table_name})")
+                result = cursor.fetchall()
+                for column in columns:
+                    if not any(row[1] == column[0] for row in result):
+                        # database is not structured correctly
+                        # create a backup and exit the loop
+                        is_correct = False
+                        self.__create_backup()
+                        break
+                if not is_correct:
+                    break
+
+            # Datenbankverbindung schließen
+            connection.close()
         
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
 
-        # Update-Routine zur Aktualisierung der Datenbankstruktur
-        for table_name, columns in self.__tables.items():
-            Datenbank.__create_table_if_not_exists(self, cursor, table_name, columns)
-            for column in columns:
-                Datenbank.__add_column_if_not_exists(self, cursor, table_name, column[0], column[1])
-        
-        # Update-Routine zur Migration der Daten in die neue Datenbankstruktur
-        for table_name, columns in self.__table_columns_rename.items():
-            for column in columns:
-                Datenbank.__copy_column_and_delete(self, cursor, table_name, column[0], column[1])
+        if not self.db_path.exists() or not is_correct:
 
-        # Update-Routine zur Umbenennung der Tabellen
-        for table in self.__tables_rename:
-            Datenbank.__copy_table_and_delete(self, cursor, table[0], self.__new_table_name(table[0]))            
+            # Update-Routine zur Aktualisierung der Datenbankstruktur
+            for table_name, columns in self.__tables.items():
+                Datenbank.__create_table_if_not_exists(self, cursor, table_name, columns)
+                for column in columns:
+                    Datenbank.__add_column_if_not_exists(self, cursor, table_name, column[0], column[1])
+            
+            # Update-Routine zur Migration der Daten in die neue Datenbankstruktur
+            for table_name, columns in self.__table_columns_rename.items():
+                for column in columns:
+                    Datenbank.__copy_column(self, cursor, table_name, column[0], column[1])
 
-        # validate all datum entries in the tables
-        # check if they are in the format YYYY-MM-DD
-        # and change them from the format YYYY-MM-DD to DD.MM.YYYY
-        # for table_name, columns in self.__tables.items():
-        #     for column in columns:
-        #         if 'datum' in column[0]:
-        #             cursor.execute(f"SELECT id, {column[0]} FROM {table_name}")
-        #             db_result = cursor.fetchall()
-        #             for row in db_result:
-        #                 if row[1] is not None:
-        #                     if len(row[1].split('-')) == 3:
-        #                         datum = f"{row[1].split('-')[2]}.{row[1].split('-')[1]}.{row[1].split('-')[0]}"
-        #                         cursor.execute(f"UPDATE {table_name} SET {column[0]} = ? WHERE id = ?", (datum, row[0]))
+            # Update-Routine zur Umbenennung der Tabellen
+            for table in self.__tables_rename:
+                Datenbank.__copy_table_and_delete(self, cursor, table[0], self.__new_table_name(table[0]))            
 
         # Datenbankverbindung schließen
         connection.commit()
