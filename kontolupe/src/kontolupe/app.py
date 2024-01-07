@@ -202,7 +202,7 @@ class Kontolupe(toga.App):
         return summe
     
 
-    def eingabe_zahl(self, widget):
+    def pruefe_zahl(self, widget):
         """Prüft, ob die Eingabe eine Zahl ist und korrigiert sie entsprechend."""
 
         # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein , sind.
@@ -221,32 +221,29 @@ class Kontolupe(toga.App):
             float(eingabe)
         except ValueError:
             widget.value = ''
+            self.main_window.error_dialog('Fehler', 'Kein gültiger Betrag eingegeben.')
 
     
-    def eingabe_prozent(self, widget):
+    def pruefe_prozent(self, widget):
         """Prüft, ob die Eingabe eine ganze Zahl zwischen 0 und 100 ist und korrigiert sie entsprechend."""
 
         # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein , sind.
         eingabe = ''.join(c for c in widget.value if c in '0123456789')
-
-        if eingabe == '':
-            widget.value = ''
-        elif int(eingabe) > 100:
-            widget.value = '100'
-        else:
-            widget.value = eingabe
-
-
-    def eingabe_datum(self, widget):
-        """Prüft, ob die Eingabe nur Zahlen oder ein . ist."""
-
-        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein . sind.
-        eingabe = ''.join(c for c in widget.value if c in '0123456789.')
         widget.value = eingabe
+
+        try:
+            zahl = int(eingabe)
+            if zahl > 100:
+                widget.value = '100'
+            if zahl not in range(0, 101, 5):
+                self.main_window.info_dialog('Bitte überprüfen', 'Der Beihilfesatz ist üblicherweise ein Vielfaches von 5 und nicht 0 oder 100.')
+        except ValueError:
+            widget.value = ''
+            self.main_window.error_dialog('Fehler', 'Kein gültiger Prozentsatz eingegeben.')
 
 
     def pruefe_datum(self, widget):
-        """ Prüft, ob die Eingabe ein gültiges Datum ist."""
+        """ Prüft, ob die Eingabe ein gültiges Datum ist und korrigiert die Eingabe."""
 
         eingabe = ''.join(c for c in widget.value if c in '0123456789.')
         widget.value = eingabe
@@ -502,7 +499,7 @@ class Kontolupe(toga.App):
 
         box_formular_rechnungen_betrag = toga.Box(style=style_box_row)
         box_formular_rechnungen_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_lose_focus=self.eingabe_zahl)
+        self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_zahl)
         box_formular_rechnungen_betrag.add(self.input_formular_rechnungen_betrag)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_betrag)
 
@@ -523,7 +520,7 @@ class Kontolupe(toga.App):
         # Bereich zur Auswahl des Beihilfesatzes
         box_formular_rechnungen_beihilfesatz = toga.Box(style=style_box_row)
         box_formular_rechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
-        self.input_formular_rechnungen_beihilfesatz = toga.TextInput(style=style_input, on_lose_focus=self.eingabe_prozent)
+        self.input_formular_rechnungen_beihilfesatz = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_prozent)
         box_formular_rechnungen_beihilfesatz.add(self.input_formular_rechnungen_beihilfesatz)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_beihilfesatz)
 
