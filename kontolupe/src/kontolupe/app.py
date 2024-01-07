@@ -60,7 +60,7 @@ class Kontolupe(toga.App):
         """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
 
         # Anzeige des offenen Betrags aktualisieren
-        self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen())
+        self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen()).replace('.', ',')
 
         # Tabelle mit offenen Buchungen aktualisieren
         if widget != self.tabelle_offene_buchungen:
@@ -166,7 +166,7 @@ class Kontolupe(toga.App):
     
     def index_auswahl(self, widget):
         """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
-        if widget.selection is not None:
+        if type(widget) == toga.Table and widget.selection is not None:
             zeile = widget.selection
             for i, z in enumerate(widget.data):
                 if str(z) == str(zeile):
