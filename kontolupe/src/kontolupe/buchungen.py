@@ -126,6 +126,43 @@ class Datenbank:
         connection.close()
 
         return db_id
+    
+    def change_element(self, table, element):
+        """Ändern eines Elements in der Datenbank."""
+        # Datenbankverbindung herstellen
+        connection = sql.connect(self.db_path)
+        cursor = connection.cursor()
+
+        # Get the columns for the query
+        column_names = [column[0] for column in self.tables[table]]
+        column_names.remove('id')
+
+        # Build the SQL query and values tuple dynamically
+        query = f"""UPDATE {table} SET {', '.join([f'{column_name} = ?' for column_name in column_names])} WHERE id = ?"""
+        values = tuple(getattr(element, column_name) for column_name in column_names)
+        values += (element.db_id,)
+
+        # Daten ändern
+        cursor.execute(query, values)
+
+        # Datenbankverbindung schließen
+        connection.commit()
+        connection.close()
+
+    def delete_element(self, table, element):
+        """Löschen eines Elements aus der Datenbank."""
+        # Datenbankverbindung herstellen
+        connection = sql.connect(self.db_path)
+        cursor = connection.cursor()
+
+        # Daten löschen
+        cursor.execute(f"""DELETE FROM {table} WHERE id = ?""", (
+            element.db_id,
+        ))
+
+        # Datenbankverbindung schließen
+        connection.commit()
+        connection.close()
 
     def neue_rechnung(self, rechnung):
         """Einfügen einer neuen Arztrechnung in die Datenbank."""
@@ -145,165 +182,35 @@ class Datenbank:
     
     def aendere_rechnung(self, rechnung):
         """Ändern einer Arztrechnung in der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten ändern
-        cursor.execute("""UPDATE arztrechnungen SET
-            betrag = ?,
-            arzt_id = ?,
-            rechnungsdatum = ?,
-            notiz = ?,
-            beihilfesatz = ?,
-            buchungsdatum = ?,
-            aktiv = ?,
-            bezahlt = ?,
-            beihilfe_id = ?,
-            pkv_id = ?
-        WHERE id = ?""", (
-            rechnung.betrag,
-            rechnung.arzt_id,
-            rechnung.rechnungsdatum,
-            rechnung.notiz,
-            rechnung.beihilfesatz,
-            rechnung.buchungsdatum,
-            rechnung.aktiv,
-            rechnung.bezahlt,
-            rechnung.beihilfe_id,
-            rechnung.pkv_id,
-            rechnung.db_id
-        ))
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close() 
+        self.change_element('arztrechnungen', rechnung)
 
     def aendere_beihilfepaket(self, beihilfepaket):
         """Ändern eines Beihilfepakets in der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten ändern
-        cursor.execute("""UPDATE beihilfepakete SET
-            betrag = ?,
-            datum = ?,
-            aktiv = ?,
-            erhalten = ?
-        WHERE id = ?""", (
-            beihilfepaket.betrag,
-            beihilfepaket.datum,
-            beihilfepaket.aktiv,
-            beihilfepaket.erhalten,
-            beihilfepaket.db_id
-        ))
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
+        self.change_element('beihilfepakete', beihilfepaket)
 
     def aendere_pkvpaket(self, pkvpaket):
         """Ändern eines PKV-Pakets in der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten ändern
-        cursor.execute("""UPDATE pkvpakete SET
-            betrag = ?,
-            datum = ?,
-            aktiv = ?,
-            erhalten = ?
-        WHERE id = ?""", (
-            pkvpaket.betrag,
-            pkvpaket.datum,
-            pkvpaket.aktiv,
-            pkvpaket.erhalten,
-            pkvpaket.db_id
-        ))
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
+        self.change_element('pkvpakete', pkvpaket)
 
     def aendere_arzt(self, arzt):
         """Ändern eines Arztes in der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten ändern
-        cursor.execute("""UPDATE aerzte SET
-            name = ?
-        WHERE id = ?""", (
-            arzt.name,
-            arzt.db_id
-        ))
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
+        self.change_element('aerzte', arzt)
 
     def loesche_rechnung(self, rechnung):
         """Löschen einer Arztrechnung aus der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten löschen
-        cursor.execute("""DELETE FROM arztrechnungen WHERE id = ?""", (
-            rechnung.db_id,
-        ))
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
+        self.delete_element('arztrechnungen', rechnung)
 
     def loesche_beihilfepaket(self, beihilfepaket):
         """Löschen eines Beihilfepakets aus der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten löschen
-        cursor.execute("""DELETE FROM beihilfepakete WHERE id = ?""", (
-            beihilfepaket.db_id,
-        ))
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
+        self.delete_element('beihilfepakete', beihilfepaket)
 
     def loesche_pkvpaket(self, pkvpaket):
         """Löschen eines PKV-Pakets aus der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten löschen
-        cursor.execute("""DELETE FROM pkvpakete WHERE id = ?""", (
-            pkvpaket.db_id,
-        ))
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
+        self.delete_element('pkvpakete', pkvpaket)
 
     def loesche_arzt(self, arzt):
         """Löschen eines Arztes aus der Datenbank."""
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # Daten löschen
-        cursor.execute("""DELETE FROM aerzte WHERE id = ?""", (
-            arzt.db_id,
-        ))
-
-        # Datenbankverbindung schließen
-        connection.commit()
-        connection.close()
+        self.delete_element('aerzte', arzt)
 
     def lade_rechnungen(self):
         """Laden der Arztrechnungen aus der Datenbank."""
