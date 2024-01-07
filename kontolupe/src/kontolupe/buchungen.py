@@ -16,37 +16,20 @@ class Datenbank:
         # lösche die Datei der Datenbank
         #self.db_path.unlink()
 
-        # Datenbank erstellen
-        self.create_db()
-
-    def __add_column_if_not_exists(cursor, table_name, new_column, column_type):
-        cursor.execute(f"PRAGMA table_info({table_name})")
-        if not any(row[1] == new_column for row in cursor.fetchall()):
-            cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
-
-    def create_db(self):
-        """Erstellen und Update der Datenbank."""
-        
-        # Datenbankverbindung herstellen
-        connection = sql.connect(self.db_path)
-        cursor = connection.cursor()
-
-        # create a dictionary with table names as keys and a list of tuples
-        # with column names and column types as values
-
-        tables = {
+        # Dictionary mit den Tabellen und Spalten der Datenbank erstellen
+        self.tables = {
             'arztrechnungen': [
                 ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
                 ('betrag', 'REAL'),
-                ('arzt', 'INTEGER REFERENCES aerzte(id)'),
+                ('arzt_id', 'INTEGER'),
                 ('rechnungsdatum', 'TEXT'),
                 ('notiz', 'TEXT'),
                 ('beihilfesatz', 'REAL'),
                 ('buchungsdatum', 'TEXT'),
                 ('aktiv', 'INTEGER'),
                 ('bezahlt', 'INTEGER'),
-                ('beihilfe_id', 'INTEGER REFERENCES beihilfepakete(id)'),
-                ('pkv_id', 'INTEGER REFERENCES pkvpakete(id)')
+                ('beihilfe_id', 'INTEGER'),
+                ('pkv_id', 'INTEGER')
             ],
             'beihilfepakete': [
                 ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
@@ -68,19 +51,44 @@ class Datenbank:
             ]
         }
 
+        # Datenbank erstellen
+        self.create_db()
+
+    def __add_column_if_not_exists(cursor, table_name, new_column, column_type):
+        cursor.execute(f"PRAGMA table_info({table_name})")
+        if not any(row[1] == new_column for row in cursor.fetchall()):
+            cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
+
+    def create_db(self):
+        """Erstellen und Update der Datenbank."""
+        
+        # Datenbankverbindung herstellen
+        connection = sql.connect(self.db_path)
+        cursor = connection.cursor()
+
         # create tables if they don't exist
-        for table_name, columns in tables.items():
+        for table_name, columns in self.tables.items():
             cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{column[0]} {column[1]}' for column in columns])})")
 
         # add columns if they don't exist
-        for table_name, columns in tables.items():
+        for table_name, columns in self.tables.items():
             for column in columns:
                 Datenbank.__add_column_if_not_exists(cursor, table_name, column[0], column[1])
+        
+        # update the column 'arzt' to 'arzt_id' in the table 'arztrechnungen' if it exists
+        # copy the values from the column 'arzt' to the column 'arzt_id' and drop it afterwards
+        cursor.execute(f"PRAGMA table_info(arztrechnungen)")
+        if any(row[1] == 'arzt' for row in cursor.fetchall()):
+            cursor.execute(f"SELECT id, arzt FROM arztrechnungen")
+            db_result = cursor.fetchall()
+            for row in db_result:
+                cursor.execute(f"UPDATE arztrechnungen SET arzt_id = ? WHERE id = ?", (row[1], row[0]))
+            cursor.execute(f"ALTER TABLE arztrechnungen DROP COLUMN arzt")
 
         # validate all datum entries in the tables
         # check if they are in the format YYYY-MM-DD
         # and change them from the format YYYY-MM-DD to DD.MM.YYYY
-        # for table_name, columns in tables.items():
+        # for table_name, columns in self.tables.items():
         #     for column in columns:
         #         if 'datum' in column[0]:
         #             cursor.execute(f"SELECT id, {column[0]} FROM {table_name}")
@@ -101,30 +109,23 @@ class Datenbank:
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
 
+        # Get the table columns from self.tables
+        columns = self.tables['arztrechnungen']
+
+        # Extract the column names
+        column_names = [column[0] for column in columns]
+
+        # drop the column 'id' from the list and do not assume that it is the first column
+        column_names.remove('id')
+
+        # Build the SQL query dynamically
+        query = f"""INSERT INTO arztrechnungen ({', '.join(column_names)}) VALUES ({', '.join(['?' for _ in column_names])})"""
+
+        # Build the values tuple dynamically
+        values = tuple(getattr(rechnung, column_name) for column_name in column_names)
+
         # Daten einfügen
-        cursor.execute("""INSERT INTO arztrechnungen (
-            betrag,
-            arzt,
-            rechnungsdatum,
-            notiz,
-            beihilfesatz,
-            buchungsdatum,
-            aktiv,
-            bezahlt,
-            beihilfe_id,
-            pkv_id
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (
-            rechnung.betrag,
-            rechnung.arzt_id,
-            rechnung.rechnungsdatum,
-            rechnung.notiz,
-            rechnung.beihilfesatz,
-            rechnung.buchungsdatum,
-            rechnung.aktiv,
-            rechnung.bezahlt,
-            rechnung.beihilfe_id,
-            rechnung.pkv_id
-        ))
+        cursor.execute(query, values)
 
         # id der neuen Buchung abfragen
         db_id = cursor.lastrowid
@@ -393,7 +394,7 @@ class Datenbank:
             rechnung = Arztrechnung()
             rechnung.db_id = row['id']
             rechnung.betrag = row['betrag']
-            rechnung.arzt_id = row['arzt']
+            rechnung.arzt_id = row['arzt_id']
             rechnung.rechnungsdatum = row['rechnungsdatum']
             rechnung.notiz = row['notiz']
             rechnung.beihilfesatz = row['beihilfesatz']
@@ -538,7 +539,7 @@ class Arztrechnung:
             ausgabe += 'Bezahlt: Ja'
         else:
             ausgabe += 'Bezahlt: Nein'
-            
+
         return ausgabe
     
 

@@ -339,7 +339,8 @@ class Kontolupe(toga.App):
 
         # Button zur Markierung offener Buchungen als bezahlt/erhalten 
         self.box_startseite_tabelle_buttons = toga.Box(style=style_box_row)
-        self.startseite_button_erledigt = toga.Button('Markiere als bezahlt/erhalten', on_press=self.bestaetige_bezahlung, style=style_button, enabled=False)
+        self.startseite_button_erledigt = toga.Button('Bezahlt/Erstattet', on_press=self.bestaetige_bezahlung, style=style_button, enabled=False)
+        #self.startseite_button_bearbeiten = toga.Button('Bearbeiten', on_press=, style=style_button, enabled=False)
         self.box_startseite_tabelle_buttons.add(self.startseite_button_erledigt)
         self.box_startseite_tabelle_offene_buchungen.add(self.box_startseite_tabelle_buttons)
 
