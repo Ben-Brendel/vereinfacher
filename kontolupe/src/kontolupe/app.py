@@ -409,58 +409,87 @@ class Kontolupe(toga.App):
     def zeige_info_buchung(self, widget, row):
         """Zeigt die Info einer Buchung."""
         
+        # Initialisierung Variablen
         titel = ''
         inhalt = ''
 
-        if row.typ == 'Arztrechnung':
-            # Finde die gewählte Arztrechnung in self.rechnungen_liste
-            for rechnung in self.rechnungen_liste:
-                if rechnung.db_id == row.db_id:
-                    titel = 'Rechnung'
-                    inhalt = 'Rechnungsdatum: {}\n'.format(rechnung.rechnungsdatum)
-                    inhalt += 'Betrag: {:.2f} €\n'.format(rechnung.betrag).replace('.', ',')
-                    inhalt += 'Beihilfesatz: {:.0f} %\n\n'.format(rechnung.beihilfesatz)
-                    inhalt += 'Einrichtung: {}\n'.format(rechnung.arzt_name)
-                    inhalt += 'Notiz: {}\n'.format(rechnung.notiz)
-                    if rechnung.buchungsdatum:
-                        inhalt += 'Buchungsdatum: {}\n'.format(rechnung.buchungsdatum)
-                    else:
-                        inhalt += 'Buchungsdatum: -\n'
-                    if rechnung.bezahlt:
-                        inhalt += 'Bezahlt: Ja'
-                    else:
-                        inhalt += 'Bezahlt: Nein'
-                    break
-        elif row.typ == 'Beihilfe' or row.typ == 'PKV':
-            paket = None
-            titel = ''
-            inhalt = ''
-            if row.typ == 'Beihilfe':
-                titel = 'Beihilfe-Einreichung'
-                # Finde die gewählte Beihilfe in self.beihilfepakete_liste
-                for beihilfepaket in self.beihilfepakete_liste:
-                    if beihilfepaket.db_id == row.db_id:
-                        paket = beihilfepaket
+        # Ermittlung der Buchungsart
+        typ = ''
+        element = None
+        match widget:
+            case self.tabelle_offene_buchungen:
+                typ = row.typ
+                match typ:
+                    case 'Rechnung':
+                        for rechnung in self.rechnungen_liste:
+                            if rechnung.db_id == row.db_id:
+                                element = rechnung
+                                break
+                    case 'Beihilfe':
+                        for beihilfepaket in self.beihilfepakete_liste:
+                            if beihilfepaket.db_id == row.db_id:
+                                element = beihilfepaket
+                                break
+                    case 'PKV':
+                        for pkvpaket in self.pkvpakete_liste:
+                            if pkvpaket.db_id == row.db_id:
+                                element = pkvpaket
+                                break
+            case self.formular_beihilfe_tabelle_rechnungen:
+                typ = 'Rechnung'
+                for rechnung in self.rechnungen_liste:
+                    if rechnung.db_id == row.db_id:
+                        element = rechnung
                         break
-            else:
-                titel = 'PKV-Einreichung'
-                for pkvpaket in self.pkvpakete_liste:
-                    if pkvpaket.db_id == row.db_id:
-                        paket = pkvpaket
+            case self.formular_pkv_tabelle_rechnungen:
+                typ = 'Rechnung'
+                for rechnung in self.rechnungen_liste:
+                    if rechnung.db_id == row.db_id:
+                        element = rechnung
                         break
+            case self.tabelle_rechnungen:
+                typ = 'Rechnung'
+                element = self.rechnungen_liste[self.index_auswahl(widget)]
+            case self.tabelle_beihilfepakete:
+                typ = 'Beihilfe'
+                element = self.beihilfepakete_liste[self.index_auswahl(widget)]
+            case self.tabelle_pkvpakete:
+                typ = 'PKV'
+                element = self.pkvpakete_liste[self.index_auswahl(widget)]
+            case self.tabelle_aerzte:
+                typ = 'Einrichtung'
+                element = self.aerzte_liste[self.index_auswahl(widget)]
 
-            inhalt = 'Vom {} '.format(paket.datum)
-            inhalt += 'über {:.2f} €\n\n'.format(paket.betrag).replace('.', ',')
+        # Ermittlung der Texte
+        if typ == 'Rechnung':
+            titel = 'Rechnung'
+            inhalt = 'Rechnungsdatum: {}\n'.format(element.rechnungsdatum)
+            inhalt += 'Betrag: {:.2f} €\n'.format(element.betrag).replace('.', ',')
+            inhalt += 'Beihilfesatz: {:.0f} %\n\n'.format(element.beihilfesatz)
+            inhalt += 'Einrichtung: {}\n'.format(element.arzt_name)
+            inhalt += 'Notiz: {}\n'.format(element.notiz)
+            inhalt += 'Buchungsdatum: {}\n'.format(element.buchungsdatum) if element.buchungsdatum else 'Buchungsdatum: -\n'
+            inhalt += 'Bezahlt: Ja' if element.bezahlt else 'Bezahlt: Nein'
+        elif typ == 'Beihilfe' or typ == 'PKV':
+            titel = 'Beihilfe-Einreichung' if typ == 'Beihilfe' else 'PKV-Einreichung'
+            inhalt = 'Vom {} '.format(element.datum)
+            inhalt += 'über {:.2f} €\n\n'.format(element.betrag).replace('.', ',')
             
             # Liste alle Rechnungen auf, die zu diesem Paket gehören
             inhalt += 'Eingereichte Rechnungen:'
             for rechnung in self.rechnungen_liste:
-                if (row.typ == 'Beihilfe' and rechnung.beihilfe_id == paket.db_id) or (row.typ == 'PKV' and rechnung.pkv_id == paket.db_id):
+                if (typ == 'Beihilfe' and rechnung.beihilfe_id == element.db_id) or (typ == 'PKV' and rechnung.pkv_id == element.db_id):
                     inhalt += '\n- {}'.format(rechnung.info)
                     #inhalt += ', {}'.format(rechnung.rechnungsdatum)
                     inhalt += ', {:.2f} €'.format(rechnung.betrag).replace('.', ',')
                     inhalt += ', {:.0f} %'.format(rechnung.beihilfesatz)
-                break
+        elif typ == 'Einrichtung':
+            titel = 'Einrichtung'
+            inhalt = 'Name: {}\n'.format(element.name)
+            # inhalt += 'Straße: {}\n'.format(element.strasse)
+            # inhalt += 'PLZ: {}\n'.format(element.plz)
+            # inhalt += 'Ort: {}\n'.format(element.ort)
+            # inhalt += 'Notiz: {}'.format(element.notiz)
 
         self.main_window.info_dialog(titel, inhalt)
 
@@ -478,6 +507,7 @@ class Kontolupe(toga.App):
             data        = self.rechnungen_liste,
             style       = style_table,
             on_select   = self.update_app,
+            on_activate = self.zeige_info_buchung
         )
         self.box_seite_liste_rechnungen.add(self.tabelle_rechnungen)
 
@@ -817,6 +847,7 @@ class Kontolupe(toga.App):
             data        = self.aerzte_liste,
             style       = style_table,
             on_select   = self.update_app,
+            on_activate = self.zeige_info_buchung
         )
         self.box_seite_liste_aerzte.add(self.tabelle_aerzte)
 
@@ -963,6 +994,7 @@ class Kontolupe(toga.App):
             data        = self.beihilfepakete_liste,
             style       = style_table,
             on_select   = self.update_app,
+            on_activate = self.zeige_info_buchung
         )
         self.box_seite_liste_beihilfepakete.add(self.tabelle_beihilfepakete)
 
@@ -991,6 +1023,7 @@ class Kontolupe(toga.App):
             data        = self.pkvpakete_liste,
             style       = style_table,
             on_select   = self.update_app,
+            on_activate = self.zeige_info_buchung
         )
         self.tabelle_pkvpakete_container.content = self.tabelle_pkvpakete
         self.box_seite_liste_pkvpakete.add(self.tabelle_pkvpakete_container)
@@ -1040,7 +1073,8 @@ class Kontolupe(toga.App):
             accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
             data            = self.erzeuge_teilliste_rechnungen(beihilfe=True),
             multiple_select = True,
-            on_select       = self.beihilfe_tabelle_rechnungen_auswahl_geaendert,   
+            on_select       = self.beihilfe_tabelle_rechnungen_auswahl_geaendert,
+            on_activate     = self.zeige_info_buchung,
             style           = style_table_auswahl
         )
         self.box_seite_formular_beihilfepakete.add(self.formular_beihilfe_tabelle_rechnungen)
@@ -1087,6 +1121,7 @@ class Kontolupe(toga.App):
             data            = self.erzeuge_teilliste_rechnungen(pkv=True),
             multiple_select = True,
             on_select       = self.pkv_tabelle_rechnungen_auswahl_geaendert,   
+            on_activate     = self.zeige_info_buchung,
             style           = style_table_auswahl
         )
         self.formular_pkvpakete_rechnungen_container.content = self.formular_pkv_tabelle_rechnungen
@@ -1619,7 +1654,7 @@ class Kontolupe(toga.App):
         """Erzeugt die Liste der offenen Buchungen für die Tabelle auf der Startseite."""
         offene_buchungen_liste = ListSource(accessors=[
             'db_id',                        # Datenbank-Id des jeweiligen Elements
-            'typ',                          # Typ des Elements (Arztrechnung, Beihilfe, PKV)
+            'typ',                          # Typ des Elements (Rechnung, Beihilfe, PKV)
             'betrag_euro',                  # Betrag der Buchung in Euro
             'datum',                        # Datum der Buchung (Plandatum der Rechnung oder Einreichungsdatum der Beihilfe/PKV)
             'info'                          # Info-Text der Buchung
@@ -1629,7 +1664,7 @@ class Kontolupe(toga.App):
             if not rechnung.bezahlt:
                 offene_buchungen_liste.append({
                     'db_id': rechnung.db_id,
-                    'typ': 'Arztrechnung',
+                    'typ': 'Rechnung',
                     'betrag_euro': '-{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                     'datum': rechnung.buchungsdatum,
                     'info': self.arzt_name(rechnung.arzt_id) + ' - ' + rechnung.notiz
