@@ -904,6 +904,8 @@ class Kontolupe(toga.App):
         box_formular_einrichtungen_name.add(self.input_formular_einrichtungen_name)
         self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_name)
 
+        # Bereich zur Eingabe der Strasse
+
         # Bereich der Buttons
         box_formular_einrichtungen_buttons = toga.Box(style=style_box_row)
         box_formular_einrichtungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
@@ -990,17 +992,29 @@ class Kontolupe(toga.App):
                 on_result=self.einrichtung_loeschen
             )
 
+
     def einrichtung_loeschen(self, widget, result):
         """Löscht eine Einrichtung."""
         if self.tabelle_einrichtungen.selection and result:
             index = self.index_auswahl(self.tabelle_einrichtungen)
-            self.einrichtungen[index].loeschen(self.db)
+
+            # Prüfe, ob die Einrichtung in einer Rechnung verwendet wird
+            for rechnung in self.rechnungen:
+                if rechnung.einrichtung_id == self.einrichtungen[index].db_id:
+                    self.main_window.error_dialog(
+                        'Fehler beim Löschen',
+                        'Die Einrichtung wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
+                    )
+                    return
+            
+            # Einrichtung wird deaktiviert
+            self.einrichtungen[index].aktiv = False
+            self.einrichtungen[index].speichern(self.db)
             del self.einrichtungen[index]
             del self.einrichtungen_liste[index]
 
-            # Rechnungen aktualisieren
-            self.rechnungen_aktualisieren()
-            self.input_formular_einrichtungen_name.items = self.einrichtungen_liste
+            # Formularfelder aktualiseren
+            #self.input_formular_einrichtungen_name.items = self.einrichtungen_liste
 
 
     def erzeuge_seite_liste_beihilfepakete(self):

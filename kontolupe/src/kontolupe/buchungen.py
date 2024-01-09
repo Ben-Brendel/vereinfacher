@@ -134,6 +134,8 @@ class Datenbank:
         cursor.execute(f"PRAGMA table_info({table_name})")
         if not any(row[1] == new_column for row in cursor.fetchall()):
             cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
+        if new_column == 'aktiv':
+            cursor.execute(f"UPDATE {table_name} SET aktiv = 1")
 
     def __copy_column(self, cursor, table_name, old_column, new_column):
         # Check if table_name exists
@@ -406,7 +408,7 @@ class Datenbank:
     
     def lade_einrichtungen(self):
         """Laden der Einrichtungen aus der Datenbank."""
-        return self.__load_data('einrichtungen')
+        return self.__load_data('einrichtungen', only_active=True)
 
 
 class Rechnung:
