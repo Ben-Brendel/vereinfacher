@@ -313,13 +313,13 @@ class Datenbank:
         for row in ergebnis:
             match table:
                 case 'rechnungen':
-                    element = Arztrechnung()
+                    element = Rechnung()
                 case 'beihilfepakete':
                     element = BeihilfePaket()
                 case 'pkvpakete':
                     element = PKVPaket()
                 case 'einrichtungen':
-                    element = Arzt()
+                    element = Einrichtung()
 
             # Setze die Attribute des Elements
             for column in self.__tables[table]:
@@ -401,7 +401,7 @@ class Datenbank:
         return self.__load_data('einrichtungen')
 
 
-class Arztrechnung:
+class Rechnung:
     """Klasse zur Erfassung einer Rechnung."""
     
     def __init__(self):
@@ -435,7 +435,7 @@ class Arztrechnung:
         ausgabe = 'Rechnung vom {}\n'.format(self.rechnungsdatum)
         ausgabe += 'Betrag: {:.2f} €\n'.format(self.betrag).replace('.', ',')
         ausgabe += 'Beihilfesatz: {:.0f} %\n'.format(self.beihilfesatz)
-        ausgabe += 'Einrichtung: {}\n'.format(self.arzt_id)
+        ausgabe += 'Einrichtung: {}\n'.format(self.einrichtung_id)
         ausgabe += 'Notiz: {}\n'.format(self.notiz)
         if self.buchungsdatum is not None:
             ausgabe += 'Buchungsdatum: {}\n'.format(self.buchungsdatum)
@@ -475,7 +475,7 @@ class BeihilfePaket:
         self.db_id = db.neues_beihilfepaket(self)
 
         if rechnungen is not None:
-            # Beihilfe-Einreichung mit Arztrechnungen verknüpfen
+            # Beihilfe-Einreichung mit Rechnungen verknüpfen
             for rechnung in rechnungen:
                 rechnung.beihilfe_id = self.db_id
                 rechnung.speichern(db)
@@ -520,7 +520,7 @@ class PKVPaket:
         self.db_id = db.neues_pkvpaket(self)
 
         if rechnungen is not None:
-            # PKV-Einreichung mit Arztrechnungen verknüpfen
+            # PKV-Einreichung mit Rechnungen verknüpfen
             for rechnung in rechnungen:
                 rechnung.pkv_id = self.db_id
                 rechnung.speichern(db)
@@ -541,7 +541,7 @@ class PKVPaket:
             f"Erstattet: {self.erhalten}")
 
 
-class Arzt:
+class Einrichtung:
     """Klasse zur Verwaltung der Einrichtungen."""
     
     def __init__(self):
@@ -564,4 +564,4 @@ class Arzt:
     def __str__(self):
         """Ausgabe der Einrichtung."""
         return (f"ID: {self.db_id}\n"
-            f"Arzt: {self.name}")
+            f"Einrichtung: {self.name}")
