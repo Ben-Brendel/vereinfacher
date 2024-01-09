@@ -1590,7 +1590,7 @@ class Kontolupe(toga.App):
         """Bestätigt die Bezahlung einer Arztrechnung."""
         if self.tabelle_offene_buchungen.selection:
             match self.tabelle_offene_buchungen.selection.typ:
-                case 'Arztrechnung':
+                case 'Rechnung':
                     self.main_window.confirm_dialog(
                         'Rechnung als bezahlt markieren', 
                         'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?',
