@@ -51,7 +51,15 @@ class Datenbank:
             ],
             'einrichtungen': [
                 ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
-                ('name', 'TEXT')
+                ('name', 'TEXT'),
+                ('strasse', 'TEXT'),
+                ('plz', 'TEXT'),
+                ('ort', 'TEXT'),
+                ('telefon', 'TEXT'),
+                ('email', 'TEXT'),
+                ('webseite', 'TEXT'),
+                ('notiz', 'TEXT'),
+                ('aktiv', 'INTEGER')
             ]
         }
 
@@ -432,7 +440,8 @@ class Rechnung:
 
     def __str__(self):
         """Ausgabe der Rechnung."""
-        ausgabe = 'Rechnung vom {}\n'.format(self.rechnungsdatum)
+        ausgabe = 'ID: {}\n'.format(self.db_id)
+        ausgabe += 'Rechnung vom {}\n'.format(self.rechnungsdatum)
         ausgabe += 'Betrag: {:.2f} €\n'.format(self.betrag).replace('.', ',')
         ausgabe += 'Beihilfesatz: {:.0f} %\n'.format(self.beihilfesatz)
         ausgabe += 'Einrichtung: {}\n'.format(self.einrichtung_id)
@@ -548,6 +557,14 @@ class Einrichtung:
         """Initialisierung der Einrichtung."""
         self.name = None
         self.db_id = None
+        self.strasse = None
+        self.plz = None
+        self.ort = None
+        self.telefon = None
+        self.email = None
+        self.webseite = None
+        self.notiz = None
+        self.aktiv = True
 
     def neu(self, db):
         """Neue Einrichtung erstellen."""
@@ -563,5 +580,11 @@ class Einrichtung:
 
     def __str__(self):
         """Ausgabe der Einrichtung."""
-        return (f"ID: {self.db_id}\n"
-            f"Einrichtung: {self.name}")
+        return (f'ID: {self.db_id}\n'
+            f'Einrichtung: {self.name}'
+            f'\nStraße: {self.strasse}'
+            f'\nPLZ, Ort: {self.plz, self.ort}'
+            f'\nTelefon: {self.telefon}'
+            f'\nE-Mail: {self.email}'
+            f'\nWebseite: {self.webseite}'
+            f'\nNotiz: {self.notiz}')
