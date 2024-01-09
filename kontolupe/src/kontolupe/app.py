@@ -746,7 +746,7 @@ class Kontolupe(toga.App):
             nachricht += 'Bitte gib ein gültiges Rechnungsdatum ein.\n'
 
         # Prüfe, ob ein Betrag eingegeben wurde
-        if not self.pruefe_zahl(self.input_formular_rechnungen_betrag):
+        if not self.pruefe_zahl(self.input_formular_rechnungen_betrag) or self.input_formular_rechnungen_betrag.value == '':
             nachricht += 'Bitte gib einen gültigen Betrag ein.\n'
 
         # Prüfe, ob eine Einrichtung ausgewählt wurde
@@ -755,11 +755,11 @@ class Kontolupe(toga.App):
                 nachricht += 'Bitte wähle eine Einrichtung aus.\n'
 
         # Prüfe, ob ein Beihilfesatz eingegeben wurde
-        if not self.pruefe_prozent(self.input_formular_rechnungen_beihilfesatz):
+        if not self.pruefe_prozent(self.input_formular_rechnungen_beihilfesatz) or self.input_formular_rechnungen_beihilfesatz.value == '':
             nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         if not self.pruefe_datum(self.input_formular_rechnungen_buchungsdatum):
-            nachricht += 'Bitte gib ein gültiges Buchungsdatum ein.\n'
+            nachricht += 'Bitte gib ein gültiges Buchungsdatum ein oder lasse das Feld leer.\n'
                 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
@@ -1084,18 +1084,15 @@ class Kontolupe(toga.App):
             nachricht += 'Bitte gib einen Namen ein.\n'
 
         # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
-        if self.input_formular_einrichtungen_plz.value != '':
-            if not self.pruefe_plz(self.input_formular_einrichtungen_plz):
+        if not self.pruefe_plz(self.input_formular_einrichtungen_plz):
                 nachricht += 'Bitte gib eine gültige PLZ ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige E-Mail-Adresse eingegeben wurde
-        if self.input_formular_einrichtungen_email.value != '':
-            if not self.pruefe_email(self.input_formular_einrichtungen_email):
+        if not self.pruefe_email(self.input_formular_einrichtungen_email):
                 nachricht += 'Bitte gib eine gültige E-Mail-Adresse ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige Webseite eingegeben wurde
-        if self.input_formular_einrichtungen_webseite.value != '':
-            if not self.pruefe_webseite(self.input_formular_einrichtungen_webseite):
+        if not self.pruefe_webseite(self.input_formular_einrichtungen_webseite):
                 nachricht += 'Bitte gib eine gültige Webseite ein oder lasse das Feld leer.\n'
 
         if nachricht != '':
@@ -1468,8 +1465,8 @@ class Kontolupe(toga.App):
         nachricht = ''
 
         # Prüfe das Datum
-        if not self.pruefe_datum(self.input_formular_beihilfepakete_datum):
-            nachricht += 'Das Datum ist nicht korrekt.\n'
+        if not self.pruefe_datum(self.input_formular_beihilfepakete_datum) or self.input_formular_beihilfepakete_datum.value == '':
+            nachricht += 'Bitte gib ein gültiges Datum ein.\n'
 
         # Prüfe ob Rechnungen ausgewählt wurden
         if not self.formular_beihilfe_tabelle_rechnungen.selection:
@@ -1486,8 +1483,8 @@ class Kontolupe(toga.App):
         nachricht = ''
 
         # Prüfe das Datum
-        if not self.pruefe_datum(self.input_formular_pkvpakete_datum):
-            nachricht += 'Das Datum ist nicht korrekt.\n'
+        if not self.pruefe_datum(self.input_formular_pkvpakete_datum) or self.input_formular_pkvpakete_datum.value == '':
+            nachricht += 'Bitte gib ein gültiges Datum ein.\n'
 
         # Prüfe ob Rechnungen ausgewählt wurden
         if not self.formular_pkv_tabelle_rechnungen.selection:
