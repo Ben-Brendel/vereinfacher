@@ -43,7 +43,7 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_rechnung = False
         self.rechnung_b_id = 0
 
-        # Hilfsvariablen zur Bearbeitung von Ärzten
+        # Hilfsvariablen zur Bearbeitung von Einrichtungen
         self.flag_bearbeite_einrichtung = False
         self.einrichtung_b_id = 0
 
@@ -856,12 +856,12 @@ class Kontolupe(toga.App):
 
 
     def erzeuge_seite_liste_einrichtungen(self):
-        """Erzeugt die Seite, auf der die Ärzte angezeigt werden."""
+        """Erzeugt die Seite, auf der die Einrichtungen angezeigt werden."""
         self.box_seite_liste_einrichtungen = toga.Box(style=style_box_column)
         self.box_seite_liste_einrichtungen.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
         self.box_seite_liste_einrichtungen.add(toga.Label('Einrichtungen', style=style_label_h1))
 
-        # Tabelle mit den Ärzten
+        # Tabelle mit den Einrichtungen
 
         self.tabelle_einrichtungen = toga.Table(
             headings    = ['Einrichtung'], 
@@ -873,7 +873,7 @@ class Kontolupe(toga.App):
         )
         self.box_seite_liste_einrichtungen.add(self.tabelle_einrichtungen)
 
-        # Buttons für die Ärzten
+        # Buttons für die Einrichtungen
         box_seite_liste_einrichtungen_buttons = toga.Box(style=style_box_row)
         self.seite_liste_einrichtungen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_einrichtung_loeschen, style=style_button, enabled=False)
         self.seite_liste_einrichtungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_einrichtungen_bearbeiten, style=style_button, enabled=False)
@@ -885,7 +885,7 @@ class Kontolupe(toga.App):
 
 
     def zeige_seite_liste_einrichtungen(self, widget):
-        """Zeigt die Seite mit der Liste der Ärzte."""
+        """Zeigt die Seite mit der Liste der Einrichtungen."""
         self.update_app(widget)
         self.main_window.content = self.box_seite_liste_einrichtungen
 
@@ -1762,10 +1762,17 @@ class Kontolupe(toga.App):
 
 
     def einrichtungen_liste_erzeugen(self):
-        """Erzeugt die Liste für die Ärzte."""
+        """Erzeugt die Liste für die Einrichtungen."""
         self.einrichtungen_liste = ListSource(accessors=[
             'db_id',
             'name',
+            'strasse',
+            'plz',
+            'ort',
+            'telefon',
+            'email',
+            'webseite',
+            'notiz'
         ])
 
         for einrichtung in self.einrichtungen:            
@@ -1899,6 +1906,13 @@ class Kontolupe(toga.App):
         self.einrichtungen_liste.append({
                 'db_id': einrichtung.db_id,
                 'name': einrichtung.name,
+                'strasse': einrichtung.strasse,
+                'plz': einrichtung.plz,
+                'ort': einrichtung.ort,
+                'telefon': einrichtung.telefon,
+                'email': einrichtung.email,
+                'webseite': einrichtung.webseite,
+                'notiz': einrichtung.notiz
             })
         
 
@@ -1954,6 +1968,13 @@ class Kontolupe(toga.App):
         self.einrichtungen_liste[einrichtung_id] = {
                 'db_id': einrichtung.db_id,
                 'name': einrichtung.name,
+                'strasse': einrichtung.strasse,
+                'plz': einrichtung.plz,
+                'ort': einrichtung.ort,
+                'telefon': einrichtung.telefon,
+                'email': einrichtung.email,
+                'webseite': einrichtung.webseite,
+                'notiz': einrichtung.notiz
             }
         
         # Rechnungen aktualisieren
