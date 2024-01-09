@@ -319,13 +319,80 @@ class Kontolupe(toga.App):
                 datetime.strptime(widget.value, '%d.%m.%Y')
             except ValueError:
                 error = True
-                
 
         if error:
             #self.main_window.error_dialog('Fehler', 'Kein gültiges Datum eingegeben.')
             widget.value = ''
 
         return not error
+    
+
+    def pruefe_plz(self, widget):
+        """Prüft, ob die Eingabe eine gültige Postleitzahl ist und korrigiert sie entsprechend."""
+
+        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 sind.
+        eingabe = ''.join(c for c in widget.value if c in '0123456789')
+        widget.value = eingabe
+
+        if widget.value == '':
+            return True
+
+        if len(widget.value) != 5:
+            return False
+        
+
+    def pruefe_email(self, widget):
+        """Prüft, ob die Eingabe eine gültige E-Mail-Adresse ist und korrigiert sie entsprechend."""
+
+        # Entferne alle Zeichen, die nicht in einer E-Mail-Adresse vorkommen dürfen
+        eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_')
+        widget.value = eingabe
+
+        if widget.value == '':
+            return True
+
+        # Überprüfe ob die Struktur der Mail-Adresse korrekt ist
+        if eingabe.count('@') != 1:
+            return False
+        if eingabe.count('.') < 1:
+            return False
+        if eingabe.count('.') > 2:
+            return False
+        if eingabe[0] == '@':
+            return False   
+        if eingabe[-1] == '@':
+            return False
+        if eingabe[0] == '.': 
+            return False
+        if eingabe[-1] == '.':
+            return False
+        if eingabe[-1] == '-':
+            return False
+        if eingabe[-1] == '_':
+            return False
+        
+        return True
+    
+
+    def pruefe_webseite(self, widget):
+        """Prüft, ob die Eingabe eine gültige Webseite ist und korrigiert sie entsprechend."""
+
+        # Entferne alle Zeichen, die nicht in einer Webadresse vorkommen dürfen
+        eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_/:?%=&')
+        widget.value = eingabe
+
+        if widget.value == '':
+            return True
+
+        # Überprüfe ob die Struktur der Webadresse korrekt ist
+        if eingabe.count('.') < 1:
+            return False
+        if eingabe[0] == '.':
+            return False
+        if eingabe[-1] == '.':
+            return False
+        
+        return True
 
 
     def erzeuge_startseite(self):
@@ -958,7 +1025,7 @@ class Kontolupe(toga.App):
         # Bereich der Buttons
         box_formular_einrichtungen_buttons = toga.Box(style=style_box_row)
         box_formular_einrichtungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
-        box_formular_einrichtungen_buttons.add(toga.Button('Speichern', on_press=self.einrichtung_speichern, style=style_button))
+        box_formular_einrichtungen_buttons.add(toga.Button('Speichern', on_press=self.einrichtung_speichern_check, style=style_button))
         self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_buttons)
 
 
@@ -1007,6 +1074,35 @@ class Kontolupe(toga.App):
 
         # Zeige die Seite
         self.main_window.content = self.scroll_container_formular_einrichtungen
+
+
+    def einrichtung_speichern_check(self, widget):
+        """Prüft die Eingaben im Formular der Einrichtungen."""
+        nachricht = ''
+
+        # Prüfe, ob ein Name eingegeben wurde
+        if self.input_formular_einrichtungen_name.value == '':
+            nachricht += 'Bitte gib einen Namen ein.\n'
+
+        # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
+        if self.input_formular_einrichtungen_plz.value != '':
+            if not self.pruefe_plz(self.input_formular_einrichtungen_plz):
+                nachricht += 'Bitte gib eine gültige PLZ ein oder lasse das Feld leer.\n'
+
+        # Prüfe, ob nichts oder eine gültige E-Mail-Adresse eingegeben wurde
+        if self.input_formular_einrichtungen_email.value != '':
+            if not self.pruefe_email(self.input_formular_einrichtungen_email):
+                nachricht += 'Bitte gib eine gültige E-Mail-Adresse ein oder lasse das Feld leer.\n'
+
+        # Prüfe, ob nichts oder eine gültige Webseite eingegeben wurde
+        if self.input_formular_einrichtungen_webseite.value != '':
+            if not self.pruefe_webseite(self.input_formular_einrichtungen_webseite):
+                nachricht += 'Bitte gib eine gültige Webseite ein oder lasse das Feld leer.\n'
+
+        if nachricht != '':
+            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
+        else:
+            self.einrichtung_speichern(widget)
 
 
     def einrichtung_speichern(self, widget):
