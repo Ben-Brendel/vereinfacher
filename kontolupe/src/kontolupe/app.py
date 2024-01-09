@@ -234,7 +234,7 @@ class Kontolupe(toga.App):
             float(eingabe)
             return True
         except ValueError:
-            widget.value = ''
+            #widget.value = ''
             #self.main_window.error_dialog('Fehler', 'Kein gültiger Betrag eingegeben.')
             return False
 
@@ -320,9 +320,8 @@ class Kontolupe(toga.App):
             except ValueError:
                 error = True
 
-        if error:
-            #self.main_window.error_dialog('Fehler', 'Kein gültiges Datum eingegeben.')
-            widget.value = ''
+        # if error:
+        #     widget.value = ''
 
         return not error
     
