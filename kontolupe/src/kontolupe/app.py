@@ -68,6 +68,7 @@ class Kontolupe(toga.App):
 
         # Button zum Markieren von Buchungen als bezahlt/erhalten aktivieren oder deaktivieren,
         self.startseite_button_erledigt.enabled = False
+        self.startseite_button_bearbeiten.enabled = False
 
         # Anzahl der je Segment offenen Elemente ermitteln
         anzahl_rg = 0
@@ -150,6 +151,8 @@ class Kontolupe(toga.App):
         match widget:
             case self.tabelle_offene_buchungen:
                 self.startseite_button_erledigt.enabled = status
+                if self.tabelle_offene_buchungen.selection and self.tabelle_offene_buchungen.selection.typ == 'Rechnung':
+                    self.startseite_button_bearbeiten.enabled = True
             case self.tabelle_rechnungen:
                 self.liste_rechnungen_button_loeschen.enabled = status
                 self.liste_rechnungen_button_bearbeiten.enabled = status
@@ -176,6 +179,16 @@ class Kontolupe(toga.App):
                 return None
         else:
             print("Keine Zeile ausgewählt.")
+            return None
+        
+
+    def index_liste_von_id(self, liste, id):
+        """Ermittelt den Index eines Elements einer Liste anhand der ID."""
+        for i, element in enumerate(liste):
+            if element.db_id == id:
+                return i
+        else:
+            print("Element mit der ID {} konnte nicht gefunden werden.".format(id))
             return None
 
 
@@ -342,8 +355,9 @@ class Kontolupe(toga.App):
         # Button zur Markierung offener Buchungen als bezahlt/erhalten 
         self.box_startseite_tabelle_buttons = toga.Box(style=style_box_row)
         self.startseite_button_erledigt = toga.Button('Bezahlt/Erstattet', on_press=self.bestaetige_bezahlung, style=style_button, enabled=False)
-        #self.startseite_button_bearbeiten = toga.Button('Bearbeiten', on_press=, style=style_button, enabled=False)
+        self.startseite_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.bearbeite_offene_buchung, style=style_button, enabled=False)
         self.box_startseite_tabelle_buttons.add(self.startseite_button_erledigt)
+        self.box_startseite_tabelle_buttons.add(self.startseite_button_bearbeiten)
         self.box_startseite_tabelle_offene_buchungen.add(self.box_startseite_tabelle_buttons)
 
         # Box der offenen Buchungen zur Startseite hinzufügen
@@ -583,7 +597,7 @@ class Kontolupe(toga.App):
 
         # Bereich zur Angabe der Bezahlung
         box_formular_rechnungen_bezahlt = toga.Box(style=style_box_row)
-        self.input_formular_rechnungen_bezahlt = toga.Switch('Bezahlt', style=style_switch)
+        self.input_formular_rechnungen_bezahlt = toga.Switch('Bezahlt:', style=style_switch)
         box_formular_rechnungen_bezahlt.add(self.input_formular_rechnungen_bezahlt)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_bezahlt)
 
@@ -621,14 +635,16 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Bearbeiten einer Rechnung."""
 
         # Ermittle den Index der ausgewählten Rechnung
-        self.rechnung_b_id = self.index_auswahl(self.tabelle_rechnungen)
+        if widget == self.liste_rechnungen_button_bearbeiten:
+            self.rechnung_b_id = self.index_auswahl(self.tabelle_rechnungen)
+        elif widget == self.startseite_button_bearbeiten:
+            self.rechnung_b_id = self.index_liste_von_id(self.rechnungen, self.tabelle_offene_buchungen.selection.db_id)
+        else:
+            print('Fehler: Aufrufendes Widget unbekannt.')
+            return
 
         # Ermittle den Index der Einrichtung in der Liste der Einrichtungen
-        einrichtung_index = None
-        for i, einrichtung in enumerate(self.einrichtungen):
-            if einrichtung.db_id == self.rechnungen[self.rechnung_b_id].einrichtung_id:
-                einrichtung_index = i
-                break
+        einrichtung_index = self.index_liste_von_id(self.einrichtungen, self.rechnungen[self.rechnung_b_id].einrichtung_id)
 
         # Befülle die Eingabefelder
         self.input_formular_rechnungen_betrag.value = format(float(self.rechnungen[self.rechnung_b_id].betrag), '.2f').replace('.', ',')
@@ -1094,7 +1110,7 @@ class Kontolupe(toga.App):
 
         # Bereich zur Angabe der Erstattung
         box_formular_beihilfepakete_erhalten = toga.Box(style=style_box_row)
-        self.input_formular_beihilfepakete_erhalten = toga.Switch('Erstattet', style=style_switch)
+        self.input_formular_beihilfepakete_erhalten = toga.Switch('Erstattet:', style=style_switch)
         box_formular_beihilfepakete_erhalten.add(self.input_formular_beihilfepakete_erhalten)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_erhalten)
 
@@ -1705,6 +1721,19 @@ class Kontolupe(toga.App):
                 })
 
         return offene_buchungen_liste
+    
+
+    def bearbeite_offene_buchung(self, widget):
+        """Öffnet die Seite zum Bearbeiten einer offenen Buchung."""
+        if self.tabelle_offene_buchungen.selection:
+            match self.tabelle_offene_buchungen.selection.typ:
+                case 'Rechnung':
+                    self.zeige_seite_formular_rechnungen_bearbeiten(widget)
+                # case 'Beihilfe':
+                #     self.zeige_seite_formular_beihilfepakete_bearbeiten(widget)
+                # case 'PKV':
+                #     self.zeige_seite_formular_pkvpakete_bearbeiten(widget)
+
 
     def rechnungen_liste_erzeugen(self):
         """Erzeugt die Liste für die Rechnungen."""
