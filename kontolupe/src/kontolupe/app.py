@@ -892,19 +892,68 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_formular_einrichtungen(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Einrichtung."""
+        self.scroll_container_formular_einrichtungen = toga.ScrollContainer(style=style_scroll_container)
         self.box_seite_formular_einrichtungen = toga.Box(style=style_box_column)
+        self.scroll_container_formular_einrichtungen.content = self.box_seite_formular_einrichtungen
         self.box_seite_formular_einrichtungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
         self.label_formular_einrichtungen = toga.Label('Neue Einrichtung', style=style_label_h1)
         self.box_seite_formular_einrichtungen.add(self.label_formular_einrichtungen)
 
         # Bereich zur Eingabe des Namens
         box_formular_einrichtungen_name = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_name.add(toga.Label('Name der Einrichtung: ', style=style_label_input))
+        box_formular_einrichtungen_name.add(toga.Label('Name: ', style=style_label_input))
         self.input_formular_einrichtungen_name = toga.TextInput(style=style_input)
         box_formular_einrichtungen_name.add(self.input_formular_einrichtungen_name)
         self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_name)
 
         # Bereich zur Eingabe der Strasse
+        box_formular_einrichtungen_strasse = toga.Box(style=style_box_row)
+        box_formular_einrichtungen_strasse.add(toga.Label('Straße: ', style=style_label_input))
+        self.input_formular_einrichtungen_strasse = toga.TextInput(style=style_input)
+        box_formular_einrichtungen_strasse.add(self.input_formular_einrichtungen_strasse)
+        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_strasse)
+
+        # Bereich zur Eingabe der PLZ
+        box_formular_einrichtungen_plz = toga.Box(style=style_box_row)
+        box_formular_einrichtungen_plz.add(toga.Label('PLZ: ', style=style_label_input))
+        self.input_formular_einrichtungen_plz = toga.TextInput(style=style_input)
+        box_formular_einrichtungen_plz.add(self.input_formular_einrichtungen_plz)
+        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_plz)
+
+        # Bereich zur Eingabe des Ortes
+        box_formular_einrichtungen_ort = toga.Box(style=style_box_row)
+        box_formular_einrichtungen_ort.add(toga.Label('Ort: ', style=style_label_input))
+        self.input_formular_einrichtungen_ort = toga.TextInput(style=style_input)
+        box_formular_einrichtungen_ort.add(self.input_formular_einrichtungen_ort)
+        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_ort)
+
+        # Bereich zur Eingabe der Telefonnummer
+        box_formular_einrichtungen_telefon = toga.Box(style=style_box_row)
+        box_formular_einrichtungen_telefon.add(toga.Label('Telefon: ', style=style_label_input))
+        self.input_formular_einrichtungen_telefon = toga.TextInput(style=style_input)
+        box_formular_einrichtungen_telefon.add(self.input_formular_einrichtungen_telefon)
+        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_telefon)
+
+        # Bereich zur Eingabe der E-Mail-Adresse
+        box_formular_einrichtungen_email = toga.Box(style=style_box_row)
+        box_formular_einrichtungen_email.add(toga.Label('E-Mail: ', style=style_label_input))
+        self.input_formular_einrichtungen_email = toga.TextInput(style=style_input)
+        box_formular_einrichtungen_email.add(self.input_formular_einrichtungen_email)
+        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_email)
+
+        # Bereich zur Eingabe der Webseite
+        box_formular_einrichtungen_webseite = toga.Box(style=style_box_row)
+        box_formular_einrichtungen_webseite.add(toga.Label('Webseite: ', style=style_label_input))
+        self.input_formular_einrichtungen_webseite = toga.TextInput(style=style_input)
+        box_formular_einrichtungen_webseite.add(self.input_formular_einrichtungen_webseite)
+        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_webseite)
+
+        # Bereich zur Eingabe der Notiz
+        box_formular_einrichtungen_notiz = toga.Box(style=style_box_row)
+        box_formular_einrichtungen_notiz.add(toga.Label('Notiz: ', style=style_label_input))
+        self.input_formular_einrichtungen_notiz = toga.TextInput(style=style_input)
+        box_formular_einrichtungen_notiz.add(self.input_formular_einrichtungen_notiz)
+        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_notiz)
 
         # Bereich der Buttons
         box_formular_einrichtungen_buttons = toga.Box(style=style_box_row)
@@ -917,6 +966,13 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Erstellen einer Einrichtung."""
         # Setze die Eingabefelder zurück
         self.input_formular_einrichtungen_name.value = ''
+        self.input_formular_einrichtungen_strasse.value = ''
+        self.input_formular_einrichtungen_plz.value = ''
+        self.input_formular_einrichtungen_ort.value = ''
+        self.input_formular_einrichtungen_telefon.value = ''
+        self.input_formular_einrichtungen_email.value = ''
+        self.input_formular_einrichtungen_webseite.value = ''
+        self.input_formular_einrichtungen_notiz.value = ''
 
         # Zurücksetzen des Flags
         self.flag_bearbeite_einrichtung = False
@@ -925,7 +981,7 @@ class Kontolupe(toga.App):
         self.label_formular_einrichtungen.text = 'Neue Einrichtung'
 
         # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_einrichtungen
+        self.main_window.content = self.scroll_container_formular_einrichtungen
 
 
     def zeige_seite_formular_einrichtungen_bearbeiten(self, widget):
@@ -935,6 +991,13 @@ class Kontolupe(toga.App):
 
         # Befülle die Eingabefelder
         self.input_formular_einrichtungen_name.value = self.einrichtungen[self.einrichtung_b_id].name
+        self.input_formular_einrichtungen_strasse.value = self.einrichtungen[self.einrichtung_b_id].strasse
+        self.input_formular_einrichtungen_plz.value = self.einrichtungen[self.einrichtung_b_id].plz
+        self.input_formular_einrichtungen_ort.value = self.einrichtungen[self.einrichtung_b_id].ort
+        self.input_formular_einrichtungen_telefon.value = self.einrichtungen[self.einrichtung_b_id].telefon
+        self.input_formular_einrichtungen_email.value = self.einrichtungen[self.einrichtung_b_id].email
+        self.input_formular_einrichtungen_webseite.value = self.einrichtungen[self.einrichtung_b_id].webseite
+        self.input_formular_einrichtungen_notiz.value = self.einrichtungen[self.einrichtung_b_id].notiz
 
         # Setze das Flag
         self.flag_bearbeite_einrichtung = True
@@ -943,25 +1006,39 @@ class Kontolupe(toga.App):
         self.label_formular_einrichtungen.text = 'Einrichtung bearbeiten'
 
         # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_einrichtungen
+        self.main_window.content = self.scroll_container_formular_einrichtungen
 
 
     def einrichtung_speichern(self, widget):
         """Erstellt und speichert eine neue Einrichtung."""
         if not self.flag_bearbeite_einrichtung:
         # Erstelle eine neue Einrichtung
-            neuer_einrichtung = Einrichtung()
-            neuer_einrichtung.name = self.input_formular_einrichtungen_name.value
+            neue_einrichtung = Einrichtung()
+            neue_einrichtung.name = self.input_formular_einrichtungen_name.value
+            neue_einrichtung.strasse = self.input_formular_einrichtungen_strasse.value
+            neue_einrichtung.plz = self.input_formular_einrichtungen_plz.value
+            neue_einrichtung.ort = self.input_formular_einrichtungen_ort.value
+            neue_einrichtung.telefon = self.input_formular_einrichtungen_telefon.value
+            neue_einrichtung.email = self.input_formular_einrichtungen_email.value
+            neue_einrichtung.webseite = self.input_formular_einrichtungen_webseite.value
+            neue_einrichtung.notiz = self.input_formular_einrichtungen_notiz.value
 
             # Speichere die Einrichtung in der Datenbank
-            neuer_einrichtung.neu(self.db)
+            neue_einrichtung.neu(self.db)
 
             # Füge die Einrichtung der Liste hinzu
-            self.einrichtungen.append(neuer_einrichtung)
-            self.einrichtungen_liste_anfuegen(neuer_einrichtung)
+            self.einrichtungen.append(neue_einrichtung)
+            self.einrichtungen_liste_anfuegen(neue_einrichtung)
         else:
             # Bearbeite die Einrichtung
             self.einrichtungen[self.einrichtung_b_id].name = self.input_formular_einrichtungen_name.value
+            self.einrichtungen[self.einrichtung_b_id].strasse = self.input_formular_einrichtungen_strasse.value
+            self.einrichtungen[self.einrichtung_b_id].plz = self.input_formular_einrichtungen_plz.value
+            self.einrichtungen[self.einrichtung_b_id].ort = self.input_formular_einrichtungen_ort.value
+            self.einrichtungen[self.einrichtung_b_id].telefon = self.input_formular_einrichtungen_telefon.value
+            self.einrichtungen[self.einrichtung_b_id].email = self.input_formular_einrichtungen_email.value
+            self.einrichtungen[self.einrichtung_b_id].webseite = self.input_formular_einrichtungen_webseite.value
+            self.einrichtungen[self.einrichtung_b_id].notiz = self.input_formular_einrichtungen_notiz.value
 
             # Speichere die Einrichtung in der Datenbank
             self.einrichtungen[self.einrichtung_b_id].speichern(self.db)
@@ -974,9 +1051,6 @@ class Kontolupe(toga.App):
 
             # Aktualisiere die Liste der Rechnungen
             self.rechnungen_liste_aktualisieren()
-
-            # Aktualisiere das Auswahlfeld der Einrichtungen
-            self.input_formular_einrichtungen_name.items = self.einrichtungen_liste
 
         # Zeige die Liste der Einrichtungen
         self.update_app(widget)
