@@ -12,12 +12,12 @@ from toga.sources import ListSource
 from toga.validators import *
 from kontolupe.buchungen import *
 from datetime import datetime
-import webbrowser
 
 # Allgemeine Styles
 style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
 style_box_row                   = Pack(direction=ROW, alignment=CENTER)
 style_scroll_container          = Pack(flex=1)
+style_webview                   = Pack(flex=1)
 style_label_h1                  = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
 style_label_h2                  = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
 style_label                     = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#222222')
@@ -59,6 +59,9 @@ class Kontolupe(toga.App):
         # Hilfsvariablen zur Bearbeitung der PKV-Pakete
         self.flag_bearbeite_pkvpaket = False
         self.pkvpaket_b_id = 0
+
+        # Hilfsvariable zur Festlegung des Zurück-Ziels
+        self.zurueck = 'startseite'
 
 
     def update_app(self, widget):
@@ -385,7 +388,7 @@ class Kontolupe(toga.App):
         """Prüft, ob die Eingabe eine gültige Webseite ist und korrigiert sie entsprechend."""
 
         # Entferne alle Zeichen, die nicht in einer Webadresse vorkommen dürfen
-        eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_/:?%=&')
+        eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_/:?%=#&')
         widget.value = eingabe
 
         if widget.value == '':
@@ -399,23 +402,69 @@ class Kontolupe(toga.App):
         if eingabe[-1] == '.':
             return False
         
+        # Überprüfe ob die Webadresse mit http:// oder https:// beginnt
+        # Und ersetze http:// durch https:// oder füge https:// hinzu
+        if eingabe[:7] != 'http://' and eingabe[:8] != 'https://':
+            eingabe = 'https://' + eingabe
+            widget.value = eingabe
+        elif eingabe[:7] == 'http://':
+            eingabe = 'https://' + eingabe[7:]
+            widget.value = eingabe
+        
         return True
 
 
-    def link_webseite(self, widget):
-        """Öffnet die Webseite in einem Browserfenster."""
+    def geh_zurueck(self, widget):
+        """Ermittelt das Ziel der Zurück-Funktion und ruft die entsprechende Seite auf."""
+        match self.zurueck:
+            case 'startseite':
+                self.zeige_startseite(widget)
+            case 'liste_rechnungen':
+                self.zeige_seite_liste_rechnungen(widget)
+            case 'liste_beihilfepakete':
+                self.zeige_seite_liste_beihilfepakete(widget)
+            case 'liste_pkvpakete':
+                self.zeige_seite_liste_pkvpakete(widget)
+            case 'liste_einrichtungen':
+                self.zeige_seite_liste_einrichtungen(widget)
+            case 'formular_rechnungen_neu':
+                self.zeige_seite_formular_rechnungen_neu(widget)
+            case 'formular_rechnungen_bearbeiten':
+                self.zeige_seite_formular_rechnungen_bearbeiten(widget)
+            case 'formular_beihilfepakete_neu':
+                self.zeige_seite_formular_beihilfepakete_neu(widget)
+            case 'formular_beihilfepakete_bearbeiten':
+                self.zeige_seite_formular_beihilfepakete_bearbeiten(widget)
+            case 'formular_pkvpakete_neu':
+                self.zeige_seite_formular_pkvpakete_neu(widget)
+            case 'formular_pkvpakete_bearbeiten':
+                self.zeige_seite_formular_pkvpakete_bearbeiten(widget)
+            case 'formular_einrichtungen_neu':
+                self.zeige_seite_formular_einrichtungen_neu(widget)
+            case 'formular_einrichtungen_bearbeiten':
+                self.zeige_seite_formular_einrichtungen_bearbeiten(widget)
+            case 'info_einrichtung':
+                self.zeige_info_einrichtung(widget)
+            case _:
+                self.zeige_startseite(widget)
 
-        # Ermittlung der Webadresse
-        webseite = ''
+
+    def erzeuge_webview(self):
+        """Erzeugt eine WebView zur Anzeige von Webseiten."""
+        self.box_webview = toga.Box(style=style_box_column)
+        self.box_webview.add(toga.Button('Zurück', style=style_button, on_press=self.geh_zurueck))
+        self.webview = toga.WebView(style=style_webview)
+        self.box_webview.add(self.webview)
+
+
+    def zeige_webview(self, widget):
+        """Zeigt die WebView zur Anzeige von Webseiten."""
         match widget:
             case self.link_info_einrichtung_webseite:
-                webseite = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+                self.webview.url = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+                self.zurueck = 'info_einrichtung'
 
-        # Öffnen der Webseite
-        if webseite != '':
-            webbrowser.open(webseite)
-        else:
-            self.main_window.info_dialog('Keine Webseite', 'Keine Webseite hinterlegt.')
+        self.main_window.content = self.box_webview
 
 
     def erzeuge_startseite(self):
@@ -604,7 +653,7 @@ class Kontolupe(toga.App):
     def erzeuge_seite_liste_rechnungen(self):
         """Erzeugt die Seite, auf der die Rechnungen angezeigt werden."""
         self.box_seite_liste_rechnungen = toga.Box(style=style_box_column)
-        self.box_seite_liste_rechnungen.add(toga.Button('Zurück', on_press=self.zeige_startseite))
+        self.box_seite_liste_rechnungen.add(toga.Button('Zurück', style=style_button, on_press=self.zeige_startseite))
         self.box_seite_liste_rechnungen.add(toga.Label('Rechnungen', style=style_label_h1))
 
         # Tabelle mit den Rechnungen
@@ -1210,12 +1259,12 @@ class Kontolupe(toga.App):
         box_seite_info_einrichtung_email.add(self.label_info_einrichtung_email)
 
         # Bereich mit den Details zur Webseite
-        box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
-        self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
-        box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
-        # label_info_einrichtung_website = toga.Label('Webseite:', style=style_label_info)
-        # self.link_info_einrichtung_webseite = toga.Button('', style=style_button_link, on_press=self.link_webseite)
+        # box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
+        # box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
+        # self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
+        # box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
+        label_info_einrichtung_website = toga.Label('Webseite:', style=style_label_info)
+        self.link_info_einrichtung_webseite = toga.Button('', style=style_button_link, on_press=self.zeige_webview)
         
 
         # Bereich mit den Details zur Notiz
@@ -1243,9 +1292,9 @@ class Kontolupe(toga.App):
                 toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_telefon,
                 box_seite_info_einrichtung_email,
-                box_seite_info_einrichtung_webseite,
-                #label_info_einrichtung_website,
-                #self.link_info_einrichtung_webseite,
+                #box_seite_info_einrichtung_webseite,
+                label_info_einrichtung_website,
+                self.link_info_einrichtung_webseite,
                 toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_notiz,
                 box_seite_info_einrichtung_buttons
@@ -1269,8 +1318,8 @@ class Kontolupe(toga.App):
             self.label_info_einrichtung_plz_ort.text = self.einrichtungen_liste[self.einrichtung_b_id].plz_ort
             self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.einrichtung_b_id].telefon
             self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.einrichtung_b_id].email
-            self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
-            #self.link_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+            #self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+            self.link_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
             self.label_info_einrichtung_notiz.text = self.einrichtungen_liste[self.einrichtung_b_id].notiz
 
             # Zeige die Seite
@@ -2438,6 +2487,7 @@ class Kontolupe(toga.App):
         self.erzeuge_seite_formular_beihilfepakete()
         self.erzeuge_seite_liste_pkvpakete()
         self.erzeuge_seite_formular_pkvpakete()
+        self.erzeuge_webview()
 
         # Erstelle die Menüleiste
         self.commands.add(self.cmd_rechnungen_anzeigen)
