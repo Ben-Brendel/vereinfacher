@@ -1210,12 +1210,12 @@ class Kontolupe(toga.App):
         box_seite_info_einrichtung_email.add(self.label_info_einrichtung_email)
 
         # Bereich mit den Details zur Webseite
-        #box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
-        #box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
-        #self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
-        #box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
-        label_info_einrichtung_website = toga.Label('Webseite:', style=style_label_info)
-        self.link_info_einrichtung_webseite = toga.Button('', style=style_button_link, on_press=self.link_webseite)
+        box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
+        box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
+        self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
+        box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
+        # label_info_einrichtung_website = toga.Label('Webseite:', style=style_label_info)
+        # self.link_info_einrichtung_webseite = toga.Button('', style=style_button_link, on_press=self.link_webseite)
         
 
         # Bereich mit den Details zur Notiz
@@ -1243,9 +1243,9 @@ class Kontolupe(toga.App):
                 toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_telefon,
                 box_seite_info_einrichtung_email,
-                #box_seite_info_einrichtung_webseite,
-                label_info_einrichtung_website,
-                self.link_info_einrichtung_webseite,
+                box_seite_info_einrichtung_webseite,
+                #label_info_einrichtung_website,
+                #self.link_info_einrichtung_webseite,
                 toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_notiz,
                 box_seite_info_einrichtung_buttons
@@ -1269,8 +1269,8 @@ class Kontolupe(toga.App):
             self.label_info_einrichtung_plz_ort.text = self.einrichtungen_liste[self.einrichtung_b_id].plz_ort
             self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.einrichtung_b_id].telefon
             self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.einrichtung_b_id].email
-            #self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
-            self.link_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+            self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+            #self.link_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
             self.label_info_einrichtung_notiz.text = self.einrichtungen_liste[self.einrichtung_b_id].notiz
 
             # Zeige die Seite
