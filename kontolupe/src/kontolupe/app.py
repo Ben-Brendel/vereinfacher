@@ -1159,54 +1159,44 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_info_einrichtung(self):
         """Erzeugt die Seite, auf der die Details einer Einrichtung angezeigt werden."""
-        self.scroll_container_info_einrichtung = toga.ScrollContainer(style=style_scroll_container)
-        box_seite_info_einrichtung = toga.Box(style=style_box_column)
-        self.scroll_container_info_einrichtung.content = box_seite_info_einrichtung
-        box_seite_info_einrichtung.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
+        box_seite_info_einrichtung_button_zurueck = toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button)
         self.label_info_einrichtung_name = toga.Label('', style=style_label_h1)
-        box_seite_info_einrichtung.add(self.label_info_einrichtung_name)
 
         # Bereich mit den Details zur Straße
         box_seite_info_einrichtung_strasse = toga.Box(style=style_box_row)
         box_seite_info_einrichtung_strasse.add(toga.Label('Straße, Hausnr.: ', style=style_label_info))
         self.label_info_einrichtung_strasse = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_strasse.add(self.label_info_einrichtung_strasse)
-        box_seite_info_einrichtung.add(box_seite_info_einrichtung_strasse)
 
         # Bereich mit den Details zum Ort
         box_seite_info_einrichtung_plz_ort = toga.Box(style=style_box_row)
         box_seite_info_einrichtung_plz_ort.add(toga.Label('PLZ, Ort: ', style=style_label_info))
         self.label_info_einrichtung_plz_ort = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_plz_ort.add(self.label_info_einrichtung_plz_ort)
-        box_seite_info_einrichtung.add(box_seite_info_einrichtung_plz_ort)
 
         # Bereich mit den Details zur Telefonnummer
         box_seite_info_einrichtung_telefon = toga.Box(style=style_box_row)
         box_seite_info_einrichtung_telefon.add(toga.Label('Telefon: ', style=style_label_info))
         self.label_info_einrichtung_telefon = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_telefon.add(self.label_info_einrichtung_telefon)
-        box_seite_info_einrichtung.add(box_seite_info_einrichtung_telefon)
         
         # Bereich mit den Details zur E-Mail-Adresse
         box_seite_info_einrichtung_email = toga.Box(style=style_box_row)
         box_seite_info_einrichtung_email.add(toga.Label('E-Mail: ', style=style_label_info))
         self.label_info_einrichtung_email = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_email.add(self.label_info_einrichtung_email)
-        box_seite_info_einrichtung.add(box_seite_info_einrichtung_email)
 
         # Bereich mit den Details zur Webseite
         box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
         box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
         self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
-        box_seite_info_einrichtung.add(box_seite_info_einrichtung_webseite)
 
         # Bereich mit den Details zur Notiz
         box_seite_info_einrichtung_notiz = toga.Box(style=style_box_row)
         box_seite_info_einrichtung_notiz.add(toga.Label('Notiz: ', style=style_label_info))
         self.label_info_einrichtung_notiz = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_notiz.add(self.label_info_einrichtung_notiz)
-        box_seite_info_einrichtung.add(box_seite_info_einrichtung_notiz)
 
         # Bereich mit den Buttons
         box_seite_info_einrichtung_buttons = toga.Box(style=style_box_row)
@@ -1214,7 +1204,24 @@ class Kontolupe(toga.App):
         box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_bearbeiten)
         self.seite_info_einrichtung_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_einrichtung_loeschen, style=style_button)
         box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_loeschen)
-        box_seite_info_einrichtung.add(box_seite_info_einrichtung_buttons)
+
+        # Inhaltselemente zur Seite hinzufügen
+        self.scroll_container_info_einrichtung = toga.ScrollContainer(style=style_scroll_container)
+        box_seite_info_einrichtung = toga.Box(
+            style=style_box_column,
+            children = [
+                box_seite_info_einrichtung_button_zurueck,
+                self.label_info_einrichtung_name,
+                box_seite_info_einrichtung_strasse,
+                box_seite_info_einrichtung_plz_ort,
+                box_seite_info_einrichtung_telefon,
+                box_seite_info_einrichtung_email,
+                box_seite_info_einrichtung_webseite,
+                box_seite_info_einrichtung_notiz,
+                box_seite_info_einrichtung_buttons
+            ]
+        )
+        self.scroll_container_info_einrichtung.content = box_seite_info_einrichtung
 
 
     def zeige_info_einrichtung(self, widget, row=None):
