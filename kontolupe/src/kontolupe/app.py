@@ -168,6 +168,7 @@ class Kontolupe(toga.App):
             case self.tabelle_einrichtungen:
                 self.seite_liste_einrichtungen_button_loeschen.enabled = status
                 self.seite_liste_einrichtungen_button_bearbeiten.enabled = status
+                self.seite_liste_einrichtungen_button_info.enabled = status
 
     
     def index_auswahl(self, widget):
@@ -945,14 +946,18 @@ class Kontolupe(toga.App):
         self.box_seite_liste_einrichtungen.add(self.tabelle_einrichtungen)
 
         # Buttons für die Einrichtungen
-        box_seite_liste_einrichtungen_buttons = toga.Box(style=style_box_row)
-        self.seite_liste_einrichtungen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_einrichtung_loeschen, style=style_button, enabled=False)
+        box_seite_liste_einrichtungen_buttons1 = toga.Box(style=style_box_row)
+        box_seite_liste_einrichtungen_buttons2 = toga.Box(style=style_box_row)
         self.seite_liste_einrichtungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_einrichtungen_bearbeiten, style=style_button, enabled=False)
         self.seite_liste_einrichtungen_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_einrichtungen_neu, style=style_button)
-        box_seite_liste_einrichtungen_buttons.add(self.seite_liste_einrichtungen_button_loeschen)
-        box_seite_liste_einrichtungen_buttons.add(self.seite_liste_einrichtungen_button_bearbeiten)
-        box_seite_liste_einrichtungen_buttons.add(self.seite_liste_einrichtungen_button_neu)
-        self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_buttons)   
+        self.seite_liste_einrichtungen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_einrichtung_loeschen, style=style_button, enabled=False)
+        self.seite_liste_einrichtungen_button_info = toga.Button('Info', on_press=self.zeige_info_einrichtung, style=style_button, enabled=False)
+        box_seite_liste_einrichtungen_buttons1.add(self.seite_liste_einrichtungen_button_bearbeiten)
+        box_seite_liste_einrichtungen_buttons1.add(self.seite_liste_einrichtungen_button_neu)
+        box_seite_liste_einrichtungen_buttons2.add(self.seite_liste_einrichtungen_button_loeschen)
+        box_seite_liste_einrichtungen_buttons2.add(self.seite_liste_einrichtungen_button_info)
+        self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_buttons1)   
+        self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_buttons2)
 
 
     def zeige_seite_liste_einrichtungen(self, widget):
