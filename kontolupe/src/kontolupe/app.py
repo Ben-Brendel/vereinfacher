@@ -1293,7 +1293,7 @@ class Kontolupe(toga.App):
                 box_seite_info_einrichtung_telefon,
                 box_seite_info_einrichtung_email,
                 #box_seite_info_einrichtung_webseite,
-                label_info_einrichtung_website,
+                #label_info_einrichtung_website,
                 self.link_info_einrichtung_webseite,
                 toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_notiz,
