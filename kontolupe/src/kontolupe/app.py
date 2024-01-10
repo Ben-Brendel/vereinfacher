@@ -339,6 +339,8 @@ class Kontolupe(toga.App):
         if len(widget.value) != 5:
             return False
         
+        return True
+        
 
     def pruefe_email(self, widget):
         """Prüft, ob die Eingabe eine gültige E-Mail-Adresse ist und korrigiert sie entsprechend."""
@@ -1222,18 +1224,18 @@ class Kontolupe(toga.App):
 
             # Befülle die Labels mit den Details der Einrichtung
             # Die einzutragenden Werte können None sein, daher wird hier mit einem leeren String gearbeitet
-            self.label_info_einrichtung_name.text = self.einrichtungen[self.einrichtung_b_id].name or ''
-            self.label_info_einrichtung_strasse.text = self.einrichtungen[self.einrichtung_b_id].strasse or ''
+            self.label_info_einrichtung_name.text = self.einrichtungen_liste[self.einrichtung_b_id].name
+            self.label_info_einrichtung_strasse.text = self.einrichtungen_liste[self.einrichtung_b_id].strasse
 
             # PLZ und Ort werden in einem Label zusammengefasst
             # Dabei werden beide Variablen auf None geprüft und ggf. durch einen leeren String ersetzt
             # Wenn PLZ None ist, dann entfällt das Leerzeichen vor dem Ort
-            self.label_info_einrichtung_plz_ort.text = (self.einrichtungen[self.einrichtung_b_id].plz or '') + (' ' if self.einrichtungen[self.einrichtung_b_id].plz else '') + (self.einrichtungen[self.einrichtung_b_id].ort or '')
+            self.label_info_einrichtung_plz_ort.text = self.einrichtungen_liste[self.einrichtung_b_id].plz_ort
             
-            self.label_info_einrichtung_telefon.text = self.einrichtungen[self.einrichtung_b_id].telefon or ''
-            self.label_info_einrichtung_email.text = self.einrichtungen[self.einrichtung_b_id].email or ''
-            self.label_info_einrichtung_webseite.text = self.einrichtungen[self.einrichtung_b_id].webseite or ''
-            self.label_info_einrichtung_notiz.text = self.einrichtungen[self.einrichtung_b_id].notiz or ''
+            self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.einrichtung_b_id].telefon
+            self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.einrichtung_b_id].email
+            self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+            self.label_info_einrichtung_notiz.text = self.einrichtungen_liste[self.einrichtung_b_id].notiz
 
             # Zeige die Seite
             self.main_window.content = self.scroll_container_info_einrichtung
@@ -2040,6 +2042,7 @@ class Kontolupe(toga.App):
             'strasse',
             'plz',
             'ort',
+            'plz_ort',
             'telefon',
             'email',
             'webseite',
@@ -2176,14 +2179,15 @@ class Kontolupe(toga.App):
         """Fügt der Liste der Einrichtungen eine neue Einrichtung hinzu."""
         self.einrichtungen_liste.append({
                 'db_id': einrichtung.db_id,
-                'name': einrichtung.name,
-                'strasse': einrichtung.strasse,
-                'plz': einrichtung.plz,
-                'ort': einrichtung.ort,
-                'telefon': einrichtung.telefon,
-                'email': einrichtung.email,
-                'webseite': einrichtung.webseite,
-                'notiz': einrichtung.notiz
+                'name': einrichtung.name or '',
+                'strasse': einrichtung.strasse or '',
+                'plz': einrichtung.plz or '',
+                'ort': einrichtung.ort or '',
+                'plz_ort': (einrichtung.plz or '') + (' ' if einrichtung.plz else '') + (einrichtung.ort or ''),
+                'telefon': einrichtung.telefon or '',
+                'email': einrichtung.email or '',
+                'webseite': einrichtung.webseite or '',
+                'notiz': einrichtung.notiz or ''
             })
         
 
@@ -2238,14 +2242,15 @@ class Kontolupe(toga.App):
         """Ändert ein Element der Liste der Einrichtungen."""
         self.einrichtungen_liste[einrichtung_id] = {
                 'db_id': einrichtung.db_id,
-                'name': einrichtung.name,
-                'strasse': einrichtung.strasse,
-                'plz': einrichtung.plz,
-                'ort': einrichtung.ort,
-                'telefon': einrichtung.telefon,
-                'email': einrichtung.email,
-                'webseite': einrichtung.webseite,
-                'notiz': einrichtung.notiz
+                'name': einrichtung.name or '',
+                'strasse': einrichtung.strasse or '',
+                'plz': einrichtung.plz or '',
+                'ort': einrichtung.ort or '',
+                'plz_ort': (einrichtung.plz or '') + (' ' if einrichtung.plz else '') + (einrichtung.ort or ''),
+                'telefon': einrichtung.telefon or '',
+                'email': einrichtung.email or '',
+                'webseite': einrichtung.webseite or '',
+                'notiz': einrichtung.notiz or ''
             }
         
         # Rechnungen aktualisieren
