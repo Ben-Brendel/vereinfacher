@@ -935,7 +935,7 @@ class Kontolupe(toga.App):
             data        = self.einrichtungen_liste,
             style       = style_table,
             on_select   = self.update_app,
-            on_activate = self.zeige_info_buchung
+            on_activate = self.zeige_info_einrichtung
         )
         self.box_seite_liste_einrichtungen.add(self.tabelle_einrichtungen)
 
@@ -974,7 +974,7 @@ class Kontolupe(toga.App):
 
         # Bereich zur Eingabe der Strasse
         box_formular_einrichtungen_strasse = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_strasse.add(toga.Label('Straße: ', style=style_label_input))
+        box_formular_einrichtungen_strasse.add(toga.Label('Straße, Hausnr.: ', style=style_label_input))
         self.input_formular_einrichtungen_strasse = toga.TextInput(style=style_input)
         box_formular_einrichtungen_strasse.add(self.input_formular_einrichtungen_strasse)
         self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_strasse)
@@ -1052,27 +1052,30 @@ class Kontolupe(toga.App):
 
     def zeige_seite_formular_einrichtungen_bearbeiten(self, widget):
         """Zeigt die Seite zum Bearbeiten einer Einrichtung."""
-        # Ermittle den Index der ausgewählten Rechnung
-        self.einrichtung_b_id = self.index_auswahl(self.tabelle_einrichtungen)
+        
+        # Prüfe ob eine Einrichtung ausgewählt ist
+        if self.tabelle_einrichtungen.selection:
+            # Ermittle den Index der ausgewählten Rechnung
+            self.einrichtung_b_id = self.index_auswahl(self.tabelle_einrichtungen)
+            
+            # Befülle die Eingabefelder
+            self.input_formular_einrichtungen_name.value = self.einrichtungen[self.einrichtung_b_id].name
+            self.input_formular_einrichtungen_strasse.value = self.einrichtungen[self.einrichtung_b_id].strasse
+            self.input_formular_einrichtungen_plz.value = self.einrichtungen[self.einrichtung_b_id].plz
+            self.input_formular_einrichtungen_ort.value = self.einrichtungen[self.einrichtung_b_id].ort
+            self.input_formular_einrichtungen_telefon.value = self.einrichtungen[self.einrichtung_b_id].telefon
+            self.input_formular_einrichtungen_email.value = self.einrichtungen[self.einrichtung_b_id].email
+            self.input_formular_einrichtungen_webseite.value = self.einrichtungen[self.einrichtung_b_id].webseite
+            self.input_formular_einrichtungen_notiz.value = self.einrichtungen[self.einrichtung_b_id].notiz
 
-        # Befülle die Eingabefelder
-        self.input_formular_einrichtungen_name.value = self.einrichtungen[self.einrichtung_b_id].name
-        self.input_formular_einrichtungen_strasse.value = self.einrichtungen[self.einrichtung_b_id].strasse
-        self.input_formular_einrichtungen_plz.value = self.einrichtungen[self.einrichtung_b_id].plz
-        self.input_formular_einrichtungen_ort.value = self.einrichtungen[self.einrichtung_b_id].ort
-        self.input_formular_einrichtungen_telefon.value = self.einrichtungen[self.einrichtung_b_id].telefon
-        self.input_formular_einrichtungen_email.value = self.einrichtungen[self.einrichtung_b_id].email
-        self.input_formular_einrichtungen_webseite.value = self.einrichtungen[self.einrichtung_b_id].webseite
-        self.input_formular_einrichtungen_notiz.value = self.einrichtungen[self.einrichtung_b_id].notiz
+            # Setze das Flag
+            self.flag_bearbeite_einrichtung = True
 
-        # Setze das Flag
-        self.flag_bearbeite_einrichtung = True
+            # Setze die Überschrift
+            self.label_formular_einrichtungen.text = 'Einrichtung bearbeiten'
 
-        # Setze die Überschrift
-        self.label_formular_einrichtungen.text = 'Einrichtung bearbeiten'
-
-        # Zeige die Seite
-        self.main_window.content = self.scroll_container_formular_einrichtungen
+            # Zeige die Seite
+            self.main_window.content = self.scroll_container_formular_einrichtungen
 
 
     def einrichtung_speichern_check(self, widget):
@@ -1148,6 +1151,93 @@ class Kontolupe(toga.App):
         self.update_app(widget)
         self.zeige_seite_liste_einrichtungen(widget)
 
+
+    def erzeuge_seite_info_einrichtung(self):
+        """Erzeugt die Seite, auf der die Details einer Einrichtung angezeigt werden."""
+        self.scroll_container_info_einrichtung = toga.ScrollContainer(style=style_scroll_container)
+        box_seite_info_einrichtung = toga.Box(style=style_box_column)
+        self.scroll_container_info_einrichtung.content = box_seite_info_einrichtung
+        box_seite_info_einrichtung.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
+        self.label_info_einrichtung_name = toga.Label('', style=style_label_h1)
+        box_seite_info_einrichtung.add(self.label_info_einrichtung_name)
+
+        # Bereich mit den Details zur Straße
+        box_seite_info_einrichtung_strasse = toga.Box(style=style_box_row)
+        box_seite_info_einrichtung_strasse.add(toga.Label('Straße, Hausnr.: ', style=style_label_input))
+        self.label_info_einrichtung_strasse = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_strasse.add(self.label_info_einrichtung_strasse)
+        box_seite_info_einrichtung.add(box_seite_info_einrichtung_strasse)
+
+        # Bereich mit den Details zum Ort
+        box_seite_info_einrichtung_plz_ort = toga.Box(style=style_box_row)
+        box_seite_info_einrichtung_plz_ort.add(toga.Label('PLZ, Ort: ', style=style_label_input))
+        self.label_info_einrichtung_plz_ort = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_plz_ort.add(self.label_info_einrichtung_plz_ort)
+        box_seite_info_einrichtung.add(box_seite_info_einrichtung_plz_ort)
+
+        # Bereich mit den Details zur Telefonnummer
+        box_seite_info_einrichtung_telefon = toga.Box(style=style_box_row)
+        box_seite_info_einrichtung_telefon.add(toga.Label('Telefon: ', style=style_label_input))
+        self.label_info_einrichtung_telefon = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_telefon.add(self.label_info_einrichtung_telefon)
+        box_seite_info_einrichtung.add(box_seite_info_einrichtung_telefon)
+        
+        # Bereich mit den Details zur E-Mail-Adresse
+        box_seite_info_einrichtung_email = toga.Box(style=style_box_row)
+        box_seite_info_einrichtung_email.add(toga.Label('E-Mail: ', style=style_label_input))
+        self.label_info_einrichtung_email = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_email.add(self.label_info_einrichtung_email)
+        box_seite_info_einrichtung.add(box_seite_info_einrichtung_email)
+
+        # Bereich mit den Details zur Webseite
+        box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
+        box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_input))
+        self.label_info_einrichtung_webseite = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
+        box_seite_info_einrichtung.add(box_seite_info_einrichtung_webseite)
+
+        # Bereich mit den Details zur Notiz
+        box_seite_info_einrichtung_notiz = toga.Box(style=style_box_row)
+        box_seite_info_einrichtung_notiz.add(toga.Label('Notiz: ', style=style_label_input))
+        self.label_info_einrichtung_notiz = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_notiz.add(self.label_info_einrichtung_notiz)
+        box_seite_info_einrichtung.add(box_seite_info_einrichtung_notiz)
+
+        # Bereich mit den Buttons
+        box_seite_info_einrichtung_buttons = toga.Box(style=style_box_row)
+        self.seite_info_einrichtung_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_einrichtungen_bearbeiten, style=style_button)
+        box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_bearbeiten)
+        self.seite_info_einrichtung_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_einrichtung_loeschen, style=style_button)
+        box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_loeschen)
+        box_seite_info_einrichtung.add(box_seite_info_einrichtung_buttons)
+
+
+    def zeige_info_einrichtung(self, widget, row=None):
+        """Zeigt die Seite mit den Details einer Einrichtung."""
+        # Prüfe, ob eine Einrichtung ausgewählt ist
+        if self.tabelle_einrichtungen.selection:
+
+            # Ermittle den Index der ausgewählten Einrichtung
+            self.einrichtung_b_id = self.index_auswahl(self.tabelle_einrichtungen)
+
+            # Befülle die Labels mit den Details der Einrichtung
+            # Die einzutragenden Werte können None sein, daher wird hier mit einem leeren String gearbeitet
+            self.label_info_einrichtung_name.text = self.einrichtungen[self.einrichtung_b_id].name or ''
+            self.label_info_einrichtung_strasse.text = self.einrichtungen[self.einrichtung_b_id].strasse or ''
+
+            # PLZ und Ort werden in einem Label zusammengefasst
+            # Dabei werden beide Variablen auf None geprüft und ggf. durch einen leeren String ersetzt
+            # Wenn PLZ None ist, dann entfällt das Leerzeichen vor dem Ort
+            self.label_info_einrichtung_plz_ort.text = (self.einrichtungen[self.einrichtung_b_id].plz or '') + (' ' if self.einrichtungen[self.einrichtung_b_id].plz else '') + (self.einrichtungen[self.einrichtung_b_id].ort or '')
+            
+            self.label_info_einrichtung_telefon.text = self.einrichtungen[self.einrichtung_b_id].telefon or ''
+            self.label_info_einrichtung_email.text = self.einrichtungen[self.einrichtung_b_id].email or ''
+            self.label_info_einrichtung_webseite.text = self.einrichtungen[self.einrichtung_b_id].webseite or ''
+            self.label_info_einrichtung_notiz.text = self.einrichtungen[self.einrichtung_b_id].notiz or ''
+
+            # Zeige die Seite
+            self.main_window.content = self.scroll_container_info_einrichtung
+
     
     def bestaetige_einrichtung_loeschen(self, widget):
         """Bestätigt das Löschen einer Einrichtung."""
@@ -1179,8 +1269,9 @@ class Kontolupe(toga.App):
             del self.einrichtungen[index]
             del self.einrichtungen_liste[index]
 
-            # Formularfelder aktualiseren
-            #self.input_formular_einrichtungen_name.items = self.einrichtungen_liste
+            # Seite mit Liste der Einrichtungen anzeigen
+            self.update_app(widget)
+            self.zeige_seite_liste_einrichtungen(widget)
 
 
     def erzeuge_seite_liste_beihilfepakete(self):
@@ -2301,6 +2392,7 @@ class Kontolupe(toga.App):
         self.erzeuge_seite_formular_rechnungen()
         self.erzeuge_seite_liste_einrichtungen()
         self.erzeuge_seite_formular_einrichtungen()
+        self.erzeuge_seite_info_einrichtung()
         self.erzeuge_seite_liste_beihilfepakete()
         self.erzeuge_seite_formular_beihilfepakete()
         self.erzeuge_seite_liste_pkvpakete()
