@@ -1236,12 +1236,7 @@ class Kontolupe(toga.App):
             # Die einzutragenden Werte können None sein, daher wird hier mit einem leeren String gearbeitet
             self.label_info_einrichtung_name.text = self.einrichtungen_liste[self.einrichtung_b_id].name
             self.label_info_einrichtung_strasse.text = self.einrichtungen_liste[self.einrichtung_b_id].strasse
-
-            # PLZ und Ort werden in einem Label zusammengefasst
-            # Dabei werden beide Variablen auf None geprüft und ggf. durch einen leeren String ersetzt
-            # Wenn PLZ None ist, dann entfällt das Leerzeichen vor dem Ort
             self.label_info_einrichtung_plz_ort.text = self.einrichtungen_liste[self.einrichtung_b_id].plz_ort
-            
             self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.einrichtung_b_id].telefon
             self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.einrichtung_b_id].email
             self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
