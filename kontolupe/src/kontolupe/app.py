@@ -26,6 +26,7 @@ style_input                     = Pack(flex=1, padding=5, color='#222222')
 style_label_input               = Pack(flex=1, padding=5, text_align=LEFT, color='#222222')
 style_table                     = Pack(flex=1, padding=5, color='#222222')
 style_switch                    = Pack(flex=1, padding=5, color='#222222')
+style_divider                   = Pack(padding=5, color='#222222')
 
 # Spezifische Styles
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
@@ -1027,7 +1028,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe der Notiz
         box_formular_einrichtungen_notiz = toga.Box(style=style_box_row)
         box_formular_einrichtungen_notiz.add(toga.Label('Notiz: ', style=style_label_input))
-        self.input_formular_einrichtungen_notiz = toga.TextInput(style=style_input)
+        self.input_formular_einrichtungen_notiz = toga.MultilineTextInput(style=style_input)
         box_formular_einrichtungen_notiz.add(self.input_formular_einrichtungen_notiz)
         self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_notiz)
 
@@ -1219,9 +1220,11 @@ class Kontolupe(toga.App):
                 self.label_info_einrichtung_name,
                 box_seite_info_einrichtung_strasse,
                 box_seite_info_einrichtung_plz_ort,
+                toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_telefon,
                 box_seite_info_einrichtung_email,
                 box_seite_info_einrichtung_webseite,
+                toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_notiz,
                 box_seite_info_einrichtung_buttons
             ]
