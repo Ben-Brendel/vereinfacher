@@ -3,7 +3,8 @@ outline.txt
 resources
 src/kontolupe/app_old.py
 src/kontolupe/kontolupe.db
-src/kontolupe/kontolupe.db.backup
+src/kontolupe/*.db.backup
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

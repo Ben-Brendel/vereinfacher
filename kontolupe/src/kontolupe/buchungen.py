@@ -11,10 +11,15 @@ class Datenbank:
 
     def __init__(self):
         """Initialisierung der Datenbank."""
-        self.db_dir = Path('/data/data/net.biberwerk.kontolupe')
-        #self.db_dir = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe')
+        # if it is an android device use the android path
+        # otherwise use the windows path
+        if Path('/data/data/net.biberwerk.kontolupe').exists():
+            self.db_dir = Path('/data/data/net.biberwerk.kontolupe')
+        elif Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe').exists():
+            self.db_dir = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe')
         
         self.db_path = self.db_dir / 'kontolupe.db'
+        print(self.db_path)
 
         # delete database
         #if self.db_path.exists(): 
