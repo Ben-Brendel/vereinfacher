@@ -451,6 +451,7 @@ class Rechnung:
         self.rechnungsdatum = None
         self.einrichtung_id = None
         self.notiz = None
+        self.person_id = None
         self.beihilfesatz = None
         self.buchungsdatum = None
         self.bezahlt = False
@@ -475,6 +476,7 @@ class Rechnung:
         ausgabe = 'ID: {}\n'.format(self.db_id)
         ausgabe += 'Rechnung vom {}\n'.format(self.rechnungsdatum)
         ausgabe += 'Betrag: {:.2f} €\n'.format(self.betrag).replace('.', ',')
+        ausgabe += 'Person: {}\n'.format(self.person_id)
         ausgabe += 'Beihilfesatz: {:.0f} %\n'.format(self.beihilfesatz)
         ausgabe += 'Einrichtung: {}\n'.format(self.einrichtung_id)
         ausgabe += 'Notiz: {}\n'.format(self.notiz)

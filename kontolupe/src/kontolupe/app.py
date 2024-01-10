@@ -52,6 +52,10 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_einrichtung = False
         self.einrichtung_b_id = 0
 
+        # Hilfsvariablen zur Bearbeitung von Personen
+        self.flag_bearbeite_person = False
+        self.person_b_id = 0
+
         # Hilfsvariablen zur Bearbeitung der Beihilfe-Pakete
         self.flag_bearbeite_beihilfepaket = False
         self.beihilfepaket_b_id = 0
@@ -174,6 +178,9 @@ class Kontolupe(toga.App):
                 self.seite_liste_einrichtungen_button_loeschen.enabled = status
                 self.seite_liste_einrichtungen_button_bearbeiten.enabled = status
                 self.seite_liste_einrichtungen_button_info.enabled = status
+            case self.tabelle_personen:
+                self.seite_liste_personen_button_loeschen.enabled = status
+                self.seite_liste_personen_button_bearbeiten.enabled = status
 
     
     def index_auswahl(self, widget):
@@ -851,7 +858,7 @@ class Kontolupe(toga.App):
                 neue_rechnung.einrichtung_id = self.input_formular_rechnungen_einrichtung.value.db_id
             neue_rechnung.notiz = self.input_formular_rechnungen_notiz.value
             neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
-            neue_rechnung.beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value or 0)
+            neue_rechnung.beihilfesatz = int(self.input_formular_rechnungen_beihilfesatz.value or 0)
             neue_rechnung.buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             neue_rechnung.bezahlt = self.input_formular_rechnungen_bezahlt.value
 
@@ -1371,6 +1378,191 @@ class Kontolupe(toga.App):
             self.zeige_seite_liste_einrichtungen(widget)
 
 
+    def erzeuge_seite_liste_personen(self):
+        """Erzeugt die Seite, auf der die Personen angezeigt werden."""
+        self.box_seite_liste_personen = toga.Box(style=style_box_column)
+        self.box_seite_liste_personen.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
+        self.box_seite_liste_personen.add(toga.Label('Personen', style=style_label_h1))
+
+        # Tabelle mit den Personen
+        self.tabelle_personen = toga.Table(
+            headings    = ['Name', 'Beihilfesatz'], 
+            accessors   = ['name', 'beihilfesatz_prozent'],
+            data        = self.personen_liste,
+            style       = style_table,
+            on_select   = self.update_app
+        )
+        self.box_seite_liste_personen.add(self.tabelle_personen)
+
+        # Buttons für die Personen
+        box_seite_liste_personen_buttons = toga.Box(style=style_box_row)
+        self.seite_liste_personen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_personen_bearbeiten, style=style_button, enabled=False)
+        self.seite_liste_personen_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_personen_neu, style=style_button)
+        self.seite_liste_personen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_person_loeschen, style=style_button, enabled=False)
+        box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_loeschen)
+        box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_bearbeiten)
+        box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_neu)
+        self.box_seite_liste_personen.add(box_seite_liste_personen_buttons)
+
+
+    def zeige_seite_liste_personen(self, widget):
+        """Zeigt die Seite mit der Liste der Personen."""
+        self.update_app(widget)
+        self.main_window.content = self.box_seite_liste_personen
+
+
+    def erzeuge_seite_formular_personen(self):
+        """Erzeugt das Formular zum Erstellen und Bearbeiten einer Person."""
+        self.box_seite_formular_personen = toga.Box(style=style_box_column)
+        self.box_seite_formular_personen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_personen, style=style_button))
+        self.label_formular_personen = toga.Label('Neue Person', style=style_label_h1)
+        self.box_seite_formular_personen.add(self.label_formular_personen)
+
+        # Bereich zur Eingabe des Namens
+        box_formular_personen_name = toga.Box(style=style_box_row)
+        box_formular_personen_name.add(toga.Label('Name: ', style=style_label_input))
+        self.input_formular_personen_name = toga.TextInput(style=style_input)
+        box_formular_personen_name.add(self.input_formular_personen_name)
+        self.box_seite_formular_personen.add(box_formular_personen_name)
+
+        # Bereich zur Eingabe des Beihilfesatzes
+        box_formular_personen_beihilfesatz = toga.Box(style=style_box_row)
+        box_formular_personen_beihilfesatz.add(toga.Label('Beihilfesatz: ', style=style_label_input))
+        self.input_formular_personen_beihilfesatz = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_prozent)
+        box_formular_personen_beihilfesatz.add(self.input_formular_personen_beihilfesatz)
+        self.box_seite_formular_personen.add(box_formular_personen_beihilfesatz)
+
+        # Bereich der Buttons
+        box_formular_personen_buttons = toga.Box(style=style_box_row)
+        box_formular_personen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_personen, style=style_button))
+        box_formular_personen_buttons.add(toga.Button('Speichern', on_press=self.person_speichern_check, style=style_button))
+        self.box_seite_formular_personen.add(box_formular_personen_buttons)
+
+
+    def zeige_seite_formular_personen_neu(self, widget):
+        """Zeigt die Seite zum Erstellen einer Person."""
+        # Setze die Eingabefelder zurück
+        self.input_formular_personen_name.value = ''
+        self.input_formular_personen_beihilfesatz.value = ''
+
+        # Zurücksetzen des Flags
+        self.flag_bearbeite_person = False
+
+        # Setze die Überschrift
+        self.label_formular_personen.text = 'Neue Person'
+
+        # Zeige die Seite
+        self.main_window.content = self.box_seite_formular_personen
+
+
+    def zeige_seite_formular_personen_bearbeiten(self, widget):
+        """Zeigt die Seite zum Bearbeiten einer Person."""
+            
+        # Prüfe ob eine Person ausgewählt ist
+        if self.tabelle_personen.selection:
+            # Ermittle den Index der ausgewählten Person
+            self.person_b_id = self.index_auswahl(self.tabelle_personen)
+            
+            # Befülle die Eingabefelder
+            self.input_formular_personen_name.value = self.personen[self.person_b_id].name
+            self.input_formular_personen_beihilfesatz.value = str(self.personen[self.person_b_id].beihilfesatz)
+
+            # Setze das Flag
+            self.flag_bearbeite_person = True
+
+            # Setze die Überschrift
+            self.label_formular_personen.text = 'Person bearbeiten'
+
+            # Zeige die Seite
+            self.main_window.content = self.box_seite_formular_personen
+
+
+    def person_speichern_check(self, widget):
+        """Prüft die Eingaben im Formular der Personen."""
+        nachricht = ''
+
+        # Prüfe, ob ein Name eingegeben wurde
+        if self.input_formular_personen_name.value == '':
+            nachricht += 'Bitte gib einen Namen ein.\n'
+
+        # Prüfe, ob nichts oder eine gültige Prozentzahl eingegeben wurde
+        if not self.pruefe_prozent(self.input_formular_personen_beihilfesatz) or self.input_formular_personen_beihilfesatz.value == '':
+                nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
+
+        if nachricht != '':
+            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
+        else:
+            self.person_speichern(widget)
+
+
+    def person_speichern(self, widget):
+        """Erstellt und speichert eine neue Person."""
+        if not self.flag_bearbeite_person:
+        # Erstelle eine neue Person
+            neue_person = Person()
+            neue_person.name = self.input_formular_personen_name.value
+            neue_person.beihilfesatz = int(self.input_formular_personen_beihilfesatz.value or 0)
+
+            # Speichere die Person in der Datenbank
+            neue_person.neu(self.db)
+
+            # Füge die Person der Liste hinzu
+            self.personen.append(neue_person)
+            self.personen_liste_anfuegen(neue_person)
+        else:
+            # Bearbeite die Person
+            self.personen[self.person_b_id].name = self.input_formular_personen_name.value
+            self.personen[self.person_b_id].beihilfesatz = int(self.input_formular_personen_beihilfesatz.value or 0)
+
+            # Speichere die Person in der Datenbank
+            self.personen[self.person_b_id].speichern(self.db)
+
+            # Aktualisiere die Liste der Personen
+            self.personen_liste_aendern(self.personen[self.person_b_id], self.person_b_id)
+
+            # Flag zurücksetzen
+            self.flag_bearbeite_person = False
+
+        # Zeige die Liste der Personen
+        self.update_app(widget)
+        self.zeige_seite_liste_personen(widget)
+
+
+    def bestaetige_person_loeschen(self, widget):
+        """Bestätigt das Löschen einer Person."""
+        if self.tabelle_personen.selection:
+            self.main_window.confirm_dialog(
+                'Person löschen', 
+                'Soll die ausgewählte Person wirklich gelöscht werden?',
+                on_result=self.person_loeschen
+            )
+
+
+    def person_loeschen(self, widget, result):
+        """Löscht eine Person."""
+        if self.tabelle_personen.selection and result:
+            index = self.index_auswahl(self.tabelle_personen)
+
+            # Prüfe, ob die Person in einer Rechnung verwendet wird
+            for rechnung in self.rechnungen:
+                if rechnung.person_id == self.personen[index].db_id:
+                    self.main_window.error_dialog(
+                        'Fehler beim Löschen',
+                        'Die Person wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
+                    )
+                    return
+            
+            # Person wird deaktiviert
+            self.personen[index].aktiv = False
+            self.personen[index].speichern(self.db)
+            del self.personen[index]
+            del self.personen_liste[index]
+
+            # Seite mit Liste der Personen anzeigen
+            self.update_app(widget)
+            self.zeige_seite_liste_personen(widget)
+
+
     def erzeuge_seite_liste_beihilfepakete(self):
         """Erzeugt die Seite, auf der die Beihilfe-Einreichungen angezeigt werden."""
         self.box_seite_liste_beihilfepakete = toga.Box(style=style_box_column)
@@ -1888,6 +2080,7 @@ class Kontolupe(toga.App):
 
         return data
 
+
     def einrichtung_name(self, einrichtung_id):
         """Ermittelt den Namen einer Einrichtung anhand ihrer Id."""
         for einrichtung in self.einrichtungen:
@@ -2148,6 +2341,19 @@ class Kontolupe(toga.App):
             self.einrichtungen_liste_anfuegen(einrichtung)
 
 
+    def personen_liste_erzeugen(self): 
+        """Erzeugt die Liste für die Personen."""
+        self.personen_liste = ListSource(accessors=[
+            'db_id',
+            'name',
+            'beihilfesatz',
+            'beihilfesatz_prozent',
+        ])
+
+        for person in self.personen:            
+            self.personen_liste_anfuegen(person)
+
+
     def beihilfepakete_liste_erzeugen(self):
         """Erzeugt die Liste für die Beihilfepakete."""
         self.beihilfepakete_liste = ListSource(accessors=[
@@ -2286,6 +2492,16 @@ class Kontolupe(toga.App):
             })
         
 
+    def personen_liste_anfuegen(self, person):
+        """Fügt der Liste der Personen eine neue Person hinzu."""
+        self.personen_liste.append({
+                'db_id': person.db_id,
+                'name': person.name or '',
+                'beihilfesatz': person.beihilfesatz or '',
+                'beihilfesatz_prozent': '{:.0f} %'.format(person.beihilfesatz) if person.beihilfesatz else '0 %'
+            })
+
+
     def beihilfepakete_liste_anfuegen(self, beihilfepaket):
         """Fügt der Liste der Beihilfepakete ein neues Beihilfepaket hinzu."""
         self.beihilfepakete_liste.append({
@@ -2351,6 +2567,16 @@ class Kontolupe(toga.App):
         # Rechnungen aktualisieren
         self.rechnungen_liste_aktualisieren()
 
+
+    def personen_liste_aendern(self, person, person_id):    
+        """Ändert ein Element der Liste der Personen."""
+        self.personen_liste[person_id] = {
+                'db_id': person.db_id,
+                'name': person.name or '',
+                'beihilfesatz': person.beihilfesatz or None,
+                'beihilfesatz_prozent': '{:.0f} %'.format(person.beihilfesatz) if person.beihilfesatz else '0 %'
+            }
+
     
     def beihilfepakete_liste_aendern(self, beihilfepaket, beihilfepaket_id):
         """Ändert ein Element der Liste der Beihilfepakete."""
@@ -2400,54 +2626,77 @@ class Kontolupe(toga.App):
             enabled=True
         )
 
-        gruppe_beihilfepakete = toga.Group('Beihilfe-Einreichungen', order = 2)
+        gruppe_einreichungen = toga.Group('Einreichungen', order = 2)
 
         self.cmd_beihilfepakete_anzeigen = toga.Command(
             self.zeige_seite_liste_beihilfepakete,
-            'Beihilfe-Einreichungen anzeigen',
+            'Beihilfe anzeigen',
             tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
-            group = gruppe_beihilfepakete,
+            group = gruppe_einreichungen,
+            section = 0,
             order = 10,
             enabled=True
         )
 
         self.cmd_beihilfepakete_neu = toga.Command(
             self.zeige_seite_formular_beihilfepakete_neu,
-            'Neue Beihilfe-Einreichung',
+            'Neue Beihilfe',
             tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
-            group = gruppe_beihilfepakete,
+            group = gruppe_einreichungen,
+            section = 0,
             order = 20,
             enabled=False
         )
 
-        gruppe_pkvpakete = toga.Group('PKV-Einreichungen', order = 3)
-
         self.cmd_pkvpakete_anzeigen = toga.Command(
             self.zeige_seite_liste_pkvpakete,
-            'PKV-Einreichungen anzeigen',
+            'PKV anzeigen',
             tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
-            group = gruppe_pkvpakete,
-            order = 10,
+            group = gruppe_einreichungen,
+            section = 1,
+            order = 30,
             enabled=True
         )
 
         self.cmd_pkvpakete_neu = toga.Command(
             self.zeige_seite_formular_pkvpakete_neu,
-            'Neue PKV-Einreichung',
+            'Neue PKV',
             tooltip = 'Erstellt eine neue PKV-Einreichung.',
-            group = gruppe_pkvpakete,
-            order = 20,
+            group = gruppe_einreichungen,
+            section = 1,
+            order = 40,
             enabled=False
         )
 
-        gruppe_einrichtungen = toga.Group('Einrichtungen', order = 4)
+        gruppe_daten = toga.Group('Daten', order = 3)
+
+        self.cmd_personen_anzeigen = toga.Command(
+            self.zeige_seite_liste_personen,
+            'Personen anzeigen',
+            tooltip = 'Zeigt die Liste der Personen an.',
+            group = gruppe_daten,
+            section = 0,
+            order = 10,
+            enabled=True
+        )
+
+        self.cmd_personen_neu = toga.Command(
+            self.zeige_seite_formular_personen_neu,
+            'Neue Person',
+            tooltip = 'Erstellt eine neue Person.',
+            group = gruppe_daten,
+            section = 0,
+            order = 20,
+            enabled=True
+        )
 
         self.cmd_einrichtungen_anzeigen = toga.Command(
             self.zeige_seite_liste_einrichtungen,
             'Einrichtungen anzeigen',
             tooltip = 'Zeigt die Liste der Einrichtungen an.',
-            group = gruppe_einrichtungen,
-            order = 10,
+            group = gruppe_daten,
+            section = 1,
+            order = 30,
             enabled=True
         )
 
@@ -2455,12 +2704,13 @@ class Kontolupe(toga.App):
             self.zeige_seite_formular_einrichtungen_neu,
             'Neue Einrichtung',
             tooltip = 'Erstellt eine neue Einrichtung.',
-            group = gruppe_einrichtungen,
-            order = 20,
+            group = gruppe_daten,
+            section = 1,
+            order = 40,
             enabled=True
         )
 
-        gruppe_tools = toga.Group('Tools', order = 5)
+        gruppe_tools = toga.Group('Tools', order = 4)
 
         self.cmd_archivieren = toga.Command(
             self.archivieren_bestaetigen,
@@ -2479,12 +2729,14 @@ class Kontolupe(toga.App):
         self.einrichtungen = self.db.lade_einrichtungen()
         self.beihilfepakete = self.db.lade_beihilfepakete()
         self.pkvpakete = self.db.lade_pkvpakete()
+        self.personen = self.db.lade_personen()
 
         # Erzeuge die ListSources für die GUI
         self.rechnungen_liste_erzeugen()
         self.einrichtungen_liste_erzeugen()
         self.beihilfepakete_liste_erzeugen()
         self.pkvpakete_liste_erzeugen()
+        self.personen_liste_erzeugen()
 
         # Erzeuge alle GUI-Elemente
         self.erzeuge_startseite()
@@ -2497,6 +2749,8 @@ class Kontolupe(toga.App):
         self.erzeuge_seite_formular_beihilfepakete()
         self.erzeuge_seite_liste_pkvpakete()
         self.erzeuge_seite_formular_pkvpakete()
+        self.erzeuge_seite_liste_personen()
+        self.erzeuge_seite_formular_personen()
         self.erzeuge_webview()
 
         # Erstelle die Menüleiste
@@ -2506,6 +2760,8 @@ class Kontolupe(toga.App):
         self.commands.add(self.cmd_beihilfepakete_neu)
         self.commands.add(self.cmd_pkvpakete_anzeigen)
         self.commands.add(self.cmd_pkvpakete_neu)
+        self.commands.add(self.cmd_personen_anzeigen)
+        self.commands.add(self.cmd_personen_neu)
         self.commands.add(self.cmd_einrichtungen_anzeigen)
         self.commands.add(self.cmd_einrichtungen_neu)
         self.commands.add(self.cmd_archivieren)
