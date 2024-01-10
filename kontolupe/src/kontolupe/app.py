@@ -628,6 +628,7 @@ class Kontolupe(toga.App):
             titel = 'Rechnung'
             inhalt = 'Rechnungsdatum: {}\n'.format(element.rechnungsdatum)
             inhalt += 'Betrag: {:.2f} €\n'.format(element.betrag).replace('.', ',')
+            inhalt += 'Person: {}\n'.format(element.person_name)
             inhalt += 'Beihilfesatz: {:.0f} %\n\n'.format(element.beihilfesatz)
             inhalt += 'Einrichtung: {}\n'.format(element.einrichtung_name)
             inhalt += 'Notiz: {}\n'.format(element.notiz)
@@ -691,6 +692,14 @@ class Kontolupe(toga.App):
         self.main_window.content = self.box_seite_liste_rechnungen
 
 
+    def rechnung_beihilfesatz(self, widget):
+        """Ermittelt den Beihilfesatz der ausgewählten Person und trägt ihn in das entsprechende Feld ein."""
+        for person in self.personen_liste:
+            if person.name == widget.value.name:
+                self.input_formular_rechnungen_beihilfesatz.value = person.beihilfesatz
+                break
+
+
     def erzeuge_seite_formular_rechnungen(self):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Rechnung."""
         self.scroll_container_formular_rechnungen = toga.ScrollContainer(style=style_scroll_container)
@@ -700,6 +709,20 @@ class Kontolupe(toga.App):
         self.label_formular_rechnungen = toga.Label('Neue Rechnung', style=style_label_h1)
         self.box_seite_formular_rechnungen.add(self.label_formular_rechnungen)
 
+        # Bereich zur Eingabe der Person
+        box_formular_rechnungen_person = toga.Box(style=style_box_row)
+        box_formular_rechnungen_person.add(toga.Label('Person: ', style=style_label_input))
+        self.input_formular_rechnungen_person = toga.Selection(items=self.personen_liste, accessor='name', style=style_input, on_change=self.rechnung_beihilfesatz)
+        box_formular_rechnungen_person.add(self.input_formular_rechnungen_person)
+        self.box_seite_formular_rechnungen.add(box_formular_rechnungen_person)
+
+        # Bereich zur Auswahl des Beihilfesatzes
+        box_formular_rechnungen_beihilfesatz = toga.Box(style=style_box_row)
+        box_formular_rechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
+        self.input_formular_rechnungen_beihilfesatz = toga.TextInput(style=style_input, readonly=False)
+        box_formular_rechnungen_beihilfesatz.add(self.input_formular_rechnungen_beihilfesatz)
+        self.box_seite_formular_rechnungen.add(box_formular_rechnungen_beihilfesatz)
+
         # Bereich zur Eingabe des Rechnungsdatums
         box_formular_rechnungen_rechnungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=style_label_input))
@@ -707,6 +730,7 @@ class Kontolupe(toga.App):
         box_formular_rechnungen_rechnungsdatum.add(self.input_formular_rechnungen_rechnungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_rechnungsdatum)
 
+        # Bereich zur Eingabe des Rechnungsbetrags
         box_formular_rechnungen_betrag = toga.Box(style=style_box_row)
         box_formular_rechnungen_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
         self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_zahl)
@@ -726,13 +750,6 @@ class Kontolupe(toga.App):
         self.input_formular_rechnungen_notiz = toga.TextInput(style=style_input)
         box_formular_rechnungen_notiz.add(self.input_formular_rechnungen_notiz)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_notiz)
-
-        # Bereich zur Auswahl des Beihilfesatzes
-        box_formular_rechnungen_beihilfesatz = toga.Box(style=style_box_row)
-        box_formular_rechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
-        self.input_formular_rechnungen_beihilfesatz = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_prozent)
-        box_formular_rechnungen_beihilfesatz.add(self.input_formular_rechnungen_beihilfesatz)
-        self.box_seite_formular_rechnungen.add(box_formular_rechnungen_beihilfesatz)
 
         # Bereich zur Eingabe des Buchungsdatums
         box_formular_rechnungen_buchungsdatum = toga.Box(style=style_box_row)
@@ -760,9 +777,13 @@ class Kontolupe(toga.App):
         # Setze die Eingabefelder zurück
         self.input_formular_rechnungen_betrag.value = ''
         self.input_formular_rechnungen_rechnungsdatum.value = ''
+
+        if len(self.personen_liste) > 0:
+            self.input_formular_rechnungen_person.value = self.personen_liste[0]
+            self.input_formular_rechnungen_beihilfesatz.value = str(self.personen_liste[0].beihilfesatz)
+        
         if len(self.einrichtungen_liste) > 0:
             self.input_formular_rechnungen_einrichtung.value = self.einrichtungen_liste[0]
-        self.input_formular_rechnungen_beihilfesatz.value = ''
         self.input_formular_rechnungen_notiz.value = ''
         self.input_formular_rechnungen_buchungsdatum.value = ''
         self.input_formular_rechnungen_bezahlt.value = False
@@ -792,6 +813,21 @@ class Kontolupe(toga.App):
         # Ermittle den Index der Einrichtung in der Liste der Einrichtungen
         einrichtung_index = self.index_liste_von_id(self.einrichtungen, self.rechnungen[self.rechnung_b_id].einrichtung_id)
 
+        # Ermittle den Index der Person in der Liste der Personen
+        person_index = self.index_liste_von_id(self.personen, self.rechnungen[self.rechnung_b_id].person_id)
+
+        # Auswahlfeld für die Einrichtung befüllen
+        if einrichtung_index is not None:
+            self.input_formular_rechnungen_einrichtung.value = self.einrichtungen_liste[einrichtung_index]
+        elif len(self.einrichtungen_liste) > 0:
+            self.input_formular_rechnungen_einrichtung.value = self.einrichtungen_liste[0]
+
+        # Auswahlfeld für die Person befüllen
+        if person_index is not None:    
+            self.input_formular_rechnungen_person.value = self.personen_liste[person_index]
+        elif len(self.personen_liste) > 0:
+            self.input_formular_rechnungen_person.value = self.personen_liste[0]
+
         # Befülle die Eingabefelder
         self.input_formular_rechnungen_betrag.value = format(float(self.rechnungen[self.rechnung_b_id].betrag), '.2f').replace('.', ',')
         self.input_formular_rechnungen_rechnungsdatum.value = self.rechnungen[self.rechnung_b_id].rechnungsdatum
@@ -799,12 +835,6 @@ class Kontolupe(toga.App):
         self.input_formular_rechnungen_notiz.value = self.rechnungen[self.rechnung_b_id].notiz
         self.input_formular_rechnungen_buchungsdatum.value = self.rechnungen[self.rechnung_b_id].buchungsdatum
         self.input_formular_rechnungen_bezahlt.value = self.rechnungen[self.rechnung_b_id].bezahlt
-
-        # Auswahlfeld für die Einrichtung befüllen
-        if einrichtung_index is not None:
-            self.input_formular_rechnungen_einrichtung.value = self.einrichtungen_liste[einrichtung_index]
-        elif len(self.einrichtungen_liste) > 0:
-            self.input_formular_rechnungen_einrichtung.value = self.einrichtungen_liste[0]
 
         # Setze das Flag
         self.flag_bearbeite_rechnung = True
@@ -828,6 +858,11 @@ class Kontolupe(toga.App):
         # Prüfe, ob ein Betrag eingegeben wurde
         if not self.pruefe_zahl(self.input_formular_rechnungen_betrag) or self.input_formular_rechnungen_betrag.value == '':
             nachricht += 'Bitte gib einen gültigen Betrag ein.\n'
+
+        # Prüfe, ob eine Person ausgewählt wurde
+        if len(self.personen_liste) > 0:
+            if self.input_formular_rechnungen_person.value is None:
+                nachricht += 'Bitte wähle eine Person aus.\n'
 
         # Prüfe, ob eine Einrichtung ausgewählt wurde
         if len(self.einrichtungen_liste) > 0:
@@ -854,11 +889,13 @@ class Kontolupe(toga.App):
         # Erstelle eine neue Rechnung
             neue_rechnung = Rechnung()
             neue_rechnung.rechnungsdatum = self.input_formular_rechnungen_rechnungsdatum.value
+            if len(self.personen_liste) > 0:
+                neue_rechnung.person_id = self.input_formular_rechnungen_person.value.db_id
+            neue_rechnung.beihilfesatz = int(self.input_formular_rechnungen_beihilfesatz.value or 0)
             if len(self.einrichtungen_liste) > 0:
                 neue_rechnung.einrichtung_id = self.input_formular_rechnungen_einrichtung.value.db_id
             neue_rechnung.notiz = self.input_formular_rechnungen_notiz.value
             neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
-            neue_rechnung.beihilfesatz = int(self.input_formular_rechnungen_beihilfesatz.value or 0)
             neue_rechnung.buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             neue_rechnung.bezahlt = self.input_formular_rechnungen_bezahlt.value
 
@@ -884,12 +921,15 @@ class Kontolupe(toga.App):
 
             # Bearbeite die Rechnung
             self.rechnungen[self.rechnung_b_id].rechnungsdatum = self.input_formular_rechnungen_rechnungsdatum.value
+
+            if len(self.personen_liste) > 0:
+                self.rechnungen[self.rechnung_b_id].person_id = self.input_formular_rechnungen_person.value.db_id
             
             if len(self.einrichtungen_liste) > 0:
                 self.rechnungen[self.rechnung_b_id].einrichtung_id = self.input_formular_rechnungen_einrichtung.value.db_id
             self.rechnungen[self.rechnung_b_id].notiz = self.input_formular_rechnungen_notiz.value
             self.rechnungen[self.rechnung_b_id].betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
-            self.rechnungen[self.rechnung_b_id].beihilfesatz = float(self.input_formular_rechnungen_beihilfesatz.value or 0)
+            self.rechnungen[self.rechnung_b_id].beihilfesatz = int(self.input_formular_rechnungen_beihilfesatz.value or 0)
             self.rechnungen[self.rechnung_b_id].buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
             self.rechnungen[self.rechnung_b_id].bezahlt = self.input_formular_rechnungen_bezahlt.value
 
@@ -2038,9 +2078,11 @@ class Kontolupe(toga.App):
             'betrag', 
             'betrag_euro',
             'rechnungsdatum', 
-            'einrichtung_id', 
+            'einrichtung_id',
+            'einrichtung_name',
             'notiz', 
-            'einrichtung_name', 
+            'person_id',
+            'person_name',
             'info', 
             'beihilfesatz', 
             'beihilfesatz_prozent',
@@ -2064,9 +2106,11 @@ class Kontolupe(toga.App):
                 'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                 'rechnungsdatum': rechnung.rechnungsdatum,
                 'einrichtung_id': rechnung.einrichtung_id,
-                'notiz': rechnung.notiz,
                 'einrichtung_name': self.einrichtung_name(rechnung.einrichtung_id),
-                'info': self.einrichtung_name(rechnung.einrichtung_id) + ', ' + rechnung.notiz,
+                'notiz': rechnung.notiz,
+                'person_id': rechnung.person_id,
+                'person_name': self.person_name(rechnung.person_id),
+                'info': (self.person_name(rechnung.person_id) + ', ' if self.person_name(rechnung.person_id) else '') + self.einrichtung_name(rechnung.einrichtung_id),
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
@@ -2086,6 +2130,14 @@ class Kontolupe(toga.App):
         for einrichtung in self.einrichtungen:
             if einrichtung.db_id == einrichtung_id:
                 return einrichtung.name
+        return ''
+    
+
+    def person_name(self, person_id):
+        """Ermittelt den Namen einer Person anhand ihrer Id."""
+        for person in self.personen:
+            if person.db_id == person_id:
+                return person.name
         return ''
     
 
@@ -2251,14 +2303,14 @@ class Kontolupe(toga.App):
             'info'                          # Info-Text der Buchung
         ])
 
-        for rechnung in self.rechnungen:
+        for rechnung in self.rechnungen_liste:
             if not rechnung.bezahlt:
                 offene_buchungen_liste.append({
                     'db_id': rechnung.db_id,
                     'typ': 'Rechnung',
                     'betrag_euro': '-{:.2f} €'.format(rechnung.betrag).replace('.', ','),
                     'datum': rechnung.buchungsdatum,
-                    'info': self.einrichtung_name(rechnung.einrichtung_id) + ' - ' + rechnung.notiz
+                    'info': rechnung.info
                 })
     
         for beihilfepaket in self.beihilfepakete:
@@ -2307,6 +2359,8 @@ class Kontolupe(toga.App):
             'notiz', 
             'einrichtung_name', 
             'info', 
+            'person_id',
+            'person_name',
             'beihilfesatz', 
             'beihilfesatz_prozent',
             'buchungsdatum', 
@@ -2393,8 +2447,10 @@ class Kontolupe(toga.App):
                 'rechnungsdatum': rechnung.rechnungsdatum,
                 'einrichtung_id': rechnung.einrichtung_id,
                 'notiz': rechnung.notiz,
+                'person_id': rechnung.person_id,
+                'person_name': self.person_name(rechnung.person_id),
                 'einrichtung_name': self.einrichtung_name(rechnung.einrichtung_id),
-                'info': self.einrichtung_name(rechnung.einrichtung_id) + ', ' + rechnung.notiz,
+                'info': (self.person_name(rechnung.person_id) + ', ' if self.person_name(rechnung.person_id) else '') + self.einrichtung_name(rechnung.einrichtung_id),
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
@@ -2450,6 +2506,19 @@ class Kontolupe(toga.App):
                 # Wenn die Einrichtung nicht mehr existiert, setze die Einrichtung zurück
                 if not einrichtung_vorhanden:
                     rechnung.einrichtung_id = None
+
+            # Aktualisiere die Person
+            if rechnung.person_id:
+                # Überprüfe ob die Person noch existiert
+                person_vorhanden = False
+                for person in self.personen:
+                    if person.db_id == rechnung.person_id:
+                        person_vorhanden = True
+                        break
+                
+                # Wenn die Person nicht mehr existiert, setze die Person zurück
+                if not person_vorhanden:
+                    rechnung.person_id = None
             
             # Aktualisierte Rechnung speichern
             rechnung.speichern(self.db)
@@ -2535,8 +2604,10 @@ class Kontolupe(toga.App):
                 'rechnungsdatum': rechnung.rechnungsdatum,
                 'einrichtung_id': rechnung.einrichtung_id,
                 'notiz': rechnung.notiz,
+                'person_id': rechnung.person_id,
+                'person_name': self.person_name(rechnung.person_id),
                 'einrichtung_name': self.einrichtung_name(rechnung.einrichtung_id),
-                'info': self.einrichtung_name(rechnung.einrichtung_id) + ', ' + rechnung.notiz,
+                'info': (self.person_name(rechnung.person_id) + ', ' if self.person_name(rechnung.person_id) else '') + self.einrichtung_name(rechnung.einrichtung_id),
                 'beihilfesatz': rechnung.beihilfesatz,
                 'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
                 'buchungsdatum': rechnung.buchungsdatum,
