@@ -32,6 +32,9 @@ style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, backg
 style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff', background_color='#368ba8')
 style_table_offene_buchungen    = Pack(padding=5, height=200, color='#222222')
 style_table_auswahl             = Pack(padding=5, height=200, flex=1, color='#222222')
+style_label_info                = Pack(flex=2, padding=5, padding_top=10, text_align=LEFT, color='#222222')
+style_label_detail              = Pack(flex=3, padding=5, padding_top=10, text_align=LEFT, color='#222222')
+style_label_detail_link         = Pack(flex=3, padding=5, padding_top=10, text_align=LEFT, color='#368ba8', font_weight='bold')
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -932,8 +935,8 @@ class Kontolupe(toga.App):
         # Tabelle mit den Einrichtungen
 
         self.tabelle_einrichtungen = toga.Table(
-            headings    = ['Einrichtung'], 
-            accessors   = ['name'],
+            headings    = ['Name', 'Ort', 'Telefon'], 
+            accessors   = ['name', 'ort', 'telefon'],
             data        = self.einrichtungen_liste,
             style       = style_table,
             on_select   = self.update_app,
@@ -1165,43 +1168,43 @@ class Kontolupe(toga.App):
 
         # Bereich mit den Details zur Straße
         box_seite_info_einrichtung_strasse = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_strasse.add(toga.Label('Straße, Hausnr.: ', style=style_label_input))
-        self.label_info_einrichtung_strasse = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_strasse.add(toga.Label('Straße, Hausnr.: ', style=style_label_info))
+        self.label_info_einrichtung_strasse = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_strasse.add(self.label_info_einrichtung_strasse)
         box_seite_info_einrichtung.add(box_seite_info_einrichtung_strasse)
 
         # Bereich mit den Details zum Ort
         box_seite_info_einrichtung_plz_ort = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_plz_ort.add(toga.Label('PLZ, Ort: ', style=style_label_input))
-        self.label_info_einrichtung_plz_ort = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_plz_ort.add(toga.Label('PLZ, Ort: ', style=style_label_info))
+        self.label_info_einrichtung_plz_ort = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_plz_ort.add(self.label_info_einrichtung_plz_ort)
         box_seite_info_einrichtung.add(box_seite_info_einrichtung_plz_ort)
 
         # Bereich mit den Details zur Telefonnummer
         box_seite_info_einrichtung_telefon = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_telefon.add(toga.Label('Telefon: ', style=style_label_input))
-        self.label_info_einrichtung_telefon = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_telefon.add(toga.Label('Telefon: ', style=style_label_info))
+        self.label_info_einrichtung_telefon = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_telefon.add(self.label_info_einrichtung_telefon)
         box_seite_info_einrichtung.add(box_seite_info_einrichtung_telefon)
         
         # Bereich mit den Details zur E-Mail-Adresse
         box_seite_info_einrichtung_email = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_email.add(toga.Label('E-Mail: ', style=style_label_input))
-        self.label_info_einrichtung_email = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_email.add(toga.Label('E-Mail: ', style=style_label_info))
+        self.label_info_einrichtung_email = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_email.add(self.label_info_einrichtung_email)
         box_seite_info_einrichtung.add(box_seite_info_einrichtung_email)
 
         # Bereich mit den Details zur Webseite
         box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_input))
-        self.label_info_einrichtung_webseite = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
+        self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
         box_seite_info_einrichtung.add(box_seite_info_einrichtung_webseite)
 
         # Bereich mit den Details zur Notiz
         box_seite_info_einrichtung_notiz = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_notiz.add(toga.Label('Notiz: ', style=style_label_input))
-        self.label_info_einrichtung_notiz = toga.Label('', style=style_label_input)
+        box_seite_info_einrichtung_notiz.add(toga.Label('Notiz: ', style=style_label_info))
+        self.label_info_einrichtung_notiz = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_notiz.add(self.label_info_einrichtung_notiz)
         box_seite_info_einrichtung.add(box_seite_info_einrichtung_notiz)
 
