@@ -33,6 +33,7 @@ class Datenbank:
                 ('einrichtung_id', 'INTEGER'),
                 ('rechnungsdatum', 'TEXT'),
                 ('notiz', 'TEXT'),
+                ('person_id', 'INTEGER'),
                 ('beihilfesatz', 'REAL'),
                 ('buchungsdatum', 'TEXT'),
                 ('aktiv', 'INTEGER'),
@@ -65,7 +66,13 @@ class Datenbank:
                 ('webseite', 'TEXT'),
                 ('notiz', 'TEXT'),
                 ('aktiv', 'INTEGER')
-            ]
+            ],
+            'personen': [
+                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
+                ('name', 'TEXT'),
+                ('beihilfesatz', 'INTEGER'),
+                ('aktiv', 'INTEGER')
+            ],
         }
 
         # Dictionary, welches die umzubenennenden Spalten enthält.
@@ -335,6 +342,8 @@ class Datenbank:
                     element = PKVPaket()
                 case 'einrichtungen':
                     element = Einrichtung()
+                case 'personen':
+                    element = Person()
 
             # Setze die Attribute des Elements
             for column in self.__tables[table]:
@@ -367,6 +376,10 @@ class Datenbank:
         """Einfügen einer neuen Einrichtung in die Datenbank."""
         return self.__new_element('einrichtungen', einrichtung)
     
+    def neue_person(self, person):
+        """Einfügen einer neuen Person in die Datenbank."""
+        return self.__new_element('personen', person)
+    
     def aendere_rechnung(self, rechnung):
         """Ändern einer Rechnung in der Datenbank."""
         self.__change_element('rechnungen', rechnung)
@@ -382,6 +395,10 @@ class Datenbank:
     def aendere_einrichtung(self, einrichtung):
         """Ändern einer Einrichtung in der Datenbank."""
         self.__change_element('einrichtungen', einrichtung)
+
+    def aendere_person(self, person):
+        """Ändern einer Person in der Datenbank."""
+        self.__change_element('personen', person)
 
     def loesche_rechnung(self, rechnung):
         """Löschen einer Rechnung aus der Datenbank."""
@@ -399,6 +416,10 @@ class Datenbank:
         """Löschen einer Einrichtung aus der Datenbank."""
         self.__delete_element('einrichtungen', einrichtung)
 
+    def loesche_person(self, person):
+        """Löschen einer Person aus der Datenbank."""
+        self.__delete_element('personen', person)
+
     def lade_rechnungen(self):
         """Laden der Rechnungen aus der Datenbank."""
         return self.__load_data('rechnungen', only_active=True)
@@ -414,6 +435,10 @@ class Datenbank:
     def lade_einrichtungen(self):
         """Laden der Einrichtungen aus der Datenbank."""
         return self.__load_data('einrichtungen', only_active=True)
+    
+    def lade_personen(self):
+        """Laden der Personen aus der Datenbank."""
+        return self.__load_data('personen', only_active=True)
 
 
 class Rechnung:
@@ -595,3 +620,32 @@ class Einrichtung:
             f'\nE-Mail: {self.email}'
             f'\nWebseite: {self.webseite}'
             f'\nNotiz: {self.notiz}')
+    
+
+class Person:
+    """Klasse zur Verwaltung der Personen."""
+    
+    def __init__(self):
+        """Initialisierung der Person."""
+        self.name = None
+        self.beihilfesatz = None
+        self.aktiv = True
+        self.db_id = None
+
+    def neu(self, db):
+        """Neue Person erstellen."""
+        self.db_id = db.neue_person(self)
+
+    def speichern(self, db):
+        """Speichern der Person in der Datenbank."""
+        db.aendere_person(self)
+
+    def loeschen(self, db):
+        """Löschen der Person aus der Datenbank."""
+        db.loesche_person(self)
+
+    def __str__(self):
+        """Ausgabe der Person."""
+        return (f'ID: {self.db_id}\n'
+            f'Name: {self.name}'
+            f'\nBeihilfesatz: {self.beihilfesatz} %')
