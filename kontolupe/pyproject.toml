@@ -173,6 +173,9 @@ requires = [
 requires = [
     "toga-android~=0.4.0"
 ]
+permissions = [
+    'INTERNET'
+]
 
 # Web deployments
 [tool.briefcase.app.kontolupe.web]

@@ -12,6 +12,7 @@ from toga.sources import ListSource
 from toga.validators import *
 from kontolupe.buchungen import *
 from datetime import datetime
+import webbrowser
 
 # Allgemeine Styles
 style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
@@ -31,11 +32,11 @@ style_divider                   = Pack(padding=5, color='#222222')
 # Spezifische Styles
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
 style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff', background_color='#368ba8')
-style_table_offene_buchungen    = Pack(padding=5, height=200, color='#222222')
-style_table_auswahl             = Pack(padding=5, height=200, flex=1, color='#222222')
-style_label_info                = Pack(flex=2, padding=5, padding_top=10, text_align=LEFT, color='#222222')
-style_label_detail              = Pack(flex=3, padding=5, padding_top=10, text_align=LEFT, color='#222222')
-style_label_detail_link         = Pack(flex=3, padding=5, padding_top=10, text_align=LEFT, color='#368ba8', font_weight='bold')
+style_table_offene_buchungen    = Pack(flex=1, padding=5, height=200, color='#222222')
+style_table_auswahl             = Pack(flex=1, padding=5, height=200, color='#222222')
+style_label_info                = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
+style_label_detail              = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
+style_button_link               = Pack(padding=5, padding_top=10, text_align=CENTER, background_color='#ffffff', color='#368ba8', font_weight='bold')
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -399,6 +400,22 @@ class Kontolupe(toga.App):
             return False
         
         return True
+
+
+    def link_webseite(self, widget):
+        """Öffnet die Webseite in einem Browserfenster."""
+
+        # Ermittlung der Webadresse
+        webseite = ''
+        match widget:
+            case self.link_info_einrichtung_webseite:
+                webseite = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+
+        # Öffnen der Webseite
+        if webseite != '':
+            webbrowser.open(webseite)
+        else:
+            self.main_window.info_dialog('Keine Webseite', 'Keine Webseite hinterlegt.')
 
 
     def erzeuge_startseite(self):
@@ -1193,10 +1210,13 @@ class Kontolupe(toga.App):
         box_seite_info_einrichtung_email.add(self.label_info_einrichtung_email)
 
         # Bereich mit den Details zur Webseite
-        box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
-        self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
-        box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
+        #box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
+        #box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
+        #self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
+        #box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
+        label_info_einrichtung_website = toga.Label('Webseite:', style=style_label_info)
+        self.link_info_einrichtung_webseite = toga.Button('', style=style_button_link, on_press=self.link_webseite)
+        
 
         # Bereich mit den Details zur Notiz
         box_seite_info_einrichtung_notiz = toga.Box(style=style_box_row)
@@ -1223,7 +1243,9 @@ class Kontolupe(toga.App):
                 toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_telefon,
                 box_seite_info_einrichtung_email,
-                box_seite_info_einrichtung_webseite,
+                #box_seite_info_einrichtung_webseite,
+                label_info_einrichtung_website,
+                self.link_info_einrichtung_webseite,
                 toga.Divider(style=style_divider),
                 box_seite_info_einrichtung_notiz,
                 box_seite_info_einrichtung_buttons
@@ -1247,7 +1269,8 @@ class Kontolupe(toga.App):
             self.label_info_einrichtung_plz_ort.text = self.einrichtungen_liste[self.einrichtung_b_id].plz_ort
             self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.einrichtung_b_id].telefon
             self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.einrichtung_b_id].email
-            self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+            #self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+            self.link_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
             self.label_info_einrichtung_notiz.text = self.einrichtungen_liste[self.einrichtung_b_id].notiz
 
             # Zeige die Seite
