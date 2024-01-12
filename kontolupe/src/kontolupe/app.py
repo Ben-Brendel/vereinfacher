@@ -18,28 +18,35 @@ style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
 style_box_row                   = Pack(direction=ROW, alignment=CENTER)
 style_scroll_container          = Pack(flex=1)
 style_webview                   = Pack(flex=1)
-style_label_h1                  = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
+style_label_h1                  = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=10, padding_bottom=20, color='#222222')
+style_label_h1_hell             = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=10, padding_bottom=20, color='#ffffff')
 style_label_h2                  = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
+style_label_h2_hell             = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#ffffff')
 style_label                     = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#222222')
+style_label_hell                = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#ffffff')
 style_label_center              = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#222222')
+style_label_center_hell         = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#ffffff')
 style_button                    = Pack(flex=1, padding=5, color='#222222')
 style_input                     = Pack(flex=1, padding=5, color='#222222') 
 style_label_input               = Pack(flex=1, padding=5, text_align=LEFT, color='#222222')
+style_label_input_hell          = Pack(flex=1, padding=5, text_align=LEFT, color='#ffffff')
 style_table                     = Pack(flex=1, padding=5, color='#222222')
+style_table_hell                = Pack(flex=1, padding=5, color='#ffffff')
 style_switch                    = Pack(flex=1, padding=5, color='#222222')
+style_switch_hell               = Pack(flex=1, padding=5, color='#ffffff')
 style_divider                   = Pack(padding=5, color='#222222')
 
 # Spezifische Styles
-style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
-style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff', background_color='#368ba8')
-style_table_offene_buchungen    = Pack(flex=1, padding=5, height=200, color='#222222')
 style_table_auswahl             = Pack(flex=1, padding=5, height=200, color='#222222')
 style_label_info                = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
 style_label_detail              = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
 style_button_link               = Pack(padding=5, padding_top=10, text_align=CENTER, background_color='#ffffff', color='#368ba8', font_weight='bold')
 style_display                   = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
 
-# Boxen der Startseite
+# Startseite
+style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
+style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff', background_color='#368ba8')
+style_table_offene_buchungen    = Pack(flex=1, padding=5, height=200, color='#222222')
 style_section_start             = Pack(direction=COLUMN, alignment=CENTER, padding=0)
 style_section_rechnungen        = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#368ba8')
 style_section_beihilfe          = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#b43131')
@@ -48,6 +55,12 @@ style_section_daten             = Pack(direction=COLUMN, alignment=CENTER, paddi
 style_label_h2_start            = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#ffffff')
 style_box_buttons_start         = Pack(padding=5, padding_bottom=10, direction=ROW, alignment=CENTER)
 style_label_section             = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#ffffff')
+
+# Farbige Themenbereiche
+style_box_column_rechnungen     = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
+style_box_column_beihilfe       = Pack(direction=COLUMN, alignment=CENTER, background_color='#b43131')
+style_box_column_pkv            = Pack(direction=COLUMN, alignment=CENTER, background_color='#3cae58')
+style_box_column_dunkel         = Pack(direction=COLUMN, alignment=CENTER, background_color='#444444')
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -486,7 +499,9 @@ class Kontolupe(toga.App):
     def erzeuge_webview(self):
         """Erzeugt eine WebView zur Anzeige von Webseiten."""
         self.box_webview = toga.Box(style=style_box_column)
-        self.box_webview.add(toga.Button('Zurück', style=style_button, on_press=self.geh_zurueck))
+        box_webview_top = toga.Box(style=style_box_column_dunkel)
+        box_webview_top.add(toga.Button('Zurück', style=style_button, on_press=self.geh_zurueck))
+        self.box_webview.add(box_webview_top)
         self.webview = toga.WebView(style=style_webview)
         self.box_webview.add(self.webview)
 
@@ -698,8 +713,10 @@ class Kontolupe(toga.App):
     def erzeuge_seite_liste_rechnungen(self):
         """Erzeugt die Seite, auf der die Rechnungen angezeigt werden."""
         self.box_seite_liste_rechnungen = toga.Box(style=style_box_column)
-        self.box_seite_liste_rechnungen.add(toga.Button('Zurück', style=style_button, on_press=self.zeige_startseite))
-        self.box_seite_liste_rechnungen.add(toga.Label('Rechnungen', style=style_label_h1))
+        box_seite_liste_rechnungen_top = toga.Box(style=style_box_column_rechnungen)
+        box_seite_liste_rechnungen_top.add(toga.Button('Zurück', style=style_button, on_press=self.zeige_startseite))
+        box_seite_liste_rechnungen_top.add(toga.Label('Rechnungen', style=style_label_h1_hell))
+        self.box_seite_liste_rechnungen.add(box_seite_liste_rechnungen_top)
 
         # Tabelle mit den Rechnungen
         self.tabelle_rechnungen = toga.Table(
@@ -741,10 +758,12 @@ class Kontolupe(toga.App):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Rechnung."""
         self.scroll_container_formular_rechnungen = toga.ScrollContainer(style=style_scroll_container)
         self.box_seite_formular_rechnungen = toga.Box(style=style_box_column)
+        box_seite_formular_rechnungen_top = toga.Box(style=style_box_column_rechnungen)
         self.scroll_container_formular_rechnungen.content = self.box_seite_formular_rechnungen
-        self.box_seite_formular_rechnungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_rechnungen, style=style_button))
-        self.label_formular_rechnungen = toga.Label('Neue Rechnung', style=style_label_h1)
-        self.box_seite_formular_rechnungen.add(self.label_formular_rechnungen)
+        box_seite_formular_rechnungen_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_rechnungen, style=style_button))
+        self.label_formular_rechnungen = toga.Label('Neue Rechnung', style=style_label_h1_hell)
+        box_seite_formular_rechnungen_top.add(self.label_formular_rechnungen)
+        self.box_seite_formular_rechnungen.add(box_seite_formular_rechnungen_top)
 
         # Bereich zur Eingabe der Person
         box_formular_rechnungen_person = toga.Box(style=style_box_row)
@@ -1090,8 +1109,10 @@ class Kontolupe(toga.App):
     def erzeuge_seite_liste_einrichtungen(self):
         """Erzeugt die Seite, auf der die Einrichtungen angezeigt werden."""
         self.box_seite_liste_einrichtungen = toga.Box(style=style_box_column)
-        self.box_seite_liste_einrichtungen.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
-        self.box_seite_liste_einrichtungen.add(toga.Label('Einrichtungen', style=style_label_h1))
+        box_seite_liste_einrichtungen_top = toga.Box(style=style_box_column_dunkel)
+        box_seite_liste_einrichtungen_top.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
+        box_seite_liste_einrichtungen_top.add(toga.Label('Einrichtungen', style=style_label_h1_hell))
+        self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_top)
 
         # Tabelle mit den Einrichtungen
 
@@ -1130,10 +1151,12 @@ class Kontolupe(toga.App):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Einrichtung."""
         self.scroll_container_formular_einrichtungen = toga.ScrollContainer(style=style_scroll_container)
         self.box_seite_formular_einrichtungen = toga.Box(style=style_box_column)
+        box_seite_formular_einrichtungen_top = toga.Box(style=style_box_column_dunkel)
         self.scroll_container_formular_einrichtungen.content = self.box_seite_formular_einrichtungen
-        self.box_seite_formular_einrichtungen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
-        self.label_formular_einrichtungen = toga.Label('Neue Einrichtung', style=style_label_h1)
-        self.box_seite_formular_einrichtungen.add(self.label_formular_einrichtungen)
+        box_seite_formular_einrichtungen_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
+        self.label_formular_einrichtungen = toga.Label('Neue Einrichtung', style=style_label_h1_hell)
+        box_seite_formular_einrichtungen_top.add(self.label_formular_einrichtungen)
+        self.box_seite_formular_einrichtungen.add(box_seite_formular_einrichtungen_top)
 
         # Bereich zur Eingabe des Namens
         box_formular_einrichtungen_name = toga.Box(style=style_box_row)
@@ -1335,7 +1358,10 @@ class Kontolupe(toga.App):
     def erzeuge_seite_info_einrichtung(self):
         """Erzeugt die Seite, auf der die Details einer Einrichtung angezeigt werden."""
         box_seite_info_einrichtung_button_zurueck = toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button)
-        self.label_info_einrichtung_name = toga.Label('', style=style_label_h1)
+        self.label_info_einrichtung_name = toga.Label('', style=style_label_h1_hell)
+        box_seite_info_einrichtung_top = toga.Box(style=style_box_column_dunkel)
+        box_seite_info_einrichtung_top.add(box_seite_info_einrichtung_button_zurueck)
+        box_seite_info_einrichtung_top.add(self.label_info_einrichtung_name)
 
         # Bereich mit den Details zur Straße
         box_seite_info_einrichtung_strasse = toga.Box(style=style_box_row)
@@ -1392,8 +1418,7 @@ class Kontolupe(toga.App):
         box_seite_info_einrichtung = toga.Box(
             style=style_box_column,
             children = [
-                box_seite_info_einrichtung_button_zurueck,
-                self.label_info_einrichtung_name,
+                box_seite_info_einrichtung_top,
                 box_seite_info_einrichtung_strasse,
                 box_seite_info_einrichtung_plz_ort,
                 toga.Divider(style=style_divider),
@@ -1483,8 +1508,10 @@ class Kontolupe(toga.App):
     def erzeuge_seite_liste_personen(self):
         """Erzeugt die Seite, auf der die Personen angezeigt werden."""
         self.box_seite_liste_personen = toga.Box(style=style_box_column)
-        self.box_seite_liste_personen.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
-        self.box_seite_liste_personen.add(toga.Label('Personen', style=style_label_h1))
+        box_seite_liste_personen_top = toga.Box(style=style_box_column_dunkel)
+        box_seite_liste_personen_top.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
+        box_seite_liste_personen_top.add(toga.Label('Personen', style=style_label_h1_hell))
+        self.box_seite_liste_personen.add(box_seite_liste_personen_top)
 
         # Tabelle mit den Personen
         self.tabelle_personen = toga.Table(
@@ -1516,9 +1543,11 @@ class Kontolupe(toga.App):
     def erzeuge_seite_formular_personen(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Person."""
         self.box_seite_formular_personen = toga.Box(style=style_box_column)
-        self.box_seite_formular_personen.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_personen, style=style_button))
-        self.label_formular_personen = toga.Label('Neue Person', style=style_label_h1)
-        self.box_seite_formular_personen.add(self.label_formular_personen)
+        box_seite_formular_personen_top = toga.Box(style=style_box_column_dunkel)
+        box_seite_formular_personen_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_personen, style=style_button))
+        self.label_formular_personen = toga.Label('Neue Person', style=style_label_h1_hell)
+        box_seite_formular_personen_top.add(self.label_formular_personen)
+        self.box_seite_formular_personen.add(box_seite_formular_personen_top)
 
         # Bereich zur Eingabe des Namens
         box_formular_personen_name = toga.Box(style=style_box_row)
@@ -1668,8 +1697,10 @@ class Kontolupe(toga.App):
     def erzeuge_seite_liste_beihilfepakete(self):
         """Erzeugt die Seite, auf der die Beihilfe-Einreichungen angezeigt werden."""
         self.box_seite_liste_beihilfepakete = toga.Box(style=style_box_column)
-        self.box_seite_liste_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
-        self.box_seite_liste_beihilfepakete.add(toga.Label('Beihilfe-Einreichungen', style=style_label_h1))
+        box_seite_liste_beihilfepakete_top = toga.Box(style=style_box_column_beihilfe)
+        box_seite_liste_beihilfepakete_top.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
+        box_seite_liste_beihilfepakete_top.add(toga.Label('Beihilfe-Einreichungen', style=style_label_h1_hell))
+        self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_top)
 
         # Tabelle mit den Beihilfepaketen
         self.tabelle_beihilfepakete = toga.Table(
@@ -1696,8 +1727,10 @@ class Kontolupe(toga.App):
     def erzeuge_seite_liste_pkvpakete(self):
         """Erzeugt die Seite, auf der die PKV-Einreichungen angezeigt werden."""
         self.box_seite_liste_pkvpakete = toga.Box(style=style_box_column)
-        self.box_seite_liste_pkvpakete.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
-        self.box_seite_liste_pkvpakete.add(toga.Label('PKV-Einreichungen', style=style_label_h1))
+        box_seite_liste_pkvpakete_top = toga.Box(style=style_box_column_pkv)
+        box_seite_liste_pkvpakete_top.add(toga.Button('Zurück', on_press=self.zeige_startseite, style=style_button))
+        box_seite_liste_pkvpakete_top.add(toga.Label('PKV-Einreichungen', style=style_label_h1_hell))
+        self.box_seite_liste_pkvpakete.add(box_seite_liste_pkvpakete_top)
 
         # Tabelle mit den PKV-Einreichungen
         self.tabelle_pkvpakete_container = toga.ScrollContainer(style=style_scroll_container)
@@ -1740,9 +1773,11 @@ class Kontolupe(toga.App):
     def erzeuge_seite_formular_beihilfepakete(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Beihilfe-Einreichung."""
         self.box_seite_formular_beihilfepakete = toga.Box(style=style_box_column)
-        self.box_seite_formular_beihilfepakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_beihilfepakete, style=style_button))
-        self.label_formular_beihilfepakete = toga.Label('Neue Beihilfe-Einreichung', style=style_label_h1)
-        self.box_seite_formular_beihilfepakete.add(self.label_formular_beihilfepakete)
+        box_seite_formular_beihilfepakete_top = toga.Box(style=style_box_column_beihilfe)
+        box_seite_formular_beihilfepakete_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_beihilfepakete, style=style_button))
+        self.label_formular_beihilfepakete = toga.Label('Neue Beihilfe-Einreichung', style=style_label_h1_hell)
+        box_seite_formular_beihilfepakete_top.add(self.label_formular_beihilfepakete)
+        self.box_seite_formular_beihilfepakete.add(box_seite_formular_beihilfepakete_top)
 
         # Bereich zur Eingabe des Datums
         box_formular_beihilfepakete_datum = toga.Box(style=style_box_row)
@@ -1789,9 +1824,11 @@ class Kontolupe(toga.App):
     def erzeuge_seite_formular_pkvpakete(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer PKV-Einreichung."""
         self.box_seite_formular_pkvpakete = toga.Box(style=style_box_column)
-        self.box_seite_formular_pkvpakete.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_pkvpakete, style=style_button))
-        self.label_formular_pkvpakete = toga.Label('Neue PKV-Einreichung', style=style_label_h1)
-        self.box_seite_formular_pkvpakete.add(self.label_formular_pkvpakete)
+        box_seite_formular_pkvpakete_top = toga.Box(style=style_box_column_pkv)
+        box_seite_formular_pkvpakete_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_pkvpakete, style=style_button))
+        self.label_formular_pkvpakete = toga.Label('Neue PKV-Einreichung', style=style_label_h1_hell)
+        box_seite_formular_pkvpakete_top.add(self.label_formular_pkvpakete)
+        self.box_seite_formular_pkvpakete.add(box_seite_formular_pkvpakete_top)
 
         # Bereich zur Eingabe des Datums
         box_formular_pkvpakete_datum = toga.Box(style=style_box_row)
