@@ -37,6 +37,7 @@ style_table_auswahl             = Pack(flex=1, padding=5, height=200, color='#22
 style_label_info                = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
 style_label_detail              = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
 style_button_link               = Pack(padding=5, padding_top=10, text_align=CENTER, background_color='#ffffff', color='#368ba8', font_weight='bold')
+style_display                   = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -357,6 +358,19 @@ class Kontolupe(toga.App):
         
         return True
         
+
+    def pruefe_telefon(self, widget):
+        """Prüft, ob die Eingabe eine gültige Telefonnummer ist und korrigiert sie entsprechend."""
+
+        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 sind.
+        eingabe = ''.join(c for c in widget.value if c in '0123456789 -/()+*#')
+        widget.value = eingabe
+
+        if widget.value == '':
+            return True
+
+        return True
+
 
     def pruefe_email(self, widget):
         """Prüft, ob die Eingabe eine gültige E-Mail-Adresse ist und korrigiert sie entsprechend."""
@@ -723,6 +737,9 @@ class Kontolupe(toga.App):
         box_formular_rechnungen_beihilfesatz.add(self.input_formular_rechnungen_beihilfesatz)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_beihilfesatz)
 
+        # Divider
+        self.box_seite_formular_rechnungen.add(toga.Divider(style=style_divider))
+
         # Bereich zur Eingabe des Rechnungsdatums
         box_formular_rechnungen_rechnungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=style_label_input))
@@ -744,12 +761,8 @@ class Kontolupe(toga.App):
         box_formular_rechnungen_einrichtung.add(self.input_formular_rechnungen_einrichtung)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_einrichtung)
 
-        # Bereich zur Eingabe der Notiz
-        box_formular_rechnungen_notiz = toga.Box(style=style_box_row)
-        box_formular_rechnungen_notiz.add(toga.Label('Notiz: ', style=style_label_input))
-        self.input_formular_rechnungen_notiz = toga.TextInput(style=style_input)
-        box_formular_rechnungen_notiz.add(self.input_formular_rechnungen_notiz)
-        self.box_seite_formular_rechnungen.add(box_formular_rechnungen_notiz)
+        # Divider
+        self.box_seite_formular_rechnungen.add(toga.Divider(style=style_divider))
 
         # Bereich zur Eingabe des Buchungsdatums
         box_formular_rechnungen_buchungsdatum = toga.Box(style=style_box_row)
@@ -763,6 +776,16 @@ class Kontolupe(toga.App):
         self.input_formular_rechnungen_bezahlt = toga.Switch('Bezahlt:', style=style_switch)
         box_formular_rechnungen_bezahlt.add(self.input_formular_rechnungen_bezahlt)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_bezahlt)
+
+        # Divider
+        self.box_seite_formular_rechnungen.add(toga.Divider(style=style_divider))
+
+        # Bereich zur Eingabe der Notiz
+        box_formular_rechnungen_notiz = toga.Box(style=style_box_row)
+        box_formular_rechnungen_notiz.add(toga.Label('Notiz: ', style=style_label_input))
+        self.input_formular_rechnungen_notiz = toga.MultilineTextInput(style=style_input)
+        box_formular_rechnungen_notiz.add(self.input_formular_rechnungen_notiz)
+        self.box_seite_formular_rechnungen.add(box_formular_rechnungen_notiz)
 
         # Bereich der Buttons
         box_formular_rechnungen_buttons = toga.Box(style=style_box_row)
@@ -1117,6 +1140,9 @@ class Kontolupe(toga.App):
         box_formular_einrichtungen_ort.add(self.input_formular_einrichtungen_ort)
         self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_ort)
 
+        # Divider
+        self.box_seite_formular_einrichtungen.add(toga.Divider(style=style_divider))
+
         # Bereich zur Eingabe der Telefonnummer
         box_formular_einrichtungen_telefon = toga.Box(style=style_box_row)
         box_formular_einrichtungen_telefon.add(toga.Label('Telefon: ', style=style_label_input))
@@ -1137,6 +1163,9 @@ class Kontolupe(toga.App):
         self.input_formular_einrichtungen_webseite = toga.TextInput(style=style_input)
         box_formular_einrichtungen_webseite.add(self.input_formular_einrichtungen_webseite)
         self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_webseite)
+
+        # Divider
+        self.box_seite_formular_einrichtungen.add(toga.Divider(style=style_divider))
 
         # Bereich zur Eingabe der Notiz
         box_formular_einrichtungen_notiz = toga.Box(style=style_box_row)
@@ -1213,6 +1242,10 @@ class Kontolupe(toga.App):
         # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
         if not self.pruefe_plz(self.input_formular_einrichtungen_plz):
                 nachricht += 'Bitte gib eine gültige PLZ ein oder lasse das Feld leer.\n'
+
+        # Prüfe, ob nichts oder eine gültige Telefonnummer eingegeben wurde
+        if not self.pruefe_telefon(self.input_formular_einrichtungen_telefon):
+                nachricht += 'Bitte gib eine gültige Telefonnummer ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige E-Mail-Adresse eingegeben wurde
         if not self.pruefe_email(self.input_formular_einrichtungen_email):
@@ -1298,12 +1331,16 @@ class Kontolupe(toga.App):
         box_seite_info_einrichtung_telefon.add(toga.Label('Telefon: ', style=style_label_info))
         self.label_info_einrichtung_telefon = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_telefon.add(self.label_info_einrichtung_telefon)
+        #self.display_info_einrichtung_telefon = toga.TextInput(style=style_display, readonly=True)
+        #box_seite_info_einrichtung_telefon.add(self.display_info_einrichtung_telefon)
         
         # Bereich mit den Details zur E-Mail-Adresse
         box_seite_info_einrichtung_email = toga.Box(style=style_box_row)
         box_seite_info_einrichtung_email.add(toga.Label('E-Mail: ', style=style_label_info))
         self.label_info_einrichtung_email = toga.Label('', style=style_label_detail)
         box_seite_info_einrichtung_email.add(self.label_info_einrichtung_email)
+        #self.display_info_einrichtung_email = toga.TextInput(style=style_display, readonly=True)
+        #box_seite_info_einrichtung_email.add(self.display_info_einrichtung_email)
 
         # Bereich mit den Details zur Webseite
         self.box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
@@ -1366,6 +1403,8 @@ class Kontolupe(toga.App):
             self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.einrichtung_b_id].telefon
             self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.einrichtung_b_id].email
             #self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+            #self.display_info_einrichtung_telefon.value = self.einrichtungen_liste[self.einrichtung_b_id].telefon
+            #self.display_info_einrichtung_email.value = self.einrichtungen_liste[self.einrichtung_b_id].email
             
             # Entferne die Inhalte der Box, damit die Webseite nicht mehrfach angezeigt wird
             if self.link_info_einrichtung_webseite in self.box_seite_info_einrichtung_webseite.children:
@@ -1701,7 +1740,10 @@ class Kontolupe(toga.App):
         )
         self.box_seite_formular_beihilfepakete.add(self.formular_beihilfe_tabelle_rechnungen)
 
-        # Bereich zur Eingabe des Betrags
+        # Divider
+        self.box_seite_formular_beihilfepakete.add(toga.Divider(style=style_divider))
+
+        # Bereich zur Anzeige des Betrags
         box_formular_beihilfepakete_betrag = toga.Box(style=style_box_row)
         box_formular_beihilfepakete_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
         self.input_formular_beihilfepakete_betrag = toga.TextInput(style=style_input, readonly=True)
@@ -1749,7 +1791,10 @@ class Kontolupe(toga.App):
         self.formular_pkvpakete_rechnungen_container.content = self.formular_pkv_tabelle_rechnungen
         self.box_seite_formular_pkvpakete.add(self.formular_pkvpakete_rechnungen_container)
 
-        # Bereich zur Eingabe des Betrags
+        # Divider
+        self.box_seite_formular_pkvpakete.add(toga.Divider(style=style_divider))
+
+        # Bereich zur Anzeige des Betrags
         box_formular_pkvpakete_betrag = toga.Box(style=style_box_row)
         box_formular_pkvpakete_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
         self.input_formular_pkvpakete_betrag = toga.TextInput(style=style_input, readonly=True)
