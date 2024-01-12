@@ -41,12 +41,12 @@ style_display                   = Pack(flex=1, padding=5, padding_top=10, text_a
 
 # Boxen der Startseite
 style_section_start             = Pack(direction=COLUMN, alignment=CENTER, padding=0)
-style_section_rechnungen        = Pack(direction=COLUMN, alignment=CENTER, padding=0, background_color='#368ba8')
-style_section_beihilfe          = Pack(direction=COLUMN, alignment=CENTER, padding=0, background_color='#b43131')
-style_section_pkv               = Pack(direction=COLUMN, alignment=CENTER, padding=0, background_color='#3cae58')
-style_section_daten             = Pack(direction=COLUMN, alignment=CENTER, padding=0)
+style_section_rechnungen        = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#368ba8')
+style_section_beihilfe          = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#b43131')
+style_section_pkv               = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#3cae58')
+style_section_daten             = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5,)
 style_label_h2_start            = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#ffffff')
-style_box_buttons_start         = Pack(padding=5, padding_bottom=20, direction=ROW, alignment=CENTER)
+style_box_buttons_start         = Pack(padding=5, padding_bottom=10, direction=ROW, alignment=CENTER)
 style_label_section             = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#ffffff')
 
 class Kontolupe(toga.App):
@@ -597,6 +597,7 @@ class Kontolupe(toga.App):
         box_startseite_daten.add(self.button_start_einrichtungen)
         box_startseite_daten.add(self.button_start_archiv)
         self.box_startseite.add(box_startseite_daten)
+
 
     def zeige_startseite(self, widget):
         """Zurück zur Startseite."""
