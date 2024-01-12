@@ -39,6 +39,16 @@ style_label_detail              = Pack(flex=1, padding=5, padding_top=10, text_a
 style_button_link               = Pack(padding=5, padding_top=10, text_align=CENTER, background_color='#ffffff', color='#368ba8', font_weight='bold')
 style_display                   = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
 
+# Boxen der Startseite
+style_section_start             = Pack(direction=COLUMN, alignment=CENTER, padding=0)
+style_section_rechnungen        = Pack(direction=COLUMN, alignment=CENTER, padding=0, background_color='#368ba8')
+style_section_beihilfe          = Pack(direction=COLUMN, alignment=CENTER, padding=0, background_color='#b43131')
+style_section_pkv               = Pack(direction=COLUMN, alignment=CENTER, padding=0, background_color='#3cae58')
+style_section_daten             = Pack(direction=COLUMN, alignment=CENTER, padding=0)
+style_label_h2_start            = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#ffffff')
+style_box_buttons_start         = Pack(padding=5, padding_bottom=20, direction=ROW, alignment=CENTER)
+style_label_section             = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#ffffff')
+
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
     def __init__(self, *args, **kwargs):
@@ -505,7 +515,7 @@ class Kontolupe(toga.App):
         self.box_startseite.add(self.box_startseite_offen)
 
         # Tabelle mit allen offenen Buchungen
-        self.box_startseite_tabelle_offene_buchungen = toga.Box(style=style_box_column)
+        self.box_startseite_tabelle_offene_buchungen = toga.Box(style=style_section_start)
         self.tabelle_offene_buchungen = toga.Table(
             headings    = ['Info', 'Betrag', 'Datum'],
             accessors   = ['info', 'betrag_euro', 'datum'],
@@ -527,42 +537,42 @@ class Kontolupe(toga.App):
         self.box_startseite.add(self.box_startseite_tabelle_offene_buchungen)
         
         # Bereich der Rechnungen
-        label_start_rechnungen = toga.Label('Rechnungen', style=style_label_h2)
-        self.label_start_rechnungen_offen = toga.Label('', style=style_label_center)
+        label_start_rechnungen = toga.Label('Rechnungen', style=style_label_h2_start)
+        self.label_start_rechnungen_offen = toga.Label('', style=style_label_section)
         button_start_rechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_rechnungen, style=style_button)
         button_start_rechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_rechnungen_neu, style=style_button)
-        box_startseite_rechnungen_buttons = toga.Box(style=style_box_row)
+        box_startseite_rechnungen_buttons = toga.Box(style=style_box_buttons_start)
         box_startseite_rechnungen_buttons.add(button_start_rechnungen_anzeigen)
         box_startseite_rechnungen_buttons.add(button_start_rechnungen_neu)
-        box_startseite_rechnungen = toga.Box(style=style_box_column)
+        box_startseite_rechnungen = toga.Box(style=style_section_rechnungen)
         box_startseite_rechnungen.add(label_start_rechnungen)
         box_startseite_rechnungen.add(self.label_start_rechnungen_offen)
         box_startseite_rechnungen.add(box_startseite_rechnungen_buttons)
         self.box_startseite.add(box_startseite_rechnungen)
 
         # Bereich der Beihilfe-Einreichungen
-        label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_label_h2)
-        self.label_start_beihilfe_offen = toga.Label('', style=style_label_center)
+        label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_label_h2_start)
+        self.label_start_beihilfe_offen = toga.Label('', style=style_label_section)
         button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.zeige_seite_liste_beihilfepakete)
         self.button_start_beihilfe_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_beihilfepakete_neu, enabled=False)
-        box_startseite_beihilfe_buttons = toga.Box(style=style_box_row)
+        box_startseite_beihilfe_buttons = toga.Box(style=style_box_buttons_start)
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
         box_startseite_beihilfe_buttons.add(self.button_start_beihilfe_neu)
-        box_startseite_beihilfe = toga.Box(style=style_box_column)
+        box_startseite_beihilfe = toga.Box(style=style_section_beihilfe)
         box_startseite_beihilfe.add(label_start_beihilfe)
         box_startseite_beihilfe.add(self.label_start_beihilfe_offen)
         box_startseite_beihilfe.add(box_startseite_beihilfe_buttons)
         self.box_startseite.add(box_startseite_beihilfe)
 
         # Bereich der PKV-Einreichungen
-        label_start_pkv = toga.Label('PKV-Einreichungen', style=style_label_h2)
-        self.label_start_pkv_offen = toga.Label('', style=style_label_center)
+        label_start_pkv = toga.Label('PKV-Einreichungen', style=style_label_h2_start)
+        self.label_start_pkv_offen = toga.Label('', style=style_label_section)
         button_start_pkv_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.zeige_seite_liste_pkvpakete)
         self.button_start_pkv_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_pkvpakete_neu, enabled=False)
-        box_startseite_pkv_buttons = toga.Box(style=style_box_row)
+        box_startseite_pkv_buttons = toga.Box(style=style_box_buttons_start)
         box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
         box_startseite_pkv_buttons.add(self.button_start_pkv_neu)
-        box_startseite_pkv = toga.Box(style=style_box_column)
+        box_startseite_pkv = toga.Box(style=style_section_pkv)
         box_startseite_pkv.add(label_start_pkv)
         box_startseite_pkv.add(self.label_start_pkv_offen)
         box_startseite_pkv.add(box_startseite_pkv_buttons)
@@ -577,11 +587,16 @@ class Kontolupe(toga.App):
         # box_startseite_archiv.add(self.label_start_archiv_offen)
         # box_startseite_archiv.add(self.button_start_archiv)
         # self.box_startseite.add(box_startseite_archiv)
+
+        self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.zeige_seite_liste_personen)
+        self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.zeige_seite_liste_einrichtungen)
         self.button_start_archiv = toga.Button('Keine archivierbaren Buchungen', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
 
-        box_startseite_archiv = toga.Box(style=style_box_column)
-        box_startseite_archiv.add(self.button_start_archiv)
-        self.box_startseite.add(box_startseite_archiv)
+        box_startseite_daten = toga.Box(style=style_section_daten)
+        box_startseite_daten.add(self.button_start_personen)
+        box_startseite_daten.add(self.button_start_einrichtungen)
+        box_startseite_daten.add(self.button_start_archiv)
+        self.box_startseite.add(box_startseite_daten)
 
     def zeige_startseite(self, widget):
         """Zurück zur Startseite."""
