@@ -2844,13 +2844,13 @@ class Kontolupe(toga.App):
             enabled=False
         )
 
-        gruppe_daten = toga.Group('Daten', order = 3)
+        gruppe_personen = toga.Group('Personen', order = 3)
 
         self.cmd_personen_anzeigen = toga.Command(
             self.zeige_seite_liste_personen,
             'Personen anzeigen',
             tooltip = 'Zeigt die Liste der Personen an.',
-            group = gruppe_daten,
+            group = gruppe_personen,
             section = 0,
             order = 10,
             enabled=True
@@ -2860,19 +2860,21 @@ class Kontolupe(toga.App):
             self.zeige_seite_formular_personen_neu,
             'Neue Person',
             tooltip = 'Erstellt eine neue Person.',
-            group = gruppe_daten,
+            group = gruppe_personen,
             section = 0,
             order = 20,
             enabled=True
         )
 
+        gruppe_einrichtungen = toga.Group('Einrichtungen', order = 4)
+
         self.cmd_einrichtungen_anzeigen = toga.Command(
             self.zeige_seite_liste_einrichtungen,
             'Einrichtungen anzeigen',
             tooltip = 'Zeigt die Liste der Einrichtungen an.',
-            group = gruppe_daten,
-            section = 1,
-            order = 30,
+            group = gruppe_einrichtungen,
+            section = 0,
+            order = 10,
             enabled=True
         )
 
@@ -2880,13 +2882,13 @@ class Kontolupe(toga.App):
             self.zeige_seite_formular_einrichtungen_neu,
             'Neue Einrichtung',
             tooltip = 'Erstellt eine neue Einrichtung.',
-            group = gruppe_daten,
-            section = 1,
-            order = 40,
+            group = gruppe_einrichtungen,
+            section = 0,
+            order = 20,
             enabled=True
         )
 
-        gruppe_tools = toga.Group('Tools', order = 4)
+        gruppe_tools = toga.Group('Tools', order = 5)
 
         self.cmd_archivieren = toga.Command(
             self.archivieren_bestaetigen,
