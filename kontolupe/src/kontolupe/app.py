@@ -144,15 +144,18 @@ class Kontolupe(toga.App):
             case 0:
                 self.button_start_archiv.enabled = False
                 self.cmd_archivieren.enabled = False
-                self.label_start_archiv_offen.text = 'Keine archivierbaren Buchungen vorhanden.'
+                #self.label_start_archiv_offen.text = 'Keine archivierbaren Buchungen vorhanden.'
+                self.button_start_archiv.text = 'Keine archivierbaren Buchungen'
             case 1:
                 self.button_start_archiv.enabled = True
                 self.cmd_archivieren.enabled = True
-                self.label_start_archiv_offen.text = '1 archivierbare Buchung vorhanden.'
+                #self.label_start_archiv_offen.text = '1 archivierbare Buchung vorhanden.'
+                self.button_start_archiv.text = '1 Buchung archivieren'
             case _:
                 self.button_start_archiv.enabled = True
                 self.cmd_archivieren.enabled = True
-                self.label_start_archiv_offen.text = '{} archivierbare Buchungen vorhanden.'.format(anzahl)
+                #self.label_start_archiv_offen.text = '{} archivierbare Buchungen vorhanden.'.format(anzahl)
+                self.button_start_archiv.text = '{} Buchungen archivieren'.format(anzahl)
 
         # Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons.
         status = False
@@ -566,15 +569,19 @@ class Kontolupe(toga.App):
         self.box_startseite.add(box_startseite_pkv)
 
         # Bereich für die Archivierungsfunktion
-        label_start_archiv = toga.Label('Archivierung', style=style_label_h2)
-        self.button_start_archiv = toga.Button('Archivieren', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
-        self.label_start_archiv_offen = toga.Label('', style=style_label_center)
+        # label_start_archiv = toga.Label('Archivierung', style=style_label_h2)
+        # self.button_start_archiv = toga.Button('Archivieren', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
+        # self.label_start_archiv_offen = toga.Label('', style=style_label_center)
+        # box_startseite_archiv = toga.Box(style=style_box_column)
+        # box_startseite_archiv.add(label_start_archiv)
+        # box_startseite_archiv.add(self.label_start_archiv_offen)
+        # box_startseite_archiv.add(self.button_start_archiv)
+        # self.box_startseite.add(box_startseite_archiv)
+        self.button_start_archiv = toga.Button('Keine archivierbaren Buchungen', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
+
         box_startseite_archiv = toga.Box(style=style_box_column)
-        box_startseite_archiv.add(label_start_archiv)
-        box_startseite_archiv.add(self.label_start_archiv_offen)
         box_startseite_archiv.add(self.button_start_archiv)
         self.box_startseite.add(box_startseite_archiv)
-
 
     def zeige_startseite(self, widget):
         """Zurück zur Startseite."""
