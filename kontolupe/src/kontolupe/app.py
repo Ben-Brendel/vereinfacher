@@ -512,6 +512,9 @@ class Kontolupe(toga.App):
             case self.link_info_einrichtung_webseite:
                 self.webview.url = self.einrichtungen_liste[self.einrichtung_b_id].webseite
                 self.zurueck = 'info_einrichtung'
+            case self.cmd_datenschutz:
+                self.webview.url = 'https://kontolupe.biberwerk.net/kontolupe-datenschutz.html'
+                self.zurueck = 'startseite'
 
         self.main_window.content = self.box_webview
 
@@ -2802,13 +2805,13 @@ class Kontolupe(toga.App):
             enabled=True
         )
 
-        gruppe_einreichungen = toga.Group('Einreichungen', order = 2)
+        gruppe_beihilfe = toga.Group('Beihilfe', order = 2)
 
         self.cmd_beihilfepakete_anzeigen = toga.Command(
             self.zeige_seite_liste_beihilfepakete,
             'Beihilfe anzeigen',
             tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
-            group = gruppe_einreichungen,
+            group = gruppe_beihilfe,
             section = 0,
             order = 10,
             enabled=True
@@ -2818,17 +2821,19 @@ class Kontolupe(toga.App):
             self.zeige_seite_formular_beihilfepakete_neu,
             'Neue Beihilfe',
             tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
-            group = gruppe_einreichungen,
+            group = gruppe_beihilfe,
             section = 0,
             order = 20,
             enabled=False
         )
 
+        gruppe_pkv = toga.Group('PKV', order = 3)
+
         self.cmd_pkvpakete_anzeigen = toga.Command(
             self.zeige_seite_liste_pkvpakete,
             'PKV anzeigen',
             tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
-            group = gruppe_einreichungen,
+            group = gruppe_pkv,
             section = 1,
             order = 30,
             enabled=True
@@ -2838,13 +2843,13 @@ class Kontolupe(toga.App):
             self.zeige_seite_formular_pkvpakete_neu,
             'Neue PKV',
             tooltip = 'Erstellt eine neue PKV-Einreichung.',
-            group = gruppe_einreichungen,
+            group = gruppe_pkv,
             section = 1,
             order = 40,
             enabled=False
         )
 
-        gruppe_personen = toga.Group('Personen', order = 3)
+        gruppe_personen = toga.Group('Personen', order = 4)
 
         self.cmd_personen_anzeigen = toga.Command(
             self.zeige_seite_liste_personen,
@@ -2866,7 +2871,7 @@ class Kontolupe(toga.App):
             enabled=True
         )
 
-        gruppe_einrichtungen = toga.Group('Einrichtungen', order = 4)
+        gruppe_einrichtungen = toga.Group('Einrichtungen', order = 5)
 
         self.cmd_einrichtungen_anzeigen = toga.Command(
             self.zeige_seite_liste_einrichtungen,
@@ -2888,7 +2893,7 @@ class Kontolupe(toga.App):
             enabled=True
         )
 
-        gruppe_tools = toga.Group('Tools', order = 5)
+        gruppe_tools = toga.Group('Tools', order = 6)
 
         self.cmd_archivieren = toga.Command(
             self.archivieren_bestaetigen,
@@ -2897,6 +2902,14 @@ class Kontolupe(toga.App):
             group = gruppe_tools,
             order = 10,
             enabled=False
+        )
+
+        self.cmd_datenschutz = toga.Command(
+            self.zeige_webview,
+            'Datenschutz',
+            tooltip = 'Öffne die Datenschutzerklärung.',
+            order = 7,
+            enabled=True
         )
 
         # Datenbank initialisieren
@@ -2943,6 +2956,7 @@ class Kontolupe(toga.App):
         self.commands.add(self.cmd_einrichtungen_anzeigen)
         self.commands.add(self.cmd_einrichtungen_neu)
         self.commands.add(self.cmd_archivieren)
+        self.commands.add(self.cmd_datenschutz)
 
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)      
