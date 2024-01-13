@@ -7,60 +7,12 @@ Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen
 """
 
 import toga
-from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 from toga.sources import ListSource
-from toga.validators import *
-from kontolupe.buchungen import *
 from datetime import datetime
 
-# Allgemeine Styles
-style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
-style_box_row                   = Pack(direction=ROW, alignment=CENTER)
-style_scroll_container          = Pack(flex=1)
-style_webview                   = Pack(flex=1)
-style_label_h1                  = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=10, padding_bottom=20, color='#222222')
-style_label_h1_hell             = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=10, padding_bottom=20, color='#ffffff')
-style_label_h2                  = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#222222')
-style_label_h2_hell             = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#ffffff')
-style_label                     = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#222222')
-style_label_hell                = Pack(font_weight='normal', text_align=LEFT, padding_left=5, padding_right=5, color='#ffffff')
-style_label_center              = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#222222')
-style_label_center_hell         = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#ffffff')
-style_button                    = Pack(flex=1, padding=5, color='#222222')
-style_input                     = Pack(flex=1, padding=5, color='#222222') 
-style_label_input               = Pack(flex=1, padding=5, text_align=LEFT, color='#222222')
-style_label_input_hell          = Pack(flex=1, padding=5, text_align=LEFT, color='#ffffff')
-style_table                     = Pack(flex=1, padding=5, color='#222222')
-style_table_hell                = Pack(flex=1, padding=5, color='#ffffff')
-style_switch                    = Pack(flex=1, padding=5, color='#222222')
-style_switch_hell               = Pack(flex=1, padding=5, color='#ffffff')
-style_divider                   = Pack(padding=5, color='#222222')
-
-# Spezifische Styles
-style_table_auswahl             = Pack(flex=1, padding=5, height=200, color='#222222')
-style_label_info                = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
-style_label_detail              = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
-style_button_link               = Pack(padding=5, padding_top=10, text_align=CENTER, background_color='#ffffff', color='#368ba8', font_weight='bold')
-style_display                   = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color='#222222')
-
-# Startseite
-style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8')
-style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color='#ffffff', background_color='#368ba8')
-style_table_offene_buchungen    = Pack(flex=1, padding=5, height=200, color='#222222')
-style_section_start             = Pack(direction=COLUMN, alignment=CENTER, padding=0)
-style_section_rechnungen        = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#368ba8')
-style_section_beihilfe          = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#7758a8')
-style_section_pkv               = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#4c9c60')
-style_section_daten             = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5,)
-style_label_h2_start            = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#ffffff')
-style_box_buttons_start         = Pack(padding=5, padding_bottom=10, direction=ROW, alignment=CENTER)
-style_label_section             = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color='#ffffff')
-
-# Farbige Themenbereiche
-style_box_column_rechnungen     = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8', padding_bottom=10)
-style_box_column_beihilfe       = Pack(direction=COLUMN, alignment=CENTER, background_color='#7758a8', padding_bottom=10)
-style_box_column_pkv            = Pack(direction=COLUMN, alignment=CENTER, background_color='#4c9c60', padding_bottom=10)
-style_box_column_dunkel         = Pack(direction=COLUMN, alignment=CENTER, background_color='#444444', padding_bottom=10)
+from kontolupe.buchungen import *
+from kontolupe.validierungen import *
+from kontolupe.layout import *
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -257,209 +209,6 @@ class Kontolupe(toga.App):
 
         return summe
     
-
-    def pruefe_zahl(self, widget):
-        """Prüft, ob die Eingabe eine Zahl ist und korrigiert sie entsprechend."""
-
-        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein , sind.
-        eingabe = ''.join(c for c in widget.value if c in '0123456789,')
-        
-        # entferne alle , außer dem letzten
-        if eingabe.count(',') > 1:
-            eingabe = eingabe.replace(',', '', eingabe.count(',') - 1)
-
-        widget.value = eingabe
-
-        # replace , with .
-        eingabe = eingabe.replace(',', '.')
-
-        try:
-            float(eingabe)
-            return True
-        except ValueError:
-            #widget.value = ''
-            #self.main_window.error_dialog('Fehler', 'Kein gültiger Betrag eingegeben.')
-            return False
-
-    
-    def pruefe_prozent(self, widget):
-        """Prüft, ob die Eingabe eine ganze Zahl zwischen 0 und 100 ist und korrigiert sie entsprechend."""
-
-        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein , sind.
-        eingabe = ''.join(c for c in widget.value if c in '0123456789')
-        widget.value = eingabe
-
-        try:
-            zahl = int(eingabe)
-            if zahl > 100:
-                widget.value = '100'
-            if zahl not in range(0, 101, 5):
-                #self.main_window.info_dialog('Bitte überprüfen', 'Der Beihilfesatz ist üblicherweise ein Vielfaches von 5 und nicht 0 oder 100.')
-                return False
-            return True
-        except ValueError:
-            widget.value = ''
-            #self.main_window.error_dialog('Fehler', 'Kein gültiger Prozentsatz eingegeben.')
-            return False
-
-
-    def pruefe_datum(self, widget):
-        """ Prüft, ob die Eingabe ein gültiges Datum ist und korrigiert die Eingabe."""
-
-        eingabe = ''.join(c for c in widget.value if c in '0123456789.')
-        widget.value = eingabe
-
-        if widget.value == '':
-            return True
-
-        error = False            
-        # check if there are 3 parts
-        if widget.value.count('.') != 2:
-            # check if the entry is numeric
-            if not widget.value.isnumeric():
-                error = True
-            # check if the entry is 6 digits long and insert 20 after the first four digits
-            elif len(widget.value) == 6:
-                widget.value = widget.value[:4] + '20' + widget.value[4:]
-            elif len(widget.value) != 8:
-                error = True
-        
-            if not error:
-                # add a . after the first two digits and after the second two digits
-                widget.value = widget.value[:2] + '.' + widget.value[2:4] + '.' + widget.value[4:]
-            
-            # check if the date is valid
-            try:
-                datetime.strptime(widget.value, '%d.%m.%Y')
-            except ValueError:
-                error = True
-
-        else:
-            # check if all parts are numbers
-            parts = widget.value.split('.')
-            for part in parts:
-                if not part.isnumeric():
-                    error = True
-                    break
-            
-            # first and second part must be two digits long, if not add a leading 0
-            if not error and len(parts[0]) != 2:
-                parts[0] = '0' + parts[0]
-            if not error and len(parts[1]) != 2:
-                parts[1] = '0' + parts[1]
-            # third part must be 4 or 2 digits long. if 2 digits long, add 20 to the beginning
-            if not error and len(parts[2]) == 2:
-                parts[2] = '20' + parts[2]
-            elif not error and len(parts[2]) != 4:
-                error = True
-
-            # put the parts back together
-            if not error:
-                widget.value = '.'.join(parts)
-            
-            # check if the date is valid
-            try:
-                datetime.strptime(widget.value, '%d.%m.%Y')
-            except ValueError:
-                error = True
-
-        # if error:
-        #     widget.value = ''
-
-        return not error
-    
-
-    def pruefe_plz(self, widget):
-        """Prüft, ob die Eingabe eine gültige Postleitzahl ist und korrigiert sie entsprechend."""
-
-        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 sind.
-        eingabe = ''.join(c for c in widget.value if c in '0123456789')
-        widget.value = eingabe
-
-        if widget.value == '':
-            return True
-
-        if len(widget.value) != 5:
-            return False
-        
-        return True
-        
-
-    def pruefe_telefon(self, widget):
-        """Prüft, ob die Eingabe eine gültige Telefonnummer ist und korrigiert sie entsprechend."""
-
-        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 sind.
-        eingabe = ''.join(c for c in widget.value if c in '0123456789 -/()+*#')
-        widget.value = eingabe
-
-        if widget.value == '':
-            return True
-
-        return True
-
-
-    def pruefe_email(self, widget):
-        """Prüft, ob die Eingabe eine gültige E-Mail-Adresse ist und korrigiert sie entsprechend."""
-
-        # Entferne alle Zeichen, die nicht in einer E-Mail-Adresse vorkommen dürfen
-        eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_')
-        widget.value = eingabe
-
-        if widget.value == '':
-            return True
-
-        # Überprüfe ob die Struktur der Mail-Adresse korrekt ist
-        if eingabe.count('@') != 1:
-            return False
-        if eingabe.count('.') < 1:
-            return False
-        if eingabe.count('.') > 2:
-            return False
-        if eingabe[0] == '@':
-            return False   
-        if eingabe[-1] == '@':
-            return False
-        if eingabe[0] == '.': 
-            return False
-        if eingabe[-1] == '.':
-            return False
-        if eingabe[-1] == '-':
-            return False
-        if eingabe[-1] == '_':
-            return False
-        
-        return True
-    
-
-    def pruefe_webseite(self, widget):
-        """Prüft, ob die Eingabe eine gültige Webseite ist und korrigiert sie entsprechend."""
-
-        # Entferne alle Zeichen, die nicht in einer Webadresse vorkommen dürfen
-        eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_/:?%=#&')
-        widget.value = eingabe
-
-        if widget.value == '':
-            return True
-
-        # Überprüfe ob die Struktur der Webadresse korrekt ist
-        if eingabe.count('.') < 1:
-            return False
-        if eingabe[0] == '.':
-            return False
-        if eingabe[-1] == '.':
-            return False
-        
-        # Überprüfe ob die Webadresse mit http:// oder https:// beginnt
-        # Und ersetze http:// durch https:// oder füge https:// hinzu
-        if eingabe[:7] != 'http://' and eingabe[:8] != 'https://':
-            eingabe = 'https://' + eingabe
-            widget.value = eingabe
-        elif eingabe[:7] == 'http://':
-            eingabe = 'https://' + eingabe[7:]
-            widget.value = eingabe
-        
-        return True
-
 
     def geh_zurueck(self, widget):
         """Ermittelt das Ziel der Zurück-Funktion und ruft die entsprechende Seite auf."""
@@ -788,14 +537,14 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Rechnungsdatums
         box_formular_rechnungen_rechnungsdatum = toga.Box(style=style_box_row)
         box_formular_rechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=style_label_input))
-        self.input_formular_rechnungen_rechnungsdatum = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
+        self.input_formular_rechnungen_rechnungsdatum = toga.TextInput(style=style_input, on_lose_focus=pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_rechnungen_rechnungsdatum.add(self.input_formular_rechnungen_rechnungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_rechnungsdatum)
 
         # Bereich zur Eingabe des Rechnungsbetrags
         box_formular_rechnungen_betrag = toga.Box(style=style_box_row)
         box_formular_rechnungen_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_zahl)
+        self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_lose_focus=pruefe_zahl)
         box_formular_rechnungen_betrag.add(self.input_formular_rechnungen_betrag)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_betrag)
 
@@ -811,8 +560,8 @@ class Kontolupe(toga.App):
 
         # Bereich zur Eingabe des Buchungsdatums
         box_formular_rechnungen_buchungsdatum = toga.Box(style=style_box_row)
-        box_formular_rechnungen_buchungsdatum.add(toga.Label('Datum Überweisung: ', style=style_label_input))
-        self.input_formular_rechnungen_buchungsdatum = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
+        box_formular_rechnungen_buchungsdatum.add(toga.Label('Bezahldatum: ', style=style_label_input))
+        self.input_formular_rechnungen_buchungsdatum = toga.TextInput(style=style_input, on_lose_focus=pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_rechnungen_buchungsdatum.add(self.input_formular_rechnungen_buchungsdatum)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_buchungsdatum)
 
@@ -920,11 +669,11 @@ class Kontolupe(toga.App):
         nachricht = ''
 
         # Prüfe, ob ein Rechnungsdatum eingegeben wurde
-        if not self.pruefe_datum(self.input_formular_rechnungen_rechnungsdatum) or self.input_formular_rechnungen_rechnungsdatum.value == '':
+        if not pruefe_datum(self.input_formular_rechnungen_rechnungsdatum) or self.input_formular_rechnungen_rechnungsdatum.value == '':
             nachricht += 'Bitte gib ein gültiges Rechnungsdatum ein.\n'
 
         # Prüfe, ob ein Betrag eingegeben wurde
-        if not self.pruefe_zahl(self.input_formular_rechnungen_betrag) or self.input_formular_rechnungen_betrag.value == '':
+        if not pruefe_zahl(self.input_formular_rechnungen_betrag) or self.input_formular_rechnungen_betrag.value == '':
             nachricht += 'Bitte gib einen gültigen Betrag ein.\n'
 
         # Prüfe, ob eine Person ausgewählt wurde
@@ -938,10 +687,10 @@ class Kontolupe(toga.App):
                 nachricht += 'Bitte wähle eine Einrichtung aus.\n'
 
         # Prüfe, ob ein Beihilfesatz eingegeben wurde
-        if not self.pruefe_prozent(self.input_formular_rechnungen_beihilfesatz) or self.input_formular_rechnungen_beihilfesatz.value == '':
+        if not pruefe_prozent(self.input_formular_rechnungen_beihilfesatz) or self.input_formular_rechnungen_beihilfesatz.value == '':
             nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
-        if not self.pruefe_datum(self.input_formular_rechnungen_buchungsdatum):
+        if not pruefe_datum(self.input_formular_rechnungen_buchungsdatum):
             nachricht += 'Bitte gib ein gültiges Buchungsdatum ein oder lasse das Feld leer.\n'
                 
         if nachricht != '':
@@ -1289,19 +1038,19 @@ class Kontolupe(toga.App):
             nachricht += 'Bitte gib einen Namen ein.\n'
 
         # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
-        if not self.pruefe_plz(self.input_formular_einrichtungen_plz):
+        if not pruefe_plz(self.input_formular_einrichtungen_plz):
                 nachricht += 'Bitte gib eine gültige PLZ ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige Telefonnummer eingegeben wurde
-        if not self.pruefe_telefon(self.input_formular_einrichtungen_telefon):
+        if not pruefe_telefon(self.input_formular_einrichtungen_telefon):
                 nachricht += 'Bitte gib eine gültige Telefonnummer ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige E-Mail-Adresse eingegeben wurde
-        if not self.pruefe_email(self.input_formular_einrichtungen_email):
+        if not pruefe_email(self.input_formular_einrichtungen_email):
                 nachricht += 'Bitte gib eine gültige E-Mail-Adresse ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige Webseite eingegeben wurde
-        if not self.pruefe_webseite(self.input_formular_einrichtungen_webseite):
+        if not pruefe_webseite(self.input_formular_einrichtungen_webseite):
                 nachricht += 'Bitte gib eine gültige Webseite ein oder lasse das Feld leer.\n'
 
         if nachricht != '':
@@ -1561,8 +1310,8 @@ class Kontolupe(toga.App):
 
         # Bereich zur Eingabe des Beihilfesatzes
         box_formular_personen_beihilfesatz = toga.Box(style=style_box_row)
-        box_formular_personen_beihilfesatz.add(toga.Label('Beihilfesatz: ', style=style_label_input))
-        self.input_formular_personen_beihilfesatz = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_prozent)
+        box_formular_personen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
+        self.input_formular_personen_beihilfesatz = toga.TextInput(style=style_input, on_lose_focus=pruefe_prozent)
         box_formular_personen_beihilfesatz.add(self.input_formular_personen_beihilfesatz)
         self.box_seite_formular_personen.add(box_formular_personen_beihilfesatz)
 
@@ -1620,7 +1369,7 @@ class Kontolupe(toga.App):
             nachricht += 'Bitte gib einen Namen ein.\n'
 
         # Prüfe, ob nichts oder eine gültige Prozentzahl eingegeben wurde
-        if not self.pruefe_prozent(self.input_formular_personen_beihilfesatz) or self.input_formular_personen_beihilfesatz.value == '':
+        if not pruefe_prozent(self.input_formular_personen_beihilfesatz) or self.input_formular_personen_beihilfesatz.value == '':
                 nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         if nachricht != '':
@@ -1785,7 +1534,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Datums
         box_formular_beihilfepakete_datum = toga.Box(style=style_box_row)
         box_formular_beihilfepakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_beihilfepakete_datum = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
+        self.input_formular_beihilfepakete_datum = toga.TextInput(style=style_input, on_lose_focus=pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_beihilfepakete_datum.add(self.input_formular_beihilfepakete_datum)
         self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_datum)
 
@@ -1836,7 +1585,7 @@ class Kontolupe(toga.App):
         # Bereich zur Eingabe des Datums
         box_formular_pkvpakete_datum = toga.Box(style=style_box_row)
         box_formular_pkvpakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_pkvpakete_datum = toga.TextInput(style=style_input, on_lose_focus=self.pruefe_datum, placeholder='TT.MM.JJJJ')
+        self.input_formular_pkvpakete_datum = toga.TextInput(style=style_input, on_lose_focus=pruefe_datum, placeholder='TT.MM.JJJJ')
         box_formular_pkvpakete_datum.add(self.input_formular_pkvpakete_datum)
         self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_datum)
 
@@ -1993,7 +1742,7 @@ class Kontolupe(toga.App):
         nachricht = ''
 
         # Prüfe das Datum
-        if not self.pruefe_datum(self.input_formular_beihilfepakete_datum) or self.input_formular_beihilfepakete_datum.value == '':
+        if not pruefe_datum(self.input_formular_beihilfepakete_datum) or self.input_formular_beihilfepakete_datum.value == '':
             nachricht += 'Bitte gib ein gültiges Datum ein.\n'
 
         # Prüfe ob Rechnungen ausgewählt wurden
@@ -2011,7 +1760,7 @@ class Kontolupe(toga.App):
         nachricht = ''
 
         # Prüfe das Datum
-        if not self.pruefe_datum(self.input_formular_pkvpakete_datum) or self.input_formular_pkvpakete_datum.value == '':
+        if not pruefe_datum(self.input_formular_pkvpakete_datum) or self.input_formular_pkvpakete_datum.value == '':
             nachricht += 'Bitte gib ein gültiges Datum ein.\n'
 
         # Prüfe ob Rechnungen ausgewählt wurden
