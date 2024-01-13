@@ -13,6 +13,7 @@ from datetime import datetime
 from kontolupe.buchungen import *
 from kontolupe.validierungen import *
 from kontolupe.layout import *
+from kontolupe.gui import *
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -510,17 +511,25 @@ class Kontolupe(toga.App):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Rechnung."""
         self.scroll_container_formular_rechnungen = toga.ScrollContainer(style=style_scroll_container)
         self.box_seite_formular_rechnungen = toga.Box(style=style_box_column)
-        box_seite_formular_rechnungen_top = toga.Box(style=style_box_column_rechnungen)
         self.scroll_container_formular_rechnungen.content = self.box_seite_formular_rechnungen
-        box_seite_formular_rechnungen_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_rechnungen, style=style_button))
-        self.label_formular_rechnungen = toga.Label('Neue Rechnung', style=style_label_h1_hell)
-        box_seite_formular_rechnungen_top.add(self.label_formular_rechnungen)
-        self.box_seite_formular_rechnungen.add(box_seite_formular_rechnungen_top)
+
+        # TopBox
+        self.form_rg_topbox = TopBox(
+            'Neue Rechnung', 
+            style_box_column_rechnungen,
+            self.zeige_seite_liste_rechnungen
+        )
+        self.form_rg_topbox.add_to_parent(self.box_seite_formular_rechnungen)
 
         # Bereich zur Eingabe der Person
         box_formular_rechnungen_person = toga.Box(style=style_box_row)
         box_formular_rechnungen_person.add(toga.Label('Person: ', style=style_label_input))
-        self.input_formular_rechnungen_person = toga.Selection(items=self.personen_liste, accessor='name', style=style_input, on_change=self.rechnung_beihilfesatz)
+        self.input_formular_rechnungen_person = toga.Selection(
+            items=self.personen_liste, 
+            accessor='name', 
+            style=style_input, 
+            on_change=self.rechnung_beihilfesatz
+        )
         box_formular_rechnungen_person.add(self.input_formular_rechnungen_person)
         self.box_seite_formular_rechnungen.add(box_formular_rechnungen_person)
 
@@ -609,7 +618,7 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_rechnung = False
 
         # Setze die Überschrift
-        self.label_formular_rechnungen.text = 'Neue Rechnung'
+        self.form_rg_topbox.set_label('Neue Rechnung')
 
         # Zeige die Seite
         self.main_window.content = self.scroll_container_formular_rechnungen
@@ -657,7 +666,7 @@ class Kontolupe(toga.App):
         self.flag_bearbeite_rechnung = True
 
         # Setze die Überschrift
-        self.label_formular_rechnungen.text = 'Rechnung bearbeiten'
+        self.form_rg_topbox.set_label('Rechnung bearbeiten')
 
         # Zeige die Seite
         self.main_window.content = self.scroll_container_formular_rechnungen
