@@ -49,8 +49,8 @@ style_start_summe               = Pack(font_size=14, font_weight='bold', text_al
 style_table_offene_buchungen    = Pack(flex=1, padding=5, height=200, color='#222222')
 style_section_start             = Pack(direction=COLUMN, alignment=CENTER, padding=0)
 style_section_rechnungen        = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#368ba8')
-style_section_beihilfe          = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#7c38e8')
-style_section_pkv               = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#3cae58')
+style_section_beihilfe          = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#7758a8')
+style_section_pkv               = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color='#4c9c60')
 style_section_daten             = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5,)
 style_label_h2_start            = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, color='#ffffff')
 style_box_buttons_start         = Pack(padding=5, padding_bottom=10, direction=ROW, alignment=CENTER)
@@ -58,8 +58,8 @@ style_label_section             = Pack(font_weight='normal', text_align=CENTER, 
 
 # Farbige Themenbereiche
 style_box_column_rechnungen     = Pack(direction=COLUMN, alignment=CENTER, background_color='#368ba8', padding_bottom=10)
-style_box_column_beihilfe       = Pack(direction=COLUMN, alignment=CENTER, background_color='#7c38e8', padding_bottom=10)
-style_box_column_pkv            = Pack(direction=COLUMN, alignment=CENTER, background_color='#3cae58', padding_bottom=10)
+style_box_column_beihilfe       = Pack(direction=COLUMN, alignment=CENTER, background_color='#7758a8', padding_bottom=10)
+style_box_column_pkv            = Pack(direction=COLUMN, alignment=CENTER, background_color='#4c9c60', padding_bottom=10)
 style_box_column_dunkel         = Pack(direction=COLUMN, alignment=CENTER, background_color='#444444', padding_bottom=10)
 
 class Kontolupe(toga.App):
