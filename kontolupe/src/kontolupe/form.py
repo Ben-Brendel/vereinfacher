@@ -77,6 +77,7 @@ class LabeledDateInput(LabeledTextInput):
         elif isinstance(value, str):
             self.text_input.value = value
         elif isinstance(value, datetime):
+            self.text_input.value = value.strftime('%d.%m.%Y')
 
 
 class LabeledFloatInput(LabeledTextInput):
