@@ -22,15 +22,15 @@ class TopBox:
 
 
 class LabeledTextInput:
-    def __init__(self, parent, label_text, placeholder=None, validator=None, readonly=False):
-        self.validator = Validator(validator)
+    def __init__(self, parent, label_text, **kwargs):
+        self.validator = Validator(kwargs.get('validator', None))
         self.box = toga.Box(style=style_box_row)
         self.label = toga.Label(label_text, style=style_label_input)
         self.text_input = toga.TextInput(
             style=style_input, 
-            placeholder=placeholder, 
+            placeholder=kwargs.get('placeholder', None), 
             on_lose_focus=self.validator.rectify, 
-            readonly=readonly
+            readonly=kwargs.get('readonly', False)
         )
         self.box.add(self.label)
         self.box.add(self.text_input)
@@ -62,8 +62,8 @@ class LabeledTextInput:
     
 
 class LabeledDateInput(LabeledTextInput):
-    def __init__(self, parent, label_text, readonly=False):
-        super().__init__(parent, label_text, 'TT.MM.JJJJ', 'date', readonly)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(parent, label_text, placeholder="TT.MM.JJJJ", validator='date', **kwargs)
 
     def get_value(self):
         return None if not self.text_input.value else datetime.strptime(self.text_input.value, '%d.%m.%Y').date()
@@ -81,8 +81,8 @@ class LabeledDateInput(LabeledTextInput):
 
 
 class LabeledFloatInput(LabeledTextInput):
-    def __init__(self, parent, label_text, readonly=False):
-        super().__init__(parent, label_text, '', 'float', readonly)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(parent, label_text, validator='float', **kwargs)
 
     def get_value_as_date(self):
         return 0.0 if not self.text_input.value else float(self.text_input.value.replace(',', '.'))
@@ -97,8 +97,8 @@ class LabeledFloatInput(LabeledTextInput):
     
 
 class LabeledIntInput(LabeledTextInput):
-    def __init__(self, parent, label_text, readonly=False):
-        super().__init__(parent, label_text, '', 'int', readonly)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(parent, label_text, validator='int', **kwargs)
 
     def get_value(self):
         return 0 if not self.text_input.value else int(self.text_input.value)
@@ -116,8 +116,8 @@ class LabeledIntInput(LabeledTextInput):
 
 
 class LabeledPercentInput(LabeledTextInput):
-    def __init__(self, parent, label_text, readonly=False):
-        super().__init__(parent, label_text, '', 'percent', readonly)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(parent, label_text, validator='percent', **kwargs)
 
     def get_value(self):
         return 0 if not self.text_input.value else int(self.text_input.value)
@@ -135,30 +135,30 @@ class LabeledPercentInput(LabeledTextInput):
 
 
 class LabeledPostalInput(LabeledTextInput):
-    def __init__(self, parent, label_text, readonly=False):
-        super().__init__(parent, label_text, '', 'postal', readonly)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(parent, label_text, validator='postal', **kwargs)
 
 
 class LabeledPhoneInput(LabeledTextInput):
-    def __init__(self, parent, label_text, readonly=False):
-        super().__init__(parent, label_text, '', 'phone', readonly)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(parent, label_text, validator='phone', **kwargs)
 
 
 class LabeledEmailInput(LabeledTextInput):
-    def __init__(self, parent, label_text, readonly=False):
-        super().__init__(parent, label_text, '', 'email', readonly)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(parent, label_text, validator='email', **kwargs)
 
 
 class LabeledWebsiteInput(LabeledTextInput):
-    def __init__(self, parent, label_text, readonly=False):
-        super().__init__(parent, label_text, 'https://...', 'website', readonly)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(parent, label_text, placeholder='https://...', validator='website', **kwargs)
 
 
 class LabeledMultilineTextInput:
-    def __init__(self, parent, label_text, readonly=False):
+    def __init__(self, parent, label_text, **kwargs):
         self.box = toga.Box(style=style_box_row)
         self.label = toga.Label(label_text, style=style_label_input)
-        self.text_input = toga.MultilineTextInput(style=style_input, readonly=readonly)
+        self.text_input = toga.MultilineTextInput(style=style_input, readonly=kwargs.get('readonly', False))
         self.box.add(self.label)
         self.box.add(self.text_input)
         self.__add_to_parent(parent)
@@ -177,20 +177,17 @@ class LabeledMultilineTextInput:
 
     def get_value(self):
         return self.text_input.value
-    
-    def _set_on_lose_focus(self, on_lose_focus):
-        self.text_input.on_lose_focus = on_lose_focus
 
 
 class LabeledSelection:
-    def __init__(self, parent, label_text, data, accessor, on_change=None):
+    def __init__(self, parent, label_text, data, accessor, **kwargs):
         self.box = toga.Box(style=style_box_row)
         self.label = toga.Label(label_text, style=style_label_input)
         self.selection = toga.Selection(
             style=style_input,
             items=data,
             accessor=accessor,
-            on_select=on_change
+            on_change=kwargs.get('on_change', None)
         )
         self.box.add(self.label)
         self.box.add(self.selection)
@@ -216,9 +213,9 @@ class LabeledSelection:
 
 
 class LabeledSwitch:
-    def __init__(self, parent, label_text, on_change=None):
+    def __init__(self, parent, label_text, **kwargs):
         self.box = toga.Box(style=style_box_row)
-        self.switch = toga.Switch(label_text, style=style_switch, on_change=on_change)
+        self.switch = toga.Switch(label_text, style=style_switch, on_change=kwargs.get('on_change', None))
         self.box.add(self.switch)
         self.__add_to_parent(parent)
 
