@@ -10,10 +10,10 @@ import toga
 from toga.sources import ListSource
 from datetime import datetime
 
-from kontolupe.buchungen import *
-from kontolupe.validierungen import *
+from kontolupe.database import *
+from kontolupe.validator import *
 from kontolupe.layout import *
-from kontolupe.gui import *
+from kontolupe.form import *
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -499,171 +499,86 @@ class Kontolupe(toga.App):
         self.main_window.content = self.box_seite_liste_rechnungen
 
 
-    def rechnung_beihilfesatz(self, widget):
+    def update_form_rg_beihilfe(self, widget):
         """Ermittelt den Beihilfesatz der ausgewählten Person und trägt ihn in das entsprechende Feld ein."""
         for person in self.personen_liste:
             if person.name == widget.value.name:
-                self.input_formular_rechnungen_beihilfesatz.value = person.beihilfesatz
+                self.form_rg_beihilfe.set_value(person.beihilfesatz)
                 break
 
 
-    def erzeuge_seite_formular_rechnungen(self):
+    def create_form_rg(self):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Rechnung."""
+        
+        # Container für das Formular
         self.sc_form_rg = toga.ScrollContainer(style=style_scroll_container)
         self.box_form_rg = toga.Box(style=style_box_column)
         self.sc_form_rg.content = self.box_form_rg
 
-        # TopBox
+        # Überschrift und Button zurück
         self.form_rg_topbox = TopBox(
-            'Neue Rechnung', 
-            style_box_column_rechnungen,
-            self.zeige_seite_liste_rechnungen
+            parent=self.box_form_rg,
+            label_text='Neue Rechnung', 
+            style_box=style_box_column_rechnungen,
+            target_back=self.zeige_seite_liste_rechnungen
         )
-        self.form_rg_topbox.add_to_parent(self.box_form_rg)
 
         # Selection zur Auswahl der Person
         self.form_rg_person = LabeledSelection(
-            label_text='Person: ',
+            parent=self.box_form_rg,
+            label_text='Person:',
             data=self.personen_liste,
             accessor='name',
-            on_change=self.rechnung_beihilfesatz
+            on_change=self.update_form_rg_beihilfe
         )
-        self.form_rg_person.add_to_parent(self.box_form_rg)
 
-        # Bereich zur Auswahl des Beihilfesatzes
-        self.form_rg_beihilfe = LabeledTextInput(
-            label_text='Beihilfesatz in %: ',
-            on_lose_focus=pruefe_zahl
-        )
-        self.form_rg_beihilfe.add_to_parent(self.box_form_rg)
-
-        # Divider
+        self.form_rg_beihilfe = LabeledPercentInput(self.box_form_rg, 'Beihilfesatz in %:')
         self.box_form_rg.add(toga.Divider(style=style_divider))
-
-        # Bereich zur Eingabe des Rechnungsdatums
-        self.form_rg_rechnungsdatum = LabeledTextInput(
-            label_text='Rechnungsdatum: ',
-            placeholder='TT.MM.JJJJ',
-            on_lose_focus=pruefe_datum
-        )
-        self.form_rg_rechnungsdatum.add_to_parent(self.box_form_rg)
-
-        # Bereich zur Eingabe des Rechnungsbetrags
-        self.form_rg_betrag = LabeledTextInput(
-            label_text='Betrag in €: ',
-            on_lose_focus=pruefe_zahl
-        )
-        self.form_rg_betrag.add_to_parent(self.box_form_rg)
+        self.form_rg_rechnungsdatum = LabeledDateInput(self.box_form_rg, 'Rechnungsdatum:')
+        self.form_rg_betrag = LabeledFloatInput(self.box_form_rg, 'Betrag in €:')
 
         # Bereich zur Auswahl der Einrichtung
         self.form_rg_einrichtung = LabeledSelection(
-            label_text='Einrichtung: ',
+            parent=self.box_form_rg,
+            label_text='Einrichtung:',
             data=self.einrichtungen_liste,
             accessor='name'
         )
-        self.form_rg_einrichtung.add_to_parent(self.box_form_rg)
 
-        # Divider
         self.box_form_rg.add(toga.Divider(style=style_divider))
-
-        # Bereich zur Eingabe des Buchungsdatums
-        self.form_rg_buchungsdatum = LabeledTextInput(
-            label_text='Bezahldatum: ',
-            placeholder='TT.MM.JJJJ',
-            on_lose_focus=pruefe_datum
-        )
-        self.form_rg_buchungsdatum.add_to_parent(self.box_form_rg)
-
-        # Bereich zur Angabe der Bezahlung
-        self.form_rg_bezahlt = LabeledSwitch(
-            label_text='Bezahlt: '
-        )
-        self.form_rg_bezahlt.add_to_parent(self.box_form_rg)
-
-        # Divider
+        self.form_rg_buchungsdatum = LabeledDateInput(self.box_form_rg, 'Bezahldatum:')
+        self.form_rg_bezahlt = LabeledSwitch(self.box_form_rg, 'Bezahlt:')
         self.box_form_rg.add(toga.Divider(style=style_divider))
-
-        # Bereich zur Eingabe der Notiz
-        self.form_rg_notiz = LabeledMultilineTextInput(
-            label_text='Notiz: '
-        )
-        self.form_rg_notiz.add_to_parent(self.box_form_rg)
+        self.form_rg_notiz = LabeledMultilineTextInput(self.box_form_rg, 'Notiz:')
 
         # Bereich der Buttons
         self.form_rg_bottombox = BottomBox(
-            ['Abbrechen', 'Speichern'],
-            [self.zeige_seite_liste_rechnungen, self.rechnung_speichern_check],
+            parent=self.box_form_rg,
+            labels=['Abbrechen', 'Speichern'],
+            targets=[self.zeige_seite_liste_rechnungen, self.check_save_rg],
         )
-        self.form_rg_bottombox.add_to_parent(self.box_form_rg)
-
-        # box_formular_rechnungen_beihilfesatz = toga.Box(style=style_box_row)
-        # box_formular_rechnungen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
-        # self.input_formular_rechnungen_beihilfesatz = toga.TextInput(style=style_input, readonly=False)
-        # box_formular_rechnungen_beihilfesatz.add(self.input_formular_rechnungen_beihilfesatz)
-        # self.box_form_rg.add(box_formular_rechnungen_beihilfesatz)
-
-        # box_formular_rechnungen_rechnungsdatum = toga.Box(style=style_box_row)
-        # box_formular_rechnungen_rechnungsdatum.add(toga.Label('Rechnungsdatum: ', style=style_label_input))
-        # self.input_formular_rechnungen_rechnungsdatum = toga.TextInput(style=style_input, on_lose_focus=pruefe_datum, placeholder='TT.MM.JJJJ')
-        # box_formular_rechnungen_rechnungsdatum.add(self.input_formular_rechnungen_rechnungsdatum)
-        # self.box_form_rg.add(box_formular_rechnungen_rechnungsdatum)
-
-        # box_formular_rechnungen_betrag = toga.Box(style=style_box_row)
-        # box_formular_rechnungen_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        # self.input_formular_rechnungen_betrag = toga.TextInput(style=style_input, on_lose_focus=pruefe_zahl)
-        # box_formular_rechnungen_betrag.add(self.input_formular_rechnungen_betrag)
-        # self.box_form_rg.add(box_formular_rechnungen_betrag)
-
-        # box_formular_rechnungen_einrichtung = toga.Box(style=style_box_row)
-        # box_formular_rechnungen_einrichtung.add(toga.Label('Einrichtung: ', style=style_label_input))
-        # self.input_formular_rechnungen_einrichtung = toga.Selection(items=self.einrichtungen_liste, accessor='name', style=style_input)
-        # box_formular_rechnungen_einrichtung.add(self.input_formular_rechnungen_einrichtung)
-        # self.box_form_rg.add(box_formular_rechnungen_einrichtung)
-
-        # box_formular_rechnungen_buchungsdatum = toga.Box(style=style_box_row)
-        # box_formular_rechnungen_buchungsdatum.add(toga.Label('Bezahldatum: ', style=style_label_input))
-        # self.input_formular_rechnungen_buchungsdatum = toga.TextInput(style=style_input, on_lose_focus=pruefe_datum, placeholder='TT.MM.JJJJ')
-        # box_formular_rechnungen_buchungsdatum.add(self.input_formular_rechnungen_buchungsdatum)
-        # self.box_form_rg.add(box_formular_rechnungen_buchungsdatum)
-
-        # box_formular_rechnungen_bezahlt = toga.Box(style=style_box_row)
-        # self.input_formular_rechnungen_bezahlt = toga.Switch('Bezahlt:', style=style_switch)
-        # box_formular_rechnungen_bezahlt.add(self.input_formular_rechnungen_bezahlt)
-        # self.box_form_rg.add(box_formular_rechnungen_bezahlt)
-
-        # box_formular_rechnungen_notiz = toga.Box(style=style_box_row)
-        # box_formular_rechnungen_notiz.add(toga.Label('Notiz: ', style=style_label_input))
-        # self.input_formular_rechnungen_notiz = toga.MultilineTextInput(style=style_input)
-        # box_formular_rechnungen_notiz.add(self.input_formular_rechnungen_notiz)
-        # self.box_form_rg.add(box_formular_rechnungen_notiz)
-
-        # box_formular_rechnungen_buttons = toga.Box(style=style_box_row)
-        # box_formular_rechnungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_rechnungen, style=style_button))
-        # box_formular_rechnungen_buttons.add(toga.Button('Speichern', on_press=self.rechnung_speichern_check, style=style_button))
-        # self.box_form_rg.add(box_formular_rechnungen_buttons)
 
 
     def zeige_seite_formular_rechnungen_neu(self, widget):
         """Zeigt die Seite zum Erstellen einer Rechnung."""
         
         # Setze die Eingabefelder zurück
-        self.input_formular_rechnungen_betrag.value = ''
-        self.input_formular_rechnungen_rechnungsdatum.value = ''
+        self.form_rg_betrag.set_value('')
+        self.form_rg_rechnungsdatum.set_value('')
 
         if len(self.personen_liste) > 0:
             self.form_rg_person.set_value(self.personen_liste[0])
-            self.input_formular_rechnungen_beihilfesatz.value = str(self.personen_liste[0].beihilfesatz)
+            self.form_rg_beihilfe.set_value(str(self.personen_liste[0].beihilfesatz))
         
         if len(self.einrichtungen_liste) > 0:
-            self.input_formular_rechnungen_einrichtung.value = self.einrichtungen_liste[0]
-        self.input_formular_rechnungen_notiz.value = ''
-        self.input_formular_rechnungen_buchungsdatum.value = ''
-        self.input_formular_rechnungen_bezahlt.value = False
+            self.form_rg_einrichtung.set_value(self.einrichtungen_liste[0])
 
-        # Zurücksetzen des Flags
+        self.form_rg_notiz.set_value('')
+        self.form_rg_buchungsdatum.set_value('')
+        self.form_rg_bezahlt.set_value(False)
+
+        # Zurücksetzen von Flag und Überschrift
         self.flag_bearbeite_rechnung = False
-
-        # Setze die Überschrift
         self.form_rg_topbox.set_label('Neue Rechnung')
 
         # Zeige die Seite
@@ -685,14 +600,14 @@ class Kontolupe(toga.App):
         # Ermittle den Index der Einrichtung in der Liste der Einrichtungen
         einrichtung_index = self.index_liste_von_id(self.einrichtungen, self.rechnungen[self.rechnung_b_id].einrichtung_id)
 
-        # Ermittle den Index der Person in der Liste der Personen
-        person_index = self.index_liste_von_id(self.personen, self.rechnungen[self.rechnung_b_id].person_id)
-
         # Auswahlfeld für die Einrichtung befüllen
         if einrichtung_index is not None:
-            self.input_formular_rechnungen_einrichtung.value = self.einrichtungen_liste[einrichtung_index]
+            self.form_rg_einrichtung.set_value(self.einrichtungen_liste[einrichtung_index])
         elif len(self.einrichtungen_liste) > 0:
-            self.input_formular_rechnungen_einrichtung.value = self.einrichtungen_liste[0]
+            self.form_rg_einrichtung.set_value(self.einrichtungen_liste[0])
+
+        # Ermittle den Index der Person in der Liste der Personen
+        person_index = self.index_liste_von_id(self.personen, self.rechnungen[self.rechnung_b_id].person_id)
 
         # Auswahlfeld für die Person befüllen
         if person_index is not None:    
@@ -701,34 +616,32 @@ class Kontolupe(toga.App):
             self.form_rg_person.set_value(self.personen_liste[0])
 
         # Befülle die Eingabefelder
-        self.input_formular_rechnungen_betrag.value = format(float(self.rechnungen[self.rechnung_b_id].betrag), '.2f').replace('.', ',')
-        self.input_formular_rechnungen_rechnungsdatum.value = self.rechnungen[self.rechnung_b_id].rechnungsdatum
-        self.input_formular_rechnungen_beihilfesatz.value = str(int(self.rechnungen[self.rechnung_b_id].beihilfesatz))
-        self.input_formular_rechnungen_notiz.value = self.rechnungen[self.rechnung_b_id].notiz
-        self.input_formular_rechnungen_buchungsdatum.value = self.rechnungen[self.rechnung_b_id].buchungsdatum
-        self.input_formular_rechnungen_bezahlt.value = self.rechnungen[self.rechnung_b_id].bezahlt
+        self.form_rg_betrag.set_value(self.rechnungen[self.rechnung_b_id].betrag)
+        self.form_rg_rechnungsdatum.set_value(self.rechnungen[self.rechnung_b_id].rechnungsdatum)
+        self.form_rg_beihilfe.set_value(self.rechnungen[self.rechnung_b_id].beihilfesatz)
+        self.form_rg_notiz.set_value(self.rechnungen[self.rechnung_b_id].notiz)
+        self.form_rg_buchungsdatum.set_value(self.rechnungen[self.rechnung_b_id].buchungsdatum)
+        self.form_rg_bezahlt.set_value(self.rechnungen[self.rechnung_b_id].bezahlt)
 
-        # Setze das Flag
+        # Setze das Flag und die Überschrift
         self.flag_bearbeite_rechnung = True
-
-        # Setze die Überschrift
         self.form_rg_topbox.set_label('Rechnung bearbeiten')
 
         # Zeige die Seite
         self.main_window.content = self.sc_form_rg
 
 
-    async def rechnung_speichern_check(self, widget):
+    async def check_save_rg(self, widget):
         """Prüft, ob die Rechnung gespeichert werden soll."""
 
         nachricht = ''
 
         # Prüfe, ob ein Rechnungsdatum eingegeben wurde
-        if not pruefe_datum(self.input_formular_rechnungen_rechnungsdatum) or self.input_formular_rechnungen_rechnungsdatum.value == '':
+        if not self.form_rg_rechnungsdatum.is_valid() or self.form_rg_rechnungsdatum.is_empty():
             nachricht += 'Bitte gib ein gültiges Rechnungsdatum ein.\n'
 
         # Prüfe, ob ein Betrag eingegeben wurde
-        if not pruefe_zahl(self.input_formular_rechnungen_betrag) or self.input_formular_rechnungen_betrag.value == '':
+        if not self.form_rg_betrag.is_valid() or self.form_rg_betrag.is_empty():
             nachricht += 'Bitte gib einen gültigen Betrag ein.\n'
 
         # Prüfe, ob eine Person ausgewählt wurde
@@ -738,14 +651,14 @@ class Kontolupe(toga.App):
 
         # Prüfe, ob eine Einrichtung ausgewählt wurde
         if len(self.einrichtungen_liste) > 0:
-            if self.input_formular_rechnungen_einrichtung.value is None:
+            if self.form_rg_einrichtung.get_value() is None:
                 nachricht += 'Bitte wähle eine Einrichtung aus.\n'
 
         # Prüfe, ob ein Beihilfesatz eingegeben wurde
-        if not pruefe_prozent(self.input_formular_rechnungen_beihilfesatz) or self.input_formular_rechnungen_beihilfesatz.value == '':
+        if not self.form_rg_beihilfe.is_valid() or self.form_rg_beihilfe.is_empty():
             nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
-        if not pruefe_datum(self.input_formular_rechnungen_buchungsdatum):
+        if not self.form_rg_buchungsdatum.is_valid():
             nachricht += 'Bitte gib ein gültiges Buchungsdatum ein oder lasse das Feld leer.\n'
                 
         if nachricht != '':
@@ -754,22 +667,22 @@ class Kontolupe(toga.App):
             await self.rechnung_speichern(widget)
 
 
-    async def rechnung_speichern(self, widget):
+    async def save_rg(self, widget):
         """Erstellt und speichert eine neue Rechnung."""
 
         if not self.flag_bearbeite_rechnung:
         # Erstelle eine neue Rechnung
             neue_rechnung = Rechnung()
-            neue_rechnung.rechnungsdatum = self.input_formular_rechnungen_rechnungsdatum.value
+            neue_rechnung.rechnungsdatum = self.form_rg_rechnungsdatum.get_value()
             if len(self.personen_liste) > 0:
                 neue_rechnung.person_id = self.form_rg_person.get_value().db_id
-            neue_rechnung.beihilfesatz = int(self.input_formular_rechnungen_beihilfesatz.value or 0)
+            neue_rechnung.beihilfesatz = self.form_rg_beihilfe.get_value()
             if len(self.einrichtungen_liste) > 0:
-                neue_rechnung.einrichtung_id = self.input_formular_rechnungen_einrichtung.value.db_id
-            neue_rechnung.notiz = self.input_formular_rechnungen_notiz.value
-            neue_rechnung.betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
-            neue_rechnung.buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
-            neue_rechnung.bezahlt = self.input_formular_rechnungen_bezahlt.value
+                neue_rechnung.einrichtung_id = self.form_rg_einrichtung.get_value().db_id
+            neue_rechnung.notiz = self.form_rg_notiz.get_value()
+            neue_rechnung.betrag = self.form_rg_betrag.get_value()
+            neue_rechnung.buchungsdatum = self.form_rg_buchungsdatum.get_value()
+            neue_rechnung.bezahlt = self.form_rg_bezahlt.get_value()
 
             # Speichere die Rechnung in der Datenbank
             neue_rechnung.neu(self.db)
@@ -786,24 +699,24 @@ class Kontolupe(toga.App):
             # True, wenn betrag oder beihilfesatz geändert wurde
             update_einreichung = False
             
-            if self.rechnungen[self.rechnung_b_id].betrag != float(self.input_formular_rechnungen_betrag.value.replace(',', '.')):
+            if self.rechnungen[self.rechnung_b_id].betrag != self.form_rg_betrag.get_value():
                 update_einreichung = True
-            if self.rechnungen[self.rechnung_b_id].beihilfesatz != float(self.input_formular_rechnungen_beihilfesatz.value):
+            if self.rechnungen[self.rechnung_b_id].beihilfesatz != self.form_rg_beihilfe.get_value():
                 update_einreichung = True
 
             # Bearbeite die Rechnung
-            self.rechnungen[self.rechnung_b_id].rechnungsdatum = self.input_formular_rechnungen_rechnungsdatum.value
+            self.rechnungen[self.rechnung_b_id].rechnungsdatum = self.form_rg_rechnungsdatum.get_value()
 
             if len(self.personen_liste) > 0:
                 self.rechnungen[self.rechnung_b_id].person_id = self.form_rg_person.get_value().db_id
             
             if len(self.einrichtungen_liste) > 0:
-                self.rechnungen[self.rechnung_b_id].einrichtung_id = self.input_formular_rechnungen_einrichtung.value.db_id
-            self.rechnungen[self.rechnung_b_id].notiz = self.input_formular_rechnungen_notiz.value
-            self.rechnungen[self.rechnung_b_id].betrag = float(self.input_formular_rechnungen_betrag.value.replace(',', '.') or 0)
-            self.rechnungen[self.rechnung_b_id].beihilfesatz = int(self.input_formular_rechnungen_beihilfesatz.value or 0)
-            self.rechnungen[self.rechnung_b_id].buchungsdatum = self.input_formular_rechnungen_buchungsdatum.value
-            self.rechnungen[self.rechnung_b_id].bezahlt = self.input_formular_rechnungen_bezahlt.value
+                self.rechnungen[self.rechnung_b_id].einrichtung_id = self.form_rg_einrichtung.get_value().db_id
+            self.rechnungen[self.rechnung_b_id].notiz = self.form_rg_notiz.get_value()
+            self.rechnungen[self.rechnung_b_id].betrag = self.form_rg_betrag.get_value()
+            self.rechnungen[self.rechnung_b_id].beihilfesatz = self.form_rg_beihilfe.get_value()
+            self.rechnungen[self.rechnung_b_id].buchungsdatum = self.form_rg_buchungsdatum.get_value()
+            self.rechnungen[self.rechnung_b_id].bezahlt = self.form_rg_bezahlt.get_value()
 
             # Speichere die Rechnung in der Datenbank
             self.rechnungen[self.rechnung_b_id].speichern(self.db)
@@ -2736,7 +2649,7 @@ class Kontolupe(toga.App):
         # Erzeuge alle GUI-Elemente
         self.erzeuge_startseite()
         self.erzeuge_seite_liste_rechnungen()
-        self.erzeuge_seite_formular_rechnungen()
+        self.create_form_rg()
         self.erzeuge_seite_liste_einrichtungen()
         self.erzeuge_seite_formular_einrichtungen()
         self.erzeuge_seite_info_einrichtung()
