@@ -217,17 +217,17 @@ class Kontolupe(toga.App):
             case 'startseite':
                 self.zeige_startseite(widget)
             case 'liste_rechnungen':
-                self.zeige_seite_liste_rechnungen(widget)
+                self.show_list_rg(widget)
             case 'liste_beihilfepakete':
                 self.zeige_seite_liste_beihilfepakete(widget)
             case 'liste_pkvpakete':
                 self.zeige_seite_liste_pkvpakete(widget)
             case 'liste_einrichtungen':
-                self.zeige_seite_liste_einrichtungen(widget)
+                self.show_list_ei(widget)
             case 'formular_rechnungen_neu':
-                self.zeige_seite_formular_rechnungen_neu(widget)
+                self.show_form_rg_new(widget)
             case 'formular_rechnungen_bearbeiten':
-                self.zeige_seite_formular_rechnungen_bearbeiten(widget)
+                self.show_form_rg_edit(widget)
             case 'formular_beihilfepakete_neu':
                 self.zeige_seite_formular_beihilfepakete_neu(widget)
             case 'formular_beihilfepakete_bearbeiten':
@@ -241,7 +241,7 @@ class Kontolupe(toga.App):
             case 'formular_einrichtungen_bearbeiten':
                 self.zeige_seite_formular_einrichtungen_bearbeiten(widget)
             case 'info_einrichtung':
-                self.zeige_info_einrichtung(widget)
+                self.show_info_ei(widget)
             case _:
                 self.zeige_startseite(widget)
 
@@ -307,8 +307,8 @@ class Kontolupe(toga.App):
         # Bereich der Rechnungen
         label_start_rechnungen = toga.Label('Rechnungen', style=style_label_h2_start)
         self.label_start_rechnungen_offen = toga.Label('', style=style_label_section)
-        button_start_rechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.zeige_seite_liste_rechnungen, style=style_button)
-        button_start_rechnungen_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_rechnungen_neu, style=style_button)
+        button_start_rechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.show_list_rg, style=style_button)
+        button_start_rechnungen_neu = toga.Button('Neu', on_press=self.show_form_rg_new, style=style_button)
         box_startseite_rechnungen_buttons = toga.Box(style=style_box_buttons_start)
         box_startseite_rechnungen_buttons.add(button_start_rechnungen_anzeigen)
         box_startseite_rechnungen_buttons.add(button_start_rechnungen_neu)
@@ -357,7 +357,7 @@ class Kontolupe(toga.App):
         # self.box_startseite.add(box_startseite_archiv)
 
         self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.zeige_seite_liste_personen)
-        self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.zeige_seite_liste_einrichtungen)
+        self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_ei)
         self.button_start_archiv = toga.Button('Keine archivierbaren Buchungen', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
 
         box_startseite_daten = toga.Box(style=style_section_daten)
@@ -463,7 +463,7 @@ class Kontolupe(toga.App):
         self.main_window.info_dialog(titel, inhalt)
 
 
-    def erzeuge_seite_liste_rechnungen(self):
+    def create_list_rg(self):
         """Erzeugt die Seite, auf der die Rechnungen angezeigt werden."""
         self.box_seite_liste_rechnungen = toga.Box(style=style_box_column)
         box_seite_liste_rechnungen_top = toga.Box(style=style_box_column_rechnungen)
@@ -485,15 +485,15 @@ class Kontolupe(toga.App):
         # Buttons für die Rechnungen
         box_seite_liste_rechnungen_buttons = toga.Box(style=style_box_row)
         self.liste_rechnungen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_rechnung_loeschen, style=style_button, enabled=False)
-        self.liste_rechnungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_rechnungen_bearbeiten, style=style_button, enabled=False)
-        self.liste_rechnungen_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_rechnungen_neu, style=style_button)
+        self.liste_rechnungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_rg_edit, style=style_button, enabled=False)
+        self.liste_rechnungen_button_neu = toga.Button('Neu', on_press=self.show_form_rg_new, style=style_button)
         box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_loeschen)
         box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_bearbeiten)
         box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_neu)
         self.box_seite_liste_rechnungen.add(box_seite_liste_rechnungen_buttons)    
 
 
-    def zeige_seite_liste_rechnungen(self, widget):
+    def show_list_rg(self, widget):
         """Zeigt die Seite mit der Liste der Rechnungen."""
         self.update_app(widget)
         self.main_window.content = self.box_seite_liste_rechnungen
@@ -515,12 +515,29 @@ class Kontolupe(toga.App):
         self.box_form_rg = toga.Box(style=style_box_column)
         self.sc_form_rg.content = self.box_form_rg
 
+        # Erzeuge eine Liste von Dictionaries, welche die Elemente der Seite enthält
+        # self.form_rg_elements = [
+        #     {'typ': 'TopBox', 'label_text': 'Neue Rechnung', 'style': style_box_column_rechnungen, 'target_back': self.show_list_rg},
+        #     {'typ': 'LabeledSelection', 'label_text': 'Person:', 'data': self.personen_liste, 'accessor': 'name', 'on_change': self.update_form_rg_beihilfe},
+        #     {'typ': 'LabeledPercentInput', 'label_text': 'Beihilfesatz in %:'},
+        #     {'typ': 'Divider', 'style': style_divider},
+        #     {'typ': 'LabeledDateInput', 'label_text': 'Rechnungsdatum:'},
+        #     {'typ': 'LabeledFloatInput', 'label_text': 'Betrag in €:'},
+        #     {'typ': 'LabeledSelection', 'label_text': 'Einrichtung:', 'data': self.einrichtungen_liste, 'accessor': 'name'},
+        #     {'typ': 'Divider', 'style': style_divider},
+        #     {'typ': 'LabeledDateInput', 'label_text': 'Bezahldatum:'},
+        #     {'typ': 'LabeledSwitch', 'label_text': 'Bezahlt:'},
+        #     {'typ': 'Divider', 'style': style_divider},
+        #     {'typ': 'LabeledMultilineTextInput', 'label_text': 'Notiz:'},
+        #     {'typ': 'BottomBox', 'labels': ['Abbrechen', 'Speichern'], 'targets': [self.show_list_rg, self.check_save_rg]},
+        # ]
+
         # Überschrift und Button zurück
         self.form_rg_topbox = TopBox(
             parent=self.box_form_rg,
             label_text='Neue Rechnung', 
             style_box=style_box_column_rechnungen,
-            target_back=self.zeige_seite_liste_rechnungen
+            target_back=self.show_list_rg
         )
 
         # Selection zur Auswahl der Person
@@ -555,11 +572,11 @@ class Kontolupe(toga.App):
         self.form_rg_bottombox = BottomBox(
             parent=self.box_form_rg,
             labels=['Abbrechen', 'Speichern'],
-            targets=[self.zeige_seite_liste_rechnungen, self.check_save_rg],
+            targets=[self.show_list_rg, self.check_save_rg],
         )
 
 
-    def zeige_seite_formular_rechnungen_neu(self, widget):
+    def show_form_rg_new(self, widget):
         """Zeigt die Seite zum Erstellen einer Rechnung."""
         
         # Setze die Eingabefelder zurück
@@ -585,7 +602,7 @@ class Kontolupe(toga.App):
         self.main_window.content = self.sc_form_rg
 
     
-    def zeige_seite_formular_rechnungen_bearbeiten(self, widget):
+    def show_form_rg_edit(self, widget):
         """Zeigt die Seite zum Bearbeiten einer Rechnung."""
 
         # Ermittle den Index der ausgewählten Rechnung
@@ -747,7 +764,7 @@ class Kontolupe(toga.App):
 
             # Zeigt die Liste der Rechnungen an.
             self.update_app(widget)
-            self.zeige_seite_liste_rechnungen(widget)
+            self.show_list_rg(widget)
 
 
     def beihilfepaket_aktualisieren(self, widget, result):
@@ -826,7 +843,7 @@ class Kontolupe(toga.App):
             del self.rechnungen_liste[self.rechnung_b_id]   
 
 
-    def erzeuge_seite_liste_einrichtungen(self):
+    def create_list_ei(self):
         """Erzeugt die Seite, auf der die Einrichtungen angezeigt werden."""
         self.box_seite_liste_einrichtungen = toga.Box(style=style_box_column)
         box_seite_liste_einrichtungen_top = toga.Box(style=style_box_column_dunkel)
@@ -842,7 +859,7 @@ class Kontolupe(toga.App):
             data        = self.einrichtungen_liste,
             style       = style_table,
             on_select   = self.update_app,
-            on_activate = self.zeige_info_einrichtung
+            on_activate = self.show_info_ei
         )
         self.box_seite_liste_einrichtungen.add(self.tabelle_einrichtungen)
 
@@ -852,7 +869,7 @@ class Kontolupe(toga.App):
         self.seite_liste_einrichtungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_einrichtungen_bearbeiten, style=style_button, enabled=False)
         self.seite_liste_einrichtungen_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_einrichtungen_neu, style=style_button)
         self.seite_liste_einrichtungen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_einrichtung_loeschen, style=style_button, enabled=False)
-        self.seite_liste_einrichtungen_button_info = toga.Button('Info', on_press=self.zeige_info_einrichtung, style=style_button, enabled=False)
+        self.seite_liste_einrichtungen_button_info = toga.Button('Info', on_press=self.show_info_ei, style=style_button, enabled=False)
         box_seite_liste_einrichtungen_buttons1.add(self.seite_liste_einrichtungen_button_bearbeiten)
         box_seite_liste_einrichtungen_buttons1.add(self.seite_liste_einrichtungen_button_neu)
         box_seite_liste_einrichtungen_buttons2.add(self.seite_liste_einrichtungen_button_loeschen)
@@ -861,7 +878,7 @@ class Kontolupe(toga.App):
         self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_buttons2)
 
 
-    def zeige_seite_liste_einrichtungen(self, widget):
+    def show_list_ei(self, widget):
         """Zeigt die Seite mit der Liste der Einrichtungen."""
         self.update_app(widget)
         self.main_window.content = self.box_seite_liste_einrichtungen
@@ -869,82 +886,35 @@ class Kontolupe(toga.App):
 
     def erzeuge_seite_formular_einrichtungen(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Einrichtung."""
-        self.scroll_container_formular_einrichtungen = toga.ScrollContainer(style=style_scroll_container)
-        self.box_seite_formular_einrichtungen = toga.Box(style=style_box_column)
-        box_seite_formular_einrichtungen_top = toga.Box(style=style_box_column_dunkel)
-        self.scroll_container_formular_einrichtungen.content = self.box_seite_formular_einrichtungen
-        box_seite_formular_einrichtungen_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
-        self.label_formular_einrichtungen = toga.Label('Neue Einrichtung', style=style_label_h1_hell)
-        box_seite_formular_einrichtungen_top.add(self.label_formular_einrichtungen)
-        self.box_seite_formular_einrichtungen.add(box_seite_formular_einrichtungen_top)
+        self.sc_form_ei = toga.ScrollContainer(style=style_scroll_container)
+        self.box_form_ei = toga.Box(style=style_box_column)
+        self.sc_form_ei.content = self.box_form_ei
 
-        # Bereich zur Eingabe des Namens
-        box_formular_einrichtungen_name = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_name.add(toga.Label('Name: ', style=style_label_input))
-        self.input_formular_einrichtungen_name = toga.TextInput(style=style_input)
-        box_formular_einrichtungen_name.add(self.input_formular_einrichtungen_name)
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_name)
+        # TopBox
+        self.form_ei_topbox = TopBox(
+            parent=self.box_form_ei,
+            label_text='Neue Einrichtung',
+            style_box=style_box_column_dunkel,
+            target_back=self.show_list_ei
+        )
 
-        # Bereich zur Eingabe der Strasse
-        box_formular_einrichtungen_strasse = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_strasse.add(toga.Label('Straße, Hausnr.: ', style=style_label_input))
-        self.input_formular_einrichtungen_strasse = toga.TextInput(style=style_input)
-        box_formular_einrichtungen_strasse.add(self.input_formular_einrichtungen_strasse)
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_strasse)
+        self.form_ei_name = LabeledTextInput(self.box_form_ei, 'Name:')
+        self.form_ei_strasse = LabeledTextInput(self.box_form_ei, 'Straße, Hausnr.:')
+        self.form_ei_plz = LabeledPostalInput(self.box_form_ei, 'PLZ:')
+        self.form_ei_ort = LabeledTextInput(self.box_form_ei, 'Ort:')
+        self.box_form_ei.add(toga.Divider(style=style_divider))
+        self.form_ei_telefon = LabeledPhoneInput(self.box_form_ei, 'Telefon:')
+        self.form_ei_email = LabeledEmailInput(self.box_form_ei, 'E-Mail:')
+        self.form_ei_webseite = LabeledWebsiteInput(self.box_form_ei, 'Webseite:')
+        self.box_form_ei.add(toga.Divider(style=style_divider))
+        self.form_ei_notiz = LabeledMultilineTextInput(self.box_form_ei, 'Notiz:')
 
-        # Bereich zur Eingabe der PLZ
-        box_formular_einrichtungen_plz = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_plz.add(toga.Label('PLZ: ', style=style_label_input))
-        self.input_formular_einrichtungen_plz = toga.TextInput(style=style_input)
-        box_formular_einrichtungen_plz.add(self.input_formular_einrichtungen_plz)
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_plz)
-
-        # Bereich zur Eingabe des Ortes
-        box_formular_einrichtungen_ort = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_ort.add(toga.Label('Ort: ', style=style_label_input))
-        self.input_formular_einrichtungen_ort = toga.TextInput(style=style_input)
-        box_formular_einrichtungen_ort.add(self.input_formular_einrichtungen_ort)
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_ort)
-
-        # Divider
-        self.box_seite_formular_einrichtungen.add(toga.Divider(style=style_divider))
-
-        # Bereich zur Eingabe der Telefonnummer
-        box_formular_einrichtungen_telefon = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_telefon.add(toga.Label('Telefon: ', style=style_label_input))
-        self.input_formular_einrichtungen_telefon = toga.TextInput(style=style_input)
-        box_formular_einrichtungen_telefon.add(self.input_formular_einrichtungen_telefon)
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_telefon)
-
-        # Bereich zur Eingabe der E-Mail-Adresse
-        box_formular_einrichtungen_email = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_email.add(toga.Label('E-Mail: ', style=style_label_input))
-        self.input_formular_einrichtungen_email = toga.TextInput(style=style_input)
-        box_formular_einrichtungen_email.add(self.input_formular_einrichtungen_email)
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_email)
-
-        # Bereich zur Eingabe der Webseite
-        box_formular_einrichtungen_webseite = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_webseite.add(toga.Label('Webseite: ', style=style_label_input))
-        self.input_formular_einrichtungen_webseite = toga.TextInput(style=style_input)
-        box_formular_einrichtungen_webseite.add(self.input_formular_einrichtungen_webseite)
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_webseite)
-
-        # Divider
-        self.box_seite_formular_einrichtungen.add(toga.Divider(style=style_divider))
-
-        # Bereich zur Eingabe der Notiz
-        box_formular_einrichtungen_notiz = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_notiz.add(toga.Label('Notiz: ', style=style_label_input))
-        self.input_formular_einrichtungen_notiz = toga.MultilineTextInput(style=style_input)
-        box_formular_einrichtungen_notiz.add(self.input_formular_einrichtungen_notiz)
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_notiz)
-
-        # Bereich der Buttons
-        box_formular_einrichtungen_buttons = toga.Box(style=style_box_row)
-        box_formular_einrichtungen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_einrichtungen, style=style_button))
-        box_formular_einrichtungen_buttons.add(toga.Button('Speichern', on_press=self.einrichtung_speichern_check, style=style_button))
-        self.box_seite_formular_einrichtungen.add(box_formular_einrichtungen_buttons)
+        # BottomBox
+        self.form_ei_bottombox = BottomBox(
+            parent=self.box_form_ei,
+            labels=['Abbrechen', 'Speichern'],
+            targets=[self.show_list_ei, self.check_save_ei]
+        )
 
 
     def zeige_seite_formular_einrichtungen_neu(self, widget):
@@ -997,49 +967,49 @@ class Kontolupe(toga.App):
             self.main_window.content = self.scroll_container_formular_einrichtungen
 
 
-    def einrichtung_speichern_check(self, widget):
+    def check_save_ei(self, widget):
         """Prüft die Eingaben im Formular der Einrichtungen."""
         nachricht = ''
 
         # Prüfe, ob ein Name eingegeben wurde
-        if self.input_formular_einrichtungen_name.value == '':
+        if self.form_ei_name.is_empty():
             nachricht += 'Bitte gib einen Namen ein.\n'
 
         # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
-        if not pruefe_plz(self.input_formular_einrichtungen_plz):
+        if not self.form_ei_plz.is_valid():
                 nachricht += 'Bitte gib eine gültige PLZ ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige Telefonnummer eingegeben wurde
-        if not pruefe_telefon(self.input_formular_einrichtungen_telefon):
+        if not self.form_ei_telefon.is_valid():
                 nachricht += 'Bitte gib eine gültige Telefonnummer ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige E-Mail-Adresse eingegeben wurde
-        if not pruefe_email(self.input_formular_einrichtungen_email):
+        if not self.form_ei_email.is_valid():
                 nachricht += 'Bitte gib eine gültige E-Mail-Adresse ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige Webseite eingegeben wurde
-        if not pruefe_webseite(self.input_formular_einrichtungen_webseite):
+        if not self.form_ei_webseite.is_valid():
                 nachricht += 'Bitte gib eine gültige Webseite ein oder lasse das Feld leer.\n'
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
         else:
-            self.einrichtung_speichern(widget)
+            self.save_ei(widget)
 
 
-    def einrichtung_speichern(self, widget):
+    def save_ei(self, widget):
         """Erstellt und speichert eine neue Einrichtung."""
         if not self.flag_bearbeite_einrichtung:
         # Erstelle eine neue Einrichtung
             neue_einrichtung = Einrichtung()
-            neue_einrichtung.name = self.input_formular_einrichtungen_name.value
-            neue_einrichtung.strasse = self.input_formular_einrichtungen_strasse.value
-            neue_einrichtung.plz = self.input_formular_einrichtungen_plz.value
-            neue_einrichtung.ort = self.input_formular_einrichtungen_ort.value
-            neue_einrichtung.telefon = self.input_formular_einrichtungen_telefon.value
-            neue_einrichtung.email = self.input_formular_einrichtungen_email.value
-            neue_einrichtung.webseite = self.input_formular_einrichtungen_webseite.value
-            neue_einrichtung.notiz = self.input_formular_einrichtungen_notiz.value
+            neue_einrichtung.name = self.form_ei_name.get_value()
+            neue_einrichtung.strasse = self.form_ei_strasse.get_value()
+            neue_einrichtung.plz = self.form_ei_plz.get_value()
+            neue_einrichtung.ort = self.form_ei_ort.get_value()
+            neue_einrichtung.telefon = self.form_ei_telefon.get_value()
+            neue_einrichtung.email = self.form_ei_email.get_value()
+            neue_einrichtung.webseite = self.form_ei_webseite.get_value()
+            neue_einrichtung.notiz = self.form_ei_notiz.get_value()
 
             # Speichere die Einrichtung in der Datenbank
             neue_einrichtung.neu(self.db)
@@ -1049,14 +1019,14 @@ class Kontolupe(toga.App):
             self.einrichtungen_liste_anfuegen(neue_einrichtung)
         else:
             # Bearbeite die Einrichtung
-            self.einrichtungen[self.einrichtung_b_id].name = self.input_formular_einrichtungen_name.value
-            self.einrichtungen[self.einrichtung_b_id].strasse = self.input_formular_einrichtungen_strasse.value
-            self.einrichtungen[self.einrichtung_b_id].plz = self.input_formular_einrichtungen_plz.value
-            self.einrichtungen[self.einrichtung_b_id].ort = self.input_formular_einrichtungen_ort.value
-            self.einrichtungen[self.einrichtung_b_id].telefon = self.input_formular_einrichtungen_telefon.value
-            self.einrichtungen[self.einrichtung_b_id].email = self.input_formular_einrichtungen_email.value
-            self.einrichtungen[self.einrichtung_b_id].webseite = self.input_formular_einrichtungen_webseite.value
-            self.einrichtungen[self.einrichtung_b_id].notiz = self.input_formular_einrichtungen_notiz.value
+            self.einrichtungen[self.einrichtung_b_id].name = self.form_ei_name.get_value()
+            self.einrichtungen[self.einrichtung_b_id].strasse = self.form_ei_strasse.get_value()
+            self.einrichtungen[self.einrichtung_b_id].plz = self.form_ei_plz.get_value()
+            self.einrichtungen[self.einrichtung_b_id].ort = self.form_ei_ort.get_value()
+            self.einrichtungen[self.einrichtung_b_id].telefon = self.form_ei_telefon.get_value()
+            self.einrichtungen[self.einrichtung_b_id].email = self.form_ei_email.get_value()
+            self.einrichtungen[self.einrichtung_b_id].webseite = self.form_ei_webseite.get_value()
+            self.einrichtungen[self.einrichtung_b_id].notiz = self.form_ei_notiz.get_value()
 
             # Speichere die Einrichtung in der Datenbank
             self.einrichtungen[self.einrichtung_b_id].speichern(self.db)
@@ -1072,12 +1042,12 @@ class Kontolupe(toga.App):
 
         # Zeige die Liste der Einrichtungen
         self.update_app(widget)
-        self.zeige_seite_liste_einrichtungen(widget)
+        self.show_list_ei(widget)
 
 
-    def erzeuge_seite_info_einrichtung(self):
+    def create_info_ei(self):
         """Erzeugt die Seite, auf der die Details einer Einrichtung angezeigt werden."""
-        box_seite_info_einrichtung_button_zurueck = toga.Button('Zurück', on_press=self.zeige_seite_liste_einrichtungen, style=style_button)
+        box_seite_info_einrichtung_button_zurueck = toga.Button('Zurück', on_press=self.show_list_ei, style=style_button)
         self.label_info_einrichtung_name = toga.Label('', style=style_label_h1_hell)
         box_seite_info_einrichtung_top = toga.Box(style=style_box_column_dunkel)
         box_seite_info_einrichtung_top.add(box_seite_info_einrichtung_button_zurueck)
@@ -1155,7 +1125,7 @@ class Kontolupe(toga.App):
         self.scroll_container_info_einrichtung.content = box_seite_info_einrichtung
 
 
-    def zeige_info_einrichtung(self, widget, row=None):
+    def show_info_ei(self, widget, row=None):
         """Zeigt die Seite mit den Details einer Einrichtung."""
         # Prüfe, ob eine Einrichtung ausgewählt ist
         if self.tabelle_einrichtungen.selection:
@@ -1222,7 +1192,7 @@ class Kontolupe(toga.App):
 
             # Seite mit Liste der Einrichtungen anzeigen
             self.update_app(widget)
-            self.zeige_seite_liste_einrichtungen(widget)
+            self.show_list_ei(widget)
 
 
     def erzeuge_seite_liste_personen(self):
@@ -2166,7 +2136,7 @@ class Kontolupe(toga.App):
         if self.tabelle_offene_buchungen.selection:
             match self.tabelle_offene_buchungen.selection.typ:
                 case 'Rechnung':
-                    self.zeige_seite_formular_rechnungen_bearbeiten(widget)
+                    self.show_form_rg_edit(widget)
                 # case 'Beihilfe':
                 #     self.zeige_seite_formular_beihilfepakete_bearbeiten(widget)
                 # case 'PKV':
@@ -2505,7 +2475,7 @@ class Kontolupe(toga.App):
         gruppe_rechnungen = toga.Group('Rechnungen', order = 1)
 
         self.cmd_rechnungen_anzeigen = toga.Command(
-            self.zeige_seite_liste_rechnungen,
+            self.show_list_rg,
             'Rechnungen anzeigen',
             tooltip = 'Zeigt die Liste der Rechnungen an.',
             group = gruppe_rechnungen,
@@ -2514,7 +2484,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_rechnungen_neu = toga.Command(
-            self.zeige_seite_formular_rechnungen_neu,
+            self.show_form_rg_new,
             'Neue Rechnung',
             tooltip = 'Erstellt eine neue Rechnung.',
             group = gruppe_rechnungen,
@@ -2591,7 +2561,7 @@ class Kontolupe(toga.App):
         gruppe_einrichtungen = toga.Group('Einrichtungen', order = 5)
 
         self.cmd_einrichtungen_anzeigen = toga.Command(
-            self.zeige_seite_liste_einrichtungen,
+            self.show_list_ei,
             'Einrichtungen anzeigen',
             tooltip = 'Zeigt die Liste der Einrichtungen an.',
             group = gruppe_einrichtungen,
@@ -2648,11 +2618,11 @@ class Kontolupe(toga.App):
 
         # Erzeuge alle GUI-Elemente
         self.erzeuge_startseite()
-        self.erzeuge_seite_liste_rechnungen()
+        self.create_list_rg()
         self.create_form_rg()
-        self.erzeuge_seite_liste_einrichtungen()
+        self.create_list_ei()
         self.erzeuge_seite_formular_einrichtungen()
-        self.erzeuge_seite_info_einrichtung()
+        self.create_info_ei()
         self.erzeuge_seite_liste_beihilfepakete()
         self.erzeuge_seite_formular_beihilfepakete()
         self.erzeuge_seite_liste_pkvpakete()
