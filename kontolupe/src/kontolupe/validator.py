@@ -8,8 +8,8 @@ class Validator:
         # Ordne den übergebenen Validator der Instanz zu
         match validator:
             case None:
-                self.rectify = None
-                self.is_valid = None
+                self.rectify = self.__pass
+                self.is_valid = self.__pass
             case 'float':  
                 self.rectify = self.__rect_float
                 self.is_valid = self.__is_float
@@ -38,6 +38,11 @@ class Validator:
                 self.rectify = None
                 self.is_valid = None
                 raise ValueError('Ungültiger Validator')
+            
+
+    def __pass(self, widget):
+        """Funktion, die nichts tut."""
+        pass
 
 
     def __rect_float(self, widget):
@@ -58,10 +63,10 @@ class Validator:
         """Prüft, ob die Eingabe eine Zahl ist und gibt True oder False zurück."""
 
         # Eingabe anpassen
-        self.__rect_number(widget)
+        self.__rect_float(widget)
 
         try:
-            float(widget.value)
+            float(widget.value.replace(',', '.'))
             return True
         except ValueError:
             return False
@@ -81,7 +86,7 @@ class Validator:
         """Prüft, ob die Eingabe eine ganze Zahl ist und gibt True oder False zurück."""
 
         # Eingabe anpassen
-        self.__rect_integer(widget)
+        self.__rect_int(widget)
 
         try:
             int(widget.value)
@@ -172,7 +177,7 @@ class Validator:
         """Prüft, ob die Eingabe eine gültige Postleitzahl ist und gibt True oder False zurück."""
 
         # Eingabe anpassen
-        self.__rect_plz(widget)
+        self.__rect_postal(widget)
 
         if widget.value == '' or len(widget.value) != 5:
             return False

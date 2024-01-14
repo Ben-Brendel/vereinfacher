@@ -22,24 +22,24 @@ class Kontolupe(toga.App):
         """Initialisierung der Anwendung."""
 
         # Hilfsvariablen zur Bearbeitung von Rechnungen
-        self.flag_bearbeite_rechnung = False
-        self.rechnung_b_id = 0
+        self.flag_edit_bill = False
+        self.edit_bill_id = 0
 
         # Hilfsvariablen zur Bearbeitung von Einrichtungen
-        self.flag_bearbeite_einrichtung = False
-        self.einrichtung_b_id = 0
+        self.flag_edit_institution = False
+        self.edit_institution_id = 0
 
         # Hilfsvariablen zur Bearbeitung von Personen
-        self.flag_bearbeite_person = False
-        self.person_b_id = 0
+        self.flag_edit_person = False
+        self.edit_person_id = 0
 
         # Hilfsvariablen zur Bearbeitung der Beihilfe-Pakete
-        self.flag_bearbeite_beihilfepaket = False
-        self.beihilfepaket_b_id = 0
+        self.flag_edit_beihilfe = False
+        self.edit_beihilfe_id = 0
 
         # Hilfsvariablen zur Bearbeitung der PKV-Pakete
-        self.flag_bearbeite_pkvpaket = False
-        self.pkvpaket_b_id = 0
+        self.flag_edit_pkv = False
+        self.edit_pkv_id = 0
 
         # Hilfsvariable zur Festlegung des Zurück-Ziels
         self.zurueck = 'startseite'
@@ -217,31 +217,31 @@ class Kontolupe(toga.App):
             case 'startseite':
                 self.zeige_startseite(widget)
             case 'liste_rechnungen':
-                self.show_list_rg(widget)
+                self.show_list_bills(widget)
             case 'liste_beihilfepakete':
-                self.zeige_seite_liste_beihilfepakete(widget)
+                self.show_list_beihilfe(widget)
             case 'liste_pkvpakete':
-                self.zeige_seite_liste_pkvpakete(widget)
+                self.show_list_pkv(widget)
             case 'liste_einrichtungen':
-                self.show_list_ei(widget)
+                self.show_list_institutions(widget)
             case 'formular_rechnungen_neu':
-                self.show_form_rg_new(widget)
+                self.show_form_bill_new(widget)
             case 'formular_rechnungen_bearbeiten':
-                self.show_form_rg_edit(widget)
+                self.show_form_bill_edit(widget)
             case 'formular_beihilfepakete_neu':
-                self.zeige_seite_formular_beihilfepakete_neu(widget)
+                self.show_form_beihilfe_new(widget)
             case 'formular_beihilfepakete_bearbeiten':
-                self.zeige_seite_formular_beihilfepakete_bearbeiten(widget)
+                self.show_form_beihilfe_edit(widget)
             case 'formular_pkvpakete_neu':
-                self.zeige_seite_formular_pkvpakete_neu(widget)
+                self.show_form_pkv_new(widget)
             case 'formular_pkvpakete_bearbeiten':
-                self.zeige_seite_formular_pkvpakete_bearbeiten(widget)
+                self.show_form_pkv_edit(widget)
             case 'formular_einrichtungen_neu':
-                self.zeige_seite_formular_einrichtungen_neu(widget)
+                self.show_form_institution_new(widget)
             case 'formular_einrichtungen_bearbeiten':
-                self.zeige_seite_formular_einrichtungen_bearbeiten(widget)
+                self.show_form_institution_edit(widget)
             case 'info_einrichtung':
-                self.show_info_ei(widget)
+                self.show_info_institution(widget)
             case _:
                 self.zeige_startseite(widget)
 
@@ -260,7 +260,7 @@ class Kontolupe(toga.App):
         """Zeigt die WebView zur Anzeige von Webseiten."""
         match widget:
             case self.link_info_einrichtung_webseite:
-                self.webview.url = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+                self.webview.url = self.einrichtungen_liste[self.edit_institution_id].webseite
                 self.zurueck = 'info_einrichtung'
             case self.cmd_datenschutz:
                 self.webview.url = 'https://kontolupe.biberwerk.net/kontolupe-datenschutz.html'
@@ -307,8 +307,8 @@ class Kontolupe(toga.App):
         # Bereich der Rechnungen
         label_start_rechnungen = toga.Label('Rechnungen', style=style_label_h2_start)
         self.label_start_rechnungen_offen = toga.Label('', style=style_label_section)
-        button_start_rechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.show_list_rg, style=style_button)
-        button_start_rechnungen_neu = toga.Button('Neu', on_press=self.show_form_rg_new, style=style_button)
+        button_start_rechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.show_list_bills, style=style_button)
+        button_start_rechnungen_neu = toga.Button('Neu', on_press=self.show_form_bill_new, style=style_button)
         box_startseite_rechnungen_buttons = toga.Box(style=style_box_buttons_start)
         box_startseite_rechnungen_buttons.add(button_start_rechnungen_anzeigen)
         box_startseite_rechnungen_buttons.add(button_start_rechnungen_neu)
@@ -321,8 +321,8 @@ class Kontolupe(toga.App):
         # Bereich der Beihilfe-Einreichungen
         label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_label_h2_start)
         self.label_start_beihilfe_offen = toga.Label('', style=style_label_section)
-        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.zeige_seite_liste_beihilfepakete)
-        self.button_start_beihilfe_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_beihilfepakete_neu, enabled=False)
+        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.show_list_beihilfe)
+        self.button_start_beihilfe_neu = toga.Button('Neu', style=style_button, on_press=self.show_form_beihilfe_new, enabled=False)
         box_startseite_beihilfe_buttons = toga.Box(style=style_box_buttons_start)
         box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
         box_startseite_beihilfe_buttons.add(self.button_start_beihilfe_neu)
@@ -335,8 +335,8 @@ class Kontolupe(toga.App):
         # Bereich der PKV-Einreichungen
         label_start_pkv = toga.Label('PKV-Einreichungen', style=style_label_h2_start)
         self.label_start_pkv_offen = toga.Label('', style=style_label_section)
-        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.zeige_seite_liste_pkvpakete)
-        self.button_start_pkv_neu = toga.Button('Neu', style=style_button, on_press=self.zeige_seite_formular_pkvpakete_neu, enabled=False)
+        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.show_list_pkv)
+        self.button_start_pkv_neu = toga.Button('Neu', style=style_button, on_press=self.show_form_pkv_new, enabled=False)
         box_startseite_pkv_buttons = toga.Box(style=style_box_buttons_start)
         box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
         box_startseite_pkv_buttons.add(self.button_start_pkv_neu)
@@ -356,8 +356,8 @@ class Kontolupe(toga.App):
         # box_startseite_archiv.add(self.button_start_archiv)
         # self.box_startseite.add(box_startseite_archiv)
 
-        self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.zeige_seite_liste_personen)
-        self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_ei)
+        self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
+        self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_institutions)
         self.button_start_archiv = toga.Button('Keine archivierbaren Buchungen', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
 
         box_startseite_daten = toga.Box(style=style_section_daten)
@@ -403,13 +403,13 @@ class Kontolupe(toga.App):
                             if pkvpaket.db_id == row.db_id:
                                 element = pkvpaket
                                 break
-            case self.formular_beihilfe_tabelle_rechnungen:
+            case self.form_beihilfe_bills:
                 typ = 'Rechnung'
                 for rechnung in self.rechnungen_liste:
                     if rechnung.db_id == row.db_id:
                         element = rechnung
                         break
-            case self.formular_pkv_tabelle_rechnungen:
+            case self.form_pkv_bills:
                 typ = 'Rechnung'
                 for rechnung in self.rechnungen_liste:
                     if rechnung.db_id == row.db_id:
@@ -463,7 +463,7 @@ class Kontolupe(toga.App):
         self.main_window.info_dialog(titel, inhalt)
 
 
-    def create_list_rg(self):
+    def create_list_bills(self):
         """Erzeugt die Seite, auf der die Rechnungen angezeigt werden."""
         self.box_seite_liste_rechnungen = toga.Box(style=style_box_column)
         box_seite_liste_rechnungen_top = toga.Box(style=style_box_column_rechnungen)
@@ -484,41 +484,41 @@ class Kontolupe(toga.App):
 
         # Buttons für die Rechnungen
         box_seite_liste_rechnungen_buttons = toga.Box(style=style_box_row)
-        self.liste_rechnungen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_rechnung_loeschen, style=style_button, enabled=False)
-        self.liste_rechnungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_rg_edit, style=style_button, enabled=False)
-        self.liste_rechnungen_button_neu = toga.Button('Neu', on_press=self.show_form_rg_new, style=style_button)
+        self.liste_rechnungen_button_loeschen = toga.Button('Löschen', on_press=self.confirm_delete_bill, style=style_button, enabled=False)
+        self.liste_rechnungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_bill_edit, style=style_button, enabled=False)
+        self.liste_rechnungen_button_neu = toga.Button('Neu', on_press=self.show_form_bill_new, style=style_button)
         box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_loeschen)
         box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_bearbeiten)
         box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_neu)
         self.box_seite_liste_rechnungen.add(box_seite_liste_rechnungen_buttons)    
 
 
-    def show_list_rg(self, widget):
+    def show_list_bills(self, widget):
         """Zeigt die Seite mit der Liste der Rechnungen."""
         self.update_app(widget)
         self.main_window.content = self.box_seite_liste_rechnungen
 
 
-    def update_form_rg_beihilfe(self, widget):
+    def update_form_bill_beihilfe(self, widget):
         """Ermittelt den Beihilfesatz der ausgewählten Person und trägt ihn in das entsprechende Feld ein."""
         for person in self.personen_liste:
             if person.name == widget.value.name:
-                self.form_rg_beihilfe.set_value(person.beihilfesatz)
+                self.form_bill_beihilfe.set_value(person.beihilfesatz)
                 break
 
 
-    def create_form_rg(self):
+    def create_form_bill(self):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Rechnung."""
         
         # Container für das Formular
-        self.sc_form_rg = toga.ScrollContainer(style=style_scroll_container)
-        self.box_form_rg = toga.Box(style=style_box_column)
-        self.sc_form_rg.content = self.box_form_rg
+        self.sc_form_bill = toga.ScrollContainer(style=style_scroll_container)
+        self.box_form_bill = toga.Box(style=style_box_column)
+        self.sc_form_bill.content = self.box_form_bill
 
         # Erzeuge eine Liste von Dictionaries, welche die Elemente der Seite enthält
-        # self.form_rg_elements = [
-        #     {'typ': 'TopBox', 'label_text': 'Neue Rechnung', 'style': style_box_column_rechnungen, 'target_back': self.show_list_rg},
-        #     {'typ': 'LabeledSelection', 'label_text': 'Person:', 'data': self.personen_liste, 'accessor': 'name', 'on_change': self.update_form_rg_beihilfe},
+        # self.form_bill_elements = [
+        #     {'typ': 'TopBox', 'label_text': 'Neue Rechnung', 'style': style_box_column_rechnungen, 'target_back': self.show_list_bills},
+        #     {'typ': 'LabeledSelection', 'label_text': 'Person:', 'data': self.personen_liste, 'accessor': 'name', 'on_change': self.update_form_bill_beihilfe},
         #     {'typ': 'LabeledPercentInput', 'label_text': 'Beihilfesatz in %:'},
         #     {'typ': 'Divider', 'style': style_divider},
         #     {'typ': 'LabeledDateInput', 'label_text': 'Rechnungsdatum:'},
@@ -529,177 +529,177 @@ class Kontolupe(toga.App):
         #     {'typ': 'LabeledSwitch', 'label_text': 'Bezahlt:'},
         #     {'typ': 'Divider', 'style': style_divider},
         #     {'typ': 'LabeledMultilineTextInput', 'label_text': 'Notiz:'},
-        #     {'typ': 'BottomBox', 'labels': ['Abbrechen', 'Speichern'], 'targets': [self.show_list_rg, self.check_save_rg]},
+        #     {'typ': 'BottomBox', 'labels': ['Abbrechen', 'Speichern'], 'targets': [self.show_list_bills, self.check_save_bill]},
         # ]
 
         # Überschrift und Button zurück
-        self.form_rg_topbox = TopBox(
-            parent=self.box_form_rg,
+        self.form_bill_topbox = TopBox(
+            parent=self.box_form_bill,
             label_text='Neue Rechnung', 
             style_box=style_box_column_rechnungen,
-            target_back=self.show_list_rg
+            target_back=self.show_list_bills
         )
 
         # Selection zur Auswahl der Person
-        self.form_rg_person = LabeledSelection(
-            parent=self.box_form_rg,
+        self.form_bill_person = LabeledSelection(
+            parent=self.box_form_bill,
             label_text='Person:',
             data=self.personen_liste,
             accessor='name',
-            on_change=self.update_form_rg_beihilfe
+            on_change=self.update_form_bill_beihilfe
         )
 
-        self.form_rg_beihilfe = LabeledPercentInput(self.box_form_rg, 'Beihilfesatz in %:')
-        self.box_form_rg.add(toga.Divider(style=style_divider))
-        self.form_rg_rechnungsdatum = LabeledDateInput(self.box_form_rg, 'Rechnungsdatum:')
-        self.form_rg_betrag = LabeledFloatInput(self.box_form_rg, 'Betrag in €:')
+        self.form_bill_beihilfe = LabeledPercentInput(self.box_form_bill, 'Beihilfesatz in %:')
+        self.box_form_bill.add(toga.Divider(style=style_divider))
+        self.form_bill_rechnungsdatum = LabeledDateInput(self.box_form_bill, 'Rechnungsdatum:')
+        self.form_bill_betrag = LabeledFloatInput(self.box_form_bill, 'Betrag in €:')
 
         # Bereich zur Auswahl der Einrichtung
-        self.form_rg_einrichtung = LabeledSelection(
-            parent=self.box_form_rg,
+        self.form_bill_einrichtung = LabeledSelection(
+            parent=self.box_form_bill,
             label_text='Einrichtung:',
             data=self.einrichtungen_liste,
             accessor='name'
         )
 
-        self.box_form_rg.add(toga.Divider(style=style_divider))
-        self.form_rg_buchungsdatum = LabeledDateInput(self.box_form_rg, 'Bezahldatum:')
-        self.form_rg_bezahlt = LabeledSwitch(self.box_form_rg, 'Bezahlt:')
-        self.box_form_rg.add(toga.Divider(style=style_divider))
-        self.form_rg_notiz = LabeledMultilineTextInput(self.box_form_rg, 'Notiz:')
+        self.box_form_bill.add(toga.Divider(style=style_divider))
+        self.form_bill_buchungsdatum = LabeledDateInput(self.box_form_bill, 'Bezahldatum:')
+        self.form_bill_bezahlt = LabeledSwitch(self.box_form_bill, 'Bezahlt:')
+        self.box_form_bill.add(toga.Divider(style=style_divider))
+        self.form_bill_notiz = LabeledMultilineTextInput(self.box_form_bill, 'Notiz:')
 
         # Bereich der Buttons
-        self.form_rg_bottombox = BottomBox(
-            parent=self.box_form_rg,
+        self.form_bill_bottombox = BottomBox(
+            parent=self.box_form_bill,
             labels=['Abbrechen', 'Speichern'],
-            targets=[self.show_list_rg, self.check_save_rg],
+            targets=[self.show_list_bills, self.check_save_bill],
         )
 
 
-    def show_form_rg_new(self, widget):
+    def show_form_bill_new(self, widget):
         """Zeigt die Seite zum Erstellen einer Rechnung."""
         
         # Setze die Eingabefelder zurück
-        self.form_rg_betrag.set_value('')
-        self.form_rg_rechnungsdatum.set_value('')
+        self.form_bill_betrag.set_value('')
+        self.form_bill_rechnungsdatum.set_value('')
 
         if len(self.personen_liste) > 0:
-            self.form_rg_person.set_value(self.personen_liste[0])
-            self.form_rg_beihilfe.set_value(str(self.personen_liste[0].beihilfesatz))
+            self.form_bill_person.set_value(self.personen_liste[0])
+            self.form_bill_beihilfe.set_value(str(self.personen_liste[0].beihilfesatz))
         
         if len(self.einrichtungen_liste) > 0:
-            self.form_rg_einrichtung.set_value(self.einrichtungen_liste[0])
+            self.form_bill_einrichtung.set_value(self.einrichtungen_liste[0])
 
-        self.form_rg_notiz.set_value('')
-        self.form_rg_buchungsdatum.set_value('')
-        self.form_rg_bezahlt.set_value(False)
+        self.form_bill_notiz.set_value('')
+        self.form_bill_buchungsdatum.set_value('')
+        self.form_bill_bezahlt.set_value(False)
 
         # Zurücksetzen von Flag und Überschrift
-        self.flag_bearbeite_rechnung = False
-        self.form_rg_topbox.set_label('Neue Rechnung')
+        self.flag_edit_bill = False
+        self.form_bill_topbox.set_label('Neue Rechnung')
 
         # Zeige die Seite
-        self.main_window.content = self.sc_form_rg
+        self.main_window.content = self.sc_form_bill
 
     
-    def show_form_rg_edit(self, widget):
+    def show_form_bill_edit(self, widget):
         """Zeigt die Seite zum Bearbeiten einer Rechnung."""
 
         # Ermittle den Index der ausgewählten Rechnung
         if widget == self.liste_rechnungen_button_bearbeiten:
-            self.rechnung_b_id = self.index_auswahl(self.tabelle_rechnungen)
+            self.edit_bill_id = self.index_auswahl(self.tabelle_rechnungen)
         elif widget == self.startseite_button_bearbeiten:
-            self.rechnung_b_id = self.index_liste_von_id(self.rechnungen, self.tabelle_offene_buchungen.selection.db_id)
+            self.edit_bill_id = self.index_liste_von_id(self.rechnungen, self.tabelle_offene_buchungen.selection.db_id)
         else:
             print('Fehler: Aufrufendes Widget unbekannt.')
             return
 
         # Ermittle den Index der Einrichtung in der Liste der Einrichtungen
-        einrichtung_index = self.index_liste_von_id(self.einrichtungen, self.rechnungen[self.rechnung_b_id].einrichtung_id)
+        einrichtung_index = self.index_liste_von_id(self.einrichtungen, self.rechnungen[self.edit_bill_id].einrichtung_id)
 
         # Auswahlfeld für die Einrichtung befüllen
         if einrichtung_index is not None:
-            self.form_rg_einrichtung.set_value(self.einrichtungen_liste[einrichtung_index])
+            self.form_bill_einrichtung.set_value(self.einrichtungen_liste[einrichtung_index])
         elif len(self.einrichtungen_liste) > 0:
-            self.form_rg_einrichtung.set_value(self.einrichtungen_liste[0])
+            self.form_bill_einrichtung.set_value(self.einrichtungen_liste[0])
 
         # Ermittle den Index der Person in der Liste der Personen
-        person_index = self.index_liste_von_id(self.personen, self.rechnungen[self.rechnung_b_id].person_id)
+        person_index = self.index_liste_von_id(self.personen, self.rechnungen[self.edit_bill_id].person_id)
 
         # Auswahlfeld für die Person befüllen
         if person_index is not None:    
-            self.form_rg_person.set_value(self.personen_liste[person_index])
+            self.form_bill_person.set_value(self.personen_liste[person_index])
         elif len(self.personen_liste) > 0:
-            self.form_rg_person.set_value(self.personen_liste[0])
+            self.form_bill_person.set_value(self.personen_liste[0])
 
         # Befülle die Eingabefelder
-        self.form_rg_betrag.set_value(self.rechnungen[self.rechnung_b_id].betrag)
-        self.form_rg_rechnungsdatum.set_value(self.rechnungen[self.rechnung_b_id].rechnungsdatum)
-        self.form_rg_beihilfe.set_value(self.rechnungen[self.rechnung_b_id].beihilfesatz)
-        self.form_rg_notiz.set_value(self.rechnungen[self.rechnung_b_id].notiz)
-        self.form_rg_buchungsdatum.set_value(self.rechnungen[self.rechnung_b_id].buchungsdatum)
-        self.form_rg_bezahlt.set_value(self.rechnungen[self.rechnung_b_id].bezahlt)
+        self.form_bill_betrag.set_value(self.rechnungen[self.edit_bill_id].betrag)
+        self.form_bill_rechnungsdatum.set_value(self.rechnungen[self.edit_bill_id].rechnungsdatum)
+        self.form_bill_beihilfe.set_value(self.rechnungen[self.edit_bill_id].beihilfesatz)
+        self.form_bill_notiz.set_value(self.rechnungen[self.edit_bill_id].notiz)
+        self.form_bill_buchungsdatum.set_value(self.rechnungen[self.edit_bill_id].buchungsdatum)
+        self.form_bill_bezahlt.set_value(self.rechnungen[self.edit_bill_id].bezahlt)
 
         # Setze das Flag und die Überschrift
-        self.flag_bearbeite_rechnung = True
-        self.form_rg_topbox.set_label('Rechnung bearbeiten')
+        self.flag_edit_bill = True
+        self.form_bill_topbox.set_label('Rechnung bearbeiten')
 
         # Zeige die Seite
-        self.main_window.content = self.sc_form_rg
+        self.main_window.content = self.sc_form_bill
 
 
-    async def check_save_rg(self, widget):
+    async def check_save_bill(self, widget):
         """Prüft, ob die Rechnung gespeichert werden soll."""
 
         nachricht = ''
 
         # Prüfe, ob ein Rechnungsdatum eingegeben wurde
-        if not self.form_rg_rechnungsdatum.is_valid() or self.form_rg_rechnungsdatum.is_empty():
+        if not self.form_bill_rechnungsdatum.is_valid():
             nachricht += 'Bitte gib ein gültiges Rechnungsdatum ein.\n'
 
         # Prüfe, ob ein Betrag eingegeben wurde
-        if not self.form_rg_betrag.is_valid() or self.form_rg_betrag.is_empty():
+        if not self.form_bill_betrag.is_valid():
             nachricht += 'Bitte gib einen gültigen Betrag ein.\n'
 
         # Prüfe, ob eine Person ausgewählt wurde
         if len(self.personen_liste) > 0:
-            if self.form_rg_person.get_value() is None:
+            if self.form_bill_person.get_value() is None:
                 nachricht += 'Bitte wähle eine Person aus.\n'
 
         # Prüfe, ob eine Einrichtung ausgewählt wurde
         if len(self.einrichtungen_liste) > 0:
-            if self.form_rg_einrichtung.get_value() is None:
+            if self.form_bill_einrichtung.get_value() is None:
                 nachricht += 'Bitte wähle eine Einrichtung aus.\n'
 
         # Prüfe, ob ein Beihilfesatz eingegeben wurde
-        if not self.form_rg_beihilfe.is_valid() or self.form_rg_beihilfe.is_empty():
+        if not self.form_bill_beihilfe.is_valid():
             nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
-        if not self.form_rg_buchungsdatum.is_valid():
+        if not (self.form_bill_buchungsdatum.is_valid() or self.form_bill_buchungsdatum.is_empty()):
             nachricht += 'Bitte gib ein gültiges Buchungsdatum ein oder lasse das Feld leer.\n'
                 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
         else:
-            await self.rechnung_speichern(widget)
+            await self.save_bill(widget)
 
 
-    async def save_rg(self, widget):
+    async def save_bill(self, widget):
         """Erstellt und speichert eine neue Rechnung."""
 
-        if not self.flag_bearbeite_rechnung:
+        if not self.flag_edit_bill:
         # Erstelle eine neue Rechnung
             neue_rechnung = Rechnung()
-            neue_rechnung.rechnungsdatum = self.form_rg_rechnungsdatum.get_value()
+            neue_rechnung.rechnungsdatum = self.form_bill_rechnungsdatum.get_value()
             if len(self.personen_liste) > 0:
-                neue_rechnung.person_id = self.form_rg_person.get_value().db_id
-            neue_rechnung.beihilfesatz = self.form_rg_beihilfe.get_value()
+                neue_rechnung.person_id = self.form_bill_person.get_value().db_id
+            neue_rechnung.beihilfesatz = self.form_bill_beihilfe.get_value()
             if len(self.einrichtungen_liste) > 0:
-                neue_rechnung.einrichtung_id = self.form_rg_einrichtung.get_value().db_id
-            neue_rechnung.notiz = self.form_rg_notiz.get_value()
-            neue_rechnung.betrag = self.form_rg_betrag.get_value()
-            neue_rechnung.buchungsdatum = self.form_rg_buchungsdatum.get_value()
-            neue_rechnung.bezahlt = self.form_rg_bezahlt.get_value()
+                neue_rechnung.einrichtung_id = self.form_bill_einrichtung.get_value().db_id
+            neue_rechnung.notiz = self.form_bill_notiz.get_value()
+            neue_rechnung.betrag = self.form_bill_betrag.get_value()
+            neue_rechnung.buchungsdatum = self.form_bill_buchungsdatum.get_value()
+            neue_rechnung.bezahlt = self.form_bill_bezahlt.get_value()
 
             # Speichere die Rechnung in der Datenbank
             neue_rechnung.neu(self.db)
@@ -716,37 +716,37 @@ class Kontolupe(toga.App):
             # True, wenn betrag oder beihilfesatz geändert wurde
             update_einreichung = False
             
-            if self.rechnungen[self.rechnung_b_id].betrag != self.form_rg_betrag.get_value():
+            if self.rechnungen[self.edit_bill_id].betrag != self.form_bill_betrag.get_value():
                 update_einreichung = True
-            if self.rechnungen[self.rechnung_b_id].beihilfesatz != self.form_rg_beihilfe.get_value():
+            if self.rechnungen[self.edit_bill_id].beihilfesatz != self.form_bill_beihilfe.get_value():
                 update_einreichung = True
 
             # Bearbeite die Rechnung
-            self.rechnungen[self.rechnung_b_id].rechnungsdatum = self.form_rg_rechnungsdatum.get_value()
+            self.rechnungen[self.edit_bill_id].rechnungsdatum = self.form_bill_rechnungsdatum.get_value()
 
             if len(self.personen_liste) > 0:
-                self.rechnungen[self.rechnung_b_id].person_id = self.form_rg_person.get_value().db_id
+                self.rechnungen[self.edit_bill_id].person_id = self.form_bill_person.get_value().db_id
             
             if len(self.einrichtungen_liste) > 0:
-                self.rechnungen[self.rechnung_b_id].einrichtung_id = self.form_rg_einrichtung.get_value().db_id
-            self.rechnungen[self.rechnung_b_id].notiz = self.form_rg_notiz.get_value()
-            self.rechnungen[self.rechnung_b_id].betrag = self.form_rg_betrag.get_value()
-            self.rechnungen[self.rechnung_b_id].beihilfesatz = self.form_rg_beihilfe.get_value()
-            self.rechnungen[self.rechnung_b_id].buchungsdatum = self.form_rg_buchungsdatum.get_value()
-            self.rechnungen[self.rechnung_b_id].bezahlt = self.form_rg_bezahlt.get_value()
+                self.rechnungen[self.edit_bill_id].einrichtung_id = self.form_bill_einrichtung.get_value().db_id
+            self.rechnungen[self.edit_bill_id].notiz = self.form_bill_notiz.get_value()
+            self.rechnungen[self.edit_bill_id].betrag = self.form_bill_betrag.get_value()
+            self.rechnungen[self.edit_bill_id].beihilfesatz = self.form_bill_beihilfe.get_value()
+            self.rechnungen[self.edit_bill_id].buchungsdatum = self.form_bill_buchungsdatum.get_value()
+            self.rechnungen[self.edit_bill_id].bezahlt = self.form_bill_bezahlt.get_value()
 
             # Speichere die Rechnung in der Datenbank
-            self.rechnungen[self.rechnung_b_id].speichern(self.db)
+            self.rechnungen[self.edit_bill_id].speichern(self.db)
 
             # Aktualisiere die Liste der Rechnungen
-            self.rechnungen_liste_aendern(self.rechnungen[self.rechnung_b_id], self.rechnung_b_id)
+            self.rechnungen_liste_aendern(self.rechnungen[self.edit_bill_id], self.edit_bill_id)
 
             # Flag zurücksetzen
-            self.flag_bearbeite_rechnung = False
+            self.flag_edit_bill = False
 
             # Überprüfe ob eine verknüpfte Beihilfe-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
-            if update_einreichung and self.rechnungen[self.rechnung_b_id].beihilfe_id is not None:
+            if update_einreichung and self.rechnungen[self.edit_bill_id].beihilfe_id is not None:
                 await self.main_window.confirm_dialog(
                     'Zugehörige Beihilfe-Einreichung aktualisieren',
                     'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
@@ -755,7 +755,7 @@ class Kontolupe(toga.App):
 
             # Überprüfe ob eine verknüpfte PKV-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
-            if update_einreichung and self.rechnungen[self.rechnung_b_id].pkv_id is not None:
+            if update_einreichung and self.rechnungen[self.edit_bill_id].pkv_id is not None:
                 await self.main_window.confirm_dialog(
                     'Zugehörige PKV-Einreichung aktualisieren',
                     'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
@@ -764,7 +764,7 @@ class Kontolupe(toga.App):
 
             # Zeigt die Liste der Rechnungen an.
             self.update_app(widget)
-            self.show_list_rg(widget)
+            self.show_list_bills(widget)
 
 
     def beihilfepaket_aktualisieren(self, widget, result):
@@ -772,7 +772,7 @@ class Kontolupe(toga.App):
         if result:
             # Finde die Beihilfe-Einreichung
             for beihilfepaket in self.beihilfepakete:
-                if beihilfepaket.db_id == self.rechnungen[self.rechnung_b_id].beihilfe_id:
+                if beihilfepaket.db_id == self.rechnungen[self.edit_bill_id].beihilfe_id:
                     # Alle Rechnungen durchlaufen und den Betrag aktualisieren
                     beihilfepaket.betrag = 0
                     for rechnung in self.rechnungen:
@@ -789,7 +789,7 @@ class Kontolupe(toga.App):
         if result:
             # Finde die PKV-Einreichung
             for pkvpaket in self.pkvpakete:
-                if pkvpaket.db_id == self.rechnungen[self.rechnung_b_id].pkv_id:
+                if pkvpaket.db_id == self.rechnungen[self.edit_bill_id].pkv_id:
                     # ALle Rechnungen durchlaufen und den Betrag aktualisieren
                     pkvpaket.betrag = 0
                     for rechnung in self.rechnungen:
@@ -801,28 +801,28 @@ class Kontolupe(toga.App):
                     break            
 
 
-    def bestaetige_rechnung_loeschen(self, widget):
+    def confirm_delete_bill(self, widget):
         """Bestätigt das Löschen einer Rechnung."""
         if self.tabelle_rechnungen.selection:
             self.main_window.confirm_dialog(
                 'Rechnung löschen', 
                 'Soll die ausgewählte Rechnung wirklich gelöscht werden?',
-                on_result=self.rechnung_loeschen
+                on_result=self.delete_bill
             )
 
 
-    async def rechnung_loeschen(self, widget, result):
+    async def delete_bill(self, widget, result):
         """Löscht eine Rechnung."""
         if self.tabelle_rechnungen.selection and result:
             
             # Index der ausgewählten Rechnung ermitteln
-            self.rechnung_b_id = self.index_auswahl(self.tabelle_rechnungen)
+            self.edit_bill_id = self.index_auswahl(self.tabelle_rechnungen)
             
             # Betrag der Rechnung auf 0 setzen um die Einreichungen aktualisieren zu können
-            self.rechnungen[self.rechnung_b_id].betrag = 0
+            self.rechnungen[self.edit_bill_id].betrag = 0
     
             # Auf Wunsch Beihilfe-Einreichung aktualisieren
-            if self.rechnungen[self.rechnung_b_id].beihilfe_id is not None:
+            if self.rechnungen[self.edit_bill_id].beihilfe_id is not None:
                 await self.main_window.confirm_dialog(
                     'Zugehörige Beihilfe-Einreichung aktualisieren',
                     'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
@@ -830,7 +830,7 @@ class Kontolupe(toga.App):
                 )
 
             # Auf Wunsch PKV-Einreichung aktualisieren
-            if self.rechnungen[self.rechnung_b_id].pkv_id is not None:
+            if self.rechnungen[self.edit_bill_id].pkv_id is not None:
                 await self.main_window.confirm_dialog(
                     'Zugehörige PKV-Einreichung aktualisieren',
                     'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
@@ -838,12 +838,12 @@ class Kontolupe(toga.App):
                 )
 
             # Rechnung löschen
-            self.rechnungen[self.rechnung_b_id].loeschen(self.db)  
-            del self.rechnungen[self.rechnung_b_id]
-            del self.rechnungen_liste[self.rechnung_b_id]   
+            self.rechnungen[self.edit_bill_id].loeschen(self.db)  
+            del self.rechnungen[self.edit_bill_id]
+            del self.rechnungen_liste[self.edit_bill_id]   
 
 
-    def create_list_ei(self):
+    def create_list_institutions(self):
         """Erzeugt die Seite, auf der die Einrichtungen angezeigt werden."""
         self.box_seite_liste_einrichtungen = toga.Box(style=style_box_column)
         box_seite_liste_einrichtungen_top = toga.Box(style=style_box_column_dunkel)
@@ -859,17 +859,17 @@ class Kontolupe(toga.App):
             data        = self.einrichtungen_liste,
             style       = style_table,
             on_select   = self.update_app,
-            on_activate = self.show_info_ei
+            on_activate = self.show_info_institution
         )
         self.box_seite_liste_einrichtungen.add(self.tabelle_einrichtungen)
 
         # Buttons für die Einrichtungen
         box_seite_liste_einrichtungen_buttons1 = toga.Box(style=style_box_row)
         box_seite_liste_einrichtungen_buttons2 = toga.Box(style=style_box_row)
-        self.seite_liste_einrichtungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_einrichtungen_bearbeiten, style=style_button, enabled=False)
-        self.seite_liste_einrichtungen_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_einrichtungen_neu, style=style_button)
-        self.seite_liste_einrichtungen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_einrichtung_loeschen, style=style_button, enabled=False)
-        self.seite_liste_einrichtungen_button_info = toga.Button('Info', on_press=self.show_info_ei, style=style_button, enabled=False)
+        self.seite_liste_einrichtungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_institution_edit, style=style_button, enabled=False)
+        self.seite_liste_einrichtungen_button_neu = toga.Button('Neu', on_press=self.show_form_institution_new, style=style_button)
+        self.seite_liste_einrichtungen_button_loeschen = toga.Button('Löschen', on_press=self.confirm_delete_institution, style=style_button, enabled=False)
+        self.seite_liste_einrichtungen_button_info = toga.Button('Info', on_press=self.show_info_institution, style=style_button, enabled=False)
         box_seite_liste_einrichtungen_buttons1.add(self.seite_liste_einrichtungen_button_bearbeiten)
         box_seite_liste_einrichtungen_buttons1.add(self.seite_liste_einrichtungen_button_neu)
         box_seite_liste_einrichtungen_buttons2.add(self.seite_liste_einrichtungen_button_loeschen)
@@ -878,138 +878,134 @@ class Kontolupe(toga.App):
         self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_buttons2)
 
 
-    def show_list_ei(self, widget):
+    def show_list_institutions(self, widget):
         """Zeigt die Seite mit der Liste der Einrichtungen."""
         self.update_app(widget)
         self.main_window.content = self.box_seite_liste_einrichtungen
 
 
-    def erzeuge_seite_formular_einrichtungen(self):
+    def create_form_institution(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Einrichtung."""
-        self.sc_form_ei = toga.ScrollContainer(style=style_scroll_container)
-        self.box_form_ei = toga.Box(style=style_box_column)
-        self.sc_form_ei.content = self.box_form_ei
+        self.sc_form_institution = toga.ScrollContainer(style=style_scroll_container)
+        self.box_form_institution = toga.Box(style=style_box_column)
+        self.sc_form_institution.content = self.box_form_institution
 
         # TopBox
-        self.form_ei_topbox = TopBox(
-            parent=self.box_form_ei,
+        self.form_institution_topbox = TopBox(
+            parent=self.box_form_institution,
             label_text='Neue Einrichtung',
             style_box=style_box_column_dunkel,
-            target_back=self.show_list_ei
+            target_back=self.show_list_institutions
         )
 
-        self.form_ei_name = LabeledTextInput(self.box_form_ei, 'Name:')
-        self.form_ei_strasse = LabeledTextInput(self.box_form_ei, 'Straße, Hausnr.:')
-        self.form_ei_plz = LabeledPostalInput(self.box_form_ei, 'PLZ:')
-        self.form_ei_ort = LabeledTextInput(self.box_form_ei, 'Ort:')
-        self.box_form_ei.add(toga.Divider(style=style_divider))
-        self.form_ei_telefon = LabeledPhoneInput(self.box_form_ei, 'Telefon:')
-        self.form_ei_email = LabeledEmailInput(self.box_form_ei, 'E-Mail:')
-        self.form_ei_webseite = LabeledWebsiteInput(self.box_form_ei, 'Webseite:')
-        self.box_form_ei.add(toga.Divider(style=style_divider))
-        self.form_ei_notiz = LabeledMultilineTextInput(self.box_form_ei, 'Notiz:')
+        self.form_institution_name = LabeledTextInput(self.box_form_institution, 'Name:')
+        self.form_institution_strasse = LabeledTextInput(self.box_form_institution, 'Straße, Hausnr.:')
+        self.form_institution_plz = LabeledPostalInput(self.box_form_institution, 'PLZ:')
+        self.form_institution_ort = LabeledTextInput(self.box_form_institution, 'Ort:')
+        self.box_form_institution.add(toga.Divider(style=style_divider))
+        self.form_institution_telefon = LabeledPhoneInput(self.box_form_institution, 'Telefon:')
+        self.form_institution_email = LabeledEmailInput(self.box_form_institution, 'E-Mail:')
+        self.form_institution_webseite = LabeledWebsiteInput(self.box_form_institution, 'Webseite:')
+        self.box_form_institution.add(toga.Divider(style=style_divider))
+        self.form_institution_notiz = LabeledMultilineTextInput(self.box_form_institution, 'Notiz:')
 
         # BottomBox
-        self.form_ei_bottombox = BottomBox(
-            parent=self.box_form_ei,
+        self.form_institution_bottombox = BottomBox(
+            parent=self.box_form_institution,
             labels=['Abbrechen', 'Speichern'],
-            targets=[self.show_list_ei, self.check_save_ei]
+            targets=[self.show_list_institutions, self.check_save_institution]
         )
 
 
-    def zeige_seite_formular_einrichtungen_neu(self, widget):
+    def show_form_institution_new(self, widget):
         """Zeigt die Seite zum Erstellen einer Einrichtung."""
         # Setze die Eingabefelder zurück
-        self.input_formular_einrichtungen_name.value = ''
-        self.input_formular_einrichtungen_strasse.value = ''
-        self.input_formular_einrichtungen_plz.value = ''
-        self.input_formular_einrichtungen_ort.value = ''
-        self.input_formular_einrichtungen_telefon.value = ''
-        self.input_formular_einrichtungen_email.value = ''
-        self.input_formular_einrichtungen_webseite.value = ''
-        self.input_formular_einrichtungen_notiz.value = ''
+        self.form_institution_name.set_value('')
+        self.form_institution_strasse.set_value('')
+        self.form_institution_plz.set_value('')
+        self.form_institution_ort.set_value('')
+        self.form_institution_telefon.set_value('')
+        self.form_institution_email.set_value('')
+        self.form_institution_webseite.set_value('')
+        self.form_institution_notiz.set_value('')
 
-        # Zurücksetzen des Flags
-        self.flag_bearbeite_einrichtung = False
-
-        # Setze die Überschrift
-        self.label_formular_einrichtungen.text = 'Neue Einrichtung'
+        # Zurücksetzen des Flags und der Überschrift
+        self.flag_edit_institution = False
+        self.form_institution_topbox.set_label('Neue Einrichtung')
 
         # Zeige die Seite
-        self.main_window.content = self.scroll_container_formular_einrichtungen
+        self.main_window.content = self.sc_form_institution
 
 
-    def zeige_seite_formular_einrichtungen_bearbeiten(self, widget):
+    def show_form_institution_edit(self, widget):
         """Zeigt die Seite zum Bearbeiten einer Einrichtung."""
         
         # Prüfe ob eine Einrichtung ausgewählt ist
         if self.tabelle_einrichtungen.selection:
             # Ermittle den Index der ausgewählten Rechnung
-            self.einrichtung_b_id = self.index_auswahl(self.tabelle_einrichtungen)
+            self.edit_institution_id = self.index_auswahl(self.tabelle_einrichtungen)
             
             # Befülle die Eingabefelder
-            self.input_formular_einrichtungen_name.value = self.einrichtungen[self.einrichtung_b_id].name
-            self.input_formular_einrichtungen_strasse.value = self.einrichtungen[self.einrichtung_b_id].strasse
-            self.input_formular_einrichtungen_plz.value = self.einrichtungen[self.einrichtung_b_id].plz
-            self.input_formular_einrichtungen_ort.value = self.einrichtungen[self.einrichtung_b_id].ort
-            self.input_formular_einrichtungen_telefon.value = self.einrichtungen[self.einrichtung_b_id].telefon
-            self.input_formular_einrichtungen_email.value = self.einrichtungen[self.einrichtung_b_id].email
-            self.input_formular_einrichtungen_webseite.value = self.einrichtungen[self.einrichtung_b_id].webseite
-            self.input_formular_einrichtungen_notiz.value = self.einrichtungen[self.einrichtung_b_id].notiz
+            self.form_institution_name.set_value(self.einrichtungen[self.edit_institution_id].name)
+            self.form_institution_strasse.set_value(self.einrichtungen[self.edit_institution_id].strasse)
+            self.form_institution_plz.set_value(self.einrichtungen[self.edit_institution_id].plz)
+            self.form_institution_ort.set_value(self.einrichtungen[self.edit_institution_id].ort)
+            self.form_institution_telefon.set_value(self.einrichtungen[self.edit_institution_id].telefon)
+            self.form_institution_email.set_value(self.einrichtungen[self.edit_institution_id].email)
+            self.form_institution_webseite.set_value(self.einrichtungen[self.edit_institution_id].webseite)
+            self.form_institution_notiz.set_value(self.einrichtungen[self.edit_institution_id].notiz)
 
-            # Setze das Flag
-            self.flag_bearbeite_einrichtung = True
-
-            # Setze die Überschrift
-            self.label_formular_einrichtungen.text = 'Einrichtung bearbeiten'
+            # Setze das Flag und die Überschrift
+            self.flag_edit_institution = True
+            self.form_institution_topbox.set_label('Einrichtung bearbeiten')
 
             # Zeige die Seite
-            self.main_window.content = self.scroll_container_formular_einrichtungen
+            self.main_window.content = self.sc_form_institution
 
 
-    def check_save_ei(self, widget):
+    def check_save_institution(self, widget):
         """Prüft die Eingaben im Formular der Einrichtungen."""
         nachricht = ''
 
         # Prüfe, ob ein Name eingegeben wurde
-        if self.form_ei_name.is_empty():
+        if self.form_institution_name.is_empty():
             nachricht += 'Bitte gib einen Namen ein.\n'
 
         # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
-        if not self.form_ei_plz.is_valid():
+        if not (self.form_institution_plz.is_valid() or self.form_institution_plz.is_empty()):
                 nachricht += 'Bitte gib eine gültige PLZ ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige Telefonnummer eingegeben wurde
-        if not self.form_ei_telefon.is_valid():
+        if not (self.form_institution_telefon.is_valid() or self.form_institution_telefon.is_empty()):
                 nachricht += 'Bitte gib eine gültige Telefonnummer ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige E-Mail-Adresse eingegeben wurde
-        if not self.form_ei_email.is_valid():
+        if not (self.form_institution_email.is_valid() or  self.form_institution_email.is_empty()):
                 nachricht += 'Bitte gib eine gültige E-Mail-Adresse ein oder lasse das Feld leer.\n'
 
         # Prüfe, ob nichts oder eine gültige Webseite eingegeben wurde
-        if not self.form_ei_webseite.is_valid():
+        if not (self.form_institution_webseite.is_valid() or self.form_institution_webseite.is_empty()):
                 nachricht += 'Bitte gib eine gültige Webseite ein oder lasse das Feld leer.\n'
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
         else:
-            self.save_ei(widget)
+            self.save_institution(widget)
 
 
-    def save_ei(self, widget):
+    def save_institution(self, widget):
         """Erstellt und speichert eine neue Einrichtung."""
-        if not self.flag_bearbeite_einrichtung:
+        if not self.flag_edit_institution:
         # Erstelle eine neue Einrichtung
             neue_einrichtung = Einrichtung()
-            neue_einrichtung.name = self.form_ei_name.get_value()
-            neue_einrichtung.strasse = self.form_ei_strasse.get_value()
-            neue_einrichtung.plz = self.form_ei_plz.get_value()
-            neue_einrichtung.ort = self.form_ei_ort.get_value()
-            neue_einrichtung.telefon = self.form_ei_telefon.get_value()
-            neue_einrichtung.email = self.form_ei_email.get_value()
-            neue_einrichtung.webseite = self.form_ei_webseite.get_value()
-            neue_einrichtung.notiz = self.form_ei_notiz.get_value()
+            neue_einrichtung.name = self.form_institution_name.get_value()
+            neue_einrichtung.strasse = self.form_institution_strasse.get_value()
+            neue_einrichtung.plz = self.form_institution_plz.get_value()
+            neue_einrichtung.ort = self.form_institution_ort.get_value()
+            neue_einrichtung.telefon = self.form_institution_telefon.get_value()
+            neue_einrichtung.email = self.form_institution_email.get_value()
+            neue_einrichtung.webseite = self.form_institution_webseite.get_value()
+            neue_einrichtung.notiz = self.form_institution_notiz.get_value()
 
             # Speichere die Einrichtung in der Datenbank
             neue_einrichtung.neu(self.db)
@@ -1019,35 +1015,35 @@ class Kontolupe(toga.App):
             self.einrichtungen_liste_anfuegen(neue_einrichtung)
         else:
             # Bearbeite die Einrichtung
-            self.einrichtungen[self.einrichtung_b_id].name = self.form_ei_name.get_value()
-            self.einrichtungen[self.einrichtung_b_id].strasse = self.form_ei_strasse.get_value()
-            self.einrichtungen[self.einrichtung_b_id].plz = self.form_ei_plz.get_value()
-            self.einrichtungen[self.einrichtung_b_id].ort = self.form_ei_ort.get_value()
-            self.einrichtungen[self.einrichtung_b_id].telefon = self.form_ei_telefon.get_value()
-            self.einrichtungen[self.einrichtung_b_id].email = self.form_ei_email.get_value()
-            self.einrichtungen[self.einrichtung_b_id].webseite = self.form_ei_webseite.get_value()
-            self.einrichtungen[self.einrichtung_b_id].notiz = self.form_ei_notiz.get_value()
+            self.einrichtungen[self.edit_institution_id].name = self.form_institution_name.get_value()
+            self.einrichtungen[self.edit_institution_id].strasse = self.form_institution_strasse.get_value()
+            self.einrichtungen[self.edit_institution_id].plz = self.form_institution_plz.get_value()
+            self.einrichtungen[self.edit_institution_id].ort = self.form_institution_ort.get_value()
+            self.einrichtungen[self.edit_institution_id].telefon = self.form_institution_telefon.get_value()
+            self.einrichtungen[self.edit_institution_id].email = self.form_institution_email.get_value()
+            self.einrichtungen[self.edit_institution_id].webseite = self.form_institution_webseite.get_value()
+            self.einrichtungen[self.edit_institution_id].notiz = self.form_institution_notiz.get_value()
 
             # Speichere die Einrichtung in der Datenbank
-            self.einrichtungen[self.einrichtung_b_id].speichern(self.db)
+            self.einrichtungen[self.edit_institution_id].speichern(self.db)
 
             # Aktualisiere die Liste der Einrichtungen
-            self.einrichtungen_liste_aendern(self.einrichtungen[self.einrichtung_b_id], self.einrichtung_b_id)
+            self.einrichtungen_liste_aendern(self.einrichtungen[self.edit_institution_id], self.edit_institution_id)
 
             # Flag zurücksetzen
-            self.flag_bearbeite_einrichtung = False
+            self.flag_edit_institution = False
 
             # Aktualisiere die Liste der Rechnungen
             self.rechnungen_liste_aktualisieren()
 
         # Zeige die Liste der Einrichtungen
         self.update_app(widget)
-        self.show_list_ei(widget)
+        self.show_list_institutions(widget)
 
 
-    def create_info_ei(self):
+    def create_info_institution(self):
         """Erzeugt die Seite, auf der die Details einer Einrichtung angezeigt werden."""
-        box_seite_info_einrichtung_button_zurueck = toga.Button('Zurück', on_press=self.show_list_ei, style=style_button)
+        box_seite_info_einrichtung_button_zurueck = toga.Button('Zurück', on_press=self.show_list_institutions, style=style_button)
         self.label_info_einrichtung_name = toga.Label('', style=style_label_h1_hell)
         box_seite_info_einrichtung_top = toga.Box(style=style_box_column_dunkel)
         box_seite_info_einrichtung_top.add(box_seite_info_einrichtung_button_zurueck)
@@ -1098,9 +1094,9 @@ class Kontolupe(toga.App):
 
         # Bereich mit den Buttons
         box_seite_info_einrichtung_buttons = toga.Box(style=style_box_row)
-        self.seite_info_einrichtung_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_einrichtungen_bearbeiten, style=style_button)
+        self.seite_info_einrichtung_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_institution_edit, style=style_button)
         box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_bearbeiten)
-        self.seite_info_einrichtung_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_einrichtung_loeschen, style=style_button)
+        self.seite_info_einrichtung_button_loeschen = toga.Button('Löschen', on_press=self.confirm_delete_institution, style=style_button)
         box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_loeschen)
 
         # Inhaltselemente zur Seite hinzufügen
@@ -1125,24 +1121,21 @@ class Kontolupe(toga.App):
         self.scroll_container_info_einrichtung.content = box_seite_info_einrichtung
 
 
-    def show_info_ei(self, widget, row=None):
+    def show_info_institution(self, widget, row=None):
         """Zeigt die Seite mit den Details einer Einrichtung."""
         # Prüfe, ob eine Einrichtung ausgewählt ist
         if self.tabelle_einrichtungen.selection:
 
             # Ermittle den Index der ausgewählten Einrichtung
-            self.einrichtung_b_id = self.index_auswahl(self.tabelle_einrichtungen)
+            self.edit_institution_id = self.index_auswahl(self.tabelle_einrichtungen)
 
             # Befülle die Labels mit den Details der Einrichtung
             # Die einzutragenden Werte können None sein, daher wird hier mit einem leeren String gearbeitet
-            self.label_info_einrichtung_name.text = self.einrichtungen_liste[self.einrichtung_b_id].name
-            self.label_info_einrichtung_strasse.text = self.einrichtungen_liste[self.einrichtung_b_id].strasse
-            self.label_info_einrichtung_plz_ort.text = self.einrichtungen_liste[self.einrichtung_b_id].plz_ort
-            self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.einrichtung_b_id].telefon
-            self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.einrichtung_b_id].email
-            #self.label_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
-            #self.display_info_einrichtung_telefon.value = self.einrichtungen_liste[self.einrichtung_b_id].telefon
-            #self.display_info_einrichtung_email.value = self.einrichtungen_liste[self.einrichtung_b_id].email
+            self.label_info_einrichtung_name.text = self.einrichtungen_liste[self.edit_institution_id].name
+            self.label_info_einrichtung_strasse.text = self.einrichtungen_liste[self.edit_institution_id].strasse
+            self.label_info_einrichtung_plz_ort.text = self.einrichtungen_liste[self.edit_institution_id].plz_ort
+            self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.edit_institution_id].telefon
+            self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.edit_institution_id].email
             
             # Entferne die Inhalte der Box, damit die Webseite nicht mehrfach angezeigt wird
             if self.link_info_einrichtung_webseite in self.box_seite_info_einrichtung_webseite.children:
@@ -1150,27 +1143,27 @@ class Kontolupe(toga.App):
 
             # Wenn eine gültige Webseite gespeichert ist, füge den Link wieder der Box hinzu
             # und setze den Text des Links auf die Webseite
-            if self.einrichtungen_liste[self.einrichtung_b_id].webseite:
+            if self.einrichtungen_liste[self.edit_institution_id].webseite:
                 self.box_seite_info_einrichtung_webseite.add(self.link_info_einrichtung_webseite)
-                self.link_info_einrichtung_webseite.text = self.einrichtungen_liste[self.einrichtung_b_id].webseite
+                self.link_info_einrichtung_webseite.text = self.einrichtungen_liste[self.edit_institution_id].webseite
                 
-            self.label_info_einrichtung_notiz.text = self.einrichtungen_liste[self.einrichtung_b_id].notiz
+            self.label_info_einrichtung_notiz.text = self.einrichtungen_liste[self.edit_institution_id].notiz
 
             # Zeige die Seite
             self.main_window.content = self.scroll_container_info_einrichtung
 
     
-    def bestaetige_einrichtung_loeschen(self, widget):
+    def confirm_delete_institution(self, widget):
         """Bestätigt das Löschen einer Einrichtung."""
         if self.tabelle_einrichtungen.selection:
             self.main_window.confirm_dialog(
                 'Einrichtung löschen', 
                 'Soll die ausgewählte Einrichtung wirklich gelöscht werden?',
-                on_result=self.einrichtung_loeschen
+                on_result=self.delete_institution
             )
 
 
-    def einrichtung_loeschen(self, widget, result):
+    def delete_institution(self, widget, result):
         """Löscht eine Einrichtung."""
         if self.tabelle_einrichtungen.selection and result:
             index = self.index_auswahl(self.tabelle_einrichtungen)
@@ -1192,10 +1185,10 @@ class Kontolupe(toga.App):
 
             # Seite mit Liste der Einrichtungen anzeigen
             self.update_app(widget)
-            self.show_list_ei(widget)
+            self.show_list_institutions(widget)
 
 
-    def erzeuge_seite_liste_personen(self):
+    def create_list_persons(self):
         """Erzeugt die Seite, auf der die Personen angezeigt werden."""
         self.box_seite_liste_personen = toga.Box(style=style_box_column)
         box_seite_liste_personen_top = toga.Box(style=style_box_column_dunkel)
@@ -1215,114 +1208,107 @@ class Kontolupe(toga.App):
 
         # Buttons für die Personen
         box_seite_liste_personen_buttons = toga.Box(style=style_box_row)
-        self.seite_liste_personen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_personen_bearbeiten, style=style_button, enabled=False)
-        self.seite_liste_personen_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_personen_neu, style=style_button)
-        self.seite_liste_personen_button_loeschen = toga.Button('Löschen', on_press=self.bestaetige_person_loeschen, style=style_button, enabled=False)
+        self.seite_liste_personen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_persons_edit, style=style_button, enabled=False)
+        self.seite_liste_personen_button_neu = toga.Button('Neu', on_press=self.show_form_persons_new, style=style_button)
+        self.seite_liste_personen_button_loeschen = toga.Button('Löschen', on_press=self.confirm_delete_person, style=style_button, enabled=False)
         box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_loeschen)
         box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_bearbeiten)
         box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_neu)
         self.box_seite_liste_personen.add(box_seite_liste_personen_buttons)
 
 
-    def zeige_seite_liste_personen(self, widget):
+    def show_list_persons(self, widget):
         """Zeigt die Seite mit der Liste der Personen."""
         self.update_app(widget)
         self.main_window.content = self.box_seite_liste_personen
 
 
-    def erzeuge_seite_formular_personen(self):
+    def create_form_person(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Person."""
-        self.box_seite_formular_personen = toga.Box(style=style_box_column)
-        box_seite_formular_personen_top = toga.Box(style=style_box_column_dunkel)
-        box_seite_formular_personen_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_personen, style=style_button))
-        self.label_formular_personen = toga.Label('Neue Person', style=style_label_h1_hell)
-        box_seite_formular_personen_top.add(self.label_formular_personen)
-        self.box_seite_formular_personen.add(box_seite_formular_personen_top)
 
-        # Bereich zur Eingabe des Namens
-        box_formular_personen_name = toga.Box(style=style_box_row)
-        box_formular_personen_name.add(toga.Label('Name: ', style=style_label_input))
-        self.input_formular_personen_name = toga.TextInput(style=style_input)
-        box_formular_personen_name.add(self.input_formular_personen_name)
-        self.box_seite_formular_personen.add(box_formular_personen_name)
+        # Container
+        self.sc_form_person = toga.ScrollContainer(style=style_scroll_container)
+        self.box_form_person = toga.Box(style=style_box_column)
+        self.sc_form_person.content = self.box_form_person
 
-        # Bereich zur Eingabe des Beihilfesatzes
-        box_formular_personen_beihilfesatz = toga.Box(style=style_box_row)
-        box_formular_personen_beihilfesatz.add(toga.Label('Beihilfesatz in %: ', style=style_label_input))
-        self.input_formular_personen_beihilfesatz = toga.TextInput(style=style_input, on_lose_focus=pruefe_prozent)
-        box_formular_personen_beihilfesatz.add(self.input_formular_personen_beihilfesatz)
-        self.box_seite_formular_personen.add(box_formular_personen_beihilfesatz)
+        # TopBox
+        self.form_person_topbox = TopBox(
+            parent=self.box_form_person,
+            label_text='Neue Person',
+            style_box=style_box_column_dunkel,
+            target_back=self.show_list_persons
+        )
 
-        # Bereich der Buttons
-        box_formular_personen_buttons = toga.Box(style=style_box_row)
-        box_formular_personen_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_personen, style=style_button))
-        box_formular_personen_buttons.add(toga.Button('Speichern', on_press=self.person_speichern_check, style=style_button))
-        self.box_seite_formular_personen.add(box_formular_personen_buttons)
+        self.form_person_name = LabeledTextInput(self.box_form_person, 'Name:')
+        self.form_person_beihilfe = LabeledPercentInput(self.box_form_person, 'Beihilfe in %:')
+
+        # BottomBox
+        self.form_person_bottombox = BottomBox(
+            parent=self.box_form_person,
+            labels=['Abbrechen', 'Speichern'],
+            targets=[self.show_list_persons, self.check_save_person]
+        )
 
 
-    def zeige_seite_formular_personen_neu(self, widget):
+    def show_form_persons_new(self, widget):
         """Zeigt die Seite zum Erstellen einer Person."""
         # Setze die Eingabefelder zurück
-        self.input_formular_personen_name.value = ''
-        self.input_formular_personen_beihilfesatz.value = ''
+        self.form_person_name.set_value('')
+        self.form_person_beihilfe.set_value('')
 
-        # Zurücksetzen des Flags
-        self.flag_bearbeite_person = False
-
-        # Setze die Überschrift
-        self.label_formular_personen.text = 'Neue Person'
+        # Zurücksetzen des Flags und der Überschrift
+        self.flag_edit_person = False
+        self.form_person_topbox.set_label('Neue Person')
 
         # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_personen
+        self.main_window.content = self.sc_form_person
 
 
-    def zeige_seite_formular_personen_bearbeiten(self, widget):
+    def show_form_persons_edit(self, widget):
         """Zeigt die Seite zum Bearbeiten einer Person."""
             
         # Prüfe ob eine Person ausgewählt ist
         if self.tabelle_personen.selection:
             # Ermittle den Index der ausgewählten Person
-            self.person_b_id = self.index_auswahl(self.tabelle_personen)
+            self.edit_person_id = self.index_auswahl(self.tabelle_personen)
             
             # Befülle die Eingabefelder
-            self.input_formular_personen_name.value = self.personen[self.person_b_id].name
-            self.input_formular_personen_beihilfesatz.value = str(self.personen[self.person_b_id].beihilfesatz)
+            self.form_person_name.set_value(self.personen[self.edit_person_id].name)
+            self.form_person_beihilfe.set_value(self.personen[self.edit_person_id].beihilfesatz)
 
-            # Setze das Flag
-            self.flag_bearbeite_person = True
-
-            # Setze die Überschrift
-            self.label_formular_personen.text = 'Person bearbeiten'
+            # Setze das Flag und die Überschrift
+            self.flag_edit_person = True
+            self.form_person_topbox.set_label('Person bearbeiten')
 
             # Zeige die Seite
-            self.main_window.content = self.box_seite_formular_personen
+            self.main_window.content = self.sc_form_person
 
 
-    def person_speichern_check(self, widget):
+    def check_save_person(self, widget):
         """Prüft die Eingaben im Formular der Personen."""
         nachricht = ''
 
         # Prüfe, ob ein Name eingegeben wurde
-        if self.input_formular_personen_name.value == '':
+        if self.form_person_name.is_empty():
             nachricht += 'Bitte gib einen Namen ein.\n'
 
-        # Prüfe, ob nichts oder eine gültige Prozentzahl eingegeben wurde
-        if not pruefe_prozent(self.input_formular_personen_beihilfesatz) or self.input_formular_personen_beihilfesatz.value == '':
+        # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
+        if not self.form_person_beihilfe.is_valid():
                 nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
         else:
-            self.person_speichern(widget)
+            self.save_person(widget)
 
 
-    def person_speichern(self, widget):
+    def save_person(self, widget):
         """Erstellt und speichert eine neue Person."""
-        if not self.flag_bearbeite_person:
+        if not self.flag_edit_person:
         # Erstelle eine neue Person
             neue_person = Person()
-            neue_person.name = self.input_formular_personen_name.value
-            neue_person.beihilfesatz = int(self.input_formular_personen_beihilfesatz.value or 0)
+            neue_person.name = self.form_person_name.get_value()
+            neue_person.beihilfesatz = self.form_person_beihilfe.get_value()
 
             # Speichere die Person in der Datenbank
             neue_person.neu(self.db)
@@ -1332,34 +1318,34 @@ class Kontolupe(toga.App):
             self.personen_liste_anfuegen(neue_person)
         else:
             # Bearbeite die Person
-            self.personen[self.person_b_id].name = self.input_formular_personen_name.value
-            self.personen[self.person_b_id].beihilfesatz = int(self.input_formular_personen_beihilfesatz.value or 0)
+            self.personen[self.edit_person_id].name = self.form_person_name.get_value()
+            self.personen[self.edit_person_id].beihilfesatz = self.form_person_beihilfe.get_value()
 
             # Speichere die Person in der Datenbank
-            self.personen[self.person_b_id].speichern(self.db)
+            self.personen[self.edit_person_id].speichern(self.db)
 
             # Aktualisiere die Liste der Personen
-            self.personen_liste_aendern(self.personen[self.person_b_id], self.person_b_id)
+            self.personen_liste_aendern(self.personen[self.edit_person_id], self.edit_person_id)
 
             # Flag zurücksetzen
-            self.flag_bearbeite_person = False
+            self.flag_edit_person = False
 
         # Zeige die Liste der Personen
         self.update_app(widget)
-        self.zeige_seite_liste_personen(widget)
+        self.show_list_persons(widget)
 
 
-    def bestaetige_person_loeschen(self, widget):
+    def confirm_delete_person(self, widget):
         """Bestätigt das Löschen einer Person."""
         if self.tabelle_personen.selection:
             self.main_window.confirm_dialog(
                 'Person löschen', 
                 'Soll die ausgewählte Person wirklich gelöscht werden?',
-                on_result=self.person_loeschen
+                on_result=self.delete_person
             )
 
 
-    def person_loeschen(self, widget, result):
+    def delete_person(self, widget, result):
         """Löscht eine Person."""
         if self.tabelle_personen.selection and result:
             index = self.index_auswahl(self.tabelle_personen)
@@ -1381,10 +1367,10 @@ class Kontolupe(toga.App):
 
             # Seite mit Liste der Personen anzeigen
             self.update_app(widget)
-            self.zeige_seite_liste_personen(widget)
+            self.show_list_persons(widget)
 
 
-    def erzeuge_seite_liste_beihilfepakete(self):
+    def create_list_beihilfe(self):
         """Erzeugt die Seite, auf der die Beihilfe-Einreichungen angezeigt werden."""
         self.box_seite_liste_beihilfepakete = toga.Box(style=style_box_column)
         box_seite_liste_beihilfepakete_top = toga.Box(style=style_box_column_beihilfe)
@@ -1394,7 +1380,7 @@ class Kontolupe(toga.App):
 
         # Tabelle mit den Beihilfepaketen
         self.tabelle_beihilfepakete = toga.Table(
-            headings    = ['Datum', 'Betrag', 'Erhalten'], 
+            headings    = ['Datum', 'Betrag', 'Erstattet'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.beihilfepakete_liste,
             style       = style_table,
@@ -1405,16 +1391,16 @@ class Kontolupe(toga.App):
 
         # Buttons für die Beihilfepakete
         box_seite_liste_beihilfepakete_buttons = toga.Box(style=style_box_row)
-        self.seite_liste_beihilfepakete_button_loeschen = toga.Button('Zurücksetzen', on_press=self.bestaetige_beihilfepaket_loeschen, style=style_button, enabled=False)
+        self.seite_liste_beihilfepakete_button_loeschen = toga.Button('Zurücksetzen', on_press=self.confirm_delete_beihilfe, style=style_button, enabled=False)
         box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_loeschen)
-        #self.seite_liste_beihilfepakete_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_beihilfepakete_bearbeiten, style=style_button, enabled=False)
+        #self.seite_liste_beihilfepakete_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_beihilfe_edit, style=style_button, enabled=False)
         #box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_bearbeiten)
-        self.seite_liste_beihilfepakete_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_beihilfepakete_neu, style=style_button)
+        self.seite_liste_beihilfepakete_button_neu = toga.Button('Neu', on_press=self.show_form_beihilfe_new, style=style_button)
         box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_neu)
         self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_buttons)
 
 
-    def erzeuge_seite_liste_pkvpakete(self):
+    def create_list_pkv(self):
         """Erzeugt die Seite, auf der die PKV-Einreichungen angezeigt werden."""
         self.box_seite_liste_pkvpakete = toga.Box(style=style_box_column)
         box_seite_liste_pkvpakete_top = toga.Box(style=style_box_column_pkv)
@@ -1425,7 +1411,7 @@ class Kontolupe(toga.App):
         # Tabelle mit den PKV-Einreichungen
         self.tabelle_pkvpakete_container = toga.ScrollContainer(style=style_scroll_container)
         self.tabelle_pkvpakete = toga.Table(
-            headings    = ['Datum', 'Betrag', 'Erhalten'], 
+            headings    = ['Datum', 'Betrag', 'Erstattet'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.pkvpakete_liste,
             style       = style_table,
@@ -1437,289 +1423,211 @@ class Kontolupe(toga.App):
 
         # Buttons für die PKV-Einreichungen
         box_seite_liste_pkvpakete_buttons = toga.Box(style=style_box_row)
-        self.seite_liste_pkvpakete_button_loeschen = toga.Button('Zurücksetzen', on_press=self.bestaetige_pkvpaket_loeschen, style=style_button, enabled=False)
+        self.seite_liste_pkvpakete_button_loeschen = toga.Button('Zurücksetzen', on_press=self.confirm_delete_pkv, style=style_button, enabled=False)
         box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_loeschen)
-        #self.seite_liste_pkvpakete_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.zeige_seite_formular_pkvpakete_bearbeiten, style=style_button, enabled=False)
+        #self.seite_liste_pkvpakete_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_pkv_edit, style=style_button, enabled=False)
         #box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_bearbeiten)
-        self.seite_liste_pkvpakete_button_neu = toga.Button('Neu', on_press=self.zeige_seite_formular_pkvpakete_neu, style=style_button)
+        self.seite_liste_pkvpakete_button_neu = toga.Button('Neu', on_press=self.show_form_pkv_new, style=style_button)
         box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_neu)
         self.box_seite_liste_pkvpakete.add(box_seite_liste_pkvpakete_buttons)
 
 
-    def zeige_seite_liste_beihilfepakete(self, widget):
+    def show_list_beihilfe(self, widget):
         """Zeigt die Seite mit der Liste der Beihilfepakete."""
         # Zum Setzen des Button Status
         self.update_app(widget)
         self.main_window.content = self.box_seite_liste_beihilfepakete
 
     
-    def zeige_seite_liste_pkvpakete(self, widget):
+    def show_list_pkv(self, widget):
         """Zeigt die Seite mit der Liste der PKV-Einreichungen."""
         # Zum Setzen des Button Status
         self.update_app(widget)
         self.main_window.content = self.box_seite_liste_pkvpakete
 
     
-    def erzeuge_seite_formular_beihilfepakete(self):
+    def create_form_beihilfe(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer Beihilfe-Einreichung."""
-        self.box_seite_formular_beihilfepakete = toga.Box(style=style_box_column)
-        box_seite_formular_beihilfepakete_top = toga.Box(style=style_box_column_beihilfe)
-        box_seite_formular_beihilfepakete_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_beihilfepakete, style=style_button))
-        self.label_formular_beihilfepakete = toga.Label('Neue Beihilfe-Einreichung', style=style_label_h1_hell)
-        box_seite_formular_beihilfepakete_top.add(self.label_formular_beihilfepakete)
-        self.box_seite_formular_beihilfepakete.add(box_seite_formular_beihilfepakete_top)
 
-        # Bereich zur Eingabe des Datums
-        box_formular_beihilfepakete_datum = toga.Box(style=style_box_row)
-        box_formular_beihilfepakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_beihilfepakete_datum = toga.TextInput(style=style_input, on_lose_focus=pruefe_datum, placeholder='TT.MM.JJJJ')
-        box_formular_beihilfepakete_datum.add(self.input_formular_beihilfepakete_datum)
-        self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_datum)
+        # Container
+        self.sc_form_beihilfe = toga.ScrollContainer(style=style_scroll_container)
+        self.box_form_beihilfe = toga.Box(style=style_box_column)
+        self.sc_form_beihilfe.content = self.box_form_beihilfe
+
+        # TopBox
+        self.form_beihilfe_topbox = TopBox(
+            parent=self.box_form_beihilfe,
+            label_text='Neue Beihilfe-Einreichung',
+            style_box=style_box_column_beihilfe,
+            target_back=self.show_list_beihilfe
+        )
+
+        self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
-        self.formular_beihilfe_tabelle_rechnungen = toga.Table(
+        self.form_beihilfe_bills = toga.Table(
             headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
             accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
             data            = self.erzeuge_teilliste_rechnungen(beihilfe=True),
             multiple_select = True,
-            on_select       = self.beihilfe_tabelle_rechnungen_auswahl_geaendert,
+            on_select       = self.on_select_beihilfe_bills,
             on_activate     = self.zeige_info_buchung,
             style           = style_table_auswahl
         )
-        self.box_seite_formular_beihilfepakete.add(self.formular_beihilfe_tabelle_rechnungen)
+        self.box_form_beihilfe.add(self.form_beihilfe_bills)
 
-        # Divider
-        self.box_seite_formular_beihilfepakete.add(toga.Divider(style=style_divider))
+        self.box_form_beihilfe.add(toga.Divider(style=style_divider))
+        self.form_beihilfe_betrag = LabeledFloatInput(self.box_form_beihilfe, 'Betrag in €:', readonly=True)
+        self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
 
-        # Bereich zur Anzeige des Betrags
-        box_formular_beihilfepakete_betrag = toga.Box(style=style_box_row)
-        box_formular_beihilfepakete_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        self.input_formular_beihilfepakete_betrag = toga.TextInput(style=style_input, readonly=True)
-        box_formular_beihilfepakete_betrag.add(self.input_formular_beihilfepakete_betrag)
-        self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_betrag)
-
-        # Bereich zur Angabe der Erstattung
-        box_formular_beihilfepakete_erhalten = toga.Box(style=style_box_row)
-        self.input_formular_beihilfepakete_erhalten = toga.Switch('Erstattet:', style=style_switch)
-        box_formular_beihilfepakete_erhalten.add(self.input_formular_beihilfepakete_erhalten)
-        self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_erhalten)
-
-        # Bereich der Buttons
-        box_formular_beihilfepakete_buttons = toga.Box(style=style_box_row)
-        box_formular_beihilfepakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_beihilfepakete, style=style_button))
-        box_formular_beihilfepakete_buttons.add(toga.Button('Speichern', on_press=self.beihilfepaket_speichern_check, style=style_button))
-        self.box_seite_formular_beihilfepakete.add(box_formular_beihilfepakete_buttons)
+        # BottomBox
+        self.form_beihilfe_bottombox = BottomBox(
+            parent=self.box_form_beihilfe,
+            labels=['Abbrechen', 'Speichern'],
+            targets=[self.show_list_beihilfe, self.check_save_beihilfe]
+        )
 
 
-    def erzeuge_seite_formular_pkvpakete(self):
+    def create_form_pkv(self):
         """Erzeugt das Formular zum Erstellen und Bearbeiten einer PKV-Einreichung."""
-        self.box_seite_formular_pkvpakete = toga.Box(style=style_box_column)
-        box_seite_formular_pkvpakete_top = toga.Box(style=style_box_column_pkv)
-        box_seite_formular_pkvpakete_top.add(toga.Button('Zurück', on_press=self.zeige_seite_liste_pkvpakete, style=style_button))
-        self.label_formular_pkvpakete = toga.Label('Neue PKV-Einreichung', style=style_label_h1_hell)
-        box_seite_formular_pkvpakete_top.add(self.label_formular_pkvpakete)
-        self.box_seite_formular_pkvpakete.add(box_seite_formular_pkvpakete_top)
 
-        # Bereich zur Eingabe des Datums
-        box_formular_pkvpakete_datum = toga.Box(style=style_box_row)
-        box_formular_pkvpakete_datum.add(toga.Label('Datum: ', style=style_label_input))
-        self.input_formular_pkvpakete_datum = toga.TextInput(style=style_input, on_lose_focus=pruefe_datum, placeholder='TT.MM.JJJJ')
-        box_formular_pkvpakete_datum.add(self.input_formular_pkvpakete_datum)
-        self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_datum)
+        # Container
+        self.sc_form_pkv = toga.ScrollContainer(style=style_scroll_container)
+        self.box_form_pkv = toga.Box(style=style_box_column)
+        self.sc_form_pkv.content = self.box_form_pkv
+
+        # TopBox
+        self.form_pkv_topbox = TopBox(
+            parent=self.box_form_pkv,
+            label_text='Neue PKV-Einreichung',
+            style_box=style_box_column_pkv,
+            target_back=self.show_list_pkv
+        )
+
+        self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
-        self.formular_pkvpakete_rechnungen_container = toga.ScrollContainer(style=style_scroll_container)
-        self.formular_pkv_tabelle_rechnungen = toga.Table(
+        self.form_pkv_bills = toga.Table(
             headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
             accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
             data            = self.erzeuge_teilliste_rechnungen(pkv=True),
             multiple_select = True,
-            on_select       = self.pkv_tabelle_rechnungen_auswahl_geaendert,   
+            on_select       = self.on_select_pkv_bills,   
             on_activate     = self.zeige_info_buchung,
             style           = style_table_auswahl
         )
-        self.formular_pkvpakete_rechnungen_container.content = self.formular_pkv_tabelle_rechnungen
-        self.box_seite_formular_pkvpakete.add(self.formular_pkvpakete_rechnungen_container)
+        self.box_form_pkv.add(self.form_pkv_bills)
 
-        # Divider
-        self.box_seite_formular_pkvpakete.add(toga.Divider(style=style_divider))
+        self.box_form_pkv.add(toga.Divider(style=style_divider))
+        self.form_pkv_betrag = LabeledFloatInput(self.box_form_pkv, 'Betrag in €:', readonly=True)
+        self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')
 
-        # Bereich zur Anzeige des Betrags
-        box_formular_pkvpakete_betrag = toga.Box(style=style_box_row)
-        box_formular_pkvpakete_betrag.add(toga.Label('Betrag in €: ', style=style_label_input))
-        self.input_formular_pkvpakete_betrag = toga.TextInput(style=style_input, readonly=True)
-        box_formular_pkvpakete_betrag.add(self.input_formular_pkvpakete_betrag)
-        self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_betrag)
-
-        # Bereich zur Angabe der Erstattung
-        box_formular_pkvpakete_erhalten = toga.Box(style=style_box_row)
-        self.input_formular_pkvpakete_erhalten = toga.Switch('Erhalten', style=style_switch)
-        box_formular_pkvpakete_erhalten.add(self.input_formular_pkvpakete_erhalten)
-        self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_erhalten)
-
-        # Bereich der Buttons
-        box_formular_pkvpakete_buttons = toga.Box(style=style_box_row)
-        box_formular_pkvpakete_buttons.add(toga.Button('Abbrechen', on_press=self.zeige_seite_liste_pkvpakete, style=style_button))
-        box_formular_pkvpakete_buttons.add(toga.Button('Speichern', on_press=self.pkvpaket_speichern_check, style=style_button))
-        self.box_seite_formular_pkvpakete.add(box_formular_pkvpakete_buttons)
+        # BottomBox
+        self.form_pkv_bottombox = BottomBox(
+            parent=self.box_form_pkv,
+            labels=['Abbrechen', 'Speichern'],
+            targets=[self.show_list_pkv, self.check_save_pkv]
+        )
 
 
-    def beihilfe_tabelle_rechnungen_auswahl_geaendert(self, widget):
+    def on_select_beihilfe_bills(self, widget):
         """Ermittelt die Summe des Beihilfe-Anteils der ausgewählten Rechnungen."""
         summe = 0
         for auswahl_rg in widget.selection:
             for rg in self.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
                     summe += rg.betrag * rg.beihilfesatz / 100
-        self.input_formular_beihilfepakete_betrag.value = format(summe, '.2f').replace('.', ',')
+        self.form_beihilfe_betrag.set_value(summe)
 
 
-    def pkv_tabelle_rechnungen_auswahl_geaendert(self, widget):
+    def on_select_pkv_bills(self, widget):
         """Ermittelt die Summe des PKV-Anteils der ausgewählten Rechnungen."""
         summe = 0
         for auswahl_rg in widget.selection:
             for rg in self.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
                     summe += rg.betrag * (100 - rg.beihilfesatz) / 100
-        self.input_formular_pkvpakete_betrag.value = format(summe, '.2f').replace('.', ',')
+        self.form_pkv_betrag.set_value(summe)
 
 
-    def zeige_seite_formular_beihilfepakete_neu(self, widget):
+    def show_form_beihilfe_new(self, widget):
         """Zeigt die Seite zum Erstellen eines Beihilfepakets."""
         # Setze die Eingabefelder zurück
-        self.input_formular_beihilfepakete_betrag.value = ''
-        self.input_formular_beihilfepakete_datum.value = datetime.now().strftime('%d.%m.%Y')
-        self.input_formular_beihilfepakete_erhalten.value = False
-        self.formular_beihilfe_tabelle_rechnungen.data = self.erzeuge_teilliste_rechnungen(beihilfe=True)
+        self.form_beihilfe_betrag.set_value('')
+        self.form_beihilfe_datum.set_value(datetime.now())
+        self.form_beihilfe_erhalten.set_value(False)
+        self.form_beihilfe_bills.data = self.erzeuge_teilliste_rechnungen(beihilfe=True)
 
-        # Zurücksetzen des Flags
-        self.flag_bearbeite_beihilfepaket = False
-
-        # Setze die Überschrift
-        self.label_formular_beihilfepakete.text = 'Neue Beihilfe-Einreichung'
+        # Zurücksetzen des Flags und der Überschrift
+        self.flag_edit_beihilfe = False
+        self.form_beihilfe_topbox.set_label('Neue Beihilfe-Einreichung')
 
         # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_beihilfepakete
+        self.main_window.content = self.sc_form_beihilfe
 
 
-    def zeige_seite_formular_pkvpakete_neu(self, widget):
+    def show_form_pkv_new(self, widget):
         """Zeigt die Seite zum Erstellen einer PKV-Einreichung."""
         # Setze die Eingabefelder zurück
-        self.input_formular_pkvpakete_betrag.value = ''
-        self.input_formular_pkvpakete_datum.value = datetime.now().strftime('%d.%m.%Y')
-        self.input_formular_pkvpakete_erhalten.value = False
-        self.formular_pkv_tabelle_rechnungen.data = self.erzeuge_teilliste_rechnungen(pkv=True)
+        self.form_pkv_betrag.set_value('')
+        self.form_pkv_datum.set_value(datetime.now())
+        self.form_pkv_erhalten.set_value(False)
+        self.form_pkv_bills.data = self.erzeuge_teilliste_rechnungen(pkv=True)
 
-        # Zurücksetzen des Flags
-        self.flag_bearbeite_pkvpaket = False
-
-        # Setze die Überschrift
-        self.label_formular_pkvpakete.text = 'Neue PKV-Einreichung'
+        # Zurücksetzen des Flags und der Überschrift
+        self.flag_edit_pkv = False
+        self.form_pkv_topbox.set_label('Neue PKV-Einreichung')
 
         # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_pkvpakete
+        self.main_window.content = self.sc_form_pkv
 
 
-    def zeige_seite_formular_beihilfepakete_bearbeiten(self, widget):
-        """Zeigt die Seite zum Bearbeiten einer Beihilfe-Einreichung."""
-        # Ermittle den Index des ausgewählten Beihilfepakets
-        self.beihilfepaket_b_id = self.index_auswahl(self.tabelle_beihilfepakete)
-
-        # Befülle die Eingabefelder
-        self.input_formular_beihilfepakete_betrag.value = format(self.beihilfepakete[self.beihilfepaket_b_id].betrag, '.2f').replace('.', ',')
-        self.input_formular_beihilfepakete_datum.value = self.beihilfepakete[self.beihilfepaket_b_id].datum
-        self.input_formular_beihilfepakete_erhalten.value = self.beihilfepakete[self.beihilfepaket_b_id].erhalten
-
-        # Tabelleninhalt aktualisieren
-        tabelle_daten = self.erzeuge_teilliste_rechnungen(beihilfe=True, beihilfe_id=self.beihilfepakete[self.beihilfepaket_b_id].db_id)
-        self.formular_beihilfe_tabelle_rechnungen.data = tabelle_daten
-
-        # TODO: Wähle die verknüpften Rechnungen in der Tabelle aus
-        # self.formular_beihilfe_tabelle_rechnungen.selection = []
-        # for i, rechnung in enumerate(tabelle_daten):
-        #     if rechnung.beihilfe_id == self.beihilfepakete[self.beihilfepaket_b_id].db_id:
-        #         self.formular_beihilfe_tabelle_rechnungen.selection.append(self.formular_beihilfe_tabelle_rechnungen.data[i])
-
-        # Setze das Flag
-        self.flag_bearbeite_beihilfepaket = True
-
-        # Setze die Überschrift
-        self.label_formular_beihilfepakete.text = 'Beihilfe-Einreichung bearbeiten'
-
-        # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_beihilfepakete
-
-
-    def zeige_seite_formular_pkvpakete_bearbeiten(self, widget):
-        """Zeigt die Seite zum Bearbeiten einer PKV-Einreichung."""
-        # Ermittle den Index der ausgewählten PKV-Einreichung
-        self.pkvpaket_b_id = self.index_auswahl(self.tabelle_pkvpakete)
-
-        # Befülle die Eingabefelder
-        self.input_formular_pkvpakete_betrag.value = format(self.pkvpakete[self.pkvpaket_b_id].betrag, '.2f').replace('.', ',')
-        self.input_formular_pkvpakete_datum.value = self.pkvpakete[self.pkvpaket_b_id].datum
-        self.input_formular_pkvpakete_erhalten.value = self.pkvpakete[self.pkvpaket_b_id].erhalten
-
-        # Tabelleninhalt aktualisieren
-        tabelle_daten = self.erzeuge_teilliste_rechnungen(pkv=True, pkv_id=self.pkvpakete[self.pkvpaket_b_id].db_id)
-        self.formular_pkv_tabelle_rechnungen.data = tabelle_daten
-
-        # Setze das Flag
-        self.flag_bearbeite_pkvpaket = True
-
-        # Setze die Überschrift
-        self.label_formular_pkvpakete.text = 'PKV-Einreichung bearbeiten'
-
-        # Zeige die Seite
-        self.main_window.content = self.box_seite_formular_pkvpakete
-
-
-    def beihilfepaket_speichern_check(self, widget):
+    def check_save_beihilfe(self, widget):
         """Prüft, ob die Eingaben für eine neue Beihilfe-Einreichung korrekt sind."""
 
         nachricht = ''
 
         # Prüfe das Datum
-        if not pruefe_datum(self.input_formular_beihilfepakete_datum) or self.input_formular_beihilfepakete_datum.value == '':
+        if not self.form_beihilfe_datum.is_valid():
             nachricht += 'Bitte gib ein gültiges Datum ein.\n'
 
         # Prüfe ob Rechnungen ausgewählt wurden
-        if not self.formular_beihilfe_tabelle_rechnungen.selection:
+        if not self.form_beihilfe_bills.selection:
             nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
         else:
-            self.beihilfepaket_speichern(widget)
+            self.save_beihilfe(widget)
 
 
-    def pkvpaket_speichern_check(self, widget):
+    def check_save_pkv(self, widget):
         """Prüft, ob Rechnungen für die PKV-Einreichungen ausgewählt sind."""
         nachricht = ''
 
         # Prüfe das Datum
-        if not pruefe_datum(self.input_formular_pkvpakete_datum) or self.input_formular_pkvpakete_datum.value == '':
+        if not self.form_pkv_datum.is_valid():
             nachricht += 'Bitte gib ein gültiges Datum ein.\n'
 
         # Prüfe ob Rechnungen ausgewählt wurden
-        if not self.formular_pkv_tabelle_rechnungen.selection:
+        if not self.form_pkv_bills.selection:
             nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
         else:
-            self.pkvpaket_speichern(widget)
+            self.save_pkv(widget)
 
 
-    def beihilfepaket_speichern(self, widget):
+    def save_beihilfe(self, widget):
         """Erstellt und speichert eine neue Beihilfe-Einreichung oder ändert eine bestehende."""
 
-        if not self.flag_bearbeite_beihilfepaket:
+        if not self.flag_edit_beihilfe:
             # Erstelle ein neues Beihilfepaket
             neues_beihilfepaket = BeihilfePaket()
-            neues_beihilfepaket.datum = self.input_formular_beihilfepakete_datum.value
-            neues_beihilfepaket.betrag = float(self.input_formular_beihilfepakete_betrag.value.replace(',', '.') or 0)
-            neues_beihilfepaket.erhalten = self.input_formular_beihilfepakete_erhalten.value
+            neues_beihilfepaket.datum = self.form_beihilfe_datum.get_value()
+            neues_beihilfepaket.betrag = self.form_beihilfe_betrag.get_value()
+            neues_beihilfepaket.erhalten = self.form_beihilfe_erhalten.get_value()
 
             # Speichere das Beihilfepaket in der Datenbank
             neues_beihilfepaket.neu(self.db)
@@ -1729,7 +1637,7 @@ class Kontolupe(toga.App):
             self.beihilfepakete_liste_anfuegen(neues_beihilfepaket)
 
             # Aktualisiere verknüpfte Rechnungen
-            for auswahl_rg in self.formular_beihilfe_tabelle_rechnungen.selection:
+            for auswahl_rg in self.form_beihilfe_bills.selection:
                 for rg in self.rechnungen:
                     if auswahl_rg.db_id == rg.db_id:
                         rg.beihilfe_id = neues_beihilfepaket.db_id
@@ -1737,24 +1645,24 @@ class Kontolupe(toga.App):
 
         else:
             # Bearbeite das Beihilfepaket
-            self.beihilfepakete[self.beihilfepaket_b_id].datum = self.input_formular_beihilfepakete_datum.value
-            self.beihilfepakete[self.beihilfepaket_b_id].betrag = float(self.input_formular_beihilfepakete_betrag.value.replace(',', '.') or 0)
-            self.beihilfepakete[self.beihilfepaket_b_id].erhalten = self.input_formular_beihilfepakete_erhalten.value
+            self.beihilfepakete[self.edit_beihilfe_id].datum = self.form_beihilfe_datum.get_value()
+            self.beihilfepakete[self.edit_beihilfe_id].betrag = self.form_beihilfe_betrag.get_value()
+            self.beihilfepakete[self.edit_beihilfe_id].erhalten = self.form_beihilfe_erhalten.get_value()
 
             # Speichere das Beihilfepaket in der Datenbank
-            self.beihilfepakete[self.beihilfepaket_b_id].speichern(self.db)
+            self.beihilfepakete[self.edit_beihilfe_id].speichern(self.db)
 
             # Aktualisiere die Liste der Beihilfepakete
-            self.beihilfepakete_liste_aendern(self.beihilfepakete[self.beihilfepaket_b_id], self.beihilfepaket_b_id)
+            self.beihilfepakete_liste_aendern(self.beihilfepakete[self.edit_beihilfe_id], self.edit_beihilfe_id)
 
             # Flage zurücksetzen
-            self.flag_bearbeite_beihilfepaket = False
+            self.flag_edit_beihilfe = False
 
             # Aktualisiere verknüpfte Rechnungen
-            for auswahl_rg in self.formular_beihilfe_tabelle_rechnungen.selection:
+            for auswahl_rg in self.form_beihilfe_bills.selection:
                 for rg in self.rechnungen:
                     if auswahl_rg.db_id == rg.db_id:
-                        rg.beihilfe_id = self.beihilfepakete[self.beihilfepaket_b_id].db_id
+                        rg.beihilfe_id = self.beihilfepakete[self.edit_beihilfe_id].db_id
                         rg.speichern(self.db)
 
         # Rechnungen aktualisieren
@@ -1765,15 +1673,15 @@ class Kontolupe(toga.App):
         self.zeige_startseite(widget)
 
 
-    def pkvpaket_speichern(self, widget):
+    def save_pkv(self, widget):
         """Erstellt und speichert eine neue PKV-Einreichung oder ändert eine bestehende."""
 
-        if not self.flag_bearbeite_pkvpaket:
+        if not self.flag_edit_pkv:
             # Erstelle ein neues PKV-Paket
             neues_pkvpaket = PKVPaket()
-            neues_pkvpaket.datum = self.input_formular_pkvpakete_datum.value
-            neues_pkvpaket.betrag = float(self.input_formular_pkvpakete_betrag.value.replace(',', '.') or 0)
-            neues_pkvpaket.erhalten = self.input_formular_pkvpakete_erhalten.value
+            neues_pkvpaket.datum = self.form_pkv_datum.get_value()
+            neues_pkvpaket.betrag = self.form_pkv_betrag.get_value()
+            neues_pkvpaket.erhalten = self.form_pkv_erhalten.get_value()
 
             # Speichere das PKV-Einreichung in der Datenbank
             neues_pkvpaket.neu(self.db)
@@ -1783,7 +1691,7 @@ class Kontolupe(toga.App):
             self.pkvpakete_liste_anfuegen(neues_pkvpaket)
 
             # Aktualisiere verknüpfte Rechnungen
-            for auswahl_rg in self.formular_pkv_tabelle_rechnungen.selection:
+            for auswahl_rg in self.form_pkv_bills.selection:
                 for rg in self.rechnungen:
                     if auswahl_rg.db_id == rg.db_id:
                         rg.pkv_id = neues_pkvpaket.db_id
@@ -1791,24 +1699,24 @@ class Kontolupe(toga.App):
 
         else:
             # Bearbeite das PKV-Paket
-            self.pkvpakete[self.pkvpaket_b_id].datum = self.input_formular_pkvpakete_datum.value
-            self.pkvpakete[self.pkvpaket_b_id].betrag = float(self.input_formular_pkvpakete_betrag.value.replace(',', '.') or 0)
-            self.pkvpakete[self.pkvpaket_b_id].erhalten = self.input_formular_pkvpakete_erhalten.value
+            self.pkvpakete[self.edit_pkv_id].datum = self.form_pkv_datum.get_value()
+            self.pkvpakete[self.edit_pkv_id].betrag = self.form_pkv_betrag.get_value()
+            self.pkvpakete[self.edit_pkv_id].erhalten = self.form_pkv_erhalten.get_value()
 
             # Speichere das PKV-Einreichung in der Datenbank
-            self.pkvpakete[self.pkvpaket_b_id].speichern(self.db)
+            self.pkvpakete[self.edit_pkv_id].speichern(self.db)
 
             # Aktualisiere die Liste der PKV-Einreichungen
-            self.pkvpakete_liste_aendern(self.pkvpakete[self.pkvpaket_b_id], self.pkvpaket_b_id)
+            self.pkvpakete_liste_aendern(self.pkvpakete[self.edit_pkv_id], self.edit_pkv_id)
 
             # Flage zurücksetzen
-            self.flag_bearbeite_pkvpaket = False
+            self.flag_edit_pkv = False
 
             # Aktualisiere verknüpfte Rechnungen
-            for auswahl_rg in self.formular_pkv_tabelle_rechnungen.selection:
+            for auswahl_rg in self.form_pkv_bills.selection:
                 for rg in self.rechnungen:
                     if auswahl_rg.db_id == rg.db_id:
-                        rg.pkv_id = self.pkvpakete[self.pkvpaket_b_id].db_id
+                        rg.pkv_id = self.pkvpakete[self.edit_pkv_id].db_id
                         rg.speichern(self.db)
 
         # Rechnungen aktualisieren
@@ -1819,27 +1727,27 @@ class Kontolupe(toga.App):
         self.zeige_startseite(widget)
 
 
-    def bestaetige_beihilfepaket_loeschen(self, widget):
+    def confirm_delete_beihilfe(self, widget):
         """Bestätigt das Löschen einer Beihilfe-Einreichung."""
         if self.tabelle_beihilfepakete.selection:
             self.main_window.confirm_dialog(
                 'Beihilfe-Einreichung zurücksetzen', 
                 'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.',
-                on_result=self.beihilfepaket_loeschen
+                on_result=self.delete_beihilfe
             )
 
 
-    def bestaetige_pkvpaket_loeschen(self, widget):
+    def confirm_delete_pkv(self, widget):
         """Bestätigt das Löschen einer PKV-Einreichung."""
         if self.tabelle_pkvpakete.selection:
             self.main_window.confirm_dialog(
                 'PKV-Einreichung zurücksetzen', 
                 'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.',
-                on_result=self.pkvpaket_loeschen
+                on_result=self.delete_pkv
             )
 
 
-    def beihilfepaket_loeschen(self, widget, result):
+    def delete_beihilfe(self, widget, result):
         """Löscht eine Beihilfe-Einreichung."""
         if self.tabelle_beihilfepakete.selection and result:
             index = self.index_auswahl(self.tabelle_beihilfepakete)
@@ -1852,7 +1760,7 @@ class Kontolupe(toga.App):
             self.update_app(widget)
 
 
-    def pkvpaket_loeschen(self, widget, result):
+    def delete_pkv(self, widget, result):
         """Löscht eine PKV-Einreichung."""
         if self.tabelle_pkvpakete.selection and result:
             index = self.index_auswahl(self.tabelle_pkvpakete)
@@ -2016,20 +1924,20 @@ class Kontolupe(toga.App):
             match self.tabelle_offene_buchungen.selection.typ:
                 case 'Rechnung':
                     self.main_window.confirm_dialog(
-                        'Rechnung als bezahlt markieren', 
+                        'Rechnung bezahlt?', 
                         'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?',
                         on_result=self.rechnung_bezahlen
                     )
                 case 'Beihilfe':
                     self.main_window.confirm_dialog(
-                        'Beihilfe als erhalten markieren', 
-                        'Soll die ausgewählte Beihilfe wirklich als erhalten markiert werden?',
+                        'Beihilfe-Einreichung erstattet?', 
+                        'Soll die ausgewählte Beihilfe wirklich als erstattet markiert werden?',
                         on_result=self.beihilfe_erhalten
                     )
                 case 'PKV':
                     self.main_window.confirm_dialog(
-                        'PKV-Einreichung als erhalten markieren', 
-                        'Soll die ausgewählte PKV-Einreichung wirklich als erhalten markiert werden?',
+                        'PKV-Einreichung erstattet?', 
+                        'Soll die ausgewählte PKV-Einreichung wirklich als erstattet markiert werden?',
                         on_result=self.pkv_erhalten
                     )
     
@@ -2136,11 +2044,11 @@ class Kontolupe(toga.App):
         if self.tabelle_offene_buchungen.selection:
             match self.tabelle_offene_buchungen.selection.typ:
                 case 'Rechnung':
-                    self.show_form_rg_edit(widget)
+                    self.show_form_bill_edit(widget)
                 # case 'Beihilfe':
-                #     self.zeige_seite_formular_beihilfepakete_bearbeiten(widget)
+                #     self.show_form_beihilfe_edit(widget)
                 # case 'PKV':
-                #     self.zeige_seite_formular_pkvpakete_bearbeiten(widget)
+                #     self.show_form_pkv_edit(widget)
 
 
     def rechnungen_liste_erzeugen(self):
@@ -2475,7 +2383,7 @@ class Kontolupe(toga.App):
         gruppe_rechnungen = toga.Group('Rechnungen', order = 1)
 
         self.cmd_rechnungen_anzeigen = toga.Command(
-            self.show_list_rg,
+            self.show_list_bills,
             'Rechnungen anzeigen',
             tooltip = 'Zeigt die Liste der Rechnungen an.',
             group = gruppe_rechnungen,
@@ -2484,7 +2392,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_rechnungen_neu = toga.Command(
-            self.show_form_rg_new,
+            self.show_form_bill_new,
             'Neue Rechnung',
             tooltip = 'Erstellt eine neue Rechnung.',
             group = gruppe_rechnungen,
@@ -2495,7 +2403,7 @@ class Kontolupe(toga.App):
         gruppe_beihilfe = toga.Group('Beihilfe', order = 2)
 
         self.cmd_beihilfepakete_anzeigen = toga.Command(
-            self.zeige_seite_liste_beihilfepakete,
+            self.show_list_beihilfe,
             'Beihilfe anzeigen',
             tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
             group = gruppe_beihilfe,
@@ -2505,7 +2413,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_beihilfepakete_neu = toga.Command(
-            self.zeige_seite_formular_beihilfepakete_neu,
+            self.show_form_beihilfe_new,
             'Neue Beihilfe',
             tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
             group = gruppe_beihilfe,
@@ -2517,7 +2425,7 @@ class Kontolupe(toga.App):
         gruppe_pkv = toga.Group('PKV', order = 3)
 
         self.cmd_pkvpakete_anzeigen = toga.Command(
-            self.zeige_seite_liste_pkvpakete,
+            self.show_list_pkv,
             'PKV anzeigen',
             tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
             group = gruppe_pkv,
@@ -2527,7 +2435,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_pkvpakete_neu = toga.Command(
-            self.zeige_seite_formular_pkvpakete_neu,
+            self.show_form_pkv_new,
             'Neue PKV',
             tooltip = 'Erstellt eine neue PKV-Einreichung.',
             group = gruppe_pkv,
@@ -2539,7 +2447,7 @@ class Kontolupe(toga.App):
         gruppe_personen = toga.Group('Personen', order = 4)
 
         self.cmd_personen_anzeigen = toga.Command(
-            self.zeige_seite_liste_personen,
+            self.show_list_persons,
             'Personen anzeigen',
             tooltip = 'Zeigt die Liste der Personen an.',
             group = gruppe_personen,
@@ -2549,7 +2457,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_personen_neu = toga.Command(
-            self.zeige_seite_formular_personen_neu,
+            self.show_form_persons_new,
             'Neue Person',
             tooltip = 'Erstellt eine neue Person.',
             group = gruppe_personen,
@@ -2561,7 +2469,7 @@ class Kontolupe(toga.App):
         gruppe_einrichtungen = toga.Group('Einrichtungen', order = 5)
 
         self.cmd_einrichtungen_anzeigen = toga.Command(
-            self.show_list_ei,
+            self.show_list_institutions,
             'Einrichtungen anzeigen',
             tooltip = 'Zeigt die Liste der Einrichtungen an.',
             group = gruppe_einrichtungen,
@@ -2571,7 +2479,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_einrichtungen_neu = toga.Command(
-            self.zeige_seite_formular_einrichtungen_neu,
+            self.show_form_institution_new,
             'Neue Einrichtung',
             tooltip = 'Erstellt eine neue Einrichtung.',
             group = gruppe_einrichtungen,
@@ -2618,17 +2526,17 @@ class Kontolupe(toga.App):
 
         # Erzeuge alle GUI-Elemente
         self.erzeuge_startseite()
-        self.create_list_rg()
-        self.create_form_rg()
-        self.create_list_ei()
-        self.erzeuge_seite_formular_einrichtungen()
-        self.create_info_ei()
-        self.erzeuge_seite_liste_beihilfepakete()
-        self.erzeuge_seite_formular_beihilfepakete()
-        self.erzeuge_seite_liste_pkvpakete()
-        self.erzeuge_seite_formular_pkvpakete()
-        self.erzeuge_seite_liste_personen()
-        self.erzeuge_seite_formular_personen()
+        self.create_list_bills()
+        self.create_form_bill()
+        self.create_list_institutions()
+        self.create_form_institution()
+        self.create_info_institution()
+        self.create_list_beihilfe()
+        self.create_form_beihilfe()
+        self.create_list_pkv()
+        self.create_form_pkv()
+        self.create_list_persons()
+        self.create_form_person()
         self.erzeuge_webview()
 
         # Erstelle die Menüleiste

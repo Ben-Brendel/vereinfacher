@@ -47,15 +47,17 @@ class LabeledTextInput:
 
     def set_value(self, value):
         self.text_input.value = value
+        self.validator.rectify(self.text_input)
 
     def get_value(self):
+        self.validator.rectify(self.text_input)
         return self.text_input.value
     
     def _set_on_lose_focus(self, on_lose_focus):
         self.text_input.on_lose_focus = on_lose_focus
 
     def is_empty(self):
-        return self.text_input.value == ''
+        return not self.text_input or not self.text_input.value
     
     def is_valid(self):
         return self.validator.is_valid(self.text_input)
@@ -65,10 +67,12 @@ class LabeledDateInput(LabeledTextInput):
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, placeholder="TT.MM.JJJJ", validator='date', **kwargs)
 
-    def get_value(self):
+    def get_value_as_date(self):
+        self.validator.rectify(self.text_input)
         return None if not self.text_input.value else datetime.strptime(self.text_input.value, '%d.%m.%Y').date()
 
-    def get_value_as_str(self):
+    def get_value(self):
+        self.validator.rectify(self.text_input)
         return self.text_input.value
         
     def set_value(self, value):
@@ -79,13 +83,20 @@ class LabeledDateInput(LabeledTextInput):
         elif isinstance(value, datetime):
             self.text_input.value = value.strftime('%d.%m.%Y')
 
+        self.validator.rectify(self.text_input)
+
 
 class LabeledFloatInput(LabeledTextInput):
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, validator='float', **kwargs)
 
-    def get_value_as_date(self):
+    def get_value(self):
+        self.validator.rectify(self.text_input)
         return 0.0 if not self.text_input.value else float(self.text_input.value.replace(',', '.'))
+    
+    def get_value_as_str(self):
+        self.validator.rectify(self.text_input)
+        return self.text_input.value
     
     def set_value(self, value):     
         if value is None:
@@ -94,6 +105,8 @@ class LabeledFloatInput(LabeledTextInput):
             self.text_input.value = value
         elif isinstance(value, float):
             self.text_input.value = format(value, '.2f').replace('.', ',')
+
+        self.validator.rectify(self.text_input)
     
 
 class LabeledIntInput(LabeledTextInput):
@@ -101,9 +114,11 @@ class LabeledIntInput(LabeledTextInput):
         super().__init__(parent, label_text, validator='int', **kwargs)
 
     def get_value(self):
+        self.validator.rectify(self.text_input)
         return 0 if not self.text_input.value else int(self.text_input.value)
     
     def get_value_as_str(self):
+        self.validator.rectify(self.text_input)
         return self.text_input.value
     
     def set_value(self, value):
@@ -113,6 +128,8 @@ class LabeledIntInput(LabeledTextInput):
             self.text_input.value = value
         elif isinstance(value, int):
             self.text_input.value = str(value)
+
+        self.validator.rectify(self.text_input)
 
 
 class LabeledPercentInput(LabeledTextInput):
@@ -120,9 +137,11 @@ class LabeledPercentInput(LabeledTextInput):
         super().__init__(parent, label_text, validator='percent', **kwargs)
 
     def get_value(self):
+        self.validator.rectify(self.text_input)
         return 0 if not self.text_input.value else int(self.text_input.value)
     
     def get_value_as_str(self):
+        self.validator.rectify(self.text_input)
         return self.text_input.value
     
     def set_value(self, value):
@@ -132,6 +151,8 @@ class LabeledPercentInput(LabeledTextInput):
             self.text_input.value = value
         elif isinstance(value, int):
             self.text_input.value = str(value)
+
+        self.validator.rectify(self.text_input)
 
 
 class LabeledPostalInput(LabeledTextInput):
