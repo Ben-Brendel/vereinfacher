@@ -713,6 +713,54 @@ class DatenInterface:
             ]
         )
 
+        self.list_rg_beihilfe = ListSource(
+            accessors = [
+                'db_id', 
+                'betrag', 
+                'betrag_euro',
+                'rechnungsdatum', 
+                'einrichtung_id', 
+                'notiz', 
+                'einrichtung_name', 
+                'info', 
+                'person_id',
+                'person_name',
+                'beihilfesatz', 
+                'beihilfesatz_prozent',
+                'buchungsdatum', 
+                'bezahlt', 
+                'bezahlt_text',
+                'beihilfe_id', 
+                'beihilfe_eingereicht',
+                'pkv_id'
+                'pkv_eingereicht'
+            ]
+        )
+
+        self.list_rg_pkv = ListSource(
+            accessors = [
+                'db_id', 
+                'betrag', 
+                'betrag_euro',
+                'rechnungsdatum', 
+                'einrichtung_id', 
+                'notiz', 
+                'einrichtung_name', 
+                'info', 
+                'person_id',
+                'person_name',
+                'beihilfesatz', 
+                'beihilfesatz_prozent',
+                'buchungsdatum', 
+                'bezahlt', 
+                'bezahlt_text',
+                'beihilfe_id', 
+                'beihilfe_eingereicht',
+                'pkv_id'
+                'pkv_eingereicht'
+            ]
+        )
+
         self.list_einrichtungen = ListSource(
             accessors = [
                 'db_id',
@@ -769,6 +817,12 @@ class DatenInterface:
             ]
         )
 
+        self.archivables = {
+            'Rechnung' : [],
+            'Beihilfe' : set(),
+            'PKV' : set()
+        }
+
         for rechnung in self.rechnungen:            
             self.__list_rechnungen_append(rechnung)
 
@@ -784,7 +838,52 @@ class DatenInterface:
         for pkvpaket in self.pkvpakete:            
             self.__list_pkvpakete_append(pkvpaket)
 
-        self.__list_open_bookings_update()
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
+
+
+    def __update_archivables(self):
+        """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""
+
+        # Create dictionaries for quick lookup of beihilfepakete and pkvpakete by db_id
+        beihilfepakete_dict = {paket.db_id: paket for paket in self.beihilfepakete}
+        pkvpakete_dict = {paket.db_id: paket for paket in self.pkvpakete}
+
+        for i, rechnung in enumerate(self.rechnungen):
+            if rechnung.bezahlt and rechnung.beihilfe_id and rechnung.pkv_id:
+                beihilfepaket = beihilfepakete_dict.get(rechnung.beihilfe_id)
+                pkvpaket = pkvpakete_dict.get(rechnung.pkv_id)
+                if beihilfepaket and beihilfepaket.erhalten and pkvpaket and pkvpaket.erhalten:
+                    # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
+                    other_rechnungen = [ar for ar in self.rechnungen if ar.beihilfe_id == beihilfepaket.db_id or ar.pkv_id == pkvpaket.db_id]
+                    if all(ar.bezahlt for ar in other_rechnungen):
+                        self.archivables['Rechnung'].append(i)
+                        self.archivables['Beihilfe'].add(self.beihilfepakete.index(beihilfepaket))
+                        self.archivables['PKV'].add(self.pkvpakete.index(pkvpaket))
+
+        # Convert sets back to lists
+        self.archivables['Beihilfe'] = list(self.archivables['Beihilfe'])
+        self.archivables['PKV'] = list(self.archivables['PKV'])
+
+        # sort the lists in reverse order
+        self.archivables['Rechnung'].sort(reverse=True)
+        self.archivables['Beihilfe'].sort(reverse=True)
+        self.archivables['PKV'].sort(reverse=True)
+
+
+    def archive(self, widget, result):
+        """Archiviert alle archivierbaren Buchungen."""
+
+        for i in self.archivables['Rechnung']:
+            self.deactivate_rechnung(i)
+
+        for i in self.archivables['Beihilfe']:
+            self.deactivate_beihilfepaket(i)
+            
+        for i in self.archivables['PKV']:
+            self.deactivate_pkvpaket(i)
 
 
     def get_open_sum(self, *args, **kwargs):
@@ -813,6 +912,38 @@ class DatenInterface:
 
         return sum
     
+
+    def get_count_rechnungen_not_paid(self):
+        """Ermittelt die Anzahl der noch nicht bezahlten Rechnungen."""
+        count = 0
+        for rechnung in self.rechnungen:
+            if rechnung.bezahlt == False:
+                count += 1
+        return count
+    
+
+    def get_count_rechnungen_not_submitted_beihilfe(self):
+        """Ermittelt die Anzahl der noch nicht bei der Beihilfe eingereichten Rechnungen."""
+        count = 0
+        for rechnung in self.rechnungen:
+            if rechnung.beihilfe_id == None:
+                count += 1
+        return count
+    
+
+    def get_count_rechnungen_not_submitted_pkv(self):
+        """Ermittelt die Anzahl der noch nicht bei der PKV eingereichten Rechnungen."""
+        count = 0
+        for rechnung in self.rechnungen:
+            if rechnung.pkv_id == None:
+                count += 1
+        return count
+
+
+    def get_count_archivables(self):   
+        """Ermittelt die Anzahl der archivierbaren Elemente in self.archivables."""
+        return sum(len(self.archivables[key]) for key in self.archivables)
+        
 
     def get_rechnung_by_dbid(self, id, objekt=False):
         """Gibt eine Rechnung anhand der ID zurück."""
@@ -933,47 +1064,289 @@ class DatenInterface:
         rechnung.neu(self.db)
         self.rechnungen.append(rechnung)
         self.__list_rechnungen_append(rechnung)
-        self.__list_open_bookings_update()
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
 
 
     def edit_rechnung(self, rechnung, rg_id):
         """Rechnung ändern."""
         self.rechnungen[rg_id] = rechnung
-        self.__list_rechnungen_update_id(rechnung, rg_id)
-        self.__list_open_bookings_update()
+        self.__update_list_rechnungen_id(rechnung, rg_id)
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
 
-    def beihilfepaket_aktualisieren(self, widget, result):
-        """Aktualisiert die Beihilfe-Einreichung einer Rechnung."""
-        if result:
-            # Finde die Beihilfe-Einreichung
-            for beihilfepaket in self.beihilfepakete:
-                if beihilfepaket.db_id == self.rechnungen[self.edit_bill_id].beihilfe_id:
-                    # Alle Rechnungen durchlaufen und den Betrag aktualisieren
-                    beihilfepaket.betrag = 0
-                    for rechnung in self.rechnungen:
-                        if rechnung.beihilfe_id == beihilfepaket.db_id:
-                            beihilfepaket.betrag += rechnung.betrag * (rechnung.beihilfesatz / 100)
-                    # Die Beihilfe-Einreichung speichern
+
+    def delete_rechnung(self, rg_id):
+        """Rechnung löschen."""
+        self.rechnungen[rg_id].loeschen(self.db)
+        self.rechnungen.pop(rg_id)
+        del self.list_rechnungen[rg_id]
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
+
+
+    def deactivate_rechnung(self, rg_id):
+        """Rechnung deaktivieren."""
+        self.rechnungen[rg_id].aktiv = False
+        self.rechnungen[rg_id].speichern(self.db)
+        self.rechnungen.pop(rg_id)
+        del self.list_rechnungen[rg_id]
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
+
+
+    def pay_rechnung(self, db_id):
+        """Rechnung bezahlen."""
+        index = self.__get_list_index_by_dbid(self.list_rechnungen, db_id)
+        self.rechnungen[index].bezahlt = True
+        self.rechnungen[index].buchungsdatum = datetime.date.today()
+        self.rechnungen[index].speichern(self.db)
+        self.__update_list_rechnungen_id(self.rechnungen[index], index)
+        self.__update_list_open_bookings()
+        self.__update_archivables()
+
+
+    def receive_beihilfe(self, db_id):
+        """Beihilfe erhalten."""
+        index = self.__get_list_index_by_dbid(self.list_beihilfepakete, db_id)
+        self.beihilfepakete[index].erhalten = True
+        self.beihilfepakete[index].speichern(self.db)
+        self.__update_list_beihilfepakete_id(self.beihilfepakete[index], index)
+        self.__update_list_open_bookings()
+        self.__update_archivables()
+
+
+    def receive_pkv(self, db_id):
+        """PKV erhalten."""
+        index = self.__get_list_index_by_dbid(self.list_pkvpakete, db_id)
+        self.pkvpakete[index].erhalten = True
+        self.pkvpakete[index].speichern(self.db)
+        self.__update_list_pkvpakete_id(self.pkvpakete[index], index)
+        self.__update_list_open_bookings()
+        self.__update_archivables()
+
+
+    def new_beihilfepaket(self, beihilfepaket, rechnungen_db_ids):
+        """Neues Beihilfepaket erstellen."""
+        beihilfepaket.neu(self.db)
+        self.beihilfepakete.append(beihilfepaket)
+        self.__list_beihilfepakete_append(beihilfepaket)
+
+        # Beihilfepaket mit Rechnungen verknüpfen
+        for rechnung_db_id in rechnungen_db_ids:
+            index = self.__get_list_index_by_dbid(self.list_rechnungen, rechnung_db_id)
+            self.rechnungen[index].beihilfe_id = beihilfepaket.db_id
+            self.rechnungen[index].speichern(self.db)
+            self.__update_list_rechnungen_id(self.rechnungen[index], index)
+
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
+
+
+    def delete_beihilfepaket(self, beihilfepaket_id):
+        """Beihilfepaket löschen."""
+        self.beihilfepakete[beihilfepaket_id].loeschen(self.db)
+        self.beihilfepakete.pop(beihilfepaket_id)
+        del self.list_beihilfepakete[beihilfepaket_id]
+        self.__update_rechnungen()
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
+
+
+    def deactivate_beihilfepaket(self, beihilfepaket_id):
+        """Beihilfepaket deaktivieren."""
+        self.beihilfepakete[beihilfepaket_id].aktiv = False
+        self.beihilfepakete[beihilfepaket_id].speichern(self.db)
+        self.beihilfepakete.pop(beihilfepaket_id)
+        del self.list_beihilfepakete[beihilfepaket_id]
+        self.__update_list_open_bookings()
+        self.__update_archivables()
+
+
+    def new_pkvpaket(self, pkvpaket, rechnungen_db_ids):
+        """Neues PKV-Paket erstellen."""
+        pkvpaket.neu(self.db)
+        self.pkvpakete.append(pkvpaket)
+        self.__list_pkvpakete_append(pkvpaket)
+
+        # PKV-Paket mit Rechnungen verknüpfen
+        for rechnung_db_id in rechnungen_db_ids:
+            index = self.__get_list_index_by_dbid(self.list_rechnungen, rechnung_db_id)
+            self.rechnungen[index].pkv_id = pkvpaket.db_id
+            self.rechnungen[index].speichern(self.db)
+            self.__update_list_rechnungen_id(self.rechnungen[index], index)
+
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
+
+
+    def delete_pkvpaket(self, pkvpaket_id):
+        """PKV-Paket löschen."""
+        self.pkvpakete[pkvpaket_id].loeschen(self.db)
+        self.pkvpakete.pop(pkvpaket_id)
+        del self.list_pkvpakete[pkvpaket_id]
+        self.__update_rechnungen()
+        self.__update_list_open_bookings()
+        self.__update_list_rg_beihilfe()
+        self.__update_list_rg_pkv()
+        self.__update_archivables()
+
+
+    def deactivate_pkvpaket(self, pkvpaket_id):
+        """PKV-Paket deaktivieren."""
+        self.pkvpakete[pkvpaket_id].aktiv = False
+        self.pkvpakete[pkvpaket_id].speichern(self.db)
+        self.pkvpakete.pop(pkvpaket_id)
+        del self.list_pkvpakete[pkvpaket_id]
+        self.__update_list_open_bookings()
+        self.__update_archivables()
+
+
+    def new_einrichtung(self, einrichtung):
+        """Neue Einrichtung erstellen."""
+        einrichtung.neu(self.db)
+        self.einrichtungen.append(einrichtung)
+        self.__list_einrichtungen_append(einrichtung)
+
+
+    def edit_einrichtung(self, einrichtung, einrichtung_id):
+        """Einrichtung ändern."""
+        self.einrichtungen[einrichtung_id] = einrichtung
+        self.einrichtungen[einrichtung_id].speichern(self.db)
+        self.__update_list_einrichtungen_id(einrichtung, einrichtung_id)
+        self.__update_rechnungen()
+
+
+    def delete_einrichtung(self, einrichtung_id):
+        """Einrichtung löschen."""
+        if self.__check_einrichtung_used(einrichtung_id):
+            return False
+        self.einrichtungen[einrichtung_id].loeschen(self.db)
+        self.einrichtungen.pop(einrichtung_id)
+        del self.list_einrichtungen[einrichtung_id]
+        self.__update_rechnungen()
+        return True
+
+
+    def deactivate_einrichtung(self, einrichtung_id):
+        """Einrichtung deaktivieren."""
+        if self.__check_einrichtung_used(einrichtung_id):
+            return False
+        self.einrichtungen[einrichtung_id].aktiv = False
+        self.einrichtungen[einrichtung_id].speichern(self.db)
+        self.einrichtungen.pop(einrichtung_id)
+        del self.list_einrichtungen[einrichtung_id]
+        self.__update_rechnungen()
+        return True
+
+
+    def __check_einrichtung_used(self, einrichtung_id):
+        """Prüft, ob eine Einrichtung verwendet wird."""
+        for rechnung in self.rechnungen:
+            if rechnung.einrichtung_id == einrichtung_id:
+                return True
+        return False
+
+
+    def new_person(self, person):
+        """Neue Person erstellen."""
+        person.neu(self.db)
+        self.personen.append(person)
+        self.__list_personen_append(person)
+
+
+    def edit_person(self, person, person_id):
+        """Person ändern."""
+        self.personen[person_id] = person
+        self.personen[person_id].speichern(self.db)
+        self.__update_list_personen_id(person, person_id)
+        self.__update_rechnungen()
+
+
+    def delete_person(self, person_id):
+        """Person löschen."""
+        if self.__check_person_used(person_id):
+            return False
+        self.personen[person_id].loeschen(self.db)
+        self.personen.pop(person_id)
+        del self.list_personen[person_id]
+        self.__update_rechnungen()
+        return True
+
+
+    def deactivate_person(self, person_id):
+        """Person deaktivieren."""
+        if self.__check_person_used(person_id):
+            return False
+        self.personen[person_id].aktiv = False
+        self.personen[person_id].speichern(self.db)
+        self.personen.pop(person_id)
+        del self.list_personen[person_id]
+        self.__update_rechnungen()
+        return True
+
+
+    def __check_person_used(self, person_id):
+        """Prüft, ob eine Person verwendet wird."""
+        for rechnung in self.rechnungen:
+            if rechnung.person_id == person_id:
+                return True
+        return False
+
+
+    def update_beihilfepaket(self, db_id):
+        """Aktualisiert eine Beihilfe-Einreichung"""
+        # Finde die Beihilfe-Einreichung
+        for beihilfepaket in self.beihilfepakete:
+            if beihilfepaket.db_id == db_id:
+                # Alle Rechnungen durchlaufen und den Betrag aktualisieren
+                beihilfepaket.betrag = 0
+                inhalt = False
+                for rechnung in self.rechnungen:
+                    if rechnung.beihilfe_id == db_id:
+                        inhalt = True
+                        beihilfepaket.betrag += rechnung.betrag * (rechnung.beihilfesatz / 100)
+                # Die Beihilfe-Einreichung speichern
+                if inhalt:
                     beihilfepaket.speichern(self.db)
-                    self.beihilfepakete_liste_aendern(beihilfepaket, self.beihilfepakete.index(beihilfepaket))
-                    break
+                    self.__update_list_beihilfepakete_id(beihilfepaket, self.beihilfepakete.index(beihilfepaket))
+                else:
+                    self.delete_beihilfepaket(self.beihilfepakete.index(beihilfepaket))
+                self.__update_list_open_bookings()
+                break
             
 
-    def pkvpaket_aktualisieren(self, widget, result):
-        """Aktualisiert die PKV-Einreichung einer Rechnung."""
-        if result:
-            # Finde die PKV-Einreichung
-            for pkvpaket in self.pkvpakete:
-                if pkvpaket.db_id == self.rechnungen[self.edit_bill_id].pkv_id:
-                    # ALle Rechnungen durchlaufen und den Betrag aktualisieren
-                    pkvpaket.betrag = 0
-                    for rechnung in self.rechnungen:
-                        if rechnung.pkv_id == pkvpaket.db_id:
-                            pkvpaket.betrag += rechnung.betrag * (1 - (rechnung.beihilfesatz / 100))
-                    # Die PKV-Einreichung speichern
+    def update_pkvpaket(self, db_id):
+        """Aktualisiert eine PKV-Einreichung einer Rechnung."""
+        for pkvpaket in self.pkvpakete:
+            if pkvpaket.db_id == db_id:
+                pkvpaket.betrag = 0
+                inhalt = False
+                for rechnung in self.rechnungen:
+                    if rechnung.pkv_id == db_id:
+                        inhalt = True
+                        pkvpaket.betrag += rechnung.betrag * (1 - (rechnung.beihilfesatz / 100))
+                if inhalt:
                     pkvpaket.speichern(self.db)
-                    self.pkvpakete_liste_aendern(pkvpaket, self.pkvpakete.index(pkvpaket))
-                    break
+                    self.__update_list_pkvpakete_id(pkvpaket, self.pkvpakete.index(pkvpaket))
+                else:
+                    self.delete_pkvpaket(self.pkvpakete.index(pkvpaket))
+                self.__update_list_open_bookings()
+                break
     
 
     def __get_list_index_by_dbid(self, liste, dbid):
@@ -1000,62 +1373,47 @@ class DatenInterface:
             if einrichtung.db_id == einrichtung_id:
                 return einrichtung.name
         return None
+    
+
+    def __row_from_rechnung(self, rechnung):
+        """Erzeugt ein Row-Objekt aus einer Rechnung."""
+        return {
+            'db_id': rechnung.db_id,
+            'betrag': rechnung.betrag,
+            'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
+            'rechnungsdatum': rechnung.rechnungsdatum,
+            'einrichtung_id': rechnung.einrichtung_id,
+            'notiz': rechnung.notiz,
+            'person_id': rechnung.person_id,
+            'person_name': self.__person_name(rechnung.person_id),
+            'einrichtung_name': self.__einrichtung_name(rechnung.einrichtung_id),
+            'info': (self.__person_name(rechnung.person_id) + ', ' if self.__person_name(rechnung.person_id) else '') + self.__einrichtung_name(rechnung.einrichtung_id),
+            'beihilfesatz': rechnung.beihilfesatz,
+            'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
+            'buchungsdatum': rechnung.buchungsdatum,
+            'bezahlt': rechnung.bezahlt,
+            'bezahlt_text': 'Ja' if rechnung.bezahlt else 'Nein',
+            'beihilfe_id': rechnung.beihilfe_id,
+            'beihilfe_eingereicht': 'Ja' if rechnung.beihilfe_id else 'Nein',
+            'pkv_id': rechnung.pkv_id,
+            'pkv_eingereicht': 'Ja' if rechnung.pkv_id else 'Nein'
+        }
 
 
     def __list_rechnungen_append(self, rechnung):
         """Fügt der Liste der Rechnungen eine neue Rechnung hinzu."""
-        self.list_rechnungen.append({
-                'db_id': rechnung.db_id,
-                'betrag': rechnung.betrag,
-                'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
-                'rechnungsdatum': rechnung.rechnungsdatum,
-                'einrichtung_id': rechnung.einrichtung_id,
-                'notiz': rechnung.notiz,
-                'person_id': rechnung.person_id,
-                'person_name': self.__person_name(rechnung.person_id),
-                'einrichtung_name': self.__einrichtung_name(rechnung.einrichtung_id),
-                'info': (self.__person_name(rechnung.person_id) + ', ' if self.__person_name(rechnung.person_id) else '') + self.__einrichtung_name(rechnung.einrichtung_id),
-                'beihilfesatz': rechnung.beihilfesatz,
-                'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
-                'buchungsdatum': rechnung.buchungsdatum,
-                'bezahlt': rechnung.bezahlt,
-                'bezahlt_text': 'Ja' if rechnung.bezahlt else 'Nein',
-                'beihilfe_id': rechnung.beihilfe_id,
-                'beihilfe_eingereicht': 'Ja' if rechnung.beihilfe_id else 'Nein',
-                'pkv_id': rechnung.pkv_id,
-                'pkv_eingereicht': 'Ja' if rechnung.pkv_id else 'Nein'
-            })
+        self.list_rechnungen.append(self.__row_from_rechnung(rechnung))
         
 
-    def __list_rechnungen_update_id(self, rechnung, rg_id):
+    def __update_list_rechnungen_id(self, rechnung, rg_id):
         """Ändert ein Element der Liste der Rechnungen."""
-        self.list_rechnungen[rg_id] = {
-                'db_id': rechnung.db_id,
-                'betrag': rechnung.betrag,
-                'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
-                'rechnungsdatum': rechnung.rechnungsdatum,
-                'einrichtung_id': rechnung.einrichtung_id,
-                'notiz': rechnung.notiz,
-                'person_id': rechnung.person_id,
-                'person_name': self.__person_name(rechnung.person_id),
-                'einrichtung_name': self.__einrichtung_name(rechnung.einrichtung_id),
-                'info': (self.__person_name(rechnung.person_id) + ', ' if self.__person_name(rechnung.person_id) else '') + self.__einrichtung_name(rechnung.einrichtung_id),
-                'beihilfesatz': rechnung.beihilfesatz,
-                'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
-                'buchungsdatum': rechnung.buchungsdatum,
-                'bezahlt': rechnung.bezahlt,
-                'bezahlt_text': 'Ja' if rechnung.bezahlt else 'Nein',
-                'beihilfe_id': rechnung.beihilfe_id,
-                'beihilfe_eingereicht': 'Ja' if rechnung.beihilfe_id else 'Nein',
-                'pkv_id': rechnung.pkv_id,
-                'pkv_eingereicht': 'Ja' if rechnung.pkv_id else 'Nein'
-            }
+        self.list_rechnungen[rg_id] = self.__row_from_rechnung(rechnung)
         
 
     def __update_rechnungen(self):
         """Aktualisiert die referenzierten Werte in den Rechnungen und speichert sie in der Datenbank."""
 
-        for rechnung in self.rechnungen:
+        for i, rechnung in enumerate(self.rechnungen):
 
             # Aktualisiere die Beihilfe
             if rechnung.beihilfe_id:
@@ -1111,135 +1469,117 @@ class DatenInterface:
             
             # Aktualisierte Rechnung speichern
             rechnung.speichern(self.db)
-
-        # Aktualisiere die Liste der Rechnungen
-        self.__list_rechnungen_update()
+            self.__update_list_rechnungen_id(rechnung, i)
 
 
-    def __list_rechnungen_update(self):
-        """Aktualisiert die referenzierten Werte in der Liste der Rechnungen."""
-        for rg_id in range(len(self.list_rechnungen)):
-            self.__list_rechnungen_update_id(self.rechnungen[rg_id], rg_id)
+    def __row_from_einrichtung(self, einrichtung):
+        """Erzeugt ein Row-Objekt aus einer Einrichtung."""
+        return {
+            'db_id': einrichtung.db_id,
+            'name': einrichtung.name or '',
+            'strasse': einrichtung.strasse or '',
+            'plz': einrichtung.plz or '',
+            'ort': einrichtung.ort or '',
+            'plz_ort': (einrichtung.plz or '') + (' ' if einrichtung.plz else '') + (einrichtung.ort or ''),
+            'telefon': einrichtung.telefon or '',
+            'email': einrichtung.email or '',
+            'webseite': einrichtung.webseite or '',
+            'notiz': einrichtung.notiz or ''
+        }
 
 
     def __list_einrichtungen_append(self, einrichtung):
         """Fügt der Liste der Einrichtungen eine neue Einrichtung hinzu."""
-        self.einrichtungen_liste.append({
-                'db_id': einrichtung.db_id,
-                'name': einrichtung.name or '',
-                'strasse': einrichtung.strasse or '',
-                'plz': einrichtung.plz or '',
-                'ort': einrichtung.ort or '',
-                'plz_ort': (einrichtung.plz or '') + (' ' if einrichtung.plz else '') + (einrichtung.ort or ''),
-                'telefon': einrichtung.telefon or '',
-                'email': einrichtung.email or '',
-                'webseite': einrichtung.webseite or '',
-                'notiz': einrichtung.notiz or ''
-            })
+        self.list_einrichtungen.append(self.__row_from_einrichtung(einrichtung))
         
 
-    def __list_einrichtungen_update_id(self, einrichtung, einrichtung_id):
+    def __update_list_einrichtungen_id(self, einrichtung, einrichtung_id):
         """Ändert ein Element der Liste der Einrichtungen."""
-        self.einrichtungen_liste[einrichtung_id] = {
-                'db_id': einrichtung.db_id,
-                'name': einrichtung.name or '',
-                'strasse': einrichtung.strasse or '',
-                'plz': einrichtung.plz or '',
-                'ort': einrichtung.ort or '',
-                'plz_ort': (einrichtung.plz or '') + (' ' if einrichtung.plz else '') + (einrichtung.ort or ''),
-                'telefon': einrichtung.telefon or '',
-                'email': einrichtung.email or '',
-                'webseite': einrichtung.webseite or '',
-                'notiz': einrichtung.notiz or ''
-            }
+        self.list_einrichtungen[einrichtung_id] = self.__row_from_einrichtung(einrichtung)
+
+
+    def __row_from_person(self, person):
+        """Erzeugt ein Row-Objekt aus einer Person."""
+        return {
+            'db_id': person.db_id,
+            'name': person.name or '',
+            'beihilfesatz': person.beihilfesatz or '',
+            'beihilfesatz_prozent': '{:.0f} %'.format(person.beihilfesatz) if person.beihilfesatz else '0 %'
+        }
 
     
     def __list_personen_append(self, person):
         """Fügt der Liste der Personen eine neue Person hinzu."""
-        self.personen_liste.append({
-                'db_id': person.db_id,
-                'name': person.name or '',
-                'beihilfesatz': person.beihilfesatz or '',
-                'beihilfesatz_prozent': '{:.0f} %'.format(person.beihilfesatz) if person.beihilfesatz else '0 %'
-            })
+        self.list_personen.append(self.__row_from_person(person))
         
 
-    def __list_personen_update_id(self, person, person_id):    
+    def __update_list_personen_id(self, person, person_id):    
         """Ändert ein Element der Liste der Personen."""
-        self.personen_liste[person_id] = {
-                'db_id': person.db_id,
-                'name': person.name or '',
-                'beihilfesatz': person.beihilfesatz or None,
-                'beihilfesatz_prozent': '{:.0f} %'.format(person.beihilfesatz) if person.beihilfesatz else '0 %'
-            }
+        self.list_personen[person_id] = self.__row_from_person(person)
 
     
-    def __list_beihilfepakete_update(self):
+    def __update_list_beihilfepakete(self):
         """Aktualisiert die Liste der Beihilfepakete."""
         for beihilfepaket_id in range(len(self.list_beihilfepakete)):
-            self.__list_beihilfepakete_update_id(self.beihilfepakete[beihilfepaket_id], beihilfepaket_id)
+            self.__update_list_beihilfepakete_id(self.beihilfepakete[beihilfepaket_id], beihilfepaket_id)
+
+
+    def __row_from_beihilfepaket(self, beihilfepaket):
+        """Erzeugt ein Row-Objekt aus einem Beihilfepaket."""
+        return {
+            'db_id': beihilfepaket.db_id,
+            'betrag': beihilfepaket.betrag,
+            'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
+            'datum': beihilfepaket.datum,
+            'erhalten': beihilfepaket.erhalten,
+            'erhalten_text': 'Ja' if beihilfepaket.erhalten else 'Nein'
+        }
 
 
     def __list_beihilfepakete_append(self, beihilfepaket):
         """Fügt der Liste der Beihilfepakete ein neues Beihilfepaket hinzu."""
-        self.list_beihilfepakete.append({
-                'db_id': beihilfepaket.db_id,
-                'betrag': beihilfepaket.betrag,
-                'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
-                'datum': beihilfepaket.datum,
-                'erhalten': beihilfepaket.erhalten,
-                'erhalten_text': 'Ja' if beihilfepaket.erhalten else 'Nein'
-            })
+        self.list_beihilfepakete.append(self.__row_from_beihilfepaket(beihilfepaket))
 
     
-    def __list_beihilfepakete_update_id(self, beihilfepaket, beihilfepaket_id):
+    def __update_list_beihilfepakete_id(self, beihilfepaket, beihilfepaket_id):
         """Ändert ein Element der Liste der Beihilfepakete."""
-        self.list_beihilfepakete[beihilfepaket_id] = {
-                'db_id': beihilfepaket.db_id,
-                'betrag': beihilfepaket.betrag,
-                'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
-                'datum': beihilfepaket.datum,
-                'erhalten': beihilfepaket.erhalten,
-                'erhalten_text': 'Ja' if beihilfepaket.erhalten else 'Nein'
-            }
+        self.list_beihilfepakete[beihilfepaket_id] = self.__row_from_beihilfepaket(beihilfepaket)
         
 
-    def __list_pkvpakete_update(self):
+    def __update_list_pkvpakete(self):
         """Aktualisiert die Liste der PKV-Pakete."""
         for pkvpaket_id in range(len(self.list_pkvpakete)):
-            self.__list_pkvpakete_update_id(self.pkvpakete[pkvpaket_id], pkvpaket_id)
+            self.__update_list_pkvpakete_id(self.pkvpakete[pkvpaket_id], pkvpaket_id)
+
+
+    def __row_from_pkvpaket(self, pkvpaket):
+        """Erzeugt ein Row-Objekt aus einem PKV-Paket."""
+        return {
+            'db_id': pkvpaket.db_id,
+            'betrag': pkvpaket.betrag,
+            'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag).replace('.', ','),
+            'datum': pkvpaket.datum,
+            'erhalten': pkvpaket.erhalten,
+            'erhalten_text': 'Ja' if pkvpaket.erhalten else 'Nein'
+        }
         
 
     def __list_pkvpakete_append(self, pkvpaket):
         """Fügt der Liste der PKV-Pakete ein neues PKV-Paket hinzu."""
-        self.list_pkvpakete.append({
-                'db_id': pkvpaket.db_id,
-                'betrag': pkvpaket.betrag,
-                'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag).replace('.', ','),
-                'datum': pkvpaket.datum,
-                'erhalten': pkvpaket.erhalten,
-                'erhalten_text': 'Ja' if pkvpaket.erhalten else 'Nein'
-            })
+        self.list_pkvpakete.append(self.__row_from_pkvpaket(pkvpaket))
         
 
-    def __list_pkvpakete_update_id(self, pkvpaket, pkvpaket_id):
+    def __update_list_pkvpakete_id(self, pkvpaket, pkvpaket_id):
         """Ändert ein Element der Liste der PKV-Pakete."""
-        self.list_pkvpakete[pkvpaket_id] = {
-                'db_id': pkvpaket.db_id,
-                'betrag': pkvpaket.betrag,
-                'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag).replace('.', ','),
-                'datum': pkvpaket.datum,
-                'erhalten': pkvpaket.erhalten,
-                'erhalten_text': 'Ja' if pkvpaket.erhalten else 'Nein'
-            }
+        self.list_pkvpakete[pkvpaket_id] = self.__row_from_pkvpaket(pkvpaket)
         
 
-    def __list_open_bookings_update(self):
+    def __update_list_open_bookings(self):
         """Aktualisiert die Liste der offenen Buchungen."""
 
         self.list_open_bookings.clear()
 
-        for rechnung in self.rechnungen_liste:
+        for rechnung in self.list_rechnungen:
             if not rechnung.bezahlt:
                 self.list_open_bookings.append({
                     'db_id': rechnung.db_id,
@@ -1268,3 +1608,23 @@ class DatenInterface:
                     'datum': pkvpaket.datum,
                     'info': 'PKV-Einreichung'
                 })
+
+
+    def __update_list_rg_beihilfe(self):
+        """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die Beihilfe."""
+
+        self.list_rg_beihilfe.clear()
+
+        for rechnung in self.rechnungen:
+            if not rechnung.beihilfe_id:
+                self.list_rg_beihilfe.append(self.__row_from_rechnung(rechnung))
+
+
+    def __update_list_rg_pkv(self):
+        """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die PKV."""
+
+        self.list_rg_pkv.clear()
+
+        for rechnung in self.rechnungen:
+            if not rechnung.pkv_id:
+                self.list_rg_pkv.append(self.__row_from_rechnung(rechnung))

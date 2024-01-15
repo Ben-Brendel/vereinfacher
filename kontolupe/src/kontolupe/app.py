@@ -49,32 +49,25 @@ class Kontolupe(toga.App):
         """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
 
         # Anzeige des offenen Betrags aktualisieren
-        self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.berechne_summe_offene_buchungen()).replace('.', ',')
+        self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')
 
         # Button zum Markieren von Buchungen als bezahlt/erhalten aktivieren oder deaktivieren,
         self.startseite_button_erledigt.enabled = False
         self.startseite_button_bearbeiten.enabled = False
 
-        # Anzahl der je Segment offenen Elemente ermitteln
-        anzahl_rg = 0
-        anzahl_bh = 0
-        anzahl_pkv = 0
-        for rechnung in self.rechnungen:
-            anzahl_rg += 1 if rechnung.bezahlt == False else 0
-            anzahl_bh += 1 if rechnung.beihilfe_id is None else 0
-            anzahl_pkv += 1 if rechnung.pkv_id is None else 0
-
         # Anzeige und Button der offenen Rechnungen aktualisieren
-        match anzahl_rg:
+        anzahl = self.daten.get_count_rechnungen_not_paid()
+        match anzahl:
             case 0:
                 self.label_start_rechnungen_offen.text = 'Keine offenen Rechnungen.'
             case 1:
                 self.label_start_rechnungen_offen.text = '1 Rechnung noch nicht bezahlt.'
             case _:
-                self.label_start_rechnungen_offen.text = '{} Rechnungen noch nicht bezahlt.'.format(anzahl_rg)
+                self.label_start_rechnungen_offen.text = '{} Rechnungen noch nicht bezahlt.'.format(anzahl)
 
         # Anzeige und Button der offenen Beihilfe-Einreichungen aktualisieren
-        match anzahl_bh:
+        anzahl = self.daten.get_count_rechnungen_not_submitted_beihilfe()
+        match anzahl:
             case 0:
                 self.button_start_beihilfe_neu.enabled = False
                 self.seite_liste_beihilfepakete_button_neu.enabled = False
@@ -89,10 +82,11 @@ class Kontolupe(toga.App):
                 self.button_start_beihilfe_neu.enabled = True
                 self.seite_liste_beihilfepakete_button_neu.enabled = True
                 self.cmd_beihilfepakete_neu.enabled = True
-                self.label_start_beihilfe_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl_bh)
+                self.label_start_beihilfe_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
 
         # Anzeige und Button der offenen PKV-Einreichungen aktualisieren
-        match anzahl_pkv:
+        anzahl = self.daten.get_count_rechnungen_not_submitted_pkv()
+        match anzahl:
             case 0:
                 self.button_start_pkv_neu.enabled = False
                 self.seite_liste_pkvpakete_button_neu.enabled = False
@@ -107,26 +101,22 @@ class Kontolupe(toga.App):
                 self.button_start_pkv_neu.enabled = True
                 self.seite_liste_pkvpakete_button_neu.enabled = True
                 self.cmd_pkvpakete_neu.enabled = True
-                self.label_start_pkv_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl_pkv)
+                self.label_start_pkv_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
 
         # Anzeige und Button der archivierbaren Items aktualisieren
-        indizes = self.indizes_archivierbare_buchungen()
-        anzahl = sum(len(v) for v in indizes.values())
+        anzahl = self.daten.get_count_archivables()
         match anzahl:
             case 0:
                 self.button_start_archiv.enabled = False
                 self.cmd_archivieren.enabled = False
-                #self.label_start_archiv_offen.text = 'Keine archivierbaren Buchungen vorhanden.'
                 self.button_start_archiv.text = 'Keine archivierbaren Buchungen'
             case 1:
                 self.button_start_archiv.enabled = True
                 self.cmd_archivieren.enabled = True
-                #self.label_start_archiv_offen.text = '1 archivierbare Buchung vorhanden.'
                 self.button_start_archiv.text = '1 Buchung archivieren'
             case _:
                 self.button_start_archiv.enabled = True
                 self.cmd_archivieren.enabled = True
-                #self.label_start_archiv_offen.text = '{} archivierbare Buchungen vorhanden.'.format(anzahl)
                 self.button_start_archiv.text = '{} Buchungen archivieren'.format(anzahl)
 
         # Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons.
@@ -223,7 +213,7 @@ class Kontolupe(toga.App):
         """Zeigt die WebView zur Anzeige von Webseiten."""
         match widget:
             case self.link_info_einrichtung_webseite:
-                self.webview.url = self.einrichtungen_liste[self.edit_institution_id].webseite
+                self.webview.url = self.daten.list_einrichtungen[self.edit_institution_id].webseite
                 self.zurueck = 'info_einrichtung'
             case self.cmd_datenschutz:
                 self.webview.url = 'https://kontolupe.biberwerk.net/kontolupe-datenschutz.html'
@@ -470,12 +460,12 @@ class Kontolupe(toga.App):
         # Erzeuge eine Liste von Dictionaries, welche die Elemente der Seite enthält
         # self.form_bill_elements = [
         #     {'typ': 'TopBox', 'label_text': 'Neue Rechnung', 'style': style_box_column_rechnungen, 'target_back': self.show_list_bills},
-        #     {'typ': 'LabeledSelection', 'label_text': 'Person:', 'data': self.personen_liste, 'accessor': 'name', 'on_change': self.update_form_bill},
+        #     {'typ': 'LabeledSelection', 'label_text': 'Person:', 'data': self.daten.list_personen, 'accessor': 'name', 'on_change': self.update_form_bill},
         #     {'typ': 'LabeledPercentInput', 'label_text': 'Beihilfe in %:'},
         #     {'typ': 'Divider', 'style': style_divider},
         #     {'typ': 'LabeledDateInput', 'label_text': 'Rechnungsdatum:'},
         #     {'typ': 'LabeledFloatInput', 'label_text': 'Betrag in €:'},
-        #     {'typ': 'LabeledSelection', 'label_text': 'Einrichtung:', 'data': self.einrichtungen_liste, 'accessor': 'name'},
+        #     {'typ': 'LabeledSelection', 'label_text': 'Einrichtung:', 'data': self.list_einrichtungen, 'accessor': 'name'},
         #     {'typ': 'Divider', 'style': style_divider},
         #     {'typ': 'LabeledDateInput', 'label_text': 'Bezahldatum:'},
         #     {'typ': 'LabeledSwitch', 'label_text': 'Bezahlt:'},
@@ -615,18 +605,18 @@ class Kontolupe(toga.App):
             nachricht += 'Bitte gib einen gültigen Betrag ein.\n'
 
         # Prüfe, ob eine Person ausgewählt wurde
-        if len(self.personen_liste) > 0:
+        if len(self.daten.personen) > 0:
             if self.form_bill_person.get_value() is None:
                 nachricht += 'Bitte wähle eine Person aus.\n'
 
         # Prüfe, ob eine Einrichtung ausgewählt wurde
-        if len(self.einrichtungen_liste) > 0:
+        if len(self.daten.einrichtungen) > 0:
             if self.form_bill_einrichtung.get_value() is None:
                 nachricht += 'Bitte wähle eine Einrichtung aus.\n'
 
         # Prüfe, ob ein Beihilfe eingegeben wurde
         if not self.form_bill_beihilfe.is_valid():
-            nachricht += 'Bitte gib einen gültigen Beihilfe ein.\n'
+            nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         if not (self.form_bill_buchungsdatum.is_valid() or self.form_bill_buchungsdatum.is_empty()):
             nachricht += 'Bitte gib ein gültiges Buchungsdatum ein oder lasse das Feld leer.\n'
@@ -644,10 +634,10 @@ class Kontolupe(toga.App):
         # Erstelle eine neue Rechnung
             neue_rechnung = Rechnung()
             neue_rechnung.rechnungsdatum = self.form_bill_rechnungsdatum.get_value()
-            if len(self.personen_liste) > 0:
+            if len(self.daten.personen) > 0:
                 neue_rechnung.person_id = self.form_bill_person.get_value().db_id
             neue_rechnung.beihilfesatz = self.form_bill_beihilfe.get_value()
-            if len(self.einrichtungen_liste) > 0:
+            if len(self.daten.einrichtungen) > 0:
                 neue_rechnung.einrichtung_id = self.form_bill_einrichtung.get_value().db_id
             neue_rechnung.notiz = self.form_bill_notiz.get_value()
             neue_rechnung.betrag = self.form_bill_betrag.get_value()
@@ -699,7 +689,7 @@ class Kontolupe(toga.App):
                 await self.main_window.confirm_dialog(
                     'Zugehörige Beihilfe-Einreichung aktualisieren',
                     'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
-                    on_result=self.beihilfepaket_aktualisieren
+                    on_result=self.daten.update_beihilfepaket
                 )
 
             # Überprüfe ob eine verknüpfte PKV-Einreichung existiert
@@ -708,12 +698,24 @@ class Kontolupe(toga.App):
                 await self.main_window.confirm_dialog(
                     'Zugehörige PKV-Einreichung aktualisieren',
                     'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
-                    on_result=self.pkvpaket_aktualisieren
+                    on_result=self.daten.update_pkvpaket
                 )
 
             # Zeigt die Liste der Rechnungen an.
             self.update_app(widget)
-            self.show_list_bills(widget)            
+            self.show_list_bills(widget)     
+
+
+    def update_beihilfepaket(self, widget, result):  
+        """Aktualisiert die Beihilfe-Einreichung einer Rechnung."""
+        if result:
+            self.daten.update_beihilfepaket(self.rechnungen[self.edit_bill_id].beihilfe_id) 
+
+
+    def update_pkvpaket(self, widget, result):  
+        """Aktualisiert die PKV-Einreichung einer Rechnung."""
+        if result:
+            self.daten.update_pkvpaket(self.rechnungen[self.edit_bill_id].pkv_id)    
 
 
     def confirm_delete_bill(self, widget):
@@ -732,30 +734,27 @@ class Kontolupe(toga.App):
             
             # Index der ausgewählten Rechnung ermitteln
             self.edit_bill_id = self.index_auswahl(self.tabelle_rechnungen)
-            
-            # Betrag der Rechnung auf 0 setzen um die Einreichungen aktualisieren zu können
-            self.rechnungen[self.edit_bill_id].betrag = 0
-    
-            # Auf Wunsch Beihilfe-Einreichung aktualisieren
-            if self.rechnungen[self.edit_bill_id].beihilfe_id is not None:
+
+            # Setze Betrag der Rechnung auf 0, damit Einreichungen aktualisiert werden können
+            self.daten.rechnungen[self.edit_bill_id].betrag = 0
+
+            # Überprüfe, ob Einreichungen existieren
+            if self.daten.rechnungen[self.edit_bill_id].beihilfe_id is not None:
                 await self.main_window.confirm_dialog(
                     'Zugehörige Beihilfe-Einreichung aktualisieren',
                     'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
-                    on_result=self.beihilfepaket_aktualisieren
+                    on_result=self.update_beihilfepaket
                 )
 
-            # Auf Wunsch PKV-Einreichung aktualisieren
-            if self.rechnungen[self.edit_bill_id].pkv_id is not None:
+            if self.daten.rechnungen[self.edit_bill_id].pkv_id is not None:
                 await self.main_window.confirm_dialog(
                     'Zugehörige PKV-Einreichung aktualisieren',
                     'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
-                    on_result=self.pkvpaket_aktualisieren
+                    on_result=self.update_pkvpaket
                 )
 
             # Rechnung löschen
-            self.rechnungen[self.edit_bill_id].loeschen(self.db)  
-            del self.rechnungen[self.edit_bill_id]
-            del self.rechnungen_liste[self.edit_bill_id]   
+            self.daten.delete_rechnung(self.edit_bill_id)
 
 
     def create_list_institutions(self):
@@ -771,7 +770,7 @@ class Kontolupe(toga.App):
         self.tabelle_einrichtungen = toga.Table(
             headings    = ['Name', 'Ort', 'Telefon'], 
             accessors   = ['name', 'ort', 'telefon'],
-            data        = self.einrichtungen_liste,
+            data        = self.daten.list_einrichtungen,
             style       = style_table,
             on_select   = self.update_app,
             on_activate = self.show_info_institution
@@ -859,16 +858,19 @@ class Kontolupe(toga.App):
         if self.tabelle_einrichtungen.selection:
             # Ermittle den Index der ausgewählten Rechnung
             self.edit_institution_id = self.index_auswahl(self.tabelle_einrichtungen)
+
+            # Hole die Einrichtung
+            einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id)
             
             # Befülle die Eingabefelder
-            self.form_institution_name.set_value(self.einrichtungen[self.edit_institution_id].name)
-            self.form_institution_strasse.set_value(self.einrichtungen[self.edit_institution_id].strasse)
-            self.form_institution_plz.set_value(self.einrichtungen[self.edit_institution_id].plz)
-            self.form_institution_ort.set_value(self.einrichtungen[self.edit_institution_id].ort)
-            self.form_institution_telefon.set_value(self.einrichtungen[self.edit_institution_id].telefon)
-            self.form_institution_email.set_value(self.einrichtungen[self.edit_institution_id].email)
-            self.form_institution_webseite.set_value(self.einrichtungen[self.edit_institution_id].webseite)
-            self.form_institution_notiz.set_value(self.einrichtungen[self.edit_institution_id].notiz)
+            self.form_institution_name.set_value(einrichtung.name)
+            self.form_institution_strasse.set_value(einrichtung.strasse)
+            self.form_institution_plz.set_value(einrichtung.plz)
+            self.form_institution_ort.set_value(einrichtung.ort)
+            self.form_institution_telefon.set_value(einrichtung.telefon)
+            self.form_institution_email.set_value(einrichtung.email)
+            self.form_institution_webseite.set_value(einrichtung.webseite)
+            self.form_institution_notiz.set_value(einrichtung.notiz)
 
             # Setze das Flag und die Überschrift
             self.flag_edit_institution = True
@@ -923,33 +925,27 @@ class Kontolupe(toga.App):
             neue_einrichtung.notiz = self.form_institution_notiz.get_value()
 
             # Speichere die Einrichtung in der Datenbank
-            neue_einrichtung.neu(self.db)
-
-            # Füge die Einrichtung der Liste hinzu
-            self.einrichtungen.append(neue_einrichtung)
-            self.einrichtungen_liste_anfuegen(neue_einrichtung)
+            self.daten.new_einrichtung(neue_einrichtung)
         else:
+
+            einrichtung = Einrichtung()
+
             # Bearbeite die Einrichtung
-            self.einrichtungen[self.edit_institution_id].name = self.form_institution_name.get_value()
-            self.einrichtungen[self.edit_institution_id].strasse = self.form_institution_strasse.get_value()
-            self.einrichtungen[self.edit_institution_id].plz = self.form_institution_plz.get_value()
-            self.einrichtungen[self.edit_institution_id].ort = self.form_institution_ort.get_value()
-            self.einrichtungen[self.edit_institution_id].telefon = self.form_institution_telefon.get_value()
-            self.einrichtungen[self.edit_institution_id].email = self.form_institution_email.get_value()
-            self.einrichtungen[self.edit_institution_id].webseite = self.form_institution_webseite.get_value()
-            self.einrichtungen[self.edit_institution_id].notiz = self.form_institution_notiz.get_value()
+            einrichtung.name = self.form_institution_name.get_value()
+            einrichtung.strasse = self.form_institution_strasse.get_value()
+            einrichtung.plz = self.form_institution_plz.get_value()
+            einrichtung.ort = self.form_institution_ort.get_value()
+            einrichtung.telefon = self.form_institution_telefon.get_value()
+            einrichtung.email = self.form_institution_email.get_value()
+            einrichtung.webseite = self.form_institution_webseite.get_value()
+            einrichtung.notiz = self.form_institution_notiz.get_value()
 
-            # Speichere die Einrichtung in der Datenbank
-            self.einrichtungen[self.edit_institution_id].speichern(self.db)
-
-            # Aktualisiere die Liste der Einrichtungen
-            self.einrichtungen_liste_aendern(self.einrichtungen[self.edit_institution_id], self.edit_institution_id)
+            # Übergabe der geänderten Einrichtung an das Daten-Interface
+            self.daten.edit_einrichtung(einrichtung, self.edit_institution_id)
 
             # Flag zurücksetzen
             self.flag_edit_institution = False
 
-            # Aktualisiere die Liste der Rechnungen
-            self.rechnungen_liste_aktualisieren()
 
         # Zeige die Liste der Einrichtungen
         self.update_app(widget)
@@ -1044,13 +1040,16 @@ class Kontolupe(toga.App):
             # Ermittle den Index der ausgewählten Einrichtung
             self.edit_institution_id = self.index_auswahl(self.tabelle_einrichtungen)
 
+            # Hole die Einrichtung
+            einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id)
+
             # Befülle die Labels mit den Details der Einrichtung
             # Die einzutragenden Werte können None sein, daher wird hier mit einem leeren String gearbeitet
-            self.label_info_einrichtung_name.text = self.einrichtungen_liste[self.edit_institution_id].name
-            self.label_info_einrichtung_strasse.text = self.einrichtungen_liste[self.edit_institution_id].strasse
-            self.label_info_einrichtung_plz_ort.text = self.einrichtungen_liste[self.edit_institution_id].plz_ort
-            self.label_info_einrichtung_telefon.text = self.einrichtungen_liste[self.edit_institution_id].telefon
-            self.label_info_einrichtung_email.text = self.einrichtungen_liste[self.edit_institution_id].email
+            self.label_info_einrichtung_name.text = einrichtung.name
+            self.label_info_einrichtung_strasse.text = einrichtung.strasse
+            self.label_info_einrichtung_plz_ort.text = einrichtung.plz_ort
+            self.label_info_einrichtung_telefon.text = einrichtung.telefon
+            self.label_info_einrichtung_email.text = einrichtung.email
             
             # Entferne die Inhalte der Box, damit die Webseite nicht mehrfach angezeigt wird
             if self.link_info_einrichtung_webseite in self.box_seite_info_einrichtung_webseite.children:
@@ -1058,11 +1057,11 @@ class Kontolupe(toga.App):
 
             # Wenn eine gültige Webseite gespeichert ist, füge den Link wieder der Box hinzu
             # und setze den Text des Links auf die Webseite
-            if self.einrichtungen_liste[self.edit_institution_id].webseite:
+            if einrichtung.webseite:
                 self.box_seite_info_einrichtung_webseite.add(self.link_info_einrichtung_webseite)
-                self.link_info_einrichtung_webseite.text = self.einrichtungen_liste[self.edit_institution_id].webseite
+                self.link_info_einrichtung_webseite.text = einrichtung.webseite
                 
-            self.label_info_einrichtung_notiz.text = self.einrichtungen_liste[self.edit_institution_id].notiz
+            self.label_info_einrichtung_notiz.text = einrichtung.notiz
 
             # Zeige die Seite
             self.main_window.content = self.scroll_container_info_einrichtung
@@ -1079,24 +1078,14 @@ class Kontolupe(toga.App):
 
 
     def delete_institution(self, widget, result):
-        """Löscht eine Einrichtung."""
+        """Deaktiviert eine Einrichtung."""
         if self.tabelle_einrichtungen.selection and result:
-            index = self.index_auswahl(self.tabelle_einrichtungen)
-
-            # Prüfe, ob die Einrichtung in einer Rechnung verwendet wird
-            for rechnung in self.rechnungen:
-                if rechnung.einrichtung_id == self.einrichtungen[index].db_id:
-                    self.main_window.error_dialog(
-                        'Fehler beim Löschen',
-                        'Die Einrichtung wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
-                    )
-                    return
-            
-            # Einrichtung wird deaktiviert
-            self.einrichtungen[index].aktiv = False
-            self.einrichtungen[index].speichern(self.db)
-            del self.einrichtungen[index]
-            del self.einrichtungen_liste[index]
+            if not self.daten.deactivate_einrichtung(self.index_auswahl(self.tabelle_einrichtungen)):
+                self.main_window.error_dialog(
+                    'Fehler beim Löschen',
+                    'Die Einrichtung wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
+                )
+                return
 
             # Seite mit Liste der Einrichtungen anzeigen
             self.update_app(widget)
@@ -1115,7 +1104,7 @@ class Kontolupe(toga.App):
         self.tabelle_personen = toga.Table(
             headings    = ['Name', 'Beihilfe'], 
             accessors   = ['name', 'beihilfesatz_prozent'],
-            data        = self.personen_liste,
+            data        = self.daten.list_personen,
             style       = style_table,
             on_select   = self.update_app
         )
@@ -1186,10 +1175,13 @@ class Kontolupe(toga.App):
         if self.tabelle_personen.selection:
             # Ermittle den Index der ausgewählten Person
             self.edit_person_id = self.index_auswahl(self.tabelle_personen)
+
+            # Hole die Person
+            person = self.daten.get_person_by_index(self.edit_person_id)
             
             # Befülle die Eingabefelder
-            self.form_person_name.set_value(self.personen[self.edit_person_id].name)
-            self.form_person_beihilfe.set_value(self.personen[self.edit_person_id].beihilfesatz)
+            self.form_person_name.set_value(person.name)
+            self.form_person_beihilfe.set_value(person.beihilfesatz)
 
             # Setze das Flag und die Überschrift
             self.flag_edit_person = True
@@ -1225,22 +1217,17 @@ class Kontolupe(toga.App):
             neue_person.name = self.form_person_name.get_value()
             neue_person.beihilfesatz = self.form_person_beihilfe.get_value()
 
-            # Speichere die Person in der Datenbank
-            neue_person.neu(self.db)
-
-            # Füge die Person der Liste hinzu
-            self.personen.append(neue_person)
-            self.personen_liste_anfuegen(neue_person)
+            # Speichere die Person 
+            self.daten.new_person(neue_person)
         else:
+            person = Person()
+
             # Bearbeite die Person
-            self.personen[self.edit_person_id].name = self.form_person_name.get_value()
-            self.personen[self.edit_person_id].beihilfesatz = self.form_person_beihilfe.get_value()
+            person.name = self.form_person_name.get_value()
+            person.beihilfesatz = self.form_person_beihilfe.get_value()
 
             # Speichere die Person in der Datenbank
-            self.personen[self.edit_person_id].speichern(self.db)
-
-            # Aktualisiere die Liste der Personen
-            self.personen_liste_aendern(self.personen[self.edit_person_id], self.edit_person_id)
+            self.daten.edit_person(person, self.edit_person_id)
 
             # Flag zurücksetzen
             self.flag_edit_person = False
@@ -1261,24 +1248,14 @@ class Kontolupe(toga.App):
 
 
     def delete_person(self, widget, result):
-        """Löscht eine Person."""
+        """Deaktiviert eine Person."""
         if self.tabelle_personen.selection and result:
-            index = self.index_auswahl(self.tabelle_personen)
-
-            # Prüfe, ob die Person in einer Rechnung verwendet wird
-            for rechnung in self.rechnungen:
-                if rechnung.person_id == self.personen[index].db_id:
-                    self.main_window.error_dialog(
-                        'Fehler beim Löschen',
-                        'Die Person wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
-                    )
-                    return
-            
-            # Person wird deaktiviert
-            self.personen[index].aktiv = False
-            self.personen[index].speichern(self.db)
-            del self.personen[index]
-            del self.personen_liste[index]
+            if not self.daten.deactivate_person(self.index_auswahl(self.tabelle_personen)):
+                self.main_window.error_dialog(
+                    'Fehler beim Löschen',
+                    'Die Person wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
+                )
+                return
 
             # Seite mit Liste der Personen anzeigen
             self.update_app(widget)
@@ -1297,7 +1274,7 @@ class Kontolupe(toga.App):
         self.tabelle_beihilfepakete = toga.Table(
             headings    = ['Datum', 'Betrag', 'Erstattet'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
-            data        = self.beihilfepakete_liste,
+            data        = self.daten.list_beihilfepakete,
             style       = style_table,
             on_select   = self.update_app,
             on_activate = self.show_info_dialog_booking
@@ -1328,7 +1305,7 @@ class Kontolupe(toga.App):
         self.tabelle_pkvpakete = toga.Table(
             headings    = ['Datum', 'Betrag', 'Erstattet'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
-            data        = self.pkvpakete_liste,
+            data        = self.daten.list_pkvpakete,
             style       = style_table,
             on_select   = self.update_app,
             on_activate = self.show_info_dialog_booking
@@ -1383,7 +1360,7 @@ class Kontolupe(toga.App):
         self.form_beihilfe_bills = toga.Table(
             headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
             accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
-            data            = self.erzeuge_teilliste_rechnungen(beihilfe=True),
+            data            = self.daten.list_rg_beihilfe,
             multiple_select = True,
             on_select       = self.on_select_beihilfe_bills,
             on_activate     = self.show_info_dialog_booking,
@@ -1425,7 +1402,7 @@ class Kontolupe(toga.App):
         self.form_pkv_bills = toga.Table(
             headings        = ['Info', 'Betrag', 'Beihilfe', 'Bezahlt'],
             accessors       = ['info', 'betrag_euro', 'beihilfesatz_prozent', 'bezahlt_text'],
-            data            = self.erzeuge_teilliste_rechnungen(pkv=True),
+            data            = self.daten.list_rg_pkv,
             multiple_select = True,
             on_select       = self.on_select_pkv_bills,   
             on_activate     = self.show_info_dialog_booking,
@@ -1449,7 +1426,7 @@ class Kontolupe(toga.App):
         """Ermittelt die Summe des Beihilfe-Anteils der ausgewählten Rechnungen."""
         summe = 0
         for auswahl_rg in widget.selection:
-            for rg in self.rechnungen:
+            for rg in self.daten.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
                     summe += rg.betrag * rg.beihilfesatz / 100
         self.form_beihilfe_betrag.set_value(summe)
@@ -1459,7 +1436,7 @@ class Kontolupe(toga.App):
         """Ermittelt die Summe des PKV-Anteils der ausgewählten Rechnungen."""
         summe = 0
         for auswahl_rg in widget.selection:
-            for rg in self.rechnungen:
+            for rg in self.daten.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
                     summe += rg.betrag * (100 - rg.beihilfesatz) / 100
         self.form_pkv_betrag.set_value(summe)
@@ -1471,7 +1448,6 @@ class Kontolupe(toga.App):
         self.form_beihilfe_betrag.set_value('')
         self.form_beihilfe_datum.set_value(datetime.now())
         self.form_beihilfe_erhalten.set_value(False)
-        self.form_beihilfe_bills.data = self.erzeuge_teilliste_rechnungen(beihilfe=True)
 
         # Zurücksetzen des Flags und der Überschrift
         self.flag_edit_beihilfe = False
@@ -1487,7 +1463,6 @@ class Kontolupe(toga.App):
         self.form_pkv_betrag.set_value('')
         self.form_pkv_datum.set_value(datetime.now())
         self.form_pkv_erhalten.set_value(False)
-        self.form_pkv_bills.data = self.erzeuge_teilliste_rechnungen(pkv=True)
 
         # Zurücksetzen des Flags und der Überschrift
         self.flag_edit_pkv = False
@@ -1544,44 +1519,13 @@ class Kontolupe(toga.App):
             neues_beihilfepaket.betrag = self.form_beihilfe_betrag.get_value()
             neues_beihilfepaket.erhalten = self.form_beihilfe_erhalten.get_value()
 
-            # Speichere das Beihilfepaket in der Datenbank
-            neues_beihilfepaket.neu(self.db)
-
-            # Füge das Beihilfepaket der Liste hinzu
-            self.beihilfepakete.append(neues_beihilfepaket)
-            self.beihilfepakete_liste_anfuegen(neues_beihilfepaket)
-
-            # Aktualisiere verknüpfte Rechnungen
+            # IDs der Rechnungen in Liste speichern
+            rechnungen_ids = []
             for auswahl_rg in self.form_beihilfe_bills.selection:
-                for rg in self.rechnungen:
-                    if auswahl_rg.db_id == rg.db_id:
-                        rg.beihilfe_id = neues_beihilfepaket.db_id
-                        rg.speichern(self.db)
-
-        else:
-            # Bearbeite das Beihilfepaket
-            self.beihilfepakete[self.edit_beihilfe_id].datum = self.form_beihilfe_datum.get_value()
-            self.beihilfepakete[self.edit_beihilfe_id].betrag = self.form_beihilfe_betrag.get_value()
-            self.beihilfepakete[self.edit_beihilfe_id].erhalten = self.form_beihilfe_erhalten.get_value()
+                rechnungen_ids.append(auswahl_rg.db_id)
 
             # Speichere das Beihilfepaket in der Datenbank
-            self.beihilfepakete[self.edit_beihilfe_id].speichern(self.db)
-
-            # Aktualisiere die Liste der Beihilfepakete
-            self.beihilfepakete_liste_aendern(self.beihilfepakete[self.edit_beihilfe_id], self.edit_beihilfe_id)
-
-            # Flage zurücksetzen
-            self.flag_edit_beihilfe = False
-
-            # Aktualisiere verknüpfte Rechnungen
-            for auswahl_rg in self.form_beihilfe_bills.selection:
-                for rg in self.rechnungen:
-                    if auswahl_rg.db_id == rg.db_id:
-                        rg.beihilfe_id = self.beihilfepakete[self.edit_beihilfe_id].db_id
-                        rg.speichern(self.db)
-
-        # Rechnungen aktualisieren
-        self.rechnungen_liste_aktualisieren()
+            self.daten.new_beihilfepaket(neues_beihilfepaket, rechnungen_ids)
 
         # Wechsel zur Liste der Beihilfepakete
         self.update_app(widget)
@@ -1598,44 +1542,13 @@ class Kontolupe(toga.App):
             neues_pkvpaket.betrag = self.form_pkv_betrag.get_value()
             neues_pkvpaket.erhalten = self.form_pkv_erhalten.get_value()
 
-            # Speichere das PKV-Einreichung in der Datenbank
-            neues_pkvpaket.neu(self.db)
-
-            # Füge das PKV-Einreichung der Liste hinzu
-            self.pkvpakete.append(neues_pkvpaket)
-            self.pkvpakete_liste_anfuegen(neues_pkvpaket)
-
-            # Aktualisiere verknüpfte Rechnungen
+            # IDs der Rechnungen in Liste speichern
+            rechnungen_ids = []
             for auswahl_rg in self.form_pkv_bills.selection:
-                for rg in self.rechnungen:
-                    if auswahl_rg.db_id == rg.db_id:
-                        rg.pkv_id = neues_pkvpaket.db_id
-                        rg.speichern(self.db)
+                rechnungen_ids.append(auswahl_rg.db_id)
 
-        else:
-            # Bearbeite das PKV-Paket
-            self.pkvpakete[self.edit_pkv_id].datum = self.form_pkv_datum.get_value()
-            self.pkvpakete[self.edit_pkv_id].betrag = self.form_pkv_betrag.get_value()
-            self.pkvpakete[self.edit_pkv_id].erhalten = self.form_pkv_erhalten.get_value()
-
-            # Speichere das PKV-Einreichung in der Datenbank
-            self.pkvpakete[self.edit_pkv_id].speichern(self.db)
-
-            # Aktualisiere die Liste der PKV-Einreichungen
-            self.pkvpakete_liste_aendern(self.pkvpakete[self.edit_pkv_id], self.edit_pkv_id)
-
-            # Flage zurücksetzen
-            self.flag_edit_pkv = False
-
-            # Aktualisiere verknüpfte Rechnungen
-            for auswahl_rg in self.form_pkv_bills.selection:
-                for rg in self.rechnungen:
-                    if auswahl_rg.db_id == rg.db_id:
-                        rg.pkv_id = self.pkvpakete[self.edit_pkv_id].db_id
-                        rg.speichern(self.db)
-
-        # Rechnungen aktualisieren
-        self.rechnungen_liste_aktualisieren()
+            # Speichere das PKV-Paket in der Datenbank
+            self.daten.new_pkvpaket(neues_pkvpaket, rechnungen_ids)
 
         # Wechsel zur Liste der PKV-Einreichungen
         self.update_app(widget)
@@ -1665,11 +1578,7 @@ class Kontolupe(toga.App):
     def delete_beihilfe(self, widget, result):
         """Löscht eine Beihilfe-Einreichung."""
         if self.tabelle_beihilfepakete.selection and result:
-            index = self.index_auswahl(self.tabelle_beihilfepakete)
-            self.beihilfepakete[index].loeschen(self.db)
-            del self.beihilfepakete[index]
-            del self.beihilfepakete_liste[index]
-            self.rechnungen_aktualisieren()
+            self.daten.delete_beihilfepaket(self.index_auswahl(self.tabelle_beihilfepakete))
             
             # Anzeigen aktualisieren
             self.update_app(widget)
@@ -1678,121 +1587,10 @@ class Kontolupe(toga.App):
     def delete_pkv(self, widget, result):
         """Löscht eine PKV-Einreichung."""
         if self.tabelle_pkvpakete.selection and result:
-            index = self.index_auswahl(self.tabelle_pkvpakete)
-            self.pkvpakete[index].loeschen(self.db)
-            del self.pkvpakete[index]
-            del self.pkvpakete_liste[index]
-            self.rechnungen_aktualisieren()
+            self.daten.delete_pkvpaket(self.index_auswahl(self.tabelle_pkvpakete))
             
             # Anzeigen aktualisieren
             self.update_app(widget)
-
-
-    def erzeuge_teilliste_rechnungen(self, beihilfe=False, pkv=False, beihilfe_id=None, pkv_id=None):
-        """Erzeugt die Liste der eingereichten Rechnungen für Beihilfe oder PKV."""
-
-        data = ListSource(accessors=[
-            'db_id', 
-            'betrag', 
-            'betrag_euro',
-            'rechnungsdatum', 
-            'einrichtung_id',
-            'einrichtung_name',
-            'notiz', 
-            'person_id',
-            'person_name',
-            'info', 
-            'beihilfesatz', 
-            'beihilfesatz_prozent',
-            'buchungsdatum', 
-            'bezahlt', 
-            'bezahlt_text',
-            'beihilfe_id', 
-            'beihilfe_eingereicht',
-            'pkv_id'
-            'pkv_eingereicht'
-        ])
-
-        if self.rechnungen_liste is None:
-            return data
-
-        for rechnung in self.rechnungen_liste:
-            if (beihilfe and (rechnung.beihilfe_id is None or rechnung.beihilfe_id == beihilfe_id)) or (pkv and (rechnung.pkv_id is None or rechnung.pkv_id == pkv_id)):
-                data.append({
-                'db_id': rechnung.db_id,
-                'betrag': rechnung.betrag,
-                'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
-                'rechnungsdatum': rechnung.rechnungsdatum,
-                'einrichtung_id': rechnung.einrichtung_id,
-                'einrichtung_name': self.einrichtung_name(rechnung.einrichtung_id),
-                'notiz': rechnung.notiz,
-                'person_id': rechnung.person_id,
-                'person_name': self.person_name(rechnung.person_id),
-                'info': (self.person_name(rechnung.person_id) + ', ' if self.person_name(rechnung.person_id) else '') + self.einrichtung_name(rechnung.einrichtung_id),
-                'beihilfesatz': rechnung.beihilfesatz,
-                'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
-                'buchungsdatum': rechnung.buchungsdatum,
-                'bezahlt': rechnung.bezahlt,
-                'bezahlt_text': 'Ja' if rechnung.bezahlt else 'Nein',
-                'beihilfe_id': rechnung.beihilfe_id,
-                'beihilfe_eingereicht': 'Ja' if rechnung.beihilfe_id else 'Nein',
-                'pkv_id': rechnung.pkv_id,
-                'pkv_eingereicht': 'Ja' if rechnung.pkv_id else 'Nein'
-            })
-
-        return data
-
-
-    def einrichtung_name(self, einrichtung_id):
-        """Ermittelt den Namen einer Einrichtung anhand ihrer Id."""
-        for einrichtung in self.einrichtungen:
-            if einrichtung.db_id == einrichtung_id:
-                return einrichtung.name
-        return ''
-    
-
-    def person_name(self, person_id):
-        """Ermittelt den Namen einer Person anhand ihrer Id."""
-        for person in self.personen:
-            if person.db_id == person_id:
-                return person.name
-        return ''
-    
-
-    def indizes_archivierbare_buchungen(self):
-        """Ermittelt die Indizes der archivierbaren Rechnungen, Beihilfepakete und PKVpakete und gibt sie zurück."""
-        indizes = {
-            'Rechnung' : [],
-            'Beihilfe' : set(),
-            'PKV' : set()
-        }
-
-        # Create dictionaries for quick lookup of beihilfepakete and pkvpakete by db_id
-        beihilfepakete_dict = {paket.db_id: paket for paket in self.beihilfepakete}
-        pkvpakete_dict = {paket.db_id: paket for paket in self.pkvpakete}
-
-        for i, rechnung in enumerate(self.rechnungen):
-            if rechnung.bezahlt and rechnung.beihilfe_id and rechnung.pkv_id:
-                beihilfepaket = beihilfepakete_dict.get(rechnung.beihilfe_id)
-                pkvpaket = pkvpakete_dict.get(rechnung.pkv_id)
-                if beihilfepaket and beihilfepaket.erhalten and pkvpaket and pkvpaket.erhalten:
-                    # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
-                    other_rechnungen = [ar for ar in self.rechnungen if ar.beihilfe_id == beihilfepaket.db_id or ar.pkv_id == pkvpaket.db_id]
-                    if all(ar.bezahlt for ar in other_rechnungen):
-                        indizes['Rechnung'].append(i)
-                        indizes['Beihilfe'].add(self.beihilfepakete.index(beihilfepaket))
-                        indizes['PKV'].add(self.pkvpakete.index(pkvpaket))
-
-        # Convert sets back to lists
-        indizes['Beihilfe'] = list(indizes['Beihilfe'])
-        indizes['PKV'] = list(indizes['PKV'])
-
-        # sort the lists in reverse order
-        indizes['Rechnung'].sort(reverse=True)
-        indizes['Beihilfe'].sort(reverse=True)
-        indizes['PKV'].sort(reverse=True)
-
-        return indizes
             
 
     def archivieren_bestaetigen(self, widget):
@@ -1807,28 +1605,8 @@ class Kontolupe(toga.App):
 
 
     def archivieren(self, widget, result):
-        """Archiviert alle archivierbaren Buchungen."""
         if result:
-            indizes = self.indizes_archivierbare_buchungen()
-
-            for i in indizes['Rechnung']:
-                self.rechnungen[i].aktiv = 0
-                self.rechnungen[i].speichern(self.db)
-                del self.rechnungen[i]
-                del self.rechnungen_liste[i]
-
-            for i in indizes['Beihilfe']:
-                self.beihilfepakete[i].aktiv = 0
-                self.beihilfepakete[i].speichern(self.db)
-                del self.beihilfepakete[i]
-                del self.beihilfepakete_liste[i]
-                
-            for i in indizes['PKV']:
-                self.pkvpakete[i].aktiv = 0
-                self.pkvpakete[i].speichern(self.db)
-                del self.pkvpakete[i]
-                del self.pkvpakete_liste[i]
-            
+            self.daten.archive()
             self.update_app(widget)
             self.show_mainpage(widget)
             
@@ -1860,17 +1638,7 @@ class Kontolupe(toga.App):
     def rechnung_bezahlen(self, widget, result):
         """Markiert eine Rechnung als bezahlt."""
         if self.tabelle_offene_buchungen.selection and result:
-            # Setze das Flag bezahlt auf True bei der Rechnung mit der db_id aus der Tabelle
-            for rechnung in self.rechnungen:
-                if rechnung.db_id == self.tabelle_offene_buchungen.selection.db_id:
-                    rechnung.bezahlt = True
-                    rechnung.speichern(self.db)
-                    break
-            
-            # Aktualisiere die Liste der Rechnungen
-            self.rechnungen_liste_aktualisieren()
-
-            # Aktualisiere die Liste der offenen Buchungen
+            self.daten.pay_rechnung(self.tabelle_offene_buchungen.selection.db_id)
             self.update_app(widget)
             self.show_mainpage(widget)
 
@@ -1878,17 +1646,7 @@ class Kontolupe(toga.App):
     def beihilfe_erhalten(self, widget, result):
         """Markiert eine Beihilfe als erhalten."""
         if self.tabelle_offene_buchungen.selection and result:
-            # Setze das Flag erhalten auf True bei der Beihilfe mit der db_id aus der Tabelle
-            for beihilfepaket in self.beihilfepakete:
-                if beihilfepaket.db_id == self.tabelle_offene_buchungen.selection.db_id:
-                    beihilfepaket.erhalten = True
-                    beihilfepaket.speichern(self.db)
-                    break
-            
-            # Aktualisiere die Liste der Beihilfepakete
-            self.beihilfepakete_liste_aktualisieren()
-
-            # Aktualisiere die Liste der offenen Buchungen
+            self.daten.receive_beihilfe(self.tabelle_offene_buchungen.selection.db_id)
             self.update_app(widget)
             self.show_mainpage(widget)
 
@@ -1896,17 +1654,7 @@ class Kontolupe(toga.App):
     def pkv_erhalten(self, widget, result):
         """Markiert eine PKV-Einreichung als erhalten."""
         if self.tabelle_offene_buchungen.selection and result:
-            # Setze das Flag erhalten auf True bei der PKV-Einreichung mit der db_id aus der Tabelle
-            for pkvpaket in self.pkvpakete:
-                if pkvpaket.db_id == self.tabelle_offene_buchungen.selection.db_id:
-                    pkvpaket.erhalten = True
-                    pkvpaket.speichern(self.db)
-                    break
-            
-            # Aktualisiere die Liste der PKV-Einreichungen
-            self.pkvpakete_liste_aktualisieren()
-
-            # Aktualisiere die Liste der offenen Buchungen
+            self.daten.receive_pkv(self.tabelle_offene_buchungen.selection.db_id)
             self.update_app(widget)
             self.show_mainpage(widget)
     
@@ -2073,13 +1821,6 @@ class Kontolupe(toga.App):
 
         # Daten-Interface initialisieren
         self.daten = DatenInterface()
-
-        # Erzeuge die ListSources für die GUI
-        self.rechnungen_liste_erzeugen()
-        self.einrichtungen_liste_erzeugen()
-        self.beihilfepakete_liste_erzeugen()
-        self.pkvpakete_liste_erzeugen()
-        self.personen_liste_erzeugen()
 
         # Erzeuge alle GUI-Elemente
         self.create_mainpage()
