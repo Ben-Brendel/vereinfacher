@@ -56,7 +56,7 @@ class Kontolupe(toga.App):
         self.startseite_button_bearbeiten.enabled = False
 
         # Anzeige und Button der offenen Rechnungen aktualisieren
-        anzahl = self.daten.get_count_rechnungen_not_paid()
+        anzahl = self.daten.get_number_rechnungen_not_paid()
         match anzahl:
             case 0:
                 self.label_start_rechnungen_offen.text = 'Keine offenen Rechnungen.'
@@ -66,7 +66,7 @@ class Kontolupe(toga.App):
                 self.label_start_rechnungen_offen.text = '{} Rechnungen noch nicht bezahlt.'.format(anzahl)
 
         # Anzeige und Button der offenen Beihilfe-Einreichungen aktualisieren
-        anzahl = self.daten.get_count_rechnungen_not_submitted_beihilfe()
+        anzahl = self.daten.get_number_rechnungen_not_submitted_beihilfe()
         match anzahl:
             case 0:
                 self.button_start_beihilfe_neu.enabled = False
@@ -85,7 +85,7 @@ class Kontolupe(toga.App):
                 self.label_start_beihilfe_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
 
         # Anzeige und Button der offenen PKV-Einreichungen aktualisieren
-        anzahl = self.daten.get_count_rechnungen_not_submitted_pkv()
+        anzahl = self.daten.get_number_rechnungen_not_submitted_pkv()
         match anzahl:
             case 0:
                 self.button_start_pkv_neu.enabled = False
@@ -104,7 +104,7 @@ class Kontolupe(toga.App):
                 self.label_start_pkv_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
 
         # Anzeige und Button der archivierbaren Items aktualisieren
-        anzahl = self.daten.get_count_archivables()
+        anzahl = self.daten.get_number_archivables()
         match anzahl:
             case 0:
                 self.button_start_archiv.enabled = False
@@ -444,9 +444,7 @@ class Kontolupe(toga.App):
 
     def update_form_bill(self, widget):
         """Ermittelt den Beihilfesatz der ausgewählten Person und trägt ihn in das entsprechende Feld ein."""
-        match widget:
-            case self.form_bill_person:
-                self.form_bill_beihilfe.set_value(self.daten.get_beihilfesatz_by_name(widget.value.name))
+        self.form_bill_beihilfe.set_value(self.daten.get_beihilfesatz_by_name(widget.value.name))
 
 
     def create_form_bill(self):
@@ -689,7 +687,7 @@ class Kontolupe(toga.App):
                 await self.main_window.confirm_dialog(
                     'Zugehörige Beihilfe-Einreichung aktualisieren',
                     'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
-                    on_result=self.daten.update_beihilfepaket
+                    on_result=self.update_beihilfepaket
                 )
 
             # Überprüfe ob eine verknüpfte PKV-Einreichung existiert
@@ -698,7 +696,7 @@ class Kontolupe(toga.App):
                 await self.main_window.confirm_dialog(
                     'Zugehörige PKV-Einreichung aktualisieren',
                     'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
-                    on_result=self.daten.update_pkvpaket
+                    on_result=self.update_pkvpaket
                 )
 
             # Zeigt die Liste der Rechnungen an.
@@ -709,13 +707,13 @@ class Kontolupe(toga.App):
     def update_beihilfepaket(self, widget, result):  
         """Aktualisiert die Beihilfe-Einreichung einer Rechnung."""
         if result:
-            self.daten.update_beihilfepaket(self.rechnungen[self.edit_bill_id].beihilfe_id) 
+            self.daten.update_beihilfepaket_betrag(self.rechnungen[self.edit_bill_id].beihilfe_id) 
 
 
     def update_pkvpaket(self, widget, result):  
         """Aktualisiert die PKV-Einreichung einer Rechnung."""
         if result:
-            self.daten.update_pkvpaket(self.rechnungen[self.edit_bill_id].pkv_id)    
+            self.daten.update_pkvpaket_betrag(self.rechnungen[self.edit_bill_id].pkv_id)    
 
 
     def confirm_delete_bill(self, widget):
@@ -755,6 +753,9 @@ class Kontolupe(toga.App):
 
             # Rechnung löschen
             self.daten.delete_rechnung(self.edit_bill_id)
+
+            # App aktualisieren
+            self.update_app(widget)
 
 
     def create_list_institutions(self):
@@ -1201,7 +1202,7 @@ class Kontolupe(toga.App):
 
         # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
         if not self.form_person_beihilfe.is_valid():
-                nachricht += 'Bitte gib einen gültigen Beihilfe ein.\n'
+                nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
@@ -1520,12 +1521,12 @@ class Kontolupe(toga.App):
             neues_beihilfepaket.erhalten = self.form_beihilfe_erhalten.get_value()
 
             # IDs der Rechnungen in Liste speichern
-            rechnungen_ids = []
+            rechnungen_db_ids = []
             for auswahl_rg in self.form_beihilfe_bills.selection:
-                rechnungen_ids.append(auswahl_rg.db_id)
+                rechnungen_db_ids.append(auswahl_rg.db_id)
 
             # Speichere das Beihilfepaket in der Datenbank
-            self.daten.new_beihilfepaket(neues_beihilfepaket, rechnungen_ids)
+            self.daten.new_beihilfepaket(neues_beihilfepaket, rechnungen_db_ids)
 
         # Wechsel zur Liste der Beihilfepakete
         self.update_app(widget)
@@ -1543,12 +1544,12 @@ class Kontolupe(toga.App):
             neues_pkvpaket.erhalten = self.form_pkv_erhalten.get_value()
 
             # IDs der Rechnungen in Liste speichern
-            rechnungen_ids = []
+            rechnungen_db_ids = []
             for auswahl_rg in self.form_pkv_bills.selection:
-                rechnungen_ids.append(auswahl_rg.db_id)
+                rechnungen_db_ids.append(auswahl_rg.db_id)
 
             # Speichere das PKV-Paket in der Datenbank
-            self.daten.new_pkvpaket(neues_pkvpaket, rechnungen_ids)
+            self.daten.new_pkvpaket(neues_pkvpaket, rechnungen_db_ids)
 
         # Wechsel zur Liste der PKV-Einreichungen
         self.update_app(widget)
