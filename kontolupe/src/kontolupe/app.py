@@ -209,7 +209,7 @@ class Kontolupe(toga.App):
         self.box_webview.add(self.webview)
 
 
-    def zeige_webview(self, widget):
+    def show_webview(self, widget):
         """Zeigt die WebView zur Anzeige von Webseiten."""
         match widget:
             case self.link_info_einrichtung_webseite:
@@ -386,7 +386,7 @@ class Kontolupe(toga.App):
             
             # Liste alle Rechnungen auf, die zu diesem Paket gehören
             inhalt += 'Eingereichte Rechnungen:'
-            for rechnung in self.rechnungen_liste:
+            for rechnung in self.daten.list_rechnungen:
                 if (typ == 'Beihilfe' and rechnung.beihilfe_id == element.db_id) or (typ == 'PKV' and rechnung.pkv_id == element.db_id):
                     inhalt += '\n- {}'.format(rechnung.info)
                     #inhalt += ', {}'.format(rechnung.rechnungsdatum)
@@ -555,7 +555,7 @@ class Kontolupe(toga.App):
             return
         
         # Lade die Rechnung
-        rechnung = self.daten.get_rechnung_by_index(self.edit_bill_id)
+        rechnung = self.daten.get_rechnung_by_index(self.edit_bill_id, objekt=True)
 
         # Ermittle den Index der Einrichtung in der Liste der Einrichtungen
         einrichtung_index = self.daten.get_einrichtung_index_by_dbid(rechnung.einrichtung_id)
@@ -644,16 +644,12 @@ class Kontolupe(toga.App):
 
             # Übergebe die Rechnung dem Daten-Interface
             self.daten.new_rechnung(neue_rechnung)
-
-            # Kehrt zurück zur Startseite
-            self.update_app(widget)
-            self.show_mainpage(widget)
         else:
             # flag ob verknüpfte Einreichungen aktualisiert werden können
             # True, wenn betrag oder beihilfesatz geändert wurde
             update_einreichung = False
 
-            rechnung = self.daten.get_rechnung_by_index(self.edit_bill_id)
+            rechnung = self.daten.get_rechnung_by_index(self.edit_bill_id, objekt=True)
             
             if rechnung.betrag != self.form_bill_betrag.get_value():
                 update_einreichung = True
@@ -699,21 +695,20 @@ class Kontolupe(toga.App):
                     on_result=self.update_pkvpaket
                 )
 
-            # Zeigt die Liste der Rechnungen an.
-            self.update_app(widget)
-            self.show_list_bills(widget)     
+        # Zeigt die Liste der Rechnungen an.
+        self.show_list_bills(widget)     
 
 
     def update_beihilfepaket(self, widget, result):  
         """Aktualisiert die Beihilfe-Einreichung einer Rechnung."""
         if result:
-            self.daten.update_beihilfepaket_betrag(self.rechnungen[self.edit_bill_id].beihilfe_id) 
+            self.daten.update_beihilfepaket_betrag(self.daten.rechnungen[self.edit_bill_id].beihilfe_id) 
 
 
     def update_pkvpaket(self, widget, result):  
         """Aktualisiert die PKV-Einreichung einer Rechnung."""
         if result:
-            self.daten.update_pkvpaket_betrag(self.rechnungen[self.edit_bill_id].pkv_id)    
+            self.daten.update_pkvpaket_betrag(self.daten.rechnungen[self.edit_bill_id].pkv_id)    
 
 
     def confirm_delete_bill(self, widget):
@@ -861,7 +856,7 @@ class Kontolupe(toga.App):
             self.edit_institution_id = self.index_auswahl(self.tabelle_einrichtungen)
 
             # Hole die Einrichtung
-            einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id)
+            einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id, objekt=True)
             
             # Befülle die Eingabefelder
             self.form_institution_name.set_value(einrichtung.name)
@@ -949,7 +944,6 @@ class Kontolupe(toga.App):
 
 
         # Zeige die Liste der Einrichtungen
-        self.update_app(widget)
         self.show_list_institutions(widget)
 
 
@@ -995,7 +989,7 @@ class Kontolupe(toga.App):
         # self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
         # box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
         label_info_einrichtung_website = toga.Label('Webseite:', style=style_label_info)
-        self.link_info_einrichtung_webseite = toga.Button('', style=style_button_link, on_press=self.zeige_webview)
+        self.link_info_einrichtung_webseite = toga.Button('', style=style_button_link, on_press=self.show_webview)
         
 
         # Bereich mit den Details zur Notiz
@@ -1090,7 +1084,6 @@ class Kontolupe(toga.App):
 
             # Seite mit Liste der Einrichtungen anzeigen
             self.update_app(widget)
-            self.show_list_institutions(widget)
 
 
     def create_list_persons(self):
@@ -1178,7 +1171,7 @@ class Kontolupe(toga.App):
             self.edit_person_id = self.index_auswahl(self.tabelle_personen)
 
             # Hole die Person
-            person = self.daten.get_person_by_index(self.edit_person_id)
+            person = self.daten.get_person_by_index(self.edit_person_id, objekt=True)
             
             # Befülle die Eingabefelder
             self.form_person_name.set_value(person.name)
@@ -1234,7 +1227,6 @@ class Kontolupe(toga.App):
             self.flag_edit_person = False
 
         # Zeige die Liste der Personen
-        self.update_app(widget)
         self.show_list_persons(widget)
 
 
@@ -1258,9 +1250,8 @@ class Kontolupe(toga.App):
                 )
                 return
 
-            # Seite mit Liste der Personen anzeigen
+            # App aktualisieren
             self.update_app(widget)
-            self.show_list_persons(widget)
 
 
     def create_list_beihilfe(self):
@@ -1528,8 +1519,7 @@ class Kontolupe(toga.App):
             # Speichere das Beihilfepaket in der Datenbank
             self.daten.new_beihilfepaket(neues_beihilfepaket, rechnungen_db_ids)
 
-        # Wechsel zur Liste der Beihilfepakete
-        self.update_app(widget)
+        # Wechsel zur Startseite
         self.show_mainpage(widget)
 
 
@@ -1551,8 +1541,7 @@ class Kontolupe(toga.App):
             # Speichere das PKV-Paket in der Datenbank
             self.daten.new_pkvpaket(neues_pkvpaket, rechnungen_db_ids)
 
-        # Wechsel zur Liste der PKV-Einreichungen
-        self.update_app(widget)
+        # Wechsel zur Startseite
         self.show_mainpage(widget)
 
 
@@ -1596,8 +1585,7 @@ class Kontolupe(toga.App):
 
     def archivieren_bestaetigen(self, widget):
         """Bestätigt das Archivieren von Buchungen."""
-        indizes = self.indizes_archivierbare_buchungen()
-        if sum(len(v) for v in indizes.values()) > 0:
+        if self.daten.get_number_archivables() > 0:
             self.main_window.confirm_dialog(
                 'Buchungen archivieren', 
                 'Sollen alle archivierbaren Buchungen wirklich archiviert werden? Sie werden dann in der App nicht mehr angezeigt.',
@@ -1608,7 +1596,6 @@ class Kontolupe(toga.App):
     def archivieren(self, widget, result):
         if result:
             self.daten.archive()
-            self.update_app(widget)
             self.show_mainpage(widget)
             
 
@@ -1641,7 +1628,6 @@ class Kontolupe(toga.App):
         if self.tabelle_offene_buchungen.selection and result:
             self.daten.pay_rechnung(self.tabelle_offene_buchungen.selection.db_id)
             self.update_app(widget)
-            self.show_mainpage(widget)
 
     
     def beihilfe_erhalten(self, widget, result):
@@ -1649,7 +1635,6 @@ class Kontolupe(toga.App):
         if self.tabelle_offene_buchungen.selection and result:
             self.daten.receive_beihilfe(self.tabelle_offene_buchungen.selection.db_id)
             self.update_app(widget)
-            self.show_mainpage(widget)
 
 
     def pkv_erhalten(self, widget, result):
@@ -1657,7 +1642,6 @@ class Kontolupe(toga.App):
         if self.tabelle_offene_buchungen.selection and result:
             self.daten.receive_pkv(self.tabelle_offene_buchungen.selection.db_id)
             self.update_app(widget)
-            self.show_mainpage(widget)
     
 
     def edit_open_booking(self, widget):
@@ -1795,7 +1779,7 @@ class Kontolupe(toga.App):
         )
 
         self.cmd_datenschutz = toga.Command(
-            self.zeige_webview,
+            self.show_webview,
             'Datenschutz',
             tooltip = 'Öffne die Datenschutzerklärung.',
             order = 7,

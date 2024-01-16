@@ -391,9 +391,9 @@ class Datenbank:
         query = f"""SELECT * FROM {table}"""
         if only_active:
             query += f""" WHERE aktiv = 1"""
-            print(f'### Database: Only active elements will be loaded from table {table}')
+            print(f'### Database.__load_data: Only active elements will be loaded from table {table}')
         else:
-            print(f'### Database: All elements will be loaded from table {table}')
+            print(f'### Database.__load_data: All elements will be loaded from table {table}')
         cursor.execute(query)
         db_result = cursor.fetchall()
 
@@ -413,6 +413,8 @@ class Datenbank:
                     element = Einrichtung()
                 case 'personen':
                     element = Person()
+                case _:
+                    raise ValueError(f'### Database.__load_data: Table {table} not found')
 
             # Setze die Attribute des Elements
             for column in self.__tables[table]:
@@ -423,10 +425,11 @@ class Datenbank:
                         setattr(element, column[0], row[column[0]])
 
             result.append(element)
+            print(f'### Database.__load_data: Loaded element with id {element.db_id} and type {type(element)} from table {table}')
 
         # Datenbankverbindung schließen
         connection.close()
-        print(f'### Database: Loaded data from table {table}')
+        print(f'### Database.__load_data: Loaded data from table {table}')
 
         return result
 
@@ -967,21 +970,22 @@ class DatenInterface:
         print(f'### DatenInterface.__update_archivables: Archivables updated: {self.archivables}')
 
 
-    def archive(self, widget, result):
+    def archive(self):
         """Archiviert alle archivierbaren Buchungen."""
 
         print(f'### DatenInterface: archive: Archiving process started')
 
         for i in self.archivables['Rechnung']:
-            self.deactivate_rechnung(i)
+            self.__deactivate_rechnung(i)
 
         for i in self.archivables['Beihilfe']:
-            self.deactivate_beihilfepaket(i)
+            self.__deactivate_beihilfepaket(i)
             
         for i in self.archivables['PKV']:
-            self.deactivate_pkvpaket(i)
+            self.__deactivate_pkvpaket(i)
 
         print(f'### DatenInterface.archive: Archiving process finished')
+        self.__update_archivables()
 
 
     def get_open_sum(self, *args, **kwargs):
@@ -1116,7 +1120,7 @@ class DatenInterface:
     
 
     def get_rechnung_by_index(self, index, objekt=False):
-        """Gibt eine Rechnung anhand des Index zurück."""
+        """Gibt eine Rechnung als Row-Objekt oder als Rechnung-Objekt anhand des Index zurück."""
         rechnungen = self.rechnungen if objekt else self.list_rechnungen
 
         if index < 0 or index >= len(rechnungen):
@@ -1129,7 +1133,7 @@ class DatenInterface:
     
 
     def get_beihilfepaket_by_index(self, index, objekt=False):
-        """Gibt ein Beihilfepaket anhand des Index zurück."""
+        """Gibt ein Beihilfepaket als Row-Objekt oder als BeihilfePaket-Objekt anhand des Index zurück."""
         beihilfepakete = self.beihilfepakete if objekt else self.list_beihilfepakete
 
         if index < 0 or index >= len(beihilfepakete):
@@ -1142,7 +1146,7 @@ class DatenInterface:
     
 
     def get_pkvpaket_by_index(self, index, objekt=False):
-        """Gibt ein PKV-Paket anhand des Index zurück."""
+        """Gibt ein PKV-Paket als Row-Objekt oder als PKVPaket-Objekt anhand des Index zurück."""
         pkvpakete = self.pkvpakete if objekt else self.list_pkvpakete
 
         if index < 0 or index >= len(pkvpakete):
@@ -1155,7 +1159,7 @@ class DatenInterface:
     
 
     def get_einrichtung_by_index(self, index, objekt=False):
-        """Gibt eine Einrichtung anhand des Index zurück."""
+        """Gibt eine Einrichtung als Row-Objekt oder als Einrichtung-Objekt anhand des Index zurück."""
         einrichtungen = self.einrichtungen if objekt else self.list_einrichtungen
 
         if index < 0 or index >= len(einrichtungen):
@@ -1168,7 +1172,7 @@ class DatenInterface:
     
 
     def get_person_by_index(self, index, objekt=False):
-        """Gibt eine Person anhand des Index zurück."""
+        """Gibt eine Person als Row-Objekt oder als Person-Objekt anhand des Index zurück."""
         personen = self.personen if objekt else self.list_personen
 
         if index < 0 or index >= len(personen):
@@ -1236,7 +1240,7 @@ class DatenInterface:
 
     def edit_rechnung(self, rechnung, rg_id):
         """Rechnung ändern."""
-        print(f'### DatenInterface.edit_rechnung: Edit rechnung with id {rg_id}')
+        print(f'### DatenInterface.edit_rechnung: Edit rechnung with list id {rg_id}')
         self.rechnungen[rg_id] = rechnung
         self.__update_list_rechnungen_id(rechnung, rg_id)
         self.__update_list_open_bookings()
@@ -1247,7 +1251,7 @@ class DatenInterface:
 
     def delete_rechnung(self, rg_id):
         """Rechnung löschen."""
-        print(f'### DatenInterface.delete_rechnung: Delete rechnung with id {rg_id}')
+        print(f'### DatenInterface.delete_rechnung: Delete rechnung with list id {rg_id}')
         self.rechnungen[rg_id].loeschen(self.db)
         self.rechnungen.pop(rg_id)
         del self.list_rechnungen[rg_id]
@@ -1257,17 +1261,13 @@ class DatenInterface:
         self.__update_archivables()
 
 
-    def deactivate_rechnung(self, rg_id):
+    def __deactivate_rechnung(self, rg_id):
         """Rechnung deaktivieren."""
-        print(f'### DatenInterface.deactivate_rechnung: Deactivate rechnung with id {rg_id}')
+        print(f'### DatenInterface.deactivate_rechnung: Deactivate rechnung with list id {rg_id}')
         self.rechnungen[rg_id].aktiv = False
         self.rechnungen[rg_id].speichern(self.db)
         self.rechnungen.pop(rg_id)
         del self.list_rechnungen[rg_id]
-        self.__update_list_open_bookings()
-        self.__update_list_rg_beihilfe()
-        self.__update_list_rg_pkv()
-        self.__update_archivables()
 
 
     def pay_rechnung(self, db_id):
@@ -1275,7 +1275,7 @@ class DatenInterface:
         print(f'### DatenInterface.pay_rechnung: Pay rechnung with db_id {db_id}')
         index = self.__get_list_index_by_dbid(self.list_rechnungen, db_id)
         self.rechnungen[index].bezahlt = True
-        self.rechnungen[index].buchungsdatum = datetime.date.today()
+        self.rechnungen[index].buchungsdatum = datetime.now().strftime('%d.%m.%Y')
         self.rechnungen[index].speichern(self.db)
         self.__update_list_rechnungen_id(self.rechnungen[index], index)
         self.__update_list_open_bookings()
@@ -1315,9 +1315,10 @@ class DatenInterface:
         for rechnung_db_id in rechnungen_db_ids:
             index = self.__get_list_index_by_dbid(self.list_rechnungen, rechnung_db_id)
             self.rechnungen[index].beihilfe_id = beihilfepaket.db_id
+            print(f'### DatenInterface.new_beihilfepaket: rechnung type: {type(self.rechnungen[index])}')
             self.rechnungen[index].speichern(self.db)
             self.__update_list_rechnungen_id(self.rechnungen[index], index)
-            print(f'### DatenInterface.new_beihilfepaket: Beihilfepaket with id {beihilfepaket.db_id} linked to rechnung with id {rechnung_db_id}')
+            print(f'### DatenInterface.new_beihilfepaket: Rechnung with id {rechnung_db_id} linked to beihilfepaket with id {beihilfepaket.db_id}')
 
         self.__update_list_open_bookings()
         self.__update_list_rg_beihilfe()
@@ -1338,15 +1339,13 @@ class DatenInterface:
         self.__update_archivables()
 
 
-    def deactivate_beihilfepaket(self, beihilfepaket_id):
+    def __deactivate_beihilfepaket(self, beihilfepaket_id):
         """Beihilfepaket deaktivieren."""
         print(f'### DatenInterface.deactivate_beihilfepaket: Deactivate beihilfepaket with id {beihilfepaket_id}')
         self.beihilfepakete[beihilfepaket_id].aktiv = False
         self.beihilfepakete[beihilfepaket_id].speichern(self.db)
         self.beihilfepakete.pop(beihilfepaket_id)
         del self.list_beihilfepakete[beihilfepaket_id]
-        self.__update_list_open_bookings()
-        self.__update_archivables()
 
 
     def new_pkvpaket(self, pkvpaket, rechnungen_db_ids):
@@ -1360,9 +1359,10 @@ class DatenInterface:
         for rechnung_db_id in rechnungen_db_ids:
             index = self.__get_list_index_by_dbid(self.list_rechnungen, rechnung_db_id)
             self.rechnungen[index].pkv_id = pkvpaket.db_id
+            print(f'### DatenInterface.new_pkvpaket: rechnung type: {type(self.rechnungen[index])}')
             self.rechnungen[index].speichern(self.db)
             self.__update_list_rechnungen_id(self.rechnungen[index], index)
-            print(f'### DatenInterface.new_pkvpaket: PKV-Paket with id {pkvpaket.db_id} linked to rechnung with id {rechnung_db_id}')
+            print(f'### DatenInterface.new_pkvpaket: Rechnung with id {rechnung_db_id} linked to pkvpaket with id {pkvpaket.db_id}')
 
         self.__update_list_open_bookings()
         self.__update_list_rg_beihilfe()
@@ -1383,15 +1383,13 @@ class DatenInterface:
         self.__update_archivables()
 
 
-    def deactivate_pkvpaket(self, pkvpaket_id):
+    def __deactivate_pkvpaket(self, pkvpaket_id):
         """PKV-Paket deaktivieren."""
         print(f'### DatenInterface.deactivate_pkvpaket: Deactivate pkvpaket with id {pkvpaket_id}')
         self.pkvpakete[pkvpaket_id].aktiv = False
         self.pkvpakete[pkvpaket_id].speichern(self.db)
         self.pkvpakete.pop(pkvpaket_id)
         del self.list_pkvpakete[pkvpaket_id]
-        self.__update_list_open_bookings()
-        self.__update_archivables()
 
 
     def new_einrichtung(self, einrichtung):
@@ -1820,7 +1818,8 @@ class DatenInterface:
 
         self.list_open_bookings.clear()
         print(f'### DatenInterface.__update_list_open_bookings: Cleared list open bookings')
-        print(f'### DatenInterface.__update_list_open_bookings: List open bookings: {self.list_open_bookings}')
+        for b in self.list_open_bookings:
+            print(f'### DatenInterface.__update_list_open_bookings: element: {b}')
 
         for rechnung in self.list_rechnungen:
             if not rechnung.bezahlt:
@@ -1862,7 +1861,8 @@ class DatenInterface:
 
         self.list_rg_beihilfe.clear()
         print(f'### DatenInterface.__update_list_rg_beihilfe: Cleared list rg beihilfe')
-        print(f'### DatenInterface.__update_list_rg_beihilfe: List rg beihilfe: {self.list_rg_beihilfe}')
+        for b in self.list_rg_beihilfe:
+            print(f'### DatenInterface.__update_list_rg_beihilfe: element: {b}')
 
         for rechnung in self.rechnungen:
             if not rechnung.beihilfe_id:
@@ -1876,7 +1876,8 @@ class DatenInterface:
 
         self.list_rg_pkv.clear()
         print(f'### DatenInterface.__update_list_rg_pkv: Cleared list rg pkv')
-        print(f'### DatenInterface.__update_list_rg_pkv: List rg pkv: {self.list_rg_pkv}')
+        for b in self.list_rg_pkv:
+            print(f'### DatenInterface.__update_list_rg_pkv: element: {b}')
 
         for rechnung in self.rechnungen:
             if not rechnung.pkv_id:
