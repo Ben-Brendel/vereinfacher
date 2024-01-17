@@ -6,6 +6,7 @@ FARBE_BLAU                      = '#368ba8'
 FARBE_LILA                      = '#7758a8'
 FARBE_GRUEN                     = '#4c9c60'
 FARBE_GRAU                      = '#444444'
+FARBE_MITTEL                    = '#666666' 
 
 # Allgemeine Styles
 style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
@@ -28,12 +29,14 @@ style_table                     = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_table_hell                = Pack(flex=1, padding=5, color=FARBE_HELL)
 style_switch                    = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_switch_hell               = Pack(flex=1, padding=5, color=FARBE_HELL)
-style_divider                   = Pack(padding=5, color=FARBE_DUNKEL)
+style_divider                   = Pack(padding=5, background_color=FARBE_MITTEL)
 
 # Spezifische Styles
 style_table_auswahl             = Pack(flex=1, padding=5, height=200, color=FARBE_DUNKEL)
 style_label_info                = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color=FARBE_DUNKEL)
 style_label_detail              = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color=FARBE_DUNKEL)
+style_label_subtext             = Pack(flex=1, padding=5, padding_top=0, text_align=RIGHT, color=FARBE_MITTEL, font_size=8)
+style_divider_subtext           = Pack(padding=5, padding_bottom=0, padding_top=10, background_color=FARBE_MITTEL)
 style_button_link               = Pack(padding=5, padding_top=10, text_align=CENTER, background_color=FARBE_HELL, color=FARBE_BLAU, font_weight='bold')
 style_display                   = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color=FARBE_DUNKEL)
 

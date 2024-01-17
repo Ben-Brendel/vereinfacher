@@ -436,23 +436,6 @@ class Kontolupe(toga.App):
         self.box_form_bill = toga.Box(style=style_box_column)
         self.sc_form_bill.content = self.box_form_bill
 
-        # Erzeuge eine Liste von Dictionaries, welche die Elemente der Seite enthält
-        # self.form_bill_elements = [
-        #     {'typ': 'TopBox', 'label_text': 'Neue Rechnung', 'style': style_box_column_rechnungen, 'target_back': self.show_list_bills},
-        #     {'typ': 'LabeledSelection', 'label_text': 'Person:', 'data': self.daten.list_personen, 'accessor': 'name', 'on_change': self.update_form_bill},
-        #     {'typ': 'LabeledPercentInput', 'label_text': 'Beihilfe in %:'},
-        #     {'typ': 'Divider', 'style': style_divider},
-        #     {'typ': 'LabeledDateInput', 'label_text': 'Rechnungsdatum:'},
-        #     {'typ': 'LabeledFloatInput', 'label_text': 'Betrag in €:'},
-        #     {'typ': 'LabeledSelection', 'label_text': 'Einrichtung:', 'data': self.list_einrichtungen, 'accessor': 'name'},
-        #     {'typ': 'Divider', 'style': style_divider},
-        #     {'typ': 'LabeledDateInput', 'label_text': 'Bezahldatum:'},
-        #     {'typ': 'LabeledSwitch', 'label_text': 'Bezahlt:'},
-        #     {'typ': 'Divider', 'style': style_divider},
-        #     {'typ': 'LabeledMultilineTextInput', 'label_text': 'Notiz:'},
-        #     {'typ': 'BottomBox', 'labels': ['Abbrechen', 'Speichern'], 'targets': [self.show_list_bills, self.check_save_bill]},
-        # ]
-
         # Überschrift und Button zurück
         self.form_bill_topbox = TopBox(
             parent=self.box_form_bill,
@@ -460,6 +443,8 @@ class Kontolupe(toga.App):
             style_box=style_box_column_rechnungen,
             target_back=self.show_list_bills
         )
+
+        divider_mandatory = SubtextDivider(self.box_form_bill, 'Pflichtfelder')
 
         # Selection zur Auswahl der Person
         self.form_bill_person = LabeledSelection(
@@ -471,7 +456,6 @@ class Kontolupe(toga.App):
         )
 
         self.form_bill_beihilfe = LabeledPercentInput(self.box_form_bill, 'Beihilfe in %:')
-        self.box_form_bill.add(toga.Divider(style=style_divider))
         self.form_bill_rechnungsdatum = LabeledDateInput(self.box_form_bill, 'Rechnungsdatum:')
         self.form_bill_betrag = LabeledFloatInput(self.box_form_bill, 'Betrag in €:')
 
@@ -483,10 +467,10 @@ class Kontolupe(toga.App):
             accessor='name'
         )
 
-        self.box_form_bill.add(toga.Divider(style=style_divider))
+        divider_optional = SubtextDivider(self.box_form_bill, 'Optionale Felder')
+
         self.form_bill_buchungsdatum = LabeledDateInput(self.box_form_bill, 'Bezahldatum:')
         self.form_bill_bezahlt = LabeledSwitch(self.box_form_bill, 'Bezahlt:')
-        self.box_form_bill.add(toga.Divider(style=style_divider))
         self.form_bill_notiz = LabeledMultilineTextInput(self.box_form_bill, 'Notiz:')
 
         # Bereich der Buttons
@@ -795,15 +779,20 @@ class Kontolupe(toga.App):
             target_back=self.show_list_institutions
         )
 
+        # Bereich der Pflichteingaben
+        divider_mandatory = SubtextDivider(self.box_form_institution, 'Pflichtfelder')
         self.form_institution_name = LabeledTextInput(self.box_form_institution, 'Name:')
+
+        # Bereich der optionalen Eingabe
+        divider_optional = SubtextDivider(self.box_form_institution, 'Optionale Felder')
         self.form_institution_strasse = LabeledTextInput(self.box_form_institution, 'Straße, Hausnr.:')
         self.form_institution_plz = LabeledPostalInput(self.box_form_institution, 'PLZ:')
         self.form_institution_ort = LabeledTextInput(self.box_form_institution, 'Ort:')
-        self.box_form_institution.add(toga.Divider(style=style_divider))
+        #self.box_form_institution.add(toga.Divider(style=style_divider))
         self.form_institution_telefon = LabeledPhoneInput(self.box_form_institution, 'Telefon:')
         self.form_institution_email = LabeledEmailInput(self.box_form_institution, 'E-Mail:')
         self.form_institution_webseite = LabeledWebsiteInput(self.box_form_institution, 'Webseite:')
-        self.box_form_institution.add(toga.Divider(style=style_divider))
+        #self.box_form_institution.add(toga.Divider(style=style_divider))
         self.form_institution_notiz = LabeledMultilineTextInput(self.box_form_institution, 'Notiz:')
 
         # BottomBox
@@ -1124,8 +1113,11 @@ class Kontolupe(toga.App):
             target_back=self.show_list_persons
         )
 
+        divider_mandatory = SubtextDivider(self.box_form_person, 'Pflichtfelder')
         self.form_person_name = LabeledTextInput(self.box_form_person, 'Name:')
         self.form_person_beihilfe = LabeledPercentInput(self.box_form_person, 'Beihilfe in %:')
+
+        # divider_optional = SubtextDivider(self.box_form_person, 'Optionale Felder')
 
         # BottomBox
         self.form_person_bottombox = BottomBox(
@@ -1333,6 +1325,8 @@ class Kontolupe(toga.App):
             target_back=self.show_list_beihilfe
         )
 
+        divider_mandatory = SubtextDivider(self.box_form_beihilfe, 'Pflichtfelder')
+
         self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
@@ -1347,7 +1341,8 @@ class Kontolupe(toga.App):
         )
         self.box_form_beihilfe.add(self.form_beihilfe_bills)
 
-        self.box_form_beihilfe.add(toga.Divider(style=style_divider))
+        divider_optional = SubtextDivider(self.box_form_beihilfe, 'Optionale Felder')
+
         self.form_beihilfe_betrag = LabeledFloatInput(self.box_form_beihilfe, 'Betrag in €:', readonly=True)
         self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
 
@@ -1375,6 +1370,8 @@ class Kontolupe(toga.App):
             target_back=self.show_list_pkv
         )
 
+        divider_mandatory = SubtextDivider(self.box_form_pkv, 'Pflichtfelder')
+
         self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
@@ -1389,7 +1386,8 @@ class Kontolupe(toga.App):
         )
         self.box_form_pkv.add(self.form_pkv_bills)
 
-        self.box_form_pkv.add(toga.Divider(style=style_divider))
+        divider_optional = SubtextDivider(self.box_form_pkv, 'Optionale Felder')
+
         self.form_pkv_betrag = LabeledFloatInput(self.box_form_pkv, 'Betrag in €:', readonly=True)
         self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')
 

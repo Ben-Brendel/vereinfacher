@@ -309,3 +309,16 @@ class BottomBox:
         if button_id < 0 or button_id >= len(self.buttons):
             raise ValueError('Button ID must be between 0 and {}'.format(len(self.buttons) - 1))
         self.buttons[button_id].on_press = target
+
+
+class SubtextDivider:
+    def __init__(self, parent, text):
+        self.box = toga.Box(style=style_box_column)
+        self.divider = toga.Divider(style=style_divider_subtext)
+        self.label = toga.Label(text, style=style_label_subtext)
+        self.box.add(self.divider)
+        self.box.add(self.label)
+        self.__add_to_parent(parent)
+
+    def __add_to_parent(self, parent):
+        parent.add(self.box)
