@@ -229,6 +229,9 @@ class LabeledSelection:
     def get_value(self):
         return self.selection.value
     
+    def set_items(self, items):
+        self.selection.items = items
+    
     def _set_on_change(self, on_change):
         self.selection.on_change = on_change
 

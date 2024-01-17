@@ -121,7 +121,7 @@ class Validator:
 
 
     def __rect_date(self, widget):
-        """Korrigiert die Eingabe, sodass nur noch ein gültiges Datum enthalten sein kann."""
+        """Korrigiert die Eingabe, so dass nur noch ein gültiges Datum enthalten sein kann."""
 
         # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein . sind.
         eingabe = ''.join(c for c in widget.value if c in '0123456789.')
@@ -166,7 +166,7 @@ class Validator:
 
 
     def __rect_postal(self, widget):
-        """Prüft, ob nur Zahlen von 0 bis 9 enthalten sind und korrigiert die Eingabe entsprechend."""
+        """Entfernt alle Zeichen, die nicht in einer Postleitzahl vorkommen dürfen."""
 
         # Entferne alle Zeichen, die keine Zahl von 0 bis 9 sind.
         eingabe = ''.join(c for c in widget.value if c in '0123456789')
@@ -186,15 +186,15 @@ class Validator:
     
 
     def __rect_phone(self, widget):
-        """Prüft, ob nur Zahlen von 0 bis 9 enthalten sind und korrigiert die Eingabe entsprechend."""
+        """Entfernt, alle Zeichen, die nicht in einer Telefonnummmer vorkommen dürfen."""
 
-        # Entferne alle Zeichen, die keine Zahl von 0 bis 9 sind.
-        eingabe = ''.join(c for c in widget.value if c in '0123456789')
+        # Entferne alle Zeichen, die nicht in einer Telefonnummer vorkommen dürfen
+        eingabe = ''.join(c for c in widget.value if c in '0123456789+-/()#* ')
         widget.value = eingabe
 
     
     def __is_phone(self, widget):
-        """Prüft, ob die Eingabe eine gültige Telefonnummer ist und gibt True oder False zurück."""
+        """Prüft, ob die Eingabe eine Telefonnummer ist und gibt True oder False zurück."""
 
         # Eingabe anpassen
         self.__rect_phone(widget)
@@ -206,7 +206,7 @@ class Validator:
     
 
     def __rect_email(self, widget):
-        """Prüft, ob nur Zeichen enthalten sind, die in einer E-Mail-Adresse vorkommen dürfen und korrigiert die Eingabe entsprechend."""
+        """Entfernt alle Zeichen, die nicht in E-Mail-Adresse vorkommen dürfen."""
 
         # Entferne alle Zeichen, die nicht in einer E-Mail-Adresse vorkommen dürfen
         eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_')
@@ -246,7 +246,7 @@ class Validator:
     
 
     def __rect_website(self, widget):
-        """Prüft, ob nur Zeichen enthalten sind, die in einer Webadresse vorkommen dürfen und korrigiert die Eingabe entsprechend."""
+        """Entfernt alle Zeichen, die nicht in einer Webadresse vorkommen dürfen."""
 
         # Entferne alle Zeichen, die nicht in einer Webadresse vorkommen dürfen
         eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_/:?%=#&')

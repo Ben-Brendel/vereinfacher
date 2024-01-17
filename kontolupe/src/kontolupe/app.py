@@ -524,10 +524,12 @@ class Kontolupe(toga.App):
         self.form_bill_rechnungsdatum.set_value('')
 
         if len(self.daten.list_personen) > 0:
+            self.form_bill_person.set_items(self.daten.list_personen)
             self.form_bill_person.set_value(self.daten.list_personen[0])
             self.form_bill_beihilfe.set_value(str(self.daten.list_personen[0].beihilfesatz))
         
         if len(self.daten.list_einrichtungen) > 0:
+            self.form_bill_einrichtung.set_items(self.daten.list_einrichtungen)
             self.form_bill_einrichtung.set_value(self.daten.list_einrichtungen[0])
 
         self.form_bill_notiz.set_value('')
@@ -562,16 +564,20 @@ class Kontolupe(toga.App):
         person_index = self.daten.get_person_index_by_dbid(rechnung.person_id)
 
         # Auswahlfeld für die Einrichtung befüllen
-        if einrichtung_index is not None:
-            self.form_bill_einrichtung.set_value(self.daten.list_einrichtungen[einrichtung_index])
-        elif len(self.daten.list_einrichtungen) > 0:
-            self.form_bill_einrichtung.set_value(self.daten.list_einrichtungen[0])
+        if len(self.daten.list_einrichtungen) > 0:
+            self.form_bill_einrichtung.set_items(self.daten.list_einrichtungen)
+            if einrichtung_index is not None and einrichtung_index in range(len(self.daten.list_einrichtungen)):
+                self.form_bill_einrichtung.set_value(self.daten.list_einrichtungen[einrichtung_index])
+            else:      
+                self.form_bill_einrichtung.set_value(self.daten.list_einrichtungen[0])
 
         # Auswahlfeld für die Person befüllen
-        if person_index is not None:    
-            self.form_bill_person.set_value(self.daten.list_personen[person_index])
-        elif len(self.daten.list_personen) > 0:
-            self.form_bill_person.set_value(self.daten.list_personen[0])
+        if len(self.daten.list_personen) > 0:
+            self.form_bill_person.set_items(self.daten.list_personen)
+            if person_index is not None and person_index in range(len(self.daten.list_personen)):    
+                self.form_bill_person.set_value(self.daten.list_personen[person_index])
+            else:
+                self.form_bill_person.set_value(self.daten.list_personen[0])
 
         # Befülle die Eingabefelder
         self.form_bill_betrag.set_value(rechnung.betrag)
@@ -923,8 +929,8 @@ class Kontolupe(toga.App):
             # Speichere die Einrichtung in der Datenbank
             self.daten.new_einrichtung(neue_einrichtung)
         else:
-
-            einrichtung = Einrichtung()
+            print('+++ Einrichtung bearbeiten')
+            einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id, objekt=True)
 
             # Bearbeite die Einrichtung
             einrichtung.name = self.form_institution_name.get_value()
@@ -1214,7 +1220,7 @@ class Kontolupe(toga.App):
             # Speichere die Person 
             self.daten.new_person(neue_person)
         else:
-            person = Person()
+            person = self.daten.get_person_by_index(self.edit_person_id, objekt=True)
 
             # Bearbeite die Person
             person.name = self.form_person_name.get_value()
@@ -1827,7 +1833,6 @@ class Kontolupe(toga.App):
         self.main_window = toga.MainWindow(title=self.formal_name)      
 
         # Zeige die Startseite
-        self.update_app(None)
         self.show_mainpage(None)
         self.main_window.show()
         

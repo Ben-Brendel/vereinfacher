@@ -1014,7 +1014,7 @@ class DatenInterface:
 
         print(f'### DatenInterface.get_open_sum: Open sum: {sum} €')
 
-        return sum
+        return round(sum, 2)
     
 
     def get_number_rechnungen_not_paid(self):
@@ -1242,6 +1242,7 @@ class DatenInterface:
         """Rechnung ändern."""
         print(f'### DatenInterface.edit_rechnung: Edit rechnung with list id {rg_id}')
         self.rechnungen[rg_id] = rechnung
+        self.rechnungen[rg_id].speichern(self.db)
         self.__update_list_rechnungen_id(rechnung, rg_id)
         self.__update_list_open_bookings()
         self.__update_list_rg_beihilfe()
@@ -1407,6 +1408,7 @@ class DatenInterface:
         self.einrichtungen[einrichtung_id].speichern(self.db)
         self.__update_list_einrichtungen_id(einrichtung, einrichtung_id)
         self.__update_rechnungen()
+        self.__update_list_open_bookings()
 
 
     def delete_einrichtung(self, einrichtung_id):
@@ -1417,7 +1419,6 @@ class DatenInterface:
         self.einrichtungen[einrichtung_id].loeschen(self.db)
         self.einrichtungen.pop(einrichtung_id)
         del self.list_einrichtungen[einrichtung_id]
-        self.__update_rechnungen()
         return True
 
 
@@ -1430,7 +1431,6 @@ class DatenInterface:
         self.einrichtungen[einrichtung_id].speichern(self.db)
         self.einrichtungen.pop(einrichtung_id)
         del self.list_einrichtungen[einrichtung_id]
-        self.__update_rechnungen()
         return True
 
 
@@ -1459,6 +1459,7 @@ class DatenInterface:
         self.personen[person_id].speichern(self.db)
         self.__update_list_personen_id(person, person_id)
         self.__update_rechnungen()
+        self.__update_list_open_bookings()
 
 
     def delete_person(self, person_id):
@@ -1469,7 +1470,6 @@ class DatenInterface:
         self.personen[person_id].loeschen(self.db)
         self.personen.pop(person_id)
         del self.list_personen[person_id]
-        self.__update_rechnungen()
         return True
 
 
@@ -1482,7 +1482,6 @@ class DatenInterface:
         self.personen[person_id].speichern(self.db)
         self.personen.pop(person_id)
         del self.list_personen[person_id]
-        self.__update_rechnungen()
         return True
 
 
@@ -1569,7 +1568,7 @@ class DatenInterface:
                 print(f'### DatenInterface.__person_name: Found person {person.name} with id {person_id}')
                 return person.name
         print(f'### DatenInterface.__person_name: No person found with id {person_id}')
-        return None
+        return ''
     
 
     def __einrichtung_name(self, einrichtung_id):
@@ -1579,7 +1578,7 @@ class DatenInterface:
                 print(f'### DatenInterface.__einrichtung_name: Found einrichtung {einrichtung.name} with id {einrichtung_id}')
                 return einrichtung.name
         print(f'### DatenInterface.__einrichtung_name: No einrichtung found with id {einrichtung_id}')
-        return None
+        return ''
     
 
     def __row_from_rechnung(self, rechnung):
