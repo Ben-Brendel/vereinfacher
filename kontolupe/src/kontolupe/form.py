@@ -2,6 +2,20 @@ import toga
 from kontolupe.layout import *
 from kontolupe.validator import *
 
+def table_index_selection(self, widget):
+    """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
+    if type(widget) == toga.Table and widget.selection is not None:
+        zeile = widget.selection
+        for i, z in enumerate(widget.data):
+            if str(z) == str(zeile):
+                return i
+        else:
+            print("+++ Kontolupe: Ausgewählte Zeile konnte nicht gefunden werden.")
+            return None
+    else:
+        print("+++ Kontolupe: Keine Zeile ausgewählt.")
+        return None
+
 class TopBox:
     def __init__(self, parent, label_text, style_box, target_back):
         self.box = toga.Box(style=style_box)

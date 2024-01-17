@@ -42,7 +42,7 @@ class Kontolupe(toga.App):
         self.edit_pkv_id = 0
 
         # Hilfsvariable zur Festlegung des Zurück-Ziels
-        self.zurueck = 'startseite'
+        self.back_to = 'startseite'
 
 
     def update_app(self, widget):
@@ -148,25 +148,88 @@ class Kontolupe(toga.App):
                 self.seite_liste_personen_button_loeschen.enabled = status
                 self.seite_liste_personen_button_bearbeiten.enabled = status
 
-    
-    def index_auswahl(self, widget):
-        """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
-        if type(widget) == toga.Table and widget.selection is not None:
-            zeile = widget.selection
-            for i, z in enumerate(widget.data):
-                if str(z) == str(zeile):
-                    return i
-            else:
-                print("Ausgewählte Zeile konnte nicht gefunden werden.")
-                return None
-        else:
-            print("Keine Zeile ausgewählt.")
-            return None
-    
 
-    def geh_zurueck(self, widget):
+    def show_info_dialog_booking(self, widget, row):
+        """Zeigt die Info einer Buchung."""
+        
+        # Initialisierung Variablen
+        titel = ''
+        inhalt = ''
+
+        # Ermittlung der Buchungsart
+        typ = ''
+        element = None
+        match widget:
+            case self.tabelle_offene_buchungen:
+                typ = row.typ
+                match typ:
+                    case 'Rechnung':
+                        element = self.daten.get_rechnung_by_dbid(row.db_id)
+                    case 'Beihilfe':
+                        element = self.daten.get_beihilfepaket_by_dbid(row.db_id)
+                    case 'PKV':
+                        element = self.daten.get_pkvpaket_by_dbid(row.db_id)
+                        
+            case self.form_beihilfe_bills:
+                typ = 'Rechnung'
+                element = self.daten.get_rechnung_by_dbid(row.db_id)
+            case self.form_pkv_bills:
+                typ = 'Rechnung'
+                element = self.daten.get_rechnung_by_dbid(row.db_id)
+            case self.tabelle_rechnungen:
+                typ = 'Rechnung'
+                element = self.daten.get_rechnung_by_index(table_index_selection(widget))
+            case self.tabelle_beihilfepakete:
+                typ = 'Beihilfe'
+                element = self.daten.get_beihilfepaket_by_index(table_index_selection(widget))
+            case self.tabelle_pkvpakete:
+                typ = 'PKV'
+                element = self.daten.get_pkvpaket_by_index(table_index_selection(widget))
+            case self.tabelle_einrichtungen:
+                typ = 'Einrichtung'
+                element = self.daten.get_einrichtung_by_index(table_index_selection(widget))
+
+        # Ermittlung der Texte
+        if typ == 'Rechnung':
+            titel = 'Rechnung'
+            inhalt = 'Rechnungsdatum: {}\n'.format(element.rechnungsdatum)
+            inhalt += 'Betrag: {:.2f} €\n'.format(element.betrag).replace('.', ',')
+            inhalt += 'Person: {}\n'.format(element.person_name)
+            inhalt += 'Beihilfe: {:.0f} %\n\n'.format(element.beihilfesatz)
+            inhalt += 'Einrichtung: {}\n'.format(element.einrichtung_name)
+            inhalt += 'Notiz: {}\n'.format(element.notiz)
+            inhalt += 'Buchungsdatum: {}\n'.format(element.buchungsdatum) if element.buchungsdatum else 'Buchungsdatum: -\n'
+            inhalt += 'Bezahlt: Ja' if element.bezahlt else 'Bezahlt: Nein'
+        elif typ == 'Beihilfe' or typ == 'PKV':
+            titel = 'Beihilfe-Einreichung' if typ == 'Beihilfe' else 'PKV-Einreichung'
+            inhalt = 'Vom {} '.format(element.datum)
+            inhalt += 'über {:.2f} €\n\n'.format(element.betrag).replace('.', ',')
+            
+            # Liste alle Rechnungen auf, die zu diesem Paket gehören
+            inhalt += 'Eingereichte Rechnungen:'
+            for rechnung in self.daten.list_rechnungen:
+                if (typ == 'Beihilfe' and rechnung.beihilfe_id == element.db_id) or (typ == 'PKV' and rechnung.pkv_id == element.db_id):
+                    inhalt += '\n- {}'.format(rechnung.info)
+                    #inhalt += ', {}'.format(rechnung.rechnungsdatum)
+                    inhalt += ', {:.2f} €'.format(rechnung.betrag).replace('.', ',')
+                    inhalt += ', {:.0f} %'.format(rechnung.beihilfesatz)
+        elif typ == 'Einrichtung':
+            titel = 'Einrichtung'
+            inhalt = 'Name: {}\n'.format(element.name)
+            inhalt += 'Straße: {}\n'.format(element.strasse)
+            inhalt += 'PLZ: {}\n'.format(element.plz)
+            inhalt += 'Ort: {}\n'.format(element.ort)
+            inhalt += 'Telefon: {}\n'.format(element.telefon)
+            inhalt += 'E-Mail: {}\n'.format(element.email)
+            inhalt += 'Webseite: {}\n'.format(element.webseite)
+            inhalt += 'Notiz: {}\n'.format(element.notiz)
+
+        self.main_window.info_dialog(titel, inhalt)
+
+
+    def go_back(self, widget):
         """Ermittelt das Ziel der Zurück-Funktion und ruft die entsprechende Seite auf."""
-        match self.zurueck:
+        match self.back_to:
             case 'startseite':
                 self.show_mainpage(widget)
             case 'liste_rechnungen':
@@ -183,12 +246,8 @@ class Kontolupe(toga.App):
                 self.show_form_bill_edit(widget)
             case 'formular_beihilfepakete_neu':
                 self.show_form_beihilfe_new(widget)
-            case 'formular_beihilfepakete_bearbeiten':
-                self.show_form_beihilfe_edit(widget)
             case 'formular_pkvpakete_neu':
                 self.show_form_pkv_new(widget)
-            case 'formular_pkvpakete_bearbeiten':
-                self.show_form_pkv_edit(widget)
             case 'formular_einrichtungen_neu':
                 self.show_form_institution_new(widget)
             case 'formular_einrichtungen_bearbeiten':
@@ -203,7 +262,7 @@ class Kontolupe(toga.App):
         """Erzeugt eine WebView zur Anzeige von Webseiten."""
         self.box_webview = toga.Box(style=style_box_column)
         box_webview_top = toga.Box(style=style_box_column_dunkel)
-        box_webview_top.add(toga.Button('Zurück', style=style_button, on_press=self.geh_zurueck))
+        box_webview_top.add(toga.Button('Zurück', style=style_button, on_press=self.go_back))
         self.box_webview.add(box_webview_top)
         self.webview = toga.WebView(style=style_webview)
         self.box_webview.add(self.webview)
@@ -214,10 +273,10 @@ class Kontolupe(toga.App):
         match widget:
             case self.link_info_einrichtung_webseite:
                 self.webview.url = self.daten.list_einrichtungen[self.edit_institution_id].webseite
-                self.zurueck = 'info_einrichtung'
+                self.back_to = 'info_einrichtung'
             case self.cmd_datenschutz:
                 self.webview.url = 'https://kontolupe.biberwerk.net/kontolupe-datenschutz.html'
-                self.zurueck = 'startseite'
+                self.back_to = 'startseite'
 
         self.main_window.content = self.box_webview
 
@@ -326,84 +385,6 @@ class Kontolupe(toga.App):
         
         self.update_app(widget)
         self.main_window.content = self.scroll_container_startseite
-
-
-    def show_info_dialog_booking(self, widget, row):
-        """Zeigt die Info einer Buchung."""
-        
-        # Initialisierung Variablen
-        titel = ''
-        inhalt = ''
-
-        # Ermittlung der Buchungsart
-        typ = ''
-        element = None
-        match widget:
-            case self.tabelle_offene_buchungen:
-                typ = row.typ
-                match typ:
-                    case 'Rechnung':
-                        element = self.daten.get_rechnung_by_dbid(row.db_id)
-                    case 'Beihilfe':
-                        element = self.daten.get_beihilfepaket_by_dbid(row.db_id)
-                    case 'PKV':
-                        element = self.daten.get_pkvpaket_by_dbid(row.db_id)
-                        
-            case self.form_beihilfe_bills:
-                typ = 'Rechnung'
-                element = self.daten.get_rechnung_by_dbid(row.db_id)
-            case self.form_pkv_bills:
-                typ = 'Rechnung'
-                element = self.daten.get_rechnung_by_dbid(row.db_id)
-            case self.tabelle_rechnungen:
-                typ = 'Rechnung'
-                element = self.daten.get_rechnung_by_index(self.index_auswahl(widget))
-            case self.tabelle_beihilfepakete:
-                typ = 'Beihilfe'
-                element = self.daten.get_beihilfepaket_by_index(self.index_auswahl(widget))
-            case self.tabelle_pkvpakete:
-                typ = 'PKV'
-                element = self.daten.get_pkvpaket_by_index(self.index_auswahl(widget))
-            case self.tabelle_einrichtungen:
-                typ = 'Einrichtung'
-                element = self.daten.get_einrichtung_by_index(self.index_auswahl(widget))
-
-        # Ermittlung der Texte
-        if typ == 'Rechnung':
-            titel = 'Rechnung'
-            inhalt = 'Rechnungsdatum: {}\n'.format(element.rechnungsdatum)
-            inhalt += 'Betrag: {:.2f} €\n'.format(element.betrag).replace('.', ',')
-            inhalt += 'Person: {}\n'.format(element.person_name)
-            inhalt += 'Beihilfe: {:.0f} %\n\n'.format(element.beihilfesatz)
-            inhalt += 'Einrichtung: {}\n'.format(element.einrichtung_name)
-            inhalt += 'Notiz: {}\n'.format(element.notiz)
-            inhalt += 'Buchungsdatum: {}\n'.format(element.buchungsdatum) if element.buchungsdatum else 'Buchungsdatum: -\n'
-            inhalt += 'Bezahlt: Ja' if element.bezahlt else 'Bezahlt: Nein'
-        elif typ == 'Beihilfe' or typ == 'PKV':
-            titel = 'Beihilfe-Einreichung' if typ == 'Beihilfe' else 'PKV-Einreichung'
-            inhalt = 'Vom {} '.format(element.datum)
-            inhalt += 'über {:.2f} €\n\n'.format(element.betrag).replace('.', ',')
-            
-            # Liste alle Rechnungen auf, die zu diesem Paket gehören
-            inhalt += 'Eingereichte Rechnungen:'
-            for rechnung in self.daten.list_rechnungen:
-                if (typ == 'Beihilfe' and rechnung.beihilfe_id == element.db_id) or (typ == 'PKV' and rechnung.pkv_id == element.db_id):
-                    inhalt += '\n- {}'.format(rechnung.info)
-                    #inhalt += ', {}'.format(rechnung.rechnungsdatum)
-                    inhalt += ', {:.2f} €'.format(rechnung.betrag).replace('.', ',')
-                    inhalt += ', {:.0f} %'.format(rechnung.beihilfesatz)
-        elif typ == 'Einrichtung':
-            titel = 'Einrichtung'
-            inhalt = 'Name: {}\n'.format(element.name)
-            inhalt += 'Straße: {}\n'.format(element.strasse)
-            inhalt += 'PLZ: {}\n'.format(element.plz)
-            inhalt += 'Ort: {}\n'.format(element.ort)
-            inhalt += 'Telefon: {}\n'.format(element.telefon)
-            inhalt += 'E-Mail: {}\n'.format(element.email)
-            inhalt += 'Webseite: {}\n'.format(element.webseite)
-            inhalt += 'Notiz: {}\n'.format(element.notiz)
-
-        self.main_window.info_dialog(titel, inhalt)
 
 
     def create_list_bills(self):
@@ -549,7 +530,7 @@ class Kontolupe(toga.App):
 
         # Ermittle den Index der ausgewählten Rechnung
         if widget == self.liste_rechnungen_button_bearbeiten:
-            self.edit_bill_id = self.index_auswahl(self.tabelle_rechnungen)
+            self.edit_bill_id = table_index_selection(self.tabelle_rechnungen)
         elif widget == self.startseite_button_bearbeiten:
             self.edit_bill_id = self.daten.get_rechnung_index_by_dbid(self.tabelle_offene_buchungen.selection.db_id)
         else:
@@ -732,7 +713,7 @@ class Kontolupe(toga.App):
         if self.tabelle_rechnungen.selection and result:
             
             # Index der ausgewählten Rechnung ermitteln
-            self.edit_bill_id = self.index_auswahl(self.tabelle_rechnungen)
+            self.edit_bill_id = table_index_selection(self.tabelle_rechnungen)
 
             # Setze Betrag der Rechnung auf 0, damit Einreichungen aktualisiert werden können
             self.daten.rechnungen[self.edit_bill_id].betrag = 0
@@ -859,7 +840,7 @@ class Kontolupe(toga.App):
         # Prüfe ob eine Einrichtung ausgewählt ist
         if self.tabelle_einrichtungen.selection:
             # Ermittle den Index der ausgewählten Rechnung
-            self.edit_institution_id = self.index_auswahl(self.tabelle_einrichtungen)
+            self.edit_institution_id = table_index_selection(self.tabelle_einrichtungen)
 
             # Hole die Einrichtung
             einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id, objekt=True)
@@ -1039,7 +1020,7 @@ class Kontolupe(toga.App):
         if self.tabelle_einrichtungen.selection:
 
             # Ermittle den Index der ausgewählten Einrichtung
-            self.edit_institution_id = self.index_auswahl(self.tabelle_einrichtungen)
+            self.edit_institution_id = table_index_selection(self.tabelle_einrichtungen)
 
             # Hole die Einrichtung
             einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id)
@@ -1081,7 +1062,7 @@ class Kontolupe(toga.App):
     def delete_institution(self, widget, result):
         """Deaktiviert eine Einrichtung."""
         if self.tabelle_einrichtungen.selection and result:
-            if not self.daten.deactivate_einrichtung(self.index_auswahl(self.tabelle_einrichtungen)):
+            if not self.daten.deactivate_einrichtung(table_index_selection(self.tabelle_einrichtungen)):
                 self.main_window.error_dialog(
                     'Fehler beim Löschen',
                     'Die Einrichtung wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
@@ -1174,7 +1155,7 @@ class Kontolupe(toga.App):
         # Prüfe ob eine Person ausgewählt ist
         if self.tabelle_personen.selection:
             # Ermittle den Index der ausgewählten Person
-            self.edit_person_id = self.index_auswahl(self.tabelle_personen)
+            self.edit_person_id = table_index_selection(self.tabelle_personen)
 
             # Hole die Person
             person = self.daten.get_person_by_index(self.edit_person_id, objekt=True)
@@ -1249,7 +1230,7 @@ class Kontolupe(toga.App):
     def delete_person(self, widget, result):
         """Deaktiviert eine Person."""
         if self.tabelle_personen.selection and result:
-            if not self.daten.deactivate_person(self.index_auswahl(self.tabelle_personen)):
+            if not self.daten.deactivate_person(table_index_selection(self.tabelle_personen)):
                 self.main_window.error_dialog(
                     'Fehler beim Löschen',
                     'Die Person wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
@@ -1574,7 +1555,7 @@ class Kontolupe(toga.App):
     def delete_beihilfe(self, widget, result):
         """Löscht eine Beihilfe-Einreichung."""
         if self.tabelle_beihilfepakete.selection and result:
-            self.daten.delete_beihilfepaket(self.index_auswahl(self.tabelle_beihilfepakete))
+            self.daten.delete_beihilfepaket(table_index_selection(self.tabelle_beihilfepakete))
             
             # Anzeigen aktualisieren
             self.update_app(widget)
@@ -1583,7 +1564,7 @@ class Kontolupe(toga.App):
     def delete_pkv(self, widget, result):
         """Löscht eine PKV-Einreichung."""
         if self.tabelle_pkvpakete.selection and result:
-            self.daten.delete_pkvpaket(self.index_auswahl(self.tabelle_pkvpakete))
+            self.daten.delete_pkvpaket(table_index_selection(self.tabelle_pkvpakete))
             
             # Anzeigen aktualisieren
             self.update_app(widget)
