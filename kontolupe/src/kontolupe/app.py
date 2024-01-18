@@ -48,11 +48,7 @@ class Kontolupe(toga.App):
         """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
 
         # Anzeige des offenen Betrags aktualisieren
-        self.label_start_summe.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')
-
-        # Button zum Markieren von Buchungen als bezahlt/erhalten aktivieren oder deaktivieren,
-        self.startseite_button_erledigt.enabled = False
-        self.startseite_button_bearbeiten.enabled = False
+        self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')
 
         # Anzeige und Button der offenen Rechnungen aktualisieren
         anzahl = self.daten.get_number_rechnungen_not_paid()
@@ -125,11 +121,15 @@ class Kontolupe(toga.App):
         else:
             status = False
 
+        # Reset the buttons for the open bookings table
+        self.mainpage_table_buttons.set_enabled('confirm_payment', False)
+        self.mainpage_table_buttons.set_enabled('edit_open_booking', False)
+
         match widget:
-            case self.tabelle_offene_buchungen:
-                self.startseite_button_erledigt.enabled = status
-                if self.tabelle_offene_buchungen.selection and self.tabelle_offene_buchungen.selection.typ == 'Rechnung':
-                    self.startseite_button_bearbeiten.enabled = True
+            case self.table_open_bookings:
+                self.mainpage_table_buttons.set_enabled('confirm_payment', status)
+                if self.table_open_bookings.selection and self.table_open_bookings.selection.typ == 'Rechnung':
+                    self.mainpage_table_buttons.set_enabled('edit_open_booking', status)
             case self.table_bills:
                 self.list_bills_bottombox.set_enabled('delete_bill', status)
                 self.list_bills_bottombox.set_enabled('edit_bill', status)
@@ -157,7 +157,7 @@ class Kontolupe(toga.App):
         typ = ''
         element = None
         match widget:
-            case self.tabelle_offene_buchungen:
+            case self.table_open_bookings:
                 typ = row.typ
                 match typ:
                     case 'Rechnung':
@@ -282,18 +282,17 @@ class Kontolupe(toga.App):
         """Erzeugt die Startseite der Anwendung."""
 
         # Container für die Startseite
-        self.box_startseite = toga.Box(style=style_box_column)
-        self.scroll_container_startseite = toga.ScrollContainer(content=self.box_startseite, style=style_scroll_container)
+        self.box_mainpage = toga.Box(style=style_box_column)
+        self.sc_mainpage = toga.ScrollContainer(content=self.box_mainpage, style=style_scroll_container)
         
         # Bereich, der die Summe der offenen Buchungen anzeigt
-        self.box_startseite_offen = toga.Box(style=style_box_offene_buchungen)
-        self.label_start_summe = toga.Label('Offener Betrag: ', style=style_start_summe)
-        self.box_startseite_offen.add(self.label_start_summe)
-        self.box_startseite.add(self.box_startseite_offen)
+        self.box_mainpage_sum = toga.Box(style=style_box_offene_buchungen)
+        self.mainpage_label_sum = toga.Label('Offener Betrag: ', style=style_start_summe)
+        self.box_mainpage_sum.add(self.mainpage_label_sum)
+        self.box_mainpage.add(self.box_mainpage_sum)
 
         # Tabelle mit allen offenen Buchungen
-        self.box_startseite_tabelle_offene_buchungen = toga.Box(style=style_section_start)
-        self.tabelle_offene_buchungen = toga.Table(
+        self.table_open_bookings = toga.Table(
             headings    = ['Info', 'Betrag', 'Datum'],
             accessors   = ['info', 'betrag_euro', 'datum'],
             data        = self.daten.list_open_bookings,    
@@ -301,18 +300,16 @@ class Kontolupe(toga.App):
             on_activate = self.show_info_dialog_booking,
             on_select   = self.update_app
         )
-        self.box_startseite_tabelle_offene_buchungen.add(self.tabelle_offene_buchungen)
+        self.box_mainpage.add(self.table_open_bookings)
 
-        # Button zur Markierung offener Buchungen als bezahlt/erhalten 
-        self.box_startseite_tabelle_buttons = toga.Box(style=style_box_row)
-        self.startseite_button_erledigt = toga.Button('Bezahlt/Erstattet', on_press=self.bestaetige_bezahlung, style=style_button, enabled=False)
-        self.startseite_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.edit_open_booking, style=style_button, enabled=False)
-        self.box_startseite_tabelle_buttons.add(self.startseite_button_erledigt)
-        self.box_startseite_tabelle_buttons.add(self.startseite_button_bearbeiten)
-        self.box_startseite_tabelle_offene_buchungen.add(self.box_startseite_tabelle_buttons)
-
-        # Box der offenen Buchungen zur Startseite hinzufügen
-        self.box_startseite.add(self.box_startseite_tabelle_offene_buchungen)
+        # Buttons zur Tabelle der offenen Buchungen
+        self.mainpage_table_buttons = ButtonBox(
+            parent  = self.box_mainpage,
+            labels  = ['Bezahlt/Erstattet', 'Bearbeiten'],
+            targets = [self.confirm_payment, self.edit_open_booking],
+            ids     = ['confirm_payment', 'edit_open_booking'],
+            enabled = [False, False]
+        )
         
         # Bereich der Rechnungen
         label_start_rechnungen = toga.Label('Rechnungen', style=style_label_h2_start)
@@ -326,7 +323,7 @@ class Kontolupe(toga.App):
         box_startseite_rechnungen.add(label_start_rechnungen)
         box_startseite_rechnungen.add(self.label_start_rechnungen_offen)
         box_startseite_rechnungen.add(box_startseite_rechnungen_buttons)
-        self.box_startseite.add(box_startseite_rechnungen)
+        self.box_mainpage.add(box_startseite_rechnungen)
 
         # Bereich der Beihilfe-Einreichungen
         label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_label_h2_start)
@@ -340,7 +337,7 @@ class Kontolupe(toga.App):
         box_startseite_beihilfe.add(label_start_beihilfe)
         box_startseite_beihilfe.add(self.label_start_beihilfe_offen)
         box_startseite_beihilfe.add(box_startseite_beihilfe_buttons)
-        self.box_startseite.add(box_startseite_beihilfe)
+        self.box_mainpage.add(box_startseite_beihilfe)
 
         # Bereich der PKV-Einreichungen
         label_start_pkv = toga.Label('PKV-Einreichungen', style=style_label_h2_start)
@@ -354,17 +351,7 @@ class Kontolupe(toga.App):
         box_startseite_pkv.add(label_start_pkv)
         box_startseite_pkv.add(self.label_start_pkv_offen)
         box_startseite_pkv.add(box_startseite_pkv_buttons)
-        self.box_startseite.add(box_startseite_pkv)
-
-        # Bereich für die Archivierungsfunktion
-        # label_start_archiv = toga.Label('Archivierung', style=style_label_h2)
-        # self.button_start_archiv = toga.Button('Archivieren', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
-        # self.label_start_archiv_offen = toga.Label('', style=style_label_center)
-        # box_startseite_archiv = toga.Box(style=style_box_column)
-        # box_startseite_archiv.add(label_start_archiv)
-        # box_startseite_archiv.add(self.label_start_archiv_offen)
-        # box_startseite_archiv.add(self.button_start_archiv)
-        # self.box_startseite.add(box_startseite_archiv)
+        self.box_mainpage.add(box_startseite_pkv)
 
         self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
         self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_institutions)
@@ -374,14 +361,14 @@ class Kontolupe(toga.App):
         box_startseite_daten.add(self.button_start_personen)
         box_startseite_daten.add(self.button_start_einrichtungen)
         box_startseite_daten.add(self.button_start_archiv)
-        self.box_startseite.add(box_startseite_daten)
+        self.box_mainpage.add(box_startseite_daten)
 
 
     def show_mainpage(self, widget):
         """Zurück zur Startseite."""
         
         self.update_app(widget)
-        self.main_window.content = self.scroll_container_startseite
+        self.main_window.content = self.sc_mainpage
 
 
     def create_list_bills(self):
@@ -517,8 +504,8 @@ class Kontolupe(toga.App):
         # Ermittle den Index der ausgewählten Rechnung
         if widget in self.list_bills_bottombox.buttons:
             self.edit_bill_id = table_index_selection(self.table_bills)
-        elif widget == self.startseite_button_bearbeiten:
-            self.edit_bill_id = self.daten.get_rechnung_index_by_dbid(self.tabelle_offene_buchungen.selection.db_id)
+        elif widget in self.mainpage_table_buttons.buttons:
+            self.edit_bill_id = self.daten.get_rechnung_index_by_dbid(self.table_open_bookings.selection.db_id)
         else:
             print('Fehler: Aufrufendes Widget unbekannt.')
             return
@@ -1600,10 +1587,10 @@ class Kontolupe(toga.App):
             self.show_mainpage(widget)
             
 
-    def bestaetige_bezahlung(self, widget):
+    def confirm_payment(self, widget):
         """Bestätigt die Bezahlung einer Rechnung."""
-        if self.tabelle_offene_buchungen.selection:
-            match self.tabelle_offene_buchungen.selection.typ:
+        if self.table_open_bookings.selection:
+            match self.table_open_bookings.selection.typ:
                 case 'Rechnung':
                     self.main_window.confirm_dialog(
                         'Rechnung bezahlt?', 
@@ -1626,29 +1613,29 @@ class Kontolupe(toga.App):
 
     def rechnung_bezahlen(self, widget, result):
         """Markiert eine Rechnung als bezahlt."""
-        if self.tabelle_offene_buchungen.selection and result:
-            self.daten.pay_rechnung(self.tabelle_offene_buchungen.selection.db_id)
+        if self.table_open_bookings.selection and result:
+            self.daten.pay_rechnung(self.table_open_bookings.selection.db_id)
             self.update_app(widget)
 
     
     def beihilfe_erhalten(self, widget, result):
         """Markiert eine Beihilfe als erhalten."""
-        if self.tabelle_offene_buchungen.selection and result:
-            self.daten.receive_beihilfe(self.tabelle_offene_buchungen.selection.db_id)
+        if self.table_open_bookings.selection and result:
+            self.daten.receive_beihilfe(self.table_open_bookings.selection.db_id)
             self.update_app(widget)
 
 
     def pkv_erhalten(self, widget, result):
         """Markiert eine PKV-Einreichung als erhalten."""
-        if self.tabelle_offene_buchungen.selection and result:
-            self.daten.receive_pkv(self.tabelle_offene_buchungen.selection.db_id)
+        if self.table_open_bookings.selection and result:
+            self.daten.receive_pkv(self.table_open_bookings.selection.db_id)
             self.update_app(widget)
     
 
     def edit_open_booking(self, widget):
         """Öffnet die Seite zum Bearbeiten einer offenen Buchung."""
-        if self.tabelle_offene_buchungen.selection:
-            match self.tabelle_offene_buchungen.selection.typ:
+        if self.table_open_bookings.selection:
+            match self.table_open_bookings.selection.typ:
                 case 'Rechnung':
                     self.show_form_bill_edit(widget)
                 # case 'Beihilfe':
