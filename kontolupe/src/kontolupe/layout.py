@@ -46,7 +46,7 @@ style_display                   = Pack(flex=1, padding=5, padding_top=10, text_a
 # Startseite
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color=FARBE_BLAU)
 style_start_summe               = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=20, color=FARBE_HELL, background_color=FARBE_BLAU)
-style_table_offene_buchungen    = Pack(flex=1, padding=5, height=200, color=FARBE_DUNKEL)
+style_table_offene_buchungen    = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_section_start             = Pack(direction=COLUMN, alignment=CENTER, padding=0)
 style_section_rechnungen        = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color=FARBE_BLAU)
 style_section_beihilfe          = Pack(direction=COLUMN, alignment=CENTER, padding=0, padding_top=5, padding_bottom=5, background_color=FARBE_LILA)
