@@ -23,6 +23,7 @@ style_label_center              = Pack(font_weight='normal', text_align=CENTER, 
 style_label_center_hell         = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, color=FARBE_HELL)
 style_button                    = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_input                     = Pack(flex=1, padding=5, color=FARBE_DUNKEL) 
+style_selection                 = Pack(flex=1, padding=5, padding_top=20, color=FARBE_DUNKEL)
 style_label_input               = Pack(flex=1, padding=5, text_align=LEFT, color=FARBE_DUNKEL)
 style_label_input_hell          = Pack(flex=1, padding=5, text_align=LEFT, color=FARBE_HELL)
 style_table                     = Pack(flex=1, padding=5, color=FARBE_DUNKEL)

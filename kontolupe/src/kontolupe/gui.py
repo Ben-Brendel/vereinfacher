@@ -220,7 +220,7 @@ class LabeledSelection:
         self.box = toga.Box(style=style_box_row)
         self.label = toga.Label(label_text, style=style_label_input)
         self.selection = toga.Selection(
-            style=style_input,
+            style=style_selection,
             items=data,
             accessor=accessor,
             on_change=kwargs.get('on_change', None)
