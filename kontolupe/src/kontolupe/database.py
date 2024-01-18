@@ -1,4 +1,4 @@
-"""Definition der Klassen der verschiedenen Buchungsarten."""
+"""Enthält die Klassen für die Datenbank und das Daten-Interface."""
 
 import sqlite3 as sql
 import shutil

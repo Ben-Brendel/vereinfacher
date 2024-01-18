@@ -2,7 +2,7 @@ import toga
 from kontolupe.layout import *
 from kontolupe.validator import *
 
-def table_index_selection(self, widget):
+def table_index_selection(widget):
     """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
     if type(widget) == toga.Table and widget.selection is not None:
         zeile = widget.selection
@@ -18,6 +18,8 @@ def table_index_selection(self, widget):
 
 
 class TopBox:
+    """Create a box with a label and a button at the top of a window."""
+
     def __init__(self, parent, label_text, style_box, target_back):
         self.box = toga.Box(style=style_box)
         self.button = toga.Button('Zurück', on_press=target_back, style=style_button)
@@ -37,6 +39,8 @@ class TopBox:
 
 
 class LabeledTextInput:
+    """Create a box with a label and a text input."""
+
     def __init__(self, parent, label_text, **kwargs):
         self.validator = Validator(kwargs.get('validator', None))
         self.box = toga.Box(style=style_box_row)
@@ -79,6 +83,8 @@ class LabeledTextInput:
     
 
 class LabeledDateInput(LabeledTextInput):
+    """Create a box with a label and a text input for dates."""
+
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, placeholder="TT.MM.JJJJ", validator='date', **kwargs)
 
@@ -102,6 +108,8 @@ class LabeledDateInput(LabeledTextInput):
 
 
 class LabeledFloatInput(LabeledTextInput):
+    """Create a box with a label and a text input for floats."""
+
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, validator='float', **kwargs)
 
@@ -125,6 +133,8 @@ class LabeledFloatInput(LabeledTextInput):
     
 
 class LabeledIntInput(LabeledTextInput):
+    """Create a box with a label and a text input for integers."""
+
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, validator='int', **kwargs)
 
@@ -148,6 +158,8 @@ class LabeledIntInput(LabeledTextInput):
 
 
 class LabeledPercentInput(LabeledTextInput):
+    """Create a box with a label and a text input for percentages."""
+
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, validator='percent', **kwargs)
 
@@ -171,26 +183,36 @@ class LabeledPercentInput(LabeledTextInput):
 
 
 class LabeledPostalInput(LabeledTextInput):
+    """Create a box with a label and a text input for postal codes."""
+
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, validator='postal', **kwargs)
 
 
 class LabeledPhoneInput(LabeledTextInput):
+    """Create a box with a label and a text input for phone numbers."""
+
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, validator='phone', **kwargs)
 
 
 class LabeledEmailInput(LabeledTextInput):
+    """Create a box with a label and a text input for email addresses."""
+
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, validator='email', **kwargs)
 
 
 class LabeledWebsiteInput(LabeledTextInput):
+    """Create a box with a label and a text input for website addresses."""
+
     def __init__(self, parent, label_text, **kwargs):
         super().__init__(parent, label_text, placeholder='https://...', validator='website', **kwargs)
 
 
 class LabeledMultilineTextInput:
+    """Create a box with a label and a multiline text input."""
+
     def __init__(self, parent, label_text, **kwargs):
         self.box = toga.Box(style=style_box_row)
         self.label = toga.Label(label_text, style=style_label_input)
@@ -216,6 +238,8 @@ class LabeledMultilineTextInput:
 
 
 class LabeledSelection:
+    """Create a box with a label and a selection."""
+
     def __init__(self, parent, label_text, data, accessor, **kwargs):
         self.box = toga.Box(style=style_box_row)
         self.label = toga.Label(label_text, style=style_label_input)
@@ -252,6 +276,8 @@ class LabeledSelection:
 
 
 class LabeledSwitch:
+    """Create a box with a label and a switch."""
+
     def __init__(self, parent, label_text, **kwargs):
         self.box = toga.Box(style=style_box_row)
         self.switch = toga.Switch(label_text, style=style_switch, on_change=kwargs.get('on_change', None))
@@ -278,13 +304,33 @@ class LabeledSwitch:
 
 
 class BottomBox:
-    def __init__(self, parent, labels, targets):
+    """Create a box with up to four buttons at the bottom of a window."""
+
+    def __init__(self, parent, labels, targets, ids=None, enabled=True):
+        """Create a box with up to four buttons at the bottom of a window."""
         if not len(labels) == len(targets):
             raise ValueError('Labels and targets must have the same length.')
         
+        if ids is not None and not len(labels) == len(ids):
+            raise ValueError('There must be either no IDs or as many IDs as labels and targets.')
+        
+        if ids is None:
+            # if ids is None, it will be converted to a list of strings of integers of the same length than labels and targets
+            ids = [str(i) for i in range(len(labels))]
+
+        # enabled should be a list of booleans of the same length than labels and targets
+        # if enabled is a boolean, it will be converted to a list of the same length than labels and targets
+        # if it is a list of booleans that is shorter than labels and targets, it will be extended to the same length with True
+        if isinstance(enabled, bool):
+            enabled = [enabled] * len(labels)
+        elif isinstance(enabled, list):
+            if len(enabled) < len(labels):
+                enabled.extend([True] * (len(labels) - len(enabled)))
+
         self.buttons = []
-        for label, target in zip(labels, targets):
-            self.buttons.append(toga.Button(label, on_press=target, style=style_button))
+        for label, target, button_id, status in zip(labels, targets, ids, enabled):
+            self.buttons.append(toga.Button(label, on_press=target, id=button_id, style=style_button, enabled=status))
+            
 
         if len(self.buttons) < 4:
             self.box = toga.Box(style=style_box_row)
@@ -304,16 +350,19 @@ class BottomBox:
         self.__add_to_parent(parent)
 
     def __add_to_parent(self, parent):
+        """Add the box to the parent."""
         parent.add(self.box)
 
-    def _set_on_press(self, button_id, target):
-        if button_id < 0 or button_id >= len(self.buttons):
-            raise ValueError('Button ID must be between 0 and {}'.format(len(self.buttons) - 1))
-        self.buttons[button_id].on_press = target
+    def set_enabled(self, button_id, status):
+        """Enable or disable a button by its ID."""
+        for button in self.buttons:
+            if button.id == button_id:
+                button.enabled = status
 
 
 class SubtextDivider:
     def __init__(self, parent, text):
+        """Create a divider with a subtext."""
         self.box = toga.Box(style=style_box_column)
         self.divider = toga.Divider(style=style_divider_subtext)
         self.label = toga.Label(text, style=style_label_subtext)
@@ -322,4 +371,5 @@ class SubtextDivider:
         self.__add_to_parent(parent)
 
     def __add_to_parent(self, parent):
+        """Add the box to the parent."""
         parent.add(self.box)

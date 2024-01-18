@@ -1,3 +1,5 @@
+"""Layout-Definitionen für die Kontolupe-App."""
+
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 
 FARBE_DUNKEL                    = '#222222'

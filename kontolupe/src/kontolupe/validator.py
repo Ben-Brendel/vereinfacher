@@ -1,9 +1,12 @@
+"""Modul, das die Validierungsfunktionen enthält."""
+
 from datetime import datetime
 
 class Validator:
     """Klasse, die die Validierungsfunktionen für die Eingabefelder enthält."""
 
     def __init__(self, validator=None):
+        """Initialisiert die Klasse mit dem übergebenen Validator."""
 
         # Ordne den übergebenen Validator der Instanz zu
         match validator:

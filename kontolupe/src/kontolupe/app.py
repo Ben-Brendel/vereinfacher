@@ -69,17 +69,17 @@ class Kontolupe(toga.App):
         match anzahl:
             case 0:
                 self.button_start_beihilfe_neu.enabled = False
-                self.seite_liste_beihilfepakete_button_neu.enabled = False
+                self.list_allowance_bottombox.set_enabled('new_allowance', False)
                 self.cmd_beihilfepakete_neu.enabled = False
                 self.label_start_beihilfe_offen.text = 'Keine offenen Rechnungen.'
             case 1:
                 self.button_start_beihilfe_neu.enabled = True
-                self.seite_liste_beihilfepakete_button_neu.enabled = True
+                self.list_allowance_bottombox.set_enabled('new_allowance', True)
                 self.cmd_beihilfepakete_neu.enabled = True
                 self.label_start_beihilfe_offen.text = '1 Rechnung noch nicht eingereicht.'
             case _:
                 self.button_start_beihilfe_neu.enabled = True
-                self.seite_liste_beihilfepakete_button_neu.enabled = True
+                self.list_allowance_bottombox.set_enabled('new_allowance', True)
                 self.cmd_beihilfepakete_neu.enabled = True
                 self.label_start_beihilfe_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
 
@@ -88,17 +88,17 @@ class Kontolupe(toga.App):
         match anzahl:
             case 0:
                 self.button_start_pkv_neu.enabled = False
-                self.seite_liste_pkvpakete_button_neu.enabled = False
+                self.list_insurance_bottombox.set_enabled('new_insurance', False)
                 self.cmd_pkvpakete_neu.enabled = False
                 self.label_start_pkv_offen.text = 'Keine offenen Rechnungen.'
             case 1:
                 self.button_start_pkv_neu.enabled = True
-                self.seite_liste_pkvpakete_button_neu.enabled = True
+                self.list_insurance_bottombox.set_enabled('new_insurance', True)
                 self.cmd_pkvpakete_neu.enabled = True
                 self.label_start_pkv_offen.text = '1 Rechnung noch nicht eingereicht.'
             case _:
                 self.button_start_pkv_neu.enabled = True
-                self.seite_liste_pkvpakete_button_neu.enabled = True
+                self.list_insurance_bottombox.set_enabled('new_insurance', True)
                 self.cmd_pkvpakete_neu.enabled = True
                 self.label_start_pkv_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
 
@@ -130,22 +130,20 @@ class Kontolupe(toga.App):
                 self.startseite_button_erledigt.enabled = status
                 if self.tabelle_offene_buchungen.selection and self.tabelle_offene_buchungen.selection.typ == 'Rechnung':
                     self.startseite_button_bearbeiten.enabled = True
-            case self.tabelle_rechnungen:
-                self.liste_rechnungen_button_loeschen.enabled = status
-                self.liste_rechnungen_button_bearbeiten.enabled = status
-            case self.tabelle_beihilfepakete:
-                self.seite_liste_beihilfepakete_button_loeschen.enabled = status
-                #self.seite_liste_beihilfepakete_button_bearbeiten.enabled = status
-            case self.tabelle_pkvpakete:
-                self.seite_liste_pkvpakete_button_loeschen.enabled = status
-                #self.seite_liste_pkvpakete_button_bearbeiten.enabled = status
+            case self.table_bills:
+                self.list_bills_bottombox.set_enabled('delete_bill', status)
+                self.list_bills_bottombox.set_enabled('edit_bill', status)
+            case self.table_allowance:
+                self.list_allowance_bottombox.set_enabled('reset_allowance', status)
+            case self.table_insurance:
+                self.list_insurance_bottombox.set_enabled('reset_insurance', status)
             case self.tabelle_einrichtungen:
-                self.seite_liste_einrichtungen_button_loeschen.enabled = status
-                self.seite_liste_einrichtungen_button_bearbeiten.enabled = status
-                self.seite_liste_einrichtungen_button_info.enabled = status
+                self.list_institutions_bottombox.set_enabled('delete_institution', status)
+                self.list_institutions_bottombox.set_enabled('edit_institution', status)
+                self.list_institutions_bottombox.set_enabled('info_institution', status)
             case self.tabelle_personen:
-                self.seite_liste_personen_button_loeschen.enabled = status
-                self.seite_liste_personen_button_bearbeiten.enabled = status
+                self.list_persons_bottombox.set_enabled('delete_person', status)
+                self.list_persons_bottombox.set_enabled('edit_person', status)
 
 
     def show_info_dialog_booking(self, widget, row):
@@ -175,13 +173,13 @@ class Kontolupe(toga.App):
             case self.form_pkv_bills:
                 typ = 'Rechnung'
                 element = self.daten.get_rechnung_by_dbid(row.db_id)
-            case self.tabelle_rechnungen:
+            case self.table_bills:
                 typ = 'Rechnung'
                 element = self.daten.get_rechnung_by_index(table_index_selection(widget))
-            case self.tabelle_beihilfepakete:
+            case self.table_allowance:
                 typ = 'Beihilfe'
                 element = self.daten.get_beihilfepaket_by_index(table_index_selection(widget))
-            case self.tabelle_pkvpakete:
+            case self.table_insurance:
                 typ = 'PKV'
                 element = self.daten.get_pkvpaket_by_index(table_index_selection(widget))
             case self.tabelle_einrichtungen:
@@ -278,7 +276,6 @@ class Kontolupe(toga.App):
                 self.back_to = 'startseite'
 
         self.main_window.content = self.box_webview
-
 
 
     def create_mainpage(self):
@@ -389,14 +386,20 @@ class Kontolupe(toga.App):
 
     def create_list_bills(self):
         """Erzeugt die Seite, auf der die Rechnungen angezeigt werden."""
-        self.box_seite_liste_rechnungen = toga.Box(style=style_box_column)
-        box_seite_liste_rechnungen_top = toga.Box(style=style_box_column_rechnungen)
-        box_seite_liste_rechnungen_top.add(toga.Button('Zurück', style=style_button, on_press=self.show_mainpage))
-        box_seite_liste_rechnungen_top.add(toga.Label('Rechnungen', style=style_label_h1_hell))
-        self.box_seite_liste_rechnungen.add(box_seite_liste_rechnungen_top)
+
+        # Container für die Seite mit der Liste der Rechnungen
+        self.box_list_bills = toga.Box(style=style_box_column)
+
+        # Überschrift und Button zurück
+        self.list_bills_topbox = TopBox(
+            parent=self.box_list_bills,
+            label_text='Rechnungen', 
+            style_box=style_box_column_rechnungen,
+            target_back=self.show_mainpage
+        )
 
         # Tabelle mit den Rechnungen
-        self.tabelle_rechnungen = toga.Table(
+        self.table_bills = toga.Table(
             headings    = ['Info', 'Betrag', 'Bezahlt'],
             accessors   = ['info', 'betrag_euro', 'bezahlt_text'],
             data        = self.daten.list_rechnungen,
@@ -404,23 +407,22 @@ class Kontolupe(toga.App):
             on_select   = self.update_app,
             on_activate = self.show_info_dialog_booking
         )
-        self.box_seite_liste_rechnungen.add(self.tabelle_rechnungen)
+        self.box_list_bills.add(self.table_bills)
 
-        # Buttons für die Rechnungen
-        box_seite_liste_rechnungen_buttons = toga.Box(style=style_box_row)
-        self.liste_rechnungen_button_loeschen = toga.Button('Löschen', on_press=self.confirm_delete_bill, style=style_button, enabled=False)
-        self.liste_rechnungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_bill_edit, style=style_button, enabled=False)
-        self.liste_rechnungen_button_neu = toga.Button('Neu', on_press=self.show_form_bill_new, style=style_button)
-        box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_loeschen)
-        box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_bearbeiten)
-        box_seite_liste_rechnungen_buttons.add(self.liste_rechnungen_button_neu)
-        self.box_seite_liste_rechnungen.add(box_seite_liste_rechnungen_buttons)    
+        # BottomBox mit den Buttons
+        self.list_bills_bottombox = BottomBox(
+            parent  = self.box_list_bills,
+            labels  = ['Löschen', 'Bearbeiten', 'Neu'],
+            targets = [self.confirm_delete_bill, self.show_form_bill_edit, self.show_form_bill_new],
+            ids     = ['delete_bill', 'edit_bill', 'new_bill'],
+            enabled = [False, False, True]
+        )  
 
 
     def show_list_bills(self, widget):
         """Zeigt die Seite mit der Liste der Rechnungen."""
         self.update_app(widget)
-        self.main_window.content = self.box_seite_liste_rechnungen
+        self.main_window.content = self.box_list_bills
 
 
     def update_form_bill(self, widget):
@@ -513,8 +515,8 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Bearbeiten einer Rechnung."""
 
         # Ermittle den Index der ausgewählten Rechnung
-        if widget == self.liste_rechnungen_button_bearbeiten:
-            self.edit_bill_id = table_index_selection(self.tabelle_rechnungen)
+        if widget in self.list_bills_bottombox.buttons:
+            self.edit_bill_id = table_index_selection(self.table_bills)
         elif widget == self.startseite_button_bearbeiten:
             self.edit_bill_id = self.daten.get_rechnung_index_by_dbid(self.tabelle_offene_buchungen.selection.db_id)
         else:
@@ -684,7 +686,7 @@ class Kontolupe(toga.App):
 
     def confirm_delete_bill(self, widget):
         """Bestätigt das Löschen einer Rechnung."""
-        if self.tabelle_rechnungen.selection:
+        if self.table_bills.selection:
             self.main_window.confirm_dialog(
                 'Rechnung löschen', 
                 'Soll die ausgewählte Rechnung wirklich gelöscht werden?',
@@ -694,10 +696,10 @@ class Kontolupe(toga.App):
 
     async def delete_bill(self, widget, result):
         """Löscht eine Rechnung."""
-        if self.tabelle_rechnungen.selection and result:
+        if self.table_bills.selection and result:
             
             # Index der ausgewählten Rechnung ermitteln
-            self.edit_bill_id = table_index_selection(self.tabelle_rechnungen)
+            self.edit_bill_id = table_index_selection(self.table_bills)
 
             # Setze Betrag der Rechnung auf 0, damit Einreichungen aktualisiert werden können
             self.daten.rechnungen[self.edit_bill_id].betrag = 0
@@ -726,11 +728,17 @@ class Kontolupe(toga.App):
 
     def create_list_institutions(self):
         """Erzeugt die Seite, auf der die Einrichtungen angezeigt werden."""
-        self.box_seite_liste_einrichtungen = toga.Box(style=style_box_column)
-        box_seite_liste_einrichtungen_top = toga.Box(style=style_box_column_dunkel)
-        box_seite_liste_einrichtungen_top.add(toga.Button('Zurück', on_press=self.show_mainpage, style=style_button))
-        box_seite_liste_einrichtungen_top.add(toga.Label('Einrichtungen', style=style_label_h1_hell))
-        self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_top)
+
+        # Container
+        self.box_list_institutions = toga.Box(style=style_box_column)
+
+        # Überschrift und Button zurück
+        self.list_institutions_topbox = TopBox(
+            parent=self.box_list_institutions,
+            label_text='Einrichtungen', 
+            style_box=style_box_column_dunkel,
+            target_back=self.show_mainpage
+        )
 
         # Tabelle mit den Einrichtungen
 
@@ -742,27 +750,22 @@ class Kontolupe(toga.App):
             on_select   = self.update_app,
             on_activate = self.show_info_institution
         )
-        self.box_seite_liste_einrichtungen.add(self.tabelle_einrichtungen)
+        self.box_list_institutions.add(self.tabelle_einrichtungen)
 
-        # Buttons für die Einrichtungen
-        box_seite_liste_einrichtungen_buttons1 = toga.Box(style=style_box_row)
-        box_seite_liste_einrichtungen_buttons2 = toga.Box(style=style_box_row)
-        self.seite_liste_einrichtungen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_institution_edit, style=style_button, enabled=False)
-        self.seite_liste_einrichtungen_button_neu = toga.Button('Neu', on_press=self.show_form_institution_new, style=style_button)
-        self.seite_liste_einrichtungen_button_loeschen = toga.Button('Löschen', on_press=self.confirm_delete_institution, style=style_button, enabled=False)
-        self.seite_liste_einrichtungen_button_info = toga.Button('Info', on_press=self.show_info_institution, style=style_button, enabled=False)
-        box_seite_liste_einrichtungen_buttons1.add(self.seite_liste_einrichtungen_button_bearbeiten)
-        box_seite_liste_einrichtungen_buttons1.add(self.seite_liste_einrichtungen_button_neu)
-        box_seite_liste_einrichtungen_buttons2.add(self.seite_liste_einrichtungen_button_loeschen)
-        box_seite_liste_einrichtungen_buttons2.add(self.seite_liste_einrichtungen_button_info)
-        self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_buttons1)   
-        self.box_seite_liste_einrichtungen.add(box_seite_liste_einrichtungen_buttons2)
+        # BottomBox mit den Buttons
+        self.list_institutions_bottombox = BottomBox(
+            parent  = self.box_list_institutions,
+            labels  = ['Bearbeiten', 'Neu', 'Löschen', 'Info'],
+            targets = [self.show_form_institution_edit, self.show_form_institution_new, self.confirm_delete_institution, self.show_info_institution],
+            ids     = ['edit_institution', 'new_institution', 'delete_institution', 'info_institution'],
+            enabled = [False, True, False, False]
+        )
 
 
     def show_list_institutions(self, widget):
         """Zeigt die Seite mit der Liste der Einrichtungen."""
         self.update_app(widget)
-        self.main_window.content = self.box_seite_liste_einrichtungen
+        self.main_window.content = self.box_list_institutions
 
 
     def create_form_institution(self):
@@ -1064,11 +1067,17 @@ class Kontolupe(toga.App):
 
     def create_list_persons(self):
         """Erzeugt die Seite, auf der die Personen angezeigt werden."""
-        self.box_seite_liste_personen = toga.Box(style=style_box_column)
-        box_seite_liste_personen_top = toga.Box(style=style_box_column_dunkel)
-        box_seite_liste_personen_top.add(toga.Button('Zurück', on_press=self.show_mainpage, style=style_button))
-        box_seite_liste_personen_top.add(toga.Label('Personen', style=style_label_h1_hell))
-        self.box_seite_liste_personen.add(box_seite_liste_personen_top)
+
+        # Container
+        self.box_list_persons = toga.Box(style=style_box_column)
+
+        # Überschrift und Button zurück
+        self.list_persons_topbox = TopBox(
+            parent=self.box_list_persons,
+            label_text='Personen', 
+            style_box=style_box_column_dunkel,
+            target_back=self.show_mainpage
+        )
 
         # Tabelle mit den Personen
         self.tabelle_personen = toga.Table(
@@ -1078,23 +1087,22 @@ class Kontolupe(toga.App):
             style       = style_table,
             on_select   = self.update_app
         )
-        self.box_seite_liste_personen.add(self.tabelle_personen)
+        self.box_list_persons.add(self.tabelle_personen)
 
-        # Buttons für die Personen
-        box_seite_liste_personen_buttons = toga.Box(style=style_box_row)
-        self.seite_liste_personen_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_persons_edit, style=style_button, enabled=False)
-        self.seite_liste_personen_button_neu = toga.Button('Neu', on_press=self.show_form_persons_new, style=style_button)
-        self.seite_liste_personen_button_loeschen = toga.Button('Löschen', on_press=self.confirm_delete_person, style=style_button, enabled=False)
-        box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_loeschen)
-        box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_bearbeiten)
-        box_seite_liste_personen_buttons.add(self.seite_liste_personen_button_neu)
-        self.box_seite_liste_personen.add(box_seite_liste_personen_buttons)
+        # BottomBox mit den Buttons
+        self.list_persons_bottombox = BottomBox(
+            parent  = self.box_list_persons,
+            labels  = ['Bearbeiten', 'Neu', 'Löschen'],
+            targets = [self.show_form_persons_edit, self.show_form_persons_new, self.confirm_delete_person],
+            ids     = ['edit_person', 'new_person', 'delete_person'],
+            enabled = [False, True, False]
+        )
 
 
     def show_list_persons(self, widget):
         """Zeigt die Seite mit der Liste der Personen."""
         self.update_app(widget)
-        self.main_window.content = self.box_seite_liste_personen
+        self.main_window.content = self.box_list_persons
 
 
     def create_form_person(self):
@@ -1235,14 +1243,20 @@ class Kontolupe(toga.App):
 
     def create_list_beihilfe(self):
         """Erzeugt die Seite, auf der die Beihilfe-Einreichungen angezeigt werden."""
-        self.box_seite_liste_beihilfepakete = toga.Box(style=style_box_column)
-        box_seite_liste_beihilfepakete_top = toga.Box(style=style_box_column_beihilfe)
-        box_seite_liste_beihilfepakete_top.add(toga.Button('Zurück', on_press=self.show_mainpage, style=style_button))
-        box_seite_liste_beihilfepakete_top.add(toga.Label('Beihilfe-Einreichungen', style=style_label_h1_hell))
-        self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_top)
+        
+        # Container
+        self.box_list_allowance = toga.Box(style=style_box_column)
+
+        # Überschrift und Button zurück
+        self.list_allowance_topbox = TopBox(
+            parent=self.box_list_allowance,
+            label_text='Beihilfe-Einreichungen',
+            style_box=style_box_column_beihilfe,
+            target_back=self.show_mainpage
+        )
 
         # Tabelle mit den Beihilfepaketen
-        self.tabelle_beihilfepakete = toga.Table(
+        self.table_allowance = toga.Table(
             headings    = ['Datum', 'Betrag', 'Erstattet'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.daten.list_beihilfepakete,
@@ -1250,30 +1264,34 @@ class Kontolupe(toga.App):
             on_select   = self.update_app,
             on_activate = self.show_info_dialog_booking
         )
-        self.box_seite_liste_beihilfepakete.add(self.tabelle_beihilfepakete)
+        self.box_list_allowance.add(self.table_allowance)
 
-        # Buttons für die Beihilfepakete
-        box_seite_liste_beihilfepakete_buttons = toga.Box(style=style_box_row)
-        self.seite_liste_beihilfepakete_button_loeschen = toga.Button('Zurücksetzen', on_press=self.confirm_delete_beihilfe, style=style_button, enabled=False)
-        box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_loeschen)
-        #self.seite_liste_beihilfepakete_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_beihilfe_edit, style=style_button, enabled=False)
-        #box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_bearbeiten)
-        self.seite_liste_beihilfepakete_button_neu = toga.Button('Neu', on_press=self.show_form_beihilfe_new, style=style_button)
-        box_seite_liste_beihilfepakete_buttons.add(self.seite_liste_beihilfepakete_button_neu)
-        self.box_seite_liste_beihilfepakete.add(box_seite_liste_beihilfepakete_buttons)
+        # Buttons
+        self.list_allowance_bottombox = BottomBox(
+            parent  = self.box_list_allowance,
+            labels  = ['Zurücksetzen', 'Neu'],
+            targets = [self.confirm_delete_beihilfe, self.show_form_beihilfe_new],
+            ids     = ['reset_allowance', 'new_allowance'],
+            enabled = [False, True]
+        )
 
 
     def create_list_pkv(self):
         """Erzeugt die Seite, auf der die PKV-Einreichungen angezeigt werden."""
-        self.box_seite_liste_pkvpakete = toga.Box(style=style_box_column)
-        box_seite_liste_pkvpakete_top = toga.Box(style=style_box_column_pkv)
-        box_seite_liste_pkvpakete_top.add(toga.Button('Zurück', on_press=self.show_mainpage, style=style_button))
-        box_seite_liste_pkvpakete_top.add(toga.Label('PKV-Einreichungen', style=style_label_h1_hell))
-        self.box_seite_liste_pkvpakete.add(box_seite_liste_pkvpakete_top)
+
+        # Container
+        self.box_list_insurance = toga.Box(style=style_box_column)
+
+        # Überschrift und Button zurück
+        self.list_insurance_topbox = TopBox(
+            parent=self.box_list_insurance,
+            label_text='PKV-Einreichungen',
+            style_box=style_box_column_pkv,
+            target_back=self.show_mainpage
+        )
 
         # Tabelle mit den PKV-Einreichungen
-        self.tabelle_pkvpakete_container = toga.ScrollContainer(style=style_scroll_container)
-        self.tabelle_pkvpakete = toga.Table(
+        self.table_insurance = toga.Table(
             headings    = ['Datum', 'Betrag', 'Erstattet'], 
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.daten.list_pkvpakete,
@@ -1281,32 +1299,30 @@ class Kontolupe(toga.App):
             on_select   = self.update_app,
             on_activate = self.show_info_dialog_booking
         )
-        self.tabelle_pkvpakete_container.content = self.tabelle_pkvpakete
-        self.box_seite_liste_pkvpakete.add(self.tabelle_pkvpakete_container)
+        self.box_list_insurance.add(self.table_insurance)
 
-        # Buttons für die PKV-Einreichungen
-        box_seite_liste_pkvpakete_buttons = toga.Box(style=style_box_row)
-        self.seite_liste_pkvpakete_button_loeschen = toga.Button('Zurücksetzen', on_press=self.confirm_delete_pkv, style=style_button, enabled=False)
-        box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_loeschen)
-        #self.seite_liste_pkvpakete_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_pkv_edit, style=style_button, enabled=False)
-        #box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_bearbeiten)
-        self.seite_liste_pkvpakete_button_neu = toga.Button('Neu', on_press=self.show_form_pkv_new, style=style_button)
-        box_seite_liste_pkvpakete_buttons.add(self.seite_liste_pkvpakete_button_neu)
-        self.box_seite_liste_pkvpakete.add(box_seite_liste_pkvpakete_buttons)
+        # Buttons
+        self.list_insurance_bottombox = BottomBox(
+            parent  = self.box_list_insurance,
+            labels  = ['Zurücksetzen', 'Neu'],
+            targets = [self.confirm_delete_pkv, self.show_form_pkv_new],
+            ids     = ['reset_insurance', 'new_insurance'],
+            enabled = [False, True]
+        )
 
 
     def show_list_beihilfe(self, widget):
         """Zeigt die Seite mit der Liste der Beihilfepakete."""
         # Zum Setzen des Button Status
         self.update_app(widget)
-        self.main_window.content = self.box_seite_liste_beihilfepakete
+        self.main_window.content = self.box_list_allowance
 
     
     def show_list_pkv(self, widget):
         """Zeigt die Seite mit der Liste der PKV-Einreichungen."""
         # Zum Setzen des Button Status
         self.update_app(widget)
-        self.main_window.content = self.box_seite_liste_pkvpakete
+        self.main_window.content = self.box_list_insurance
 
     
     def create_form_beihilfe(self):
@@ -1532,7 +1548,7 @@ class Kontolupe(toga.App):
 
     def confirm_delete_beihilfe(self, widget):
         """Bestätigt das Löschen einer Beihilfe-Einreichung."""
-        if self.tabelle_beihilfepakete.selection:
+        if self.table_allowance.selection:
             self.main_window.confirm_dialog(
                 'Beihilfe-Einreichung zurücksetzen', 
                 'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.',
@@ -1542,7 +1558,7 @@ class Kontolupe(toga.App):
 
     def confirm_delete_pkv(self, widget):
         """Bestätigt das Löschen einer PKV-Einreichung."""
-        if self.tabelle_pkvpakete.selection:
+        if self.table_insurance.selection:
             self.main_window.confirm_dialog(
                 'PKV-Einreichung zurücksetzen', 
                 'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.',
@@ -1552,8 +1568,8 @@ class Kontolupe(toga.App):
 
     def delete_beihilfe(self, widget, result):
         """Löscht eine Beihilfe-Einreichung."""
-        if self.tabelle_beihilfepakete.selection and result:
-            self.daten.delete_beihilfepaket(table_index_selection(self.tabelle_beihilfepakete))
+        if self.table_allowance.selection and result:
+            self.daten.delete_beihilfepaket(table_index_selection(self.table_allowance))
             
             # Anzeigen aktualisieren
             self.update_app(widget)
@@ -1561,8 +1577,8 @@ class Kontolupe(toga.App):
 
     def delete_pkv(self, widget, result):
         """Löscht eine PKV-Einreichung."""
-        if self.tabelle_pkvpakete.selection and result:
-            self.daten.delete_pkvpaket(table_index_selection(self.tabelle_pkvpakete))
+        if self.table_insurance.selection and result:
+            self.daten.delete_pkvpaket(table_index_selection(self.table_insurance))
             
             # Anzeigen aktualisieren
             self.update_app(widget)
