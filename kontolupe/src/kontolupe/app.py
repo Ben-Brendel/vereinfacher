@@ -409,8 +409,8 @@ class Kontolupe(toga.App):
         )
         self.box_list_bills.add(self.table_bills)
 
-        # BottomBox mit den Buttons
-        self.list_bills_bottombox = BottomBox(
+        # ButtonBox mit den Buttons
+        self.list_bills_bottombox = ButtonBox(
             parent  = self.box_list_bills,
             labels  = ['Löschen', 'Bearbeiten', 'Neu'],
             targets = [self.confirm_delete_bill, self.show_form_bill_edit, self.show_form_bill_new],
@@ -476,7 +476,7 @@ class Kontolupe(toga.App):
         self.form_bill_notiz = LabeledMultilineTextInput(self.box_form_bill, 'Notiz:')
 
         # Bereich der Buttons
-        self.form_bill_bottombox = BottomBox(
+        self.form_bill_bottombox = ButtonBox(
             parent=self.box_form_bill,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_bills, self.check_save_bill],
@@ -752,8 +752,8 @@ class Kontolupe(toga.App):
         )
         self.box_list_institutions.add(self.tabelle_einrichtungen)
 
-        # BottomBox mit den Buttons
-        self.list_institutions_bottombox = BottomBox(
+        # ButtonBox mit den Buttons
+        self.list_institutions_bottombox = ButtonBox(
             parent  = self.box_list_institutions,
             labels  = ['Bearbeiten', 'Neu', 'Löschen', 'Info'],
             targets = [self.show_form_institution_edit, self.show_form_institution_new, self.confirm_delete_institution, self.show_info_institution],
@@ -798,8 +798,8 @@ class Kontolupe(toga.App):
         #self.box_form_institution.add(toga.Divider(style=style_divider))
         self.form_institution_notiz = LabeledMultilineTextInput(self.box_form_institution, 'Notiz:')
 
-        # BottomBox
-        self.form_institution_bottombox = BottomBox(
+        # ButtonBox
+        self.form_institution_bottombox = ButtonBox(
             parent=self.box_form_institution,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_institutions, self.check_save_institution]
@@ -1089,8 +1089,8 @@ class Kontolupe(toga.App):
         )
         self.box_list_persons.add(self.tabelle_personen)
 
-        # BottomBox mit den Buttons
-        self.list_persons_bottombox = BottomBox(
+        # ButtonBox mit den Buttons
+        self.list_persons_bottombox = ButtonBox(
             parent  = self.box_list_persons,
             labels  = ['Bearbeiten', 'Neu', 'Löschen'],
             targets = [self.show_form_persons_edit, self.show_form_persons_new, self.confirm_delete_person],
@@ -1127,8 +1127,8 @@ class Kontolupe(toga.App):
 
         # divider_optional = SubtextDivider(self.box_form_person, 'Optionale Felder')
 
-        # BottomBox
-        self.form_person_bottombox = BottomBox(
+        # ButtonBox
+        self.form_person_bottombox = ButtonBox(
             parent=self.box_form_person,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_persons, self.check_save_person]
@@ -1267,7 +1267,7 @@ class Kontolupe(toga.App):
         self.box_list_allowance.add(self.table_allowance)
 
         # Buttons
-        self.list_allowance_bottombox = BottomBox(
+        self.list_allowance_bottombox = ButtonBox(
             parent  = self.box_list_allowance,
             labels  = ['Zurücksetzen', 'Neu'],
             targets = [self.confirm_delete_beihilfe, self.show_form_beihilfe_new],
@@ -1302,7 +1302,7 @@ class Kontolupe(toga.App):
         self.box_list_insurance.add(self.table_insurance)
 
         # Buttons
-        self.list_insurance_bottombox = BottomBox(
+        self.list_insurance_bottombox = ButtonBox(
             parent  = self.box_list_insurance,
             labels  = ['Zurücksetzen', 'Neu'],
             targets = [self.confirm_delete_pkv, self.show_form_pkv_new],
@@ -1362,8 +1362,8 @@ class Kontolupe(toga.App):
         self.form_beihilfe_betrag = LabeledFloatInput(self.box_form_beihilfe, 'Betrag in €:', readonly=True)
         self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
 
-        # BottomBox
-        self.form_beihilfe_bottombox = BottomBox(
+        # ButtonBox
+        self.form_beihilfe_bottombox = ButtonBox(
             parent=self.box_form_beihilfe,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_beihilfe, self.check_save_beihilfe]
@@ -1407,8 +1407,8 @@ class Kontolupe(toga.App):
         self.form_pkv_betrag = LabeledFloatInput(self.box_form_pkv, 'Betrag in €:', readonly=True)
         self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')
 
-        # BottomBox
-        self.form_pkv_bottombox = BottomBox(
+        # ButtonBox
+        self.form_pkv_bottombox = ButtonBox(
             parent=self.box_form_pkv,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_pkv, self.check_save_pkv]

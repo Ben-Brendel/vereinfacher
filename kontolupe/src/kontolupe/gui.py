@@ -303,8 +303,8 @@ class LabeledSwitch:
         self.switch.on_change = on_change
 
 
-class BottomBox:
-    """Create a box with up to four buttons at the bottom of a window."""
+class ButtonBox:
+    """Create a box with up to four buttons."""
 
     def __init__(self, parent, labels, targets, ids=None, enabled=True):
         """Create a box with up to four buttons at the bottom of a window."""
