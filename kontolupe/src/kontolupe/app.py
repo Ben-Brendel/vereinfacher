@@ -7,13 +7,12 @@ Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen
 """
 
 import toga
-from toga.sources import ListSource
 from datetime import datetime
 
 from kontolupe.database import *
 from kontolupe.validator import *
 from kontolupe.layout import *
-from kontolupe.form import *
+from kontolupe.gui import *
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -279,6 +278,7 @@ class Kontolupe(toga.App):
                 self.back_to = 'startseite'
 
         self.main_window.content = self.box_webview
+
 
 
     def create_mainpage(self):
@@ -1784,6 +1784,14 @@ class Kontolupe(toga.App):
         self.commands.add(self.cmd_einrichtungen_neu)
         self.commands.add(self.cmd_archivieren)
         self.commands.add(self.cmd_datenschutz)
+
+
+    def update_timer(self):
+        """Periodische Aktualisierung bestimmter Anzeigen - Workaround."""
+        if self.form_beihilfe_bills and not self.form_beihilfe_bills.selection:
+            self.form_beihilfe_betrag.set_value('')
+        if self.form_pkv_bills and not self.form_pkv_bills.selection:
+            self.form_pkv_betrag.set_value('')
 
 
     def startup(self):

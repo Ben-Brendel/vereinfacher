@@ -16,6 +16,7 @@ def table_index_selection(self, widget):
         print("+++ Kontolupe: Keine Zeile ausgewählt.")
         return None
 
+
 class TopBox:
     def __init__(self, parent, label_text, style_box, target_back):
         self.box = toga.Box(style=style_box)
