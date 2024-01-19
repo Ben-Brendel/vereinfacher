@@ -17,6 +17,46 @@ def table_index_selection(widget):
         return None
 
 
+class Section:
+    """Create a section on the mainpage."""
+
+    def __init__(self, parent, title, type=None, on_press_show=None, on_press_new=None, new_enabled=True):
+
+        match type:
+            case 'rechnungen':
+                style = style_section_rechnungen
+            case 'beihilfe':
+                style = style_section_beihilfe
+            case 'pkv':
+                style = style_section_pkv
+            case 'daten':
+                style = style_section_daten
+            case _:
+                style = style_section_daten
+
+        self.section_box = toga.Box(style=style)
+        self.button_box = toga.Box(style=style_box_buttons_start)
+        self.title = toga.Label(title, style=style_label_h2_start)
+        self.info = toga.Label('', style=style_label_section)
+        self.button_show = toga.Button('Anzeigen', on_press=on_press_show, style=style_button)
+        self.button_new = toga.Button('Neu', on_press=on_press_new, style=style_button, enabled=new_enabled)
+        self.button_box.add(self.button_show)
+        self.button_box.add(self.button_new)
+        self.section_box.add(self.title)
+        self.section_box.add(self.info)
+        self.section_box.add(self.button_box)
+        self.__add_to_parent(parent)
+
+    def __add_to_parent(self, parent):
+        parent.add(self.section_box)
+
+    def set_info(self, info_text):
+        self.info.text = info_text
+
+    def set_enabled_new(self, status):
+        self.button_new.enabled = status
+
+
 class TopBox:
     """Create a box with a label and a button at the top of a window."""
 

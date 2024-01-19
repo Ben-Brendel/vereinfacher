@@ -50,53 +50,53 @@ class Kontolupe(toga.App):
         # Anzeige des offenen Betrags aktualisieren
         self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')
 
-        # Anzeige und Button der offenen Rechnungen aktualisieren
+        # Anzeige und Buttons der offenen Rechnungen aktualisieren
         anzahl = self.daten.get_number_rechnungen_not_paid()
         match anzahl:
             case 0:
-                self.label_start_rechnungen_offen.text = 'Keine offenen Rechnungen.'
+                self.mainpage_section_bills.set_info('Keine offenen Rechnungen.')
             case 1:
-                self.label_start_rechnungen_offen.text = '1 Rechnung noch nicht bezahlt.'
+                self.mainpage_section_bills.set_info('1 Rechnung noch nicht bezahlt.')
             case _:
-                self.label_start_rechnungen_offen.text = '{} Rechnungen noch nicht bezahlt.'.format(anzahl)
+                self.mainpage_section_bills.set_info('{} Rechnungen noch nicht bezahlt.'.format(anzahl))
 
-        # Anzeige und Button der offenen Beihilfe-Einreichungen aktualisieren
+        # Anzeige und Buttons der offenen Beihilfe-Einreichungen aktualisieren
         anzahl = self.daten.get_number_rechnungen_not_submitted_beihilfe()
         match anzahl:
             case 0:
-                self.button_start_beihilfe_neu.enabled = False
+                self.mainpage_section_allowance.set_enabled_new(False)
                 self.list_allowance_buttons.set_enabled('new_allowance', False)
                 self.cmd_beihilfepakete_neu.enabled = False
-                self.label_start_beihilfe_offen.text = 'Keine offenen Rechnungen.'
+                self.mainpage_section_allowance.set_info('Keine offenen Rechnungen.')
             case 1:
-                self.button_start_beihilfe_neu.enabled = True
+                self.mainpage_section_allowance.set_enabled_new(True)
                 self.list_allowance_buttons.set_enabled('new_allowance', True)
                 self.cmd_beihilfepakete_neu.enabled = True
-                self.label_start_beihilfe_offen.text = '1 Rechnung noch nicht eingereicht.'
+                self.mainpage_section_allowance.set_info('1 Rechnung noch nicht eingereicht.')
             case _:
-                self.button_start_beihilfe_neu.enabled = True
+                self.mainpage_section_allowance.set_enabled_new(True)
                 self.list_allowance_buttons.set_enabled('new_allowance', True)
                 self.cmd_beihilfepakete_neu.enabled = True
-                self.label_start_beihilfe_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
+                self.mainpage_section_allowance.set_info('{} Rechnungen noch nicht eingereicht.'.format(anzahl))
 
-        # Anzeige und Button der offenen PKV-Einreichungen aktualisieren
+        # Anzeige und Buttons der offenen PKV-Einreichungen aktualisieren
         anzahl = self.daten.get_number_rechnungen_not_submitted_pkv()
         match anzahl:
             case 0:
-                self.button_start_pkv_neu.enabled = False
+                self.mainpage_section_insurance.set_enabled_new(False)
                 self.list_insurance_buttons.set_enabled('new_insurance', False)
                 self.cmd_pkvpakete_neu.enabled = False
-                self.label_start_pkv_offen.text = 'Keine offenen Rechnungen.'
+                self.mainpage_section_insurance.set_info('Keine offenen Rechnungen.')
             case 1:
-                self.button_start_pkv_neu.enabled = True
+                self.mainpage_section_insurance.set_enabled_new(True)
                 self.list_insurance_buttons.set_enabled('new_insurance', True)
                 self.cmd_pkvpakete_neu.enabled = True
-                self.label_start_pkv_offen.text = '1 Rechnung noch nicht eingereicht.'
+                self.mainpage_section_insurance.set_info('1 Rechnung noch nicht eingereicht.')
             case _:
-                self.button_start_pkv_neu.enabled = True
+                self.mainpage_section_insurance.set_enabled_new(True)
                 self.list_insurance_buttons.set_enabled('new_insurance', True)
                 self.cmd_pkvpakete_neu.enabled = True
-                self.label_start_pkv_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
+                self.mainpage_section_insurance.set_info('{} Rechnungen noch nicht eingereicht.'.format(anzahl))
 
         # Anzeige und Button der archivierbaren Items aktualisieren
         anzahl = self.daten.get_number_archivables()
@@ -310,49 +310,37 @@ class Kontolupe(toga.App):
             ids     = ['pay_receive', 'edit_open_booking'],
             enabled = [False, False]
         )
+
+        # Section: Rechnungen
+        self.mainpage_section_bills = Section(
+            parent          = self.box_mainpage,
+            title           = 'Rechnungen',
+            type            = 'rechnungen',
+            on_press_show   = self.show_list_bills,
+            on_press_new    = self.show_form_bill_new
+        )
         
-        # Bereich der Rechnungen
-        label_start_rechnungen = toga.Label('Rechnungen', style=style_label_h2_start)
-        self.label_start_rechnungen_offen = toga.Label('', style=style_label_section)
-        button_start_rechnungen_anzeigen = toga.Button('Anzeigen', on_press=self.show_list_bills, style=style_button)
-        button_start_rechnungen_neu = toga.Button('Neu', on_press=self.show_form_bill_new, style=style_button)
-        box_startseite_rechnungen_buttons = toga.Box(style=style_box_buttons_start)
-        box_startseite_rechnungen_buttons.add(button_start_rechnungen_anzeigen)
-        box_startseite_rechnungen_buttons.add(button_start_rechnungen_neu)
-        box_startseite_rechnungen = toga.Box(style=style_section_rechnungen)
-        box_startseite_rechnungen.add(label_start_rechnungen)
-        box_startseite_rechnungen.add(self.label_start_rechnungen_offen)
-        box_startseite_rechnungen.add(box_startseite_rechnungen_buttons)
-        self.box_mainpage.add(box_startseite_rechnungen)
+        # Section: Beihilfe-Einreichungen
+        self.mainpage_section_allowance = Section(
+            parent          = self.box_mainpage,
+            title           = 'Beihilfe-Einreichungen',
+            type            = 'beihilfe',
+            on_press_show   = self.show_list_beihilfe,
+            on_press_new    = self.show_form_beihilfe_new,
+            new_enabled     = False
+        )
 
-        # Bereich der Beihilfe-Einreichungen
-        label_start_beihilfe = toga.Label('Beihilfe-Einreichungen', style=style_label_h2_start)
-        self.label_start_beihilfe_offen = toga.Label('', style=style_label_section)
-        button_start_beihilfe_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.show_list_beihilfe)
-        self.button_start_beihilfe_neu = toga.Button('Neu', style=style_button, on_press=self.show_form_beihilfe_new, enabled=False)
-        box_startseite_beihilfe_buttons = toga.Box(style=style_box_buttons_start)
-        box_startseite_beihilfe_buttons.add(button_start_beihilfe_anzeigen)
-        box_startseite_beihilfe_buttons.add(self.button_start_beihilfe_neu)
-        box_startseite_beihilfe = toga.Box(style=style_section_beihilfe)
-        box_startseite_beihilfe.add(label_start_beihilfe)
-        box_startseite_beihilfe.add(self.label_start_beihilfe_offen)
-        box_startseite_beihilfe.add(box_startseite_beihilfe_buttons)
-        self.box_mainpage.add(box_startseite_beihilfe)
+        # Section: PKV-Einreichungen
+        self.mainpage_section_insurance = Section(
+            parent          = self.box_mainpage,
+            title           = 'PKV-Einreichungen',
+            type            = 'pkv',
+            on_press_show   = self.show_list_pkv,
+            on_press_new    = self.show_form_pkv_new,
+            new_enabled     = False
+        )
 
-        # Bereich der PKV-Einreichungen
-        label_start_pkv = toga.Label('PKV-Einreichungen', style=style_label_h2_start)
-        self.label_start_pkv_offen = toga.Label('', style=style_label_section)
-        button_start_pkv_anzeigen = toga.Button('Anzeigen', style=style_button, on_press=self.show_list_pkv)
-        self.button_start_pkv_neu = toga.Button('Neu', style=style_button, on_press=self.show_form_pkv_new, enabled=False)
-        box_startseite_pkv_buttons = toga.Box(style=style_box_buttons_start)
-        box_startseite_pkv_buttons.add(button_start_pkv_anzeigen)
-        box_startseite_pkv_buttons.add(self.button_start_pkv_neu)
-        box_startseite_pkv = toga.Box(style=style_section_pkv)
-        box_startseite_pkv.add(label_start_pkv)
-        box_startseite_pkv.add(self.label_start_pkv_offen)
-        box_startseite_pkv.add(box_startseite_pkv_buttons)
-        self.box_mainpage.add(box_startseite_pkv)
-
+        # Weitere Funktionen
         self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
         self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_institutions)
         self.button_start_archiv = toga.Button('Keine archivierbaren Buchungen', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
