@@ -65,17 +65,17 @@ class Kontolupe(toga.App):
         match anzahl:
             case 0:
                 self.button_start_beihilfe_neu.enabled = False
-                self.list_allowance_bottombox.set_enabled('new_allowance', False)
+                self.list_allowance_buttons.set_enabled('new_allowance', False)
                 self.cmd_beihilfepakete_neu.enabled = False
                 self.label_start_beihilfe_offen.text = 'Keine offenen Rechnungen.'
             case 1:
                 self.button_start_beihilfe_neu.enabled = True
-                self.list_allowance_bottombox.set_enabled('new_allowance', True)
+                self.list_allowance_buttons.set_enabled('new_allowance', True)
                 self.cmd_beihilfepakete_neu.enabled = True
                 self.label_start_beihilfe_offen.text = '1 Rechnung noch nicht eingereicht.'
             case _:
                 self.button_start_beihilfe_neu.enabled = True
-                self.list_allowance_bottombox.set_enabled('new_allowance', True)
+                self.list_allowance_buttons.set_enabled('new_allowance', True)
                 self.cmd_beihilfepakete_neu.enabled = True
                 self.label_start_beihilfe_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
 
@@ -84,17 +84,17 @@ class Kontolupe(toga.App):
         match anzahl:
             case 0:
                 self.button_start_pkv_neu.enabled = False
-                self.list_insurance_bottombox.set_enabled('new_insurance', False)
+                self.list_insurance_buttons.set_enabled('new_insurance', False)
                 self.cmd_pkvpakete_neu.enabled = False
                 self.label_start_pkv_offen.text = 'Keine offenen Rechnungen.'
             case 1:
                 self.button_start_pkv_neu.enabled = True
-                self.list_insurance_bottombox.set_enabled('new_insurance', True)
+                self.list_insurance_buttons.set_enabled('new_insurance', True)
                 self.cmd_pkvpakete_neu.enabled = True
                 self.label_start_pkv_offen.text = '1 Rechnung noch nicht eingereicht.'
             case _:
                 self.button_start_pkv_neu.enabled = True
-                self.list_insurance_bottombox.set_enabled('new_insurance', True)
+                self.list_insurance_buttons.set_enabled('new_insurance', True)
                 self.cmd_pkvpakete_neu.enabled = True
                 self.label_start_pkv_offen.text = '{} Rechnungen noch nicht eingereicht.'.format(anzahl)
 
@@ -131,19 +131,19 @@ class Kontolupe(toga.App):
                 if self.table_open_bookings.selection and self.table_open_bookings.selection.typ == 'Rechnung':
                     self.mainpage_table_buttons.set_enabled('edit_open_booking', status)
             case self.table_bills:
-                self.list_bills_bottombox.set_enabled('delete_bill', status)
-                self.list_bills_bottombox.set_enabled('edit_bill', status)
+                self.list_bills_buttons.set_enabled('delete_bill', status)
+                self.list_bills_buttons.set_enabled('edit_bill', status)
             case self.table_allowance:
-                self.list_allowance_bottombox.set_enabled('reset_allowance', status)
+                self.list_allowance_buttons.set_enabled('reset_allowance', status)
             case self.table_insurance:
-                self.list_insurance_bottombox.set_enabled('reset_insurance', status)
+                self.list_insurance_buttons.set_enabled('reset_insurance', status)
             case self.tabelle_einrichtungen:
-                self.list_institutions_bottombox.set_enabled('delete_institution', status)
-                self.list_institutions_bottombox.set_enabled('edit_institution', status)
-                self.list_institutions_bottombox.set_enabled('info_institution', status)
+                self.list_institutions_buttons.set_enabled('delete_institution', status)
+                self.list_institutions_buttons.set_enabled('edit_institution', status)
+                self.list_institutions_buttons.set_enabled('info_institution', status)
             case self.tabelle_personen:
-                self.list_persons_bottombox.set_enabled('delete_person', status)
-                self.list_persons_bottombox.set_enabled('edit_person', status)
+                self.list_persons_buttons.set_enabled('delete_person', status)
+                self.list_persons_buttons.set_enabled('edit_person', status)
 
 
     def show_info_dialog_booking(self, widget, row):
@@ -397,7 +397,7 @@ class Kontolupe(toga.App):
         self.box_list_bills.add(self.table_bills)
 
         # ButtonBox mit den Buttons
-        self.list_bills_bottombox = ButtonBox(
+        self.list_bills_buttons = ButtonBox(
             parent  = self.box_list_bills,
             labels  = ['Löschen', 'Bearbeiten', 'Neu'],
             targets = [self.delete_bill, self.show_form_bill_edit, self.show_form_bill_new],
@@ -463,7 +463,7 @@ class Kontolupe(toga.App):
         self.form_bill_notiz = LabeledMultilineTextInput(self.box_form_bill, 'Notiz:')
 
         # Bereich der Buttons
-        self.form_bill_bottombox = ButtonBox(
+        self.form_bill_buttons = ButtonBox(
             parent=self.box_form_bill,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_bills, self.save_bill],
@@ -502,7 +502,7 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Bearbeiten einer Rechnung."""
 
         # Ermittle den Index der ausgewählten Rechnung
-        if widget in self.list_bills_bottombox.buttons:
+        if widget in self.list_bills_buttons.buttons:
             self.edit_bill_id = table_index_selection(self.table_bills)
         elif widget in self.mainpage_table_buttons.buttons:
             self.edit_bill_id = self.daten.get_rechnung_index_by_dbid(self.table_open_bookings.selection.db_id)
@@ -702,7 +702,7 @@ class Kontolupe(toga.App):
         self.box_list_institutions.add(self.tabelle_einrichtungen)
 
         # ButtonBox mit den Buttons
-        self.list_institutions_bottombox = ButtonBox(
+        self.list_institutions_buttons = ButtonBox(
             parent  = self.box_list_institutions,
             labels  = ['Bearbeiten', 'Neu', 'Löschen', 'Info'],
             targets = [self.show_form_institution_edit, self.show_form_institution_new, self.delete_institution, self.show_info_institution],
@@ -748,7 +748,7 @@ class Kontolupe(toga.App):
         self.form_institution_notiz = LabeledMultilineTextInput(self.box_form_institution, 'Notiz:')
 
         # ButtonBox
-        self.form_institution_bottombox = ButtonBox(
+        self.form_institution_buttons = ButtonBox(
             parent=self.box_form_institution,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_institutions, self.save_institution]
@@ -1025,7 +1025,7 @@ class Kontolupe(toga.App):
         self.box_list_persons.add(self.tabelle_personen)
 
         # ButtonBox mit den Buttons
-        self.list_persons_bottombox = ButtonBox(
+        self.list_persons_buttons = ButtonBox(
             parent  = self.box_list_persons,
             labels  = ['Bearbeiten', 'Neu', 'Löschen'],
             targets = [self.show_form_persons_edit, self.show_form_persons_new, self.delete_person],
@@ -1063,7 +1063,7 @@ class Kontolupe(toga.App):
         # divider_optional = SubtextDivider(self.box_form_person, 'Optionale Felder')
 
         # ButtonBox
-        self.form_person_bottombox = ButtonBox(
+        self.form_person_buttons = ButtonBox(
             parent=self.box_form_person,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_persons, self.save_person]
@@ -1188,7 +1188,7 @@ class Kontolupe(toga.App):
         self.box_list_allowance.add(self.table_allowance)
 
         # Buttons
-        self.list_allowance_bottombox = ButtonBox(
+        self.list_allowance_buttons = ButtonBox(
             parent  = self.box_list_allowance,
             labels  = ['Zurücksetzen', 'Neu'],
             targets = [self.delete_beihilfe, self.show_form_beihilfe_new],
@@ -1223,7 +1223,7 @@ class Kontolupe(toga.App):
         self.box_list_insurance.add(self.table_insurance)
 
         # Buttons
-        self.list_insurance_bottombox = ButtonBox(
+        self.list_insurance_buttons = ButtonBox(
             parent  = self.box_list_insurance,
             labels  = ['Zurücksetzen', 'Neu'],
             targets = [self.delete_pkv, self.show_form_pkv_new],
@@ -1284,7 +1284,7 @@ class Kontolupe(toga.App):
         self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
 
         # ButtonBox
-        self.form_beihilfe_bottombox = ButtonBox(
+        self.form_beihilfe_buttons = ButtonBox(
             parent=self.box_form_beihilfe,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_beihilfe, self.save_beihilfe]
@@ -1329,7 +1329,7 @@ class Kontolupe(toga.App):
         self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')
 
         # ButtonBox
-        self.form_pkv_bottombox = ButtonBox(
+        self.form_pkv_buttons = ButtonBox(
             parent=self.box_form_pkv,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_pkv, self.save_pkv]
