@@ -125,7 +125,7 @@ class Datenbank:
                 # check if there is any data
                 if rechnungen or beihilfepakete or pkvpakete or einrichtungen or personen:
                     print(f'### Database: __update_init: Init file {self.init_file} does not exist and database has data. Create init file.')
-                    self.save_init_file(version=DATABASE_VERSION, beihilfe=True)
+                    self.save_init_file(version=DATABASE_VERSION, initialized=True, beihilfe=True)
                     return
                 else:
                     print(f'### Database: __update_init: Init file {self.init_file} does not exist and database is empty. Do not create init file.')
@@ -153,7 +153,15 @@ class Datenbank:
 
     def is_first_start(self):
         """Prüfen, ob die App zum ersten Mal gestartet wird."""
-        return not self.init_file.exists()
+        if not self.init_file.exists():
+            print(f'### Database.is_first_start: Init file {self.init_file} does not exist. First start.')
+            return True
+        init_file = self.load_init_file()
+        if 'initialized' not in init_file:
+            print(f'### Database.is_first_start: Initialized not found in init file {self.init_file}. First start.')
+            return True
+        print(f'### Database.is_first_start: Init file {self.init_file} and Initialized exists. Return Initialized.')
+        return not init_file['initialized']
     
     def save_init_file(self, **kwargs):
         """Speichern der init.txt Datei."""
@@ -161,13 +169,19 @@ class Datenbank:
         # write the variables to the init file
         # if the value is a boolean, it should be converted to True or False
         content = ''
+
+        if 'version' not in kwargs:
+            kwargs['version'] = DATABASE_VERSION
+        if 'initialized' not in kwargs:
+            kwargs['initialized'] = False
+
         for key, value in kwargs.items():
             if isinstance(value, bool):
                 value = str(value).lower()
             content += f'{key}={value}\n'
 
         self.init_file.write_text(content)
-        print(f'### Database: save_init_file: Saved init file {self.init_file}')
+        print(f'### Database.save_init_file: Saved init file {self.init_file}')
 
     def load_init_file(self):
         """Laden der init.txt Datei und Rückgabe als Dictionary."""
@@ -175,20 +189,30 @@ class Datenbank:
         # the value should be converted to the correct type
         # return the variables as a dictionary
         result = {}
-        for line in self.init_file.read_text().splitlines():
-            # check if there is an equal sign in the line
-            if '=' not in line:
-                print(f'### Database: load_init_file: Line {line} does not contain an equal sign. Skipping it.')
-                continue
-            key, value = line.split('=')
-            if value == 'true':
-                value = True
-            elif value == 'false':
-                value = False
-            elif value.isnumeric():
-                value = int(value)
-            result[key] = value
-        print(f'### Database: load_init_file: Loaded init file {self.init_file}')
+        if self.init_file.exists(): 
+            # read the init file line by line
+            for line in self.init_file.read_text().splitlines():
+                # check if there is an equal sign in the line
+                if '=' not in line:
+                    print(f'### Database.load_init_file: Line {line} does not contain an equal sign. Skipping it.')
+                    continue
+                key, value = line.split('=')
+                if value == 'true':
+                    value = True
+                elif value == 'false':
+                    value = False
+                elif value.isnumeric():
+                    value = int(value)
+                result[key] = value
+
+        # check if the version is in the init file and add it if it is not
+        if 'version' not in result:
+            result['version'] = DATABASE_VERSION
+
+        if 'initialized' not in result:
+            result['initialized'] = False
+
+        print(f'### Database.load_init_file: Loaded init file {self.init_file}')
         return result
 
     def reset(self):
@@ -863,6 +887,9 @@ class DatenInterface:
         # Datenbank initialisieren
         self.db = Datenbank()
 
+        # Init-Dictionary laden
+        self.init = self.db.load_init_file()
+
         # Aktive Einträge aus der Datenbank laden
         self.rechnungen = self.db.lade_rechnungen()
         self.beihilfepakete = self.db.lade_beihilfepakete()
@@ -1036,6 +1063,10 @@ class DatenInterface:
         self.__update_list_rg_pkv()
         self.__update_archivables()
 
+    def initialized(self):
+        """Prüft, ob die Anwendung initialisiert wurde."""
+        return self.init.get('initialized', False)
+
     def reset(self):
         """Zurücksetzen des Daten-Interfaces."""
         print(f'### DatenInterface.reset: resetting all data')
@@ -1046,13 +1077,13 @@ class DatenInterface:
         """Prüft, ob das Programm zum ersten Mal gestartet wird."""
         return self.db.is_first_start()
 
-    def save_init_file(self, **kwargs):
+    def save_init_file(self):
         """Speichert die Initialisierungsdatei."""
-        self.db.save_init_file(**kwargs)
+        self.db.save_init_file(self.init)
 
     def load_init_file(self):
-        """Lädt die Initialisierungsdatei und gibt ihren Inhalt als Dictionary zurück."""
-        return self.db.load_init_file()
+        """Lädt die Initialisierungsdatei und speichert sie in der Klassenvariable."""
+        self.init = self.db.load_init_file()
 
     def __update_archivables(self):
         """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""

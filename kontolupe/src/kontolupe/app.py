@@ -279,6 +279,59 @@ class Kontolupe(toga.App):
         self.main_window.content = self.box_webview
 
 
+    def show_init_page(self, widget):
+        """Zeigt die Seite zur Initialisierung der Anwendung."""
+
+        # Aktualisiere die Anzeigen
+        self.update_init_page(widget)
+
+        # Zeige die Initialisierungsseite
+        self.main_window.content = self.sc_init_page
+
+
+    def update_init_page(self, widget):
+        """Aktualisiert die Initialisierungsseite."""
+
+        # Setze das Formular zurück
+        self.init_persons_name.set_value('')
+        self.init_persons_beihilfe.set_value(50)
+        self.init_institutions_name.set_value('')
+        self.init_institutions_city.set_value('')
+        self.init_beihilfe.set_value(self.daten.init.get('beihilfe', True))
+
+        # Ermittle den Status der Eingaben
+        status_persons = False
+        text_persons = 'Bitte füge mindestens eine Person hinzu.'
+        status_institutions = False
+        text_institutions = 'Bitte füge mindestens eine Einrichtung hinzu.'
+
+        # Überprüfe die Personen
+        if len(self.daten.personen) > 0:
+            status_persons = True
+            text_persons = 'Personen: '
+            for person in self.daten.personen:
+                text_persons += '{}, '.format(person.name)
+            text_persons = text_persons[:-2]
+
+        # Überprüfe die Einrichtungen
+        if len(self.daten.einrichtungen) > 0:
+            status_institutions = True
+            text_institutions = 'Einrichtungen: '
+            for einrichtung in self.daten.einrichtungen:
+                text_institutions += '{}, '.format(einrichtung.name)
+            text_institutions = text_institutions[:-2]
+
+        # Setze die Anzeigen
+        self.init_persons_label.text = text_persons
+        self.init_institutions_label.text = text_institutions
+
+        # Aktiviere den Button, wenn alle Eingaben korrekt sind
+        if status_persons and status_institutions:
+            self.init_button.enabled = True
+        else:
+            self.init_button.enabled = False
+
+
     def create_init_page(self):
         """Erzeugt die Seite zur Initialisierung der Anwendung nach dem ersten Start."""
 
@@ -296,7 +349,7 @@ class Kontolupe(toga.App):
         box_init_beihilfe = toga.Box(style=style_box_part_beihilfe)
         self.box_init_page.add(box_init_beihilfe)
         box_init_beihilfe.add(toga.Label('Beihilfe', style=style_label_subline_hell))
-        self.init_beihilfe = LabeledSwitch(box_init_beihilfe, '', style=style_switch_hell)
+        self.init_beihilfe = LabeledSwitch(box_init_beihilfe, '', style=style_switch_hell, value=True)
         box_init_beihilfe.add(toga.Label('Aktiviere diese Funktion, wenn Du beihilfeberechtigt bist.', style=style_description_hell))
 
         # Eingabebereich der Personen
@@ -1693,9 +1746,9 @@ class Kontolupe(toga.App):
 
         # Zeige die Startseite oder die Init-Seite
         if self.daten.is_first_start():
-            self.main_window.content = self.sc_init_page
+            self.show_init_page(None)
         else:
-            #self.main_window.content = self.sc_init_page
+            # self.show_init_page(None)
             self.show_mainpage(None)
         self.main_window.show()
 
@@ -1709,7 +1762,7 @@ class Kontolupe(toga.App):
             if await self.main_window.question_dialog('Ganz sicher?', 'Wirklich zurücksetzen? Es werden alle Daten gelöscht.'):
                 print('+++ Kontolupe.reset_app: Zurücksetzen doppelt bestätigt.')
                 self.daten.reset()
-                self.main_window.content = self.sc_init_page
+                self.show_init_page(None)
         
 
 def main():

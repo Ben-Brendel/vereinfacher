@@ -368,7 +368,12 @@ class LabeledSwitch:
 
     def __init__(self, parent, label_text, **kwargs):
         self.box = toga.Box(style=style_box_row)
-        self.switch = toga.Switch(label_text, style=kwargs.get('style', style_switch), on_change=kwargs.get('on_change', None))
+        self.switch = toga.Switch(
+            label_text, 
+            style=kwargs.get('style', style_switch), 
+            on_change=kwargs.get('on_change', None), 
+            value=kwargs.get('value', False)
+        )
         self.box.add(self.switch)
         self.__add_to_parent(parent)
 
