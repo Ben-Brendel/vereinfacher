@@ -6,6 +6,7 @@ from pathlib import Path
 from datetime import datetime
 from toga.sources import ListSource
 
+DATABASE_VERSION = 1
 
 class Datenbank:
     """Klasse zur Verwaltung der Datenbank."""
@@ -101,8 +102,54 @@ class Datenbank:
 
         self.__tables_predecessors = {new: old for old, new in self.__tables_rename.items()}
 
-        # Datenbank-Datei initialisieren
+        # Datenbank-Datei initialisieren und ggf. aktualisieren
         self.__create_db()
+
+        # Aktualisiere die init-Datei
+        self.__update_init()
+
+    def __update_init(self):
+        """Überprüfe, ob die init-Datei aktualisiert werden muss."""
+        
+        # check if the init file exists
+        if not self.init_file.exists():
+            # check if database exists and has any data
+            if self.db_path.exists():
+                # load the data
+                rechnungen = self.lade_rechnungen(only_active=False)
+                beihilfepakete = self.lade_beihilfepakete(only_active=False)
+                pkvpakete = self.lade_pkvpakete(only_active=False)
+                einrichtungen = self.lade_einrichtungen(only_active=False)
+                personen = self.lade_personen(only_active=False)
+
+                # check if there is any data
+                if rechnungen or beihilfepakete or pkvpakete or einrichtungen or personen:
+                    print(f'### Database: __update_init: Init file {self.init_file} does not exist and database has data. Create init file.')
+                    self.save_init_file(version=DATABASE_VERSION, beihilfe=True)
+                    return
+                else:
+                    print(f'### Database: __update_init: Init file {self.init_file} does not exist and database is empty. Do not create init file.')
+                    return
+            else:
+                print(f'### Database: __update_init: Init file {self.init_file} does not exist and database does not exist. Do not create init file.')
+                return
+
+        # load the init file
+        init_file = self.load_init_file()
+
+        # check if the version is in the init file
+        if 'version' not in init_file:
+            print(f'### Database: __update_init: Version not found in init file {self.init_file}.')
+            return
+
+        # check if the version is the latest version
+        if init_file['version'] == DATABASE_VERSION:
+            print(f"### Database: __update_init: Version {init_file['version']} in init file {self.init_file} is up to date.")
+            return
+        else:
+            print(f"### Database: __update_init: Version {init_file['version']} in init file {self.init_file} is not up to date. Updating it to version {DATABASE_VERSION}.")
+            # placeholder for future updates
+            return
 
     def is_first_start(self):
         """Prüfen, ob die App zum ersten Mal gestartet wird."""
