@@ -41,7 +41,7 @@ class Kontolupe(toga.App):
         self.flag_edit_pkv = False
         self.edit_pkv_id = 0
 
-        # Hilfsvariable zur Festlegung des Zurück-Ziels
+        # Weitere Hilfsvariablen
         self.back_to = 'startseite'
 
 
@@ -62,23 +62,24 @@ class Kontolupe(toga.App):
                 self.mainpage_section_bills.set_info('{} Rechnungen noch nicht bezahlt.'.format(anzahl))
 
         # Anzeige und Buttons der offenen Beihilfe-Einreichungen aktualisieren
-        anzahl = self.daten.get_number_rechnungen_not_submitted_beihilfe()
-        match anzahl:
-            case 0:
-                self.mainpage_section_allowance.set_enabled_new(False)
-                self.list_allowance_buttons.set_enabled('new_allowance', False)
-                self.cmd_beihilfepakete_neu.enabled = False
-                self.mainpage_section_allowance.set_info('Keine offenen Rechnungen.')
-            case 1:
-                self.mainpage_section_allowance.set_enabled_new(True)
-                self.list_allowance_buttons.set_enabled('new_allowance', True)
-                self.cmd_beihilfepakete_neu.enabled = True
-                self.mainpage_section_allowance.set_info('1 Rechnung noch nicht eingereicht.')
-            case _:
-                self.mainpage_section_allowance.set_enabled_new(True)
-                self.list_allowance_buttons.set_enabled('new_allowance', True)
-                self.cmd_beihilfepakete_neu.enabled = True
-                self.mainpage_section_allowance.set_info('{} Rechnungen noch nicht eingereicht.'.format(anzahl))
+        if self.daten.beihilfe_aktiv():
+            anzahl = self.daten.get_number_rechnungen_not_submitted_beihilfe()
+            match anzahl:
+                case 0:
+                    self.mainpage_section_allowance.set_enabled_new(False)
+                    self.list_allowance_buttons.set_enabled('new_allowance', False)
+                    self.cmd_beihilfepakete_neu.enabled = False
+                    self.mainpage_section_allowance.set_info('Keine offenen Rechnungen.')
+                case 1:
+                    self.mainpage_section_allowance.set_enabled_new(True)
+                    self.list_allowance_buttons.set_enabled('new_allowance', True)
+                    self.cmd_beihilfepakete_neu.enabled = True
+                    self.mainpage_section_allowance.set_info('1 Rechnung noch nicht eingereicht.')
+                case _:
+                    self.mainpage_section_allowance.set_enabled_new(True)
+                    self.list_allowance_buttons.set_enabled('new_allowance', True)
+                    self.cmd_beihilfepakete_neu.enabled = True
+                    self.mainpage_section_allowance.set_info('{} Rechnungen noch nicht eingereicht.'.format(anzahl))
 
         # Anzeige und Buttons der offenen PKV-Einreichungen aktualisieren
         anzahl = self.daten.get_number_rechnungen_not_submitted_pkv()
@@ -299,7 +300,7 @@ class Kontolupe(toga.App):
         self.init_institutions_city.set_value('')
         self.init_beihilfe.set_value(self.daten.init.get('beihilfe', True))
         
-        if self.daten.init.get('beihilfe', True):
+        if self.daten.beihilfe_aktiv():
             self.init_persons_beihilfe.show()
         else:
             self.init_persons_beihilfe.hide()
@@ -357,7 +358,7 @@ class Kontolupe(toga.App):
         self.init_beihilfe = LabeledSwitch(
             box_init_beihilfe, 
             '', 
-            style=style_switch_hell, 
+            style=style_switch_center_hell, 
             value=True,
             on_change=self.init_beihilfe_changed
         )
@@ -417,6 +418,9 @@ class Kontolupe(toga.App):
         self.daten.init['beihilfe'] = self.init_beihilfe.get_value()
         self.daten.init['initialized'] = True
         self.daten.save_init_file()
+
+        # Erstelle die Menüs
+        self.create_commands()
 
         # Zeige die Startseite
         self.show_mainpage(widget)
@@ -500,6 +504,12 @@ class Kontolupe(toga.App):
         """Zurück zur Startseite."""
         
         self.update_app(widget)
+
+        if not self.daten.beihilfe_aktiv():
+            self.mainpage_section_allowance.hide()
+        else:
+            self.mainpage_section_allowance.show()
+
         self.main_window.content = self.sc_mainpage
 
 
@@ -565,7 +575,7 @@ class Kontolupe(toga.App):
             target_back=self.show_list_bills
         )
 
-        divider_mandatory = SubtextDivider(self.box_form_bill, 'Pflichtfelder')
+        SubtextDivider(self.box_form_bill, 'Pflichtfelder')
 
         # Selection zur Auswahl der Person
         self.form_bill_person = LabeledSelection(
@@ -576,7 +586,8 @@ class Kontolupe(toga.App):
             on_change=self.update_form_bill
         )
 
-        self.form_bill_beihilfe = LabeledPercentInput(self.box_form_bill, 'Beihilfe in %:')
+        self.form_bill_beihilfe = LabeledPercentInput(self.box_form_bill, 'Beihilfe in %:', readonly=True)
+
         self.form_bill_rechnungsdatum = LabeledDateInput(self.box_form_bill, 'Rechnungsdatum:')
         self.form_bill_betrag = LabeledFloatInput(self.box_form_bill, 'Betrag in €:')
 
@@ -588,7 +599,7 @@ class Kontolupe(toga.App):
             accessor='name'
         )
 
-        divider_optional = SubtextDivider(self.box_form_bill, 'Optionale Felder')
+        SubtextDivider(self.box_form_bill, 'Optionale Felder')
 
         self.form_bill_buchungsdatum = LabeledDateInput(self.box_form_bill, 'Bezahldatum:')
         self.form_bill_bezahlt = LabeledSwitch(self.box_form_bill, 'Bezahlt:')
@@ -625,6 +636,11 @@ class Kontolupe(toga.App):
         # Zurücksetzen von Flag und Überschrift
         self.flag_edit_bill = False
         self.form_bill_topbox.set_label('Neue Rechnung')
+
+        if not self.daten.beihilfe_aktiv():
+            self.form_bill_beihilfe.hide()
+        else:
+            self.form_bill_beihilfe.show()
 
         # Zeige die Seite
         self.main_window.content = self.sc_form_bill
@@ -677,6 +693,11 @@ class Kontolupe(toga.App):
         self.flag_edit_bill = True
         self.form_bill_topbox.set_label('Rechnung bearbeiten')
 
+        if not self.daten.beihilfe_aktiv():
+            self.form_bill_beihilfe.hide()
+        else:
+            self.form_bill_beihilfe.show()
+
         # Zeige die Seite
         self.main_window.content = self.sc_form_bill
 
@@ -705,7 +726,7 @@ class Kontolupe(toga.App):
                 nachricht += 'Bitte wähle eine Einrichtung aus.\n'
 
         # Prüfe, ob ein Beihilfe eingegeben wurde
-        if not self.form_bill_beihilfe.is_valid():
+        if self.daten.beihilfe_aktiv() and not self.form_bill_beihilfe.is_valid():
             nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         if not (self.form_bill_buchungsdatum.is_valid() or self.form_bill_buchungsdatum.is_empty()):
@@ -741,7 +762,7 @@ class Kontolupe(toga.App):
             
             if rechnung.betrag != self.form_bill_betrag.get_value():
                 update_einreichung = True
-            if rechnung.beihilfesatz != self.form_bill_beihilfe.get_value():
+            if self.daten.beihilfe_aktiv() and rechnung.beihilfesatz != self.form_bill_beihilfe.get_value():
                 update_einreichung = True
 
             # Bearbeite die Rechnung
@@ -767,7 +788,7 @@ class Kontolupe(toga.App):
 
             # Überprüfe ob eine verknüpfte Beihilfe-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
-            if update_einreichung and rechnung.beihilfe_id is not None:
+            if self.daten.beihilfe_aktiv() and update_einreichung and rechnung.beihilfe_id is not None:
                 if await self.main_window.question_dialog('Zugehörige Beihilfe-Einreichung aktualisieren', 'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?'):
                     self.daten.update_beihilfepaket_betrag(rechnung.beihilfe_id)
 
@@ -792,7 +813,7 @@ class Kontolupe(toga.App):
                 self.daten.rechnungen[self.edit_bill_id].betrag = 0
 
                 # Überprüfe, ob Einreichungen existieren
-                if self.daten.rechnungen[self.edit_bill_id].beihilfe_id is not None:
+                if self.daten.beihilfe_aktiv() and self.daten.rechnungen[self.edit_bill_id].beihilfe_id is not None:
                     if await self.main_window.question_dialog('Zugehörige Beihilfe-Einreichung aktualisieren', 'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?'):
                         self.daten.update_beihilfepaket_betrag(self.daten.rechnungen[self.edit_bill_id].beihilfe_id)
 
@@ -864,19 +885,17 @@ class Kontolupe(toga.App):
         )
 
         # Bereich der Pflichteingaben
-        divider_mandatory = SubtextDivider(self.box_form_institution, 'Pflichtfelder')
+        SubtextDivider(self.box_form_institution, 'Pflichtfelder')
         self.form_institution_name = LabeledTextInput(self.box_form_institution, 'Name:')
 
         # Bereich der optionalen Eingabe
-        divider_optional = SubtextDivider(self.box_form_institution, 'Optionale Felder')
+        SubtextDivider(self.box_form_institution, 'Optionale Felder')
         self.form_institution_strasse = LabeledTextInput(self.box_form_institution, 'Straße, Hausnr.:')
         self.form_institution_plz = LabeledPostalInput(self.box_form_institution, 'PLZ:')
         self.form_institution_ort = LabeledTextInput(self.box_form_institution, 'Ort:')
-        #self.box_form_institution.add(toga.Divider(style=style_divider))
         self.form_institution_telefon = LabeledPhoneInput(self.box_form_institution, 'Telefon:')
         self.form_institution_email = LabeledEmailInput(self.box_form_institution, 'E-Mail:')
         self.form_institution_webseite = LabeledWebsiteInput(self.box_form_institution, 'Webseite:')
-        #self.box_form_institution.add(toga.Divider(style=style_divider))
         self.form_institution_notiz = LabeledMultilineTextInput(self.box_form_institution, 'Notiz:')
 
         # ButtonBox
@@ -1144,6 +1163,12 @@ class Kontolupe(toga.App):
     def show_list_persons(self, widget):
         """Zeigt die Seite mit der Liste der Personen."""
         self.update_app(widget)
+
+        if not self.daten.beihilfe_aktiv() and 'Beihilfe' in self.tabelle_personen.headings:
+            self.tabelle_personen.remove_column(1)
+        elif self.daten.beihilfe_aktiv() and 'Beihilfe' not in self.tabelle_personen.headings:
+            self.tabelle_personen.insert_column(1, 'Beihilfe', 'beihilfesatz_prozent')
+
         self.main_window.content = self.box_list_persons
 
 
@@ -1163,7 +1188,7 @@ class Kontolupe(toga.App):
             target_back=self.show_list_persons
         )
 
-        divider_mandatory = SubtextDivider(self.box_form_person, 'Pflichtfelder')
+        SubtextDivider(self.box_form_person, 'Pflichtfelder')
         self.form_person_name = LabeledTextInput(self.box_form_person, 'Name:')
         self.form_person_beihilfe = LabeledPercentInput(self.box_form_person, 'Beihilfe in %:')
 
@@ -1186,6 +1211,11 @@ class Kontolupe(toga.App):
         # Zurücksetzen des Flags und der Überschrift
         self.flag_edit_person = False
         self.form_person_topbox.set_label('Neue Person')
+
+        if self.daten.beihilfe_aktiv():
+            self.form_person_beihilfe.show()
+        else:
+            self.form_person_beihilfe.hide()
 
         # Zeige die Seite
         self.main_window.content = self.sc_form_person
@@ -1210,6 +1240,11 @@ class Kontolupe(toga.App):
             self.flag_edit_person = True
             self.form_person_topbox.set_label('Person bearbeiten')
 
+            if self.daten.beihilfe_aktiv():
+                self.form_person_beihilfe.show()
+            else:
+                self.form_person_beihilfe.hide()
+
             # Zeige die Seite
             self.main_window.content = self.sc_form_person
 
@@ -1228,7 +1263,7 @@ class Kontolupe(toga.App):
                 nachricht += 'Bitte gib einen Namen ein.\n'
 
             # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
-            if self.daten.init.get('beihilfe', True) and not self.form_person_beihilfe.is_valid():
+            if self.daten.beihilfe_aktiv() and not self.form_person_beihilfe.is_valid():
                     nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         elif widget in self.init_persons_buttons.buttons:
@@ -1238,7 +1273,7 @@ class Kontolupe(toga.App):
                     nachricht += 'Bitte gib einen Namen ein.\n'
     
                 # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
-                if self.daten.init.get('beihilfe', True) and not self.init_persons_beihilfe.is_valid():
+                if self.daten.beihilfe_aktiv() and not self.init_persons_beihilfe.is_valid():
                         nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         if nachricht != '':
@@ -1251,7 +1286,7 @@ class Kontolupe(toga.App):
             neue_person = Person()
             neue_person.name = self.form_person_name.get_value()
             
-            if self.daten.init.get('beihilfe', True):
+            if self.daten.beihilfe_aktiv():
                 neue_person.beihilfesatz = self.form_person_beihilfe.get_value()
 
             # Speichere die Person 
@@ -1266,7 +1301,7 @@ class Kontolupe(toga.App):
 
             # Bearbeite die Person
             person.name = self.form_person_name.get_value()
-            if self.daten.init.get('beihilfe', True):
+            if self.daten.beihilfe_aktiv():
                 person.beihilfesatz = self.form_person_beihilfe.get_value()
 
             # Speichere die Person in der Datenbank
@@ -1283,7 +1318,7 @@ class Kontolupe(toga.App):
             neue_person = Person()
             neue_person.name = self.init_persons_name.get_value()
             
-            if self.daten.init.get('beihilfe', True):
+            if self.daten.beihilfe_aktiv():
                 neue_person.beihilfesatz = self.init_persons_beihilfe.get_value()
 
             # Speichere die Person 
@@ -1409,7 +1444,7 @@ class Kontolupe(toga.App):
             target_back=self.show_list_beihilfe
         )
 
-        divider_mandatory = SubtextDivider(self.box_form_beihilfe, 'Pflichtfelder')
+        SubtextDivider(self.box_form_beihilfe, 'Pflichtfelder')
 
         self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
 
@@ -1425,7 +1460,7 @@ class Kontolupe(toga.App):
         )
         self.box_form_beihilfe.add(self.form_beihilfe_bills)
 
-        divider_optional = SubtextDivider(self.box_form_beihilfe, 'Optionale Felder')
+        SubtextDivider(self.box_form_beihilfe, 'Optionale Felder')
 
         self.form_beihilfe_betrag = LabeledFloatInput(self.box_form_beihilfe, 'Betrag in €:', readonly=True)
         self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
@@ -1454,7 +1489,7 @@ class Kontolupe(toga.App):
             target_back=self.show_list_pkv
         )
 
-        divider_mandatory = SubtextDivider(self.box_form_pkv, 'Pflichtfelder')
+        SubtextDivider(self.box_form_pkv, 'Pflichtfelder')
 
         self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
 
@@ -1470,7 +1505,7 @@ class Kontolupe(toga.App):
         )
         self.box_form_pkv.add(self.form_pkv_bills)
 
-        divider_optional = SubtextDivider(self.box_form_pkv, 'Optionale Felder')
+        SubtextDivider(self.box_form_pkv, 'Optionale Felder')
 
         self.form_pkv_betrag = LabeledFloatInput(self.box_form_pkv, 'Betrag in €:', readonly=True)
         self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')
@@ -1499,7 +1534,10 @@ class Kontolupe(toga.App):
         for auswahl_rg in widget.selection:
             for rg in self.daten.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
-                    summe += rg.betrag * (100 - rg.beihilfesatz) / 100
+                    if self.daten.beihilfe_aktiv():
+                        summe += rg.betrag * (100 - rg.beihilfesatz) / 100
+                    else:
+                        summe += rg.betrag
         self.form_pkv_betrag.set_value(summe)
 
 
@@ -1528,6 +1566,12 @@ class Kontolupe(toga.App):
         # Zurücksetzen des Flags und der Überschrift
         self.flag_edit_pkv = False
         self.form_pkv_topbox.set_label('Neue PKV-Einreichung')
+
+        # Tabelleninhalt aktualisieren
+        if not self.daten.beihilfe_aktiv() and 'Beihilfe' in self.form_pkv_bills.headings:
+            self.form_pkv_bills.remove_column(2)
+        elif self.daten.beihilfe_aktiv() and 'Beihilfe' not in self.form_pkv_bills.headings:
+            self.form_pkv_bills.insert_column(2, 'Beihilfe', 'beihilfesatz_prozent')
 
         # Zeige die Seite
         self.main_window.content = self.sc_form_pkv
@@ -1655,10 +1699,6 @@ class Kontolupe(toga.App):
             match self.table_open_bookings.selection.typ:
                 case 'Rechnung':
                     self.show_form_bill_edit(widget)
-                # case 'Beihilfe':
-                #     self.show_form_beihilfe_edit(widget)
-                # case 'PKV':
-                #     self.show_form_pkv_edit(widget)
 
 
     def create_commands(self):
@@ -1803,8 +1843,9 @@ class Kontolupe(toga.App):
         # Erstelle die Menüleiste
         self.commands.add(self.cmd_rechnungen_anzeigen)
         self.commands.add(self.cmd_rechnungen_neu)
-        self.commands.add(self.cmd_beihilfepakete_anzeigen)
-        self.commands.add(self.cmd_beihilfepakete_neu)
+        if self.daten.beihilfe_aktiv():
+            self.commands.add(self.cmd_beihilfepakete_anzeigen)
+            self.commands.add(self.cmd_beihilfepakete_neu)
         self.commands.add(self.cmd_pkvpakete_anzeigen)
         self.commands.add(self.cmd_pkvpakete_neu)
         self.commands.add(self.cmd_personen_anzeigen)
@@ -1837,7 +1878,6 @@ class Kontolupe(toga.App):
         self.create_list_persons()
         self.create_form_person()
         self.create_webview()
-        self.create_commands()
 
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)      
@@ -1846,7 +1886,7 @@ class Kontolupe(toga.App):
         if self.daten.is_first_start():
             self.show_init_page(None)
         else:
-            # self.show_init_page(None)
+            self.create_commands()
             self.show_mainpage(None)
         self.main_window.show()
 
@@ -1860,6 +1900,7 @@ class Kontolupe(toga.App):
             if await self.main_window.question_dialog('Ganz sicher?', 'Wirklich zurücksetzen? Es werden alle Daten gelöscht.'):
                 print('+++ Kontolupe.reset_app: Zurücksetzen doppelt bestätigt.')
                 self.daten.reset()
+                self.commands.clear()  
                 self.show_init_page(None)
         
 

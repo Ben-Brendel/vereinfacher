@@ -50,6 +50,16 @@ class Section:
     def __add_to_parent(self, parent):
         parent.add(self.section_box)
 
+    def hide(self):
+        self.section_box.remove(self.title)
+        self.section_box.remove(self.info)
+        self.section_box.remove(self.button_box)
+
+    def show(self):
+        self.section_box.add(self.title)
+        self.section_box.add(self.info)
+        self.section_box.add(self.button_box)
+
     def set_info(self, info_text):
         self.info.text = info_text
 

@@ -2,8 +2,8 @@
 [tool.briefcase]
 project_name = "Vereinfacher"
 bundle = "net.biberwerk"
-version = "0.3.0"
-build = 6
+version = "0.3.1"
+build = 1
 url = "https://biberwerk.net/kontolupe"
 license = "MIT license"
 author = "Biberwerk"

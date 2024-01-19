@@ -31,8 +31,10 @@ style_label_input               = Pack(flex=1, padding=5, text_align=LEFT, color
 style_label_input_hell          = Pack(flex=1, padding=5, text_align=LEFT, color=FARBE_HELL)
 style_table                     = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_table_hell                = Pack(flex=1, padding=5, color=FARBE_HELL)
-style_switch                    = Pack(padding=5, color=FARBE_DUNKEL)
-style_switch_hell               = Pack(padding=5, color=FARBE_HELL)
+style_switch                    = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
+style_switch_center             = Pack(padding=5, color=FARBE_DUNKEL)
+style_switch_hell               = Pack(flex=1, padding=5, color=FARBE_HELL)
+style_switch_center_hell        = Pack(padding=5, color=FARBE_HELL)
 style_divider                   = Pack(padding=5, background_color=FARBE_MITTEL)
 
 # Spezifische Styles

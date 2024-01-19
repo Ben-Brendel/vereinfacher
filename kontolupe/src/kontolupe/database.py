@@ -21,14 +21,8 @@ class Datenbank:
             self.db_dir = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe')
         
         self.db_path = self.db_dir / 'kontolupe.db'
-        print(f'### Database: {self.db_path}')
 
         self.init_file = self.db_dir / 'init.txt'
-        print(f'### Database: {self.init_file}')
-
-        # delete database
-        #if self.db_path.exists(): 
-        #    self.db_path.unlink()
 
         # Dictionary mit den Tabellen und Spalten der Datenbank erstellen
         self.__tables = {
@@ -194,7 +188,6 @@ class Datenbank:
             for line in self.init_file.read_text().splitlines():
                 # check if there is an equal sign in the line
                 if '=' not in line:
-                    print(f'### Database.load_init_file: Line {line} does not contain an equal sign. Skipping it.')
                     continue
                 key, value = line.split('=')
                 if value == 'true':
@@ -233,32 +226,28 @@ class Datenbank:
 
     def __get_column_type(self, table_name, column_name):
         """Lade den Typ der Spalte aus dem self.__tables Dictionary."""
-        print(f'### Database: Get column type for column {column_name} in table {table_name}')
         for column in self.__tables[table_name]:
             if column[0] == column_name:
-                print(f'### Database: Column type for column {column_name} in table {table_name} is {column[1]}')
+                print(f'### Database.__get_column_type: Column type for column {column_name} in table {table_name} is {column[1]}')
                 return column[1]
-        print(f'### Database: Column {column_name} not found in table {table_name}')
+        print(f'### Database.__get_column_type: Column {column_name} not found in table {table_name}')
         return None  # return None if the column is not found
 
     def __create_backup(self):
         """Erstellen eines Backups der Datenbank."""
         # Get the current date and time, formatted as a string
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        print(f'### Database: Timestamp is {timestamp}')
-
+        
         # Create the backup path with the timestamp
         backup_path = self.db_dir / Path(f'kontolupe_{timestamp}.db.backup')
-        print(f'### Database: Backup path is {backup_path}')
         
         if self.db_path.exists():
             if backup_path.exists():
-                print(f'### Database: Backup {backup_path} already exists. Deleting it.')
                 backup_path.unlink()
             shutil.copy2(self.db_path, backup_path)
-            print(f'### Database: Created backup {backup_path}')
+            print(f'### Database.__create_backup: Created backup {backup_path}')
         else:
-            print(f'### Database: Database {self.db_path} does not exist. No backup created.')
+            print(f'### Database.__create_backup: Database {self.db_path} does not exist. No backup created.')
 
     def __delete_backups(self):
         """Löschen aller Backups der Datenbank."""
@@ -268,13 +257,12 @@ class Datenbank:
 
     def __create_table_if_not_exists(self, cursor, table_name, columns):
         cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{column[0]} {column[1]}' for column in columns])})")
-        print(f'### Database: Created table {table_name}')
 
     def __add_column_if_not_exists(self, cursor, table_name, new_column, column_type):
         cursor.execute(f"PRAGMA table_info({table_name})")
         if not any(row[1] == new_column for row in cursor.fetchall()):
             cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
-            print(f'### Database: Added column {new_column} to table {table_name}')
+            print(f'### Database.__add_column_if_not_exists: Added column {new_column} to table {table_name}')
             if new_column == 'aktiv':
                 cursor.execute(f"UPDATE {table_name} SET aktiv = 1")
 
@@ -282,10 +270,8 @@ class Datenbank:
         # Check if table_name exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
         if not cursor.fetchone():
-            print(f'### Database: Copy Column: Table {table_name} does not exist')
+            print(f'### Database.__copy_column: Table {table_name} does not exist')
             return  # table_name doesn't exist, so return early
-        else:
-            print(f'### Database: Copy Column: Table {table_name} exists')
 
         # Check if old_column exists
         cursor.execute(f"PRAGMA table_info({table_name})")
@@ -301,18 +287,16 @@ class Datenbank:
             db_result = cursor.fetchall()
             for row in db_result:
                 cursor.execute(f"UPDATE {table_name} SET {new_column} = ? WHERE id = ?", (row[1], row[0]))
-            print(f'### Database: Copied column {old_column} to {new_column} in table {table_name}')
+            print(f'### Database.__copy_column: Copied column {old_column} to {new_column} in table {table_name}')
         else:
-            print(f'### Database: Column {old_column} does not exist in table {table_name}')
+            print(f'### Database.__copy_column: Column {old_column} does not exist in table {table_name}')
 
     def __copy_table_and_delete(self, cursor, old_table, new_table):
         # Check if old_table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (old_table,))
         if not cursor.fetchone():
-            print(f'### Database: Copy Table and Delete: Table {old_table} does not exist')
+            print(f'### Database.__copy_table_and_delete: Table {old_table} does not exist')
             return  # old_table doesn't exist, so return early
-        else:
-            print(f'### Database: Copy Table and Delete: Table {old_table} exists')
 
         # Get the schema of old_table
         cursor.execute(f"PRAGMA table_info({old_table})")
@@ -336,11 +320,11 @@ class Datenbank:
             placeholders_str = ', '.join(['?' for _ in column_names])
             # Insert the row into the new table
             cursor.execute(f"INSERT INTO {new_table} ({columns_str}) VALUES ({placeholders_str})", list(row_dict.values()))
-        print(f'### Database: Copied table {old_table} to {new_table}')
+        print(f'### Database.__copy_table_and_delete: Copied table {old_table} to {new_table}')
 
         # Drop old_table
         cursor.execute(f"DROP TABLE {old_table}")
-        print(f'### Database: Dropped table {old_table}')
+        print(f'### Database.__copy_table_and_delete: Dropped table {old_table}')
 
     def __create_db(self):
         """Erstellen und Update der Datenbank."""
@@ -348,9 +332,7 @@ class Datenbank:
         # Check if database exists and is structured correctly
         # If not, create a backup and rebuild the database
         if self.__db_exists_and_is_correct():
-            print('### Database: Database exists and is structured correctly.')
             return
-        print('### Database: Database does not exist or is not structured correctly.')
 
         # Backup and rebuild the database
         self.__create_backup()
@@ -360,22 +342,17 @@ class Datenbank:
         """Check if the database exists and is structured correctly."""
 
         if not self.db_path.exists():
-            print('### Database: Database does not exist.')
+            print('### Database.__db_exists_and_is_correct: Database does not exist.')
             return False
-        else:
-            print('### Database: Database exists.')
 
         with sql.connect(self.db_path) as connection:
             cursor = connection.cursor()
             for table_name, columns in self.__tables.items():
                 if not self.__table_is_correct(cursor, table_name, columns):
-                    print(f'### Database: Table {table_name} is not structured correctly.')
+                    print(f'### Database.__db_exists_and_is_correct: Database exists but is not structured correctly. Table {table_name} is not correct.')
                     return False
-                else:
-                    print(f'### Database: Table {table_name} is structured correctly.')
 
-        print('### Database: Database exists and is structured correctly.')
-
+        print('### Database.__db_exists_and_is_correct: Database exists and is structured correctly.')
         return True
 
     def __table_is_correct(self, cursor, table_name, columns):
@@ -385,19 +362,12 @@ class Datenbank:
         result = cursor.fetchall()
         for column in columns:
             if not any(row[1] == column[0] for row in result):
-                print(f'### Database: Column {column[0]} does not exist in table {table_name}.')
                 return False
-            else:
-                print(f'### Database: Column {column[0]} exists in table {table_name}.')
-
-        print(f'### Database: Table {table_name} is structured correctly.')
 
         return True
 
     def __rebuild_db(self):
         """Rebuild the database."""
-
-        print('### Database: Rebuilding database.')
 
         with sql.connect(self.db_path) as connection:
             cursor = connection.cursor()
@@ -414,8 +384,6 @@ class Datenbank:
     def __update_db_structure(self, cursor):
         """Update the database structure."""
 
-        print('### Database: Updating database structure.')
-
         for table_name, columns in self.__tables.items():
             Datenbank.__create_table_if_not_exists(self, cursor, table_name, columns)
             for column in columns:
@@ -430,7 +398,7 @@ class Datenbank:
                     # the old table exists, so update its structure
                     for column in self.__tables[table_name]:
                         Datenbank.__add_column_if_not_exists(self, cursor, old_table, column[0], column[1])
-                    print(f'### Database: Updated table {old_table} to the latest structure.')
+                    print(f'### Database.__update_db_structure: Updated table {old_table} to the latest structure.')
             
 
     def __migrate_data(self, cursor):
@@ -439,14 +407,14 @@ class Datenbank:
         for table_name, columns in self.__table_columns_rename.items():
             for column in columns:
                 Datenbank.__copy_column(self, cursor, table_name, column[0], column[1])
-                print(f'### Database: Migrated data in table {table_name} from column {column[0]} to column {column[1]}')
+                print(f'### Database.__migrate_data: Migrated data in table {table_name} from column {column[0]} to column {column[1]}')
 
     def __rename_tables(self, cursor):
         """Rename the tables."""
 
         for old_table, new_table in self.__tables_rename.items():
             Datenbank.__copy_table_and_delete(self, cursor, old_table, new_table)
-            print(f'### Database: Migrated data from {old_table} to {new_table} and deleted {old_table}')
+            print(f'### Database.__rename_tables: Migrated data from {old_table} to {new_table} and deleted {old_table}')
 
 
     def __new_element(self, table, element):
@@ -470,7 +438,7 @@ class Datenbank:
         # Datenbankverbindung schließen
         connection.commit()
         connection.close()
-        print(f'### Database: Inserted element with id {db_id} into table {table}')
+        print(f'### Database.__new_element: Inserted element with id {db_id} into table {table}')
 
         return db_id
     
@@ -495,7 +463,7 @@ class Datenbank:
         # Datenbankverbindung schließen
         connection.commit()
         connection.close()
-        print(f'### Database: Changed element with id {element.db_id} in table {table}')
+        print(f'### Database.__change_element: Changed element with id {element.db_id} in table {table}')
 
     def __delete_element(self, table, element):
         """Löschen eines Elements aus der Datenbank."""
@@ -509,7 +477,7 @@ class Datenbank:
         # Datenbankverbindung schließen
         connection.commit()
         connection.close()
-        print(f'### Database: Deleted element with id {element.db_id} from table {table}')
+        print(f'### Database.__delete_element: Deleted element with id {element.db_id} from table {table}')
 
     def __load_data(self, table, only_active=False):
         """Laden der Elemente einer Tabelle aus der Datenbank."""
@@ -555,11 +523,9 @@ class Datenbank:
                         setattr(element, column[0], row[column[0]])
 
             result.append(element)
-            print(f'### Database.__load_data: Loaded element with id {element.db_id} and type {type(element)} from table {table}')
 
         # Datenbankverbindung schließen
         connection.close()
-        print(f'### Database.__load_data: Loaded data from table {table}')
 
         return result
 
@@ -881,8 +847,6 @@ class DatenInterface:
 
     def __init__(self):
         """Initialisierung des Daten-Interfaces."""
-
-        print(f'### DatenInterface: Initialisierung des Daten-Interfaces')
         
         # Datenbank initialisieren
         self.db = Datenbank()
@@ -896,12 +860,6 @@ class DatenInterface:
         self.pkvpakete = self.db.lade_pkvpakete()
         self.einrichtungen = self.db.lade_einrichtungen()
         self.personen = self.db.lade_personen()
-
-        print(f'### DatenInterface.__init__: {len(self.rechnungen)} Rechnungen loaded')
-        print(f'### DatenInterface.__init__: {len(self.beihilfepakete)} Beihilfepakete loaded')
-        print(f'### DatenInterface.__init__: {len(self.pkvpakete)} PKV-Pakete loaded')
-        print(f'### DatenInterface.__init__: {len(self.einrichtungen)} Einrichtungen loaded')
-        print(f'### DatenInterface.__init__: {len(self.personen)} Personen loaded')
 
         # ListSources für die GUI erstellen
         # Diese enthalten alle Felder der Datenbank und zusätzliche Felder für die GUI
@@ -1035,28 +993,18 @@ class DatenInterface:
 
         for rechnung in self.rechnungen:            
             self.__list_rechnungen_append(rechnung)
-        
-        print(f'### DatenInterface.__init__: {len(self.list_rechnungen)} Rechnungen loaded to ListSource')
 
         for einrichtung in self.einrichtungen:            
             self.__list_einrichtungen_append(einrichtung)
 
-        print(f'### DatenInterface.__init__: {len(self.list_einrichtungen)} Einrichtungen loaded to ListSource')
-
         for person in self.personen:            
             self.__list_personen_append(person)
-
-        print(f'### DatenInterface.__init__: {len(self.list_personen)} Personen loaded to ListSource')
 
         for beihilfepaket in self.beihilfepakete:            
             self.__list_beihilfepakete_append(beihilfepaket)
 
-        print(f'### DatenInterface.__init__: {len(self.list_beihilfepakete)} Beihilfepakete loaded to ListSource')
-
         for pkvpaket in self.pkvpakete:            
             self.__list_pkvpakete_append(pkvpaket)
-
-        print(f'### DatenInterface.__init__: {len(self.list_pkvpakete)} PKV-Pakete loaded to ListSource')
 
         self.__update_list_open_bookings()
         self.__update_list_rg_beihilfe()
@@ -1064,8 +1012,12 @@ class DatenInterface:
         self.__update_archivables()
 
     def initialized(self):
-        """Prüft, ob die Anwendung initialisiert wurde."""
+        """Prüft, ob die Anwendung initialisiert wurde. Default ist False."""
         return self.init.get('initialized', False)
+    
+    def beihilfe_aktiv(self):
+        """Prüft, ob Beihilfe aktiviert ist. Default ist True."""
+        return self.init.get('beihilfe', True)
 
     def reset(self):
         """Zurücksetzen des Daten-Interfaces."""
@@ -1088,8 +1040,6 @@ class DatenInterface:
     def __update_archivables(self):
         """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""
 
-        print(f'### DatenInterface.__update_archivables: Updating archivables')
-
         self.archivables = {
             'Rechnung' : [],
             'Beihilfe' : set(),
@@ -1101,15 +1051,16 @@ class DatenInterface:
         pkvpakete_dict = {paket.db_id: paket for paket in self.pkvpakete}
 
         for i, rechnung in enumerate(self.rechnungen):
-            if rechnung.bezahlt and rechnung.beihilfe_id and rechnung.pkv_id:
+            if rechnung.bezahlt and (rechnung.beihilfe_id or not self.beihilfe_aktiv()) and rechnung.pkv_id:
                 beihilfepaket = beihilfepakete_dict.get(rechnung.beihilfe_id)
                 pkvpaket = pkvpakete_dict.get(rechnung.pkv_id)
-                if beihilfepaket and beihilfepaket.erhalten and pkvpaket and pkvpaket.erhalten:
+                if ((beihilfepaket and beihilfepaket.erhalten) or not self.beihilfe_aktiv()) and pkvpaket and pkvpaket.erhalten:
                     # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
-                    other_rechnungen = [ar for ar in self.rechnungen if ar.beihilfe_id == beihilfepaket.db_id or ar.pkv_id == pkvpaket.db_id]
+                    other_rechnungen = [ar for ar in self.rechnungen if (self.beihilfe_aktiv() and ar.beihilfe_id == beihilfepaket.db_id) or ar.pkv_id == pkvpaket.db_id]
                     if all(ar.bezahlt for ar in other_rechnungen):
                         self.archivables['Rechnung'].append(i)
-                        self.archivables['Beihilfe'].add(self.beihilfepakete.index(beihilfepaket))
+                        if self.beihilfe_aktiv():
+                            self.archivables['Beihilfe'].add(self.beihilfepakete.index(beihilfepaket))
                         self.archivables['PKV'].add(self.pkvpakete.index(pkvpaket))
 
         # Convert sets back to lists
@@ -1127,8 +1078,6 @@ class DatenInterface:
     def archive(self):
         """Archiviert alle archivierbaren Buchungen."""
 
-        print(f'### DatenInterface: archive: Archiving process started')
-
         for i in self.archivables['Rechnung']:
             self.__deactivate_rechnung(i)
 
@@ -1138,7 +1087,6 @@ class DatenInterface:
         for i in self.archivables['PKV']:
             self.__deactivate_pkvpaket(i)
 
-        print(f'### DatenInterface.archive: Archiving process finished')
         self.__update_archivables()
 
 
@@ -1151,12 +1099,15 @@ class DatenInterface:
             for rechnung in self.rechnungen:
                 if rechnung.bezahlt == False:
                     sum -= rechnung.betrag
-                if rechnung.beihilfe_id == None:
+                if rechnung.beihilfe_id == None and self.beihilfe_aktiv():
                     sum += rechnung.betrag * (rechnung.beihilfesatz / 100)
                 if rechnung.pkv_id == None:
-                    sum += rechnung.betrag * (1 - (rechnung.beihilfesatz / 100))
+                    if self.beihilfe_aktiv():
+                        sum += rechnung.betrag * (1 - (rechnung.beihilfesatz / 100))
+                    else:
+                        sum += rechnung.betrag
         
-        if kwargs.get('beihilfe', True):
+        if kwargs.get('beihilfe', True) and self.beihilfe_aktiv():
             for beihilfepaket in self.beihilfepakete:
                 if beihilfepaket.erhalten == False:
                     sum += beihilfepaket.betrag
@@ -1177,7 +1128,6 @@ class DatenInterface:
         for rechnung in self.rechnungen:
             if rechnung.bezahlt == False:
                 count += 1
-        print(f'### DatenInterface.get_number_rechnungen_not_paid: Number rechnungen not paid: {count}')
         return count
     
 
@@ -1187,7 +1137,6 @@ class DatenInterface:
         for rechnung in self.rechnungen:
             if rechnung.beihilfe_id == None:
                 count += 1
-        print(f'### DatenInterface.get_number_rechnungen_not_submitted_beihilfe: Number rechnungen not submitted to Beihilfe: {count}')
         return count
     
 
@@ -1197,7 +1146,6 @@ class DatenInterface:
         for rechnung in self.rechnungen:
             if rechnung.pkv_id == None:
                 count += 1
-        print(f'### DatenInterface.get_number_rechnungen_not_submitted_pkv: Number rechnungen not submitted to PKV: {count}')
         return count
 
 
@@ -1214,7 +1162,6 @@ class DatenInterface:
 
         for rechnung in rechnungen:
             if rechnung['db_id'] == id:
-                print(f'### DatenInterface.get_rechnung_by_dbid: Found rechnung with id {id}')
                 return rechnung
         print(f'### DatenInterface.get_rechnung_by_dbid: No rechnung found with id {id}')
 
@@ -1227,7 +1174,6 @@ class DatenInterface:
 
         for beihilfepaket in beihilfepakete:
             if beihilfepaket.db_id == id:
-                print(f'### DatenInterface.get_beihilfepaket_by_dbid: Found beihilfepaket with id {id}')
                 return beihilfepaket
         print(f'### DatenInterface.get_beihilfepaket_by_dbid: No beihilfepaket found with id {id}')
             
@@ -1240,7 +1186,6 @@ class DatenInterface:
 
         for pkvpaket in pkvpakete:
             if pkvpaket.db_id == id:
-                print(f'### DatenInterface.get_pkvpaket_by_dbid: Found pkvpaket with id {id}')
                 return pkvpaket
         print(f'### DatenInterface.get_pkvpaket_by_dbid: No pkvpaket found with id {id}')
             
@@ -1253,7 +1198,6 @@ class DatenInterface:
 
         for einrichtung in einrichtungen:
             if einrichtung.db_id == id:
-                print(f'### DatenInterface.get_einrichtung_by_dbid: Found einrichtung with id {id}')
                 return einrichtung
         print(f'### DatenInterface.get_einrichtung_by_dbid: No einrichtung found with id {id}')
             
@@ -1266,7 +1210,6 @@ class DatenInterface:
 
         for person in personen:
             if person.db_id == id:
-                print(f'### DatenInterface.get_person_by_dbid: Found person with id {id}')
                 return person
         print(f'### DatenInterface.get_person_by_dbid: No person found with id {id}')
             
@@ -1280,8 +1223,6 @@ class DatenInterface:
         if index < 0 or index >= len(rechnungen):
             print(f'### DatenInterface.get_rechnung_by_index: No rechnung with index {index}')
             return None
-        
-        print(f'### DatenInterface.get_rechnung_by_index: Return rechnung with index {index}')
 
         return rechnungen[index]
     
@@ -1293,8 +1234,6 @@ class DatenInterface:
         if index < 0 or index >= len(beihilfepakete):
             print(f'### DatenInterface.get_beihilfepaket_by_index: No beihilfepaket with index {index}')
             return None
-        
-        print(f'### DatenInterface.get_beihilfepaket_by_index: Return beihilfepaket with index {index}')
 
         return beihilfepakete[index]
     
@@ -1306,8 +1245,6 @@ class DatenInterface:
         if index < 0 or index >= len(pkvpakete):
             print(f'### DatenInterface.get_pkvpaket_by_index: No pkvpaket with index {index}')
             return None
-        
-        print(f'### DatenInterface.get_pkvpaket_by_index: Return pkvpaket with index {index}')
 
         return pkvpakete[index]
     
@@ -1319,8 +1256,6 @@ class DatenInterface:
         if index < 0 or index >= len(einrichtungen):
             print(f'### DatenInterface.get_einrichtung_by_index: No einrichtung with index {index}')
             return None
-        
-        print(f'### DatenInterface.get_einrichtung_by_index: Return einrichtung with index {index}')
 
         return einrichtungen[index]
     
@@ -1332,8 +1267,6 @@ class DatenInterface:
         if index < 0 or index >= len(personen):
             print(f'### DatenInterface.get_person_by_index: No person with index {index}')
             return None
-        
-        print(f'### DatenInterface.get_person_by_index: Return person with index {index}')
 
         return personen[index]
     
@@ -1344,8 +1277,6 @@ class DatenInterface:
             if person.name == name:
                 print(f'### DatenInterface.get_beihilfesatz_by_name: Found beihilfesatz for person {name}')
                 return person.beihilfesatz
-            
-        print(f'### DatenInterface.get_beihilfesatz_by_name: No beihilfesatz found for person {name}')
         
         return None
     
@@ -1355,8 +1286,6 @@ class DatenInterface:
         index = self.__get_list_index_by_dbid(self.list_rechnungen, db_id)
         if index is None:
             print(f'### DatenInterface.get_rechnung_index_by_dbid: No rechnung found with db_id {db_id}')
-        else:
-            print(f'### DatenInterface.get_rechnung_index_by_dbid: Return rechnung index {index} with id {db_id}') 
         return index
     
 
@@ -1365,8 +1294,6 @@ class DatenInterface:
         index = self.__get_list_index_by_dbid(self.list_einrichtungen, db_id)
         if index is None:
             print(f'### DatenInterface.get_einrichtung_index_by_dbid: No einrichtung found with id {db_id}')
-        else:
-            print(f'### DatenInterface.get_einrichtung_index_by_dbid: Return einrichtung index {index} with id {db_id}') 
         return index
     
 
@@ -1375,14 +1302,11 @@ class DatenInterface:
         index = self.__get_list_index_by_dbid(self.list_personen, db_id)
         if index is None:
             print(f'### DatenInterface.get_person_index_by_dbid: No person found with id {db_id}')
-        else:
-            print(f'### DatenInterface.get_person_index_by_dbid: Return person index {index} with id {db_id}') 
         return index
     
 
     def new_rechnung(self, rechnung):
         """Neue Rechnung erstellen."""
-        print(f'### DatenInterface.new_rechnung: New rechnung')
         rechnung.neu(self.db)
         self.rechnungen.append(rechnung)
         self.__list_rechnungen_append(rechnung)
@@ -1394,7 +1318,6 @@ class DatenInterface:
 
     def edit_rechnung(self, rechnung, rg_id):
         """Rechnung ändern."""
-        print(f'### DatenInterface.edit_rechnung: Edit rechnung with list id {rg_id}')
         self.rechnungen[rg_id] = rechnung
         self.rechnungen[rg_id].speichern(self.db)
         self.__update_list_rechnungen_id(rechnung, rg_id)
@@ -1406,7 +1329,6 @@ class DatenInterface:
 
     def delete_rechnung(self, rg_id):
         """Rechnung löschen."""
-        print(f'### DatenInterface.delete_rechnung: Delete rechnung with list id {rg_id}')
         self.rechnungen[rg_id].loeschen(self.db)
         self.rechnungen.pop(rg_id)
         del self.list_rechnungen[rg_id]
@@ -1418,7 +1340,6 @@ class DatenInterface:
 
     def __deactivate_rechnung(self, rg_id):
         """Rechnung deaktivieren."""
-        print(f'### DatenInterface.deactivate_rechnung: Deactivate rechnung with list id {rg_id}')
         self.rechnungen[rg_id].aktiv = False
         self.rechnungen[rg_id].speichern(self.db)
         self.rechnungen.pop(rg_id)
@@ -1427,7 +1348,6 @@ class DatenInterface:
 
     def pay_rechnung(self, db_id):
         """Rechnung bezahlen."""
-        print(f'### DatenInterface.pay_rechnung: Pay rechnung with db_id {db_id}')
         index = self.__get_list_index_by_dbid(self.list_rechnungen, db_id)
         self.rechnungen[index].bezahlt = True
         self.rechnungen[index].buchungsdatum = datetime.now().strftime('%d.%m.%Y')
@@ -1439,7 +1359,6 @@ class DatenInterface:
 
     def receive_beihilfe(self, db_id):
         """Beihilfe erhalten."""
-        print(f'### DatenInterface.receive_beihilfe: Receive beihilfe with db_id {db_id}')
         index = self.__get_list_index_by_dbid(self.list_beihilfepakete, db_id)
         self.beihilfepakete[index].erhalten = True
         self.beihilfepakete[index].speichern(self.db)
@@ -1450,7 +1369,6 @@ class DatenInterface:
 
     def receive_pkv(self, db_id):
         """PKV erhalten."""
-        print(f'### DatenInterface.receive_pkv: Receive pkv with db_id {db_id}')
         index = self.__get_list_index_by_dbid(self.list_pkvpakete, db_id)
         self.pkvpakete[index].erhalten = True
         self.pkvpakete[index].speichern(self.db)
@@ -1461,7 +1379,6 @@ class DatenInterface:
 
     def new_beihilfepaket(self, beihilfepaket, rechnungen_db_ids):
         """Neues Beihilfepaket erstellen."""
-        print(f'### DatenInterface.new_beihilfepaket: New beihilfepaket')
         beihilfepaket.neu(self.db)
         self.beihilfepakete.append(beihilfepaket)
         self.__list_beihilfepakete_append(beihilfepaket)
@@ -1470,10 +1387,8 @@ class DatenInterface:
         for rechnung_db_id in rechnungen_db_ids:
             index = self.__get_list_index_by_dbid(self.list_rechnungen, rechnung_db_id)
             self.rechnungen[index].beihilfe_id = beihilfepaket.db_id
-            print(f'### DatenInterface.new_beihilfepaket: rechnung type: {type(self.rechnungen[index])}')
             self.rechnungen[index].speichern(self.db)
             self.__update_list_rechnungen_id(self.rechnungen[index], index)
-            print(f'### DatenInterface.new_beihilfepaket: Rechnung with id {rechnung_db_id} linked to beihilfepaket with id {beihilfepaket.db_id}')
 
         self.__update_list_open_bookings()
         self.__update_list_rg_beihilfe()
@@ -1483,7 +1398,6 @@ class DatenInterface:
 
     def delete_beihilfepaket(self, beihilfepaket_id):
         """Beihilfepaket löschen."""
-        print(f'### DatenInterface.delete_beihilfepaket: Delete beihilfepaket with id {beihilfepaket_id}')
         self.beihilfepakete[beihilfepaket_id].loeschen(self.db)
         self.beihilfepakete.pop(beihilfepaket_id)
         del self.list_beihilfepakete[beihilfepaket_id]
@@ -1496,7 +1410,6 @@ class DatenInterface:
 
     def __deactivate_beihilfepaket(self, beihilfepaket_id):
         """Beihilfepaket deaktivieren."""
-        print(f'### DatenInterface.deactivate_beihilfepaket: Deactivate beihilfepaket with id {beihilfepaket_id}')
         self.beihilfepakete[beihilfepaket_id].aktiv = False
         self.beihilfepakete[beihilfepaket_id].speichern(self.db)
         self.beihilfepakete.pop(beihilfepaket_id)
@@ -1505,7 +1418,6 @@ class DatenInterface:
 
     def new_pkvpaket(self, pkvpaket, rechnungen_db_ids):
         """Neues PKV-Paket erstellen."""
-        print(f'### DatenInterface.new_pkvpaket: New pkvpaket')
         pkvpaket.neu(self.db)
         self.pkvpakete.append(pkvpaket)
         self.__list_pkvpakete_append(pkvpaket)
@@ -1514,10 +1426,8 @@ class DatenInterface:
         for rechnung_db_id in rechnungen_db_ids:
             index = self.__get_list_index_by_dbid(self.list_rechnungen, rechnung_db_id)
             self.rechnungen[index].pkv_id = pkvpaket.db_id
-            print(f'### DatenInterface.new_pkvpaket: rechnung type: {type(self.rechnungen[index])}')
             self.rechnungen[index].speichern(self.db)
             self.__update_list_rechnungen_id(self.rechnungen[index], index)
-            print(f'### DatenInterface.new_pkvpaket: Rechnung with id {rechnung_db_id} linked to pkvpaket with id {pkvpaket.db_id}')
 
         self.__update_list_open_bookings()
         self.__update_list_rg_beihilfe()
@@ -1527,7 +1437,6 @@ class DatenInterface:
 
     def delete_pkvpaket(self, pkvpaket_id):
         """PKV-Paket löschen."""
-        print(f'### DatenInterface.delete_pkvpaket: Delete pkvpaket with id {pkvpaket_id}')
         self.pkvpakete[pkvpaket_id].loeschen(self.db)
         self.pkvpakete.pop(pkvpaket_id)
         del self.list_pkvpakete[pkvpaket_id]
@@ -1540,7 +1449,6 @@ class DatenInterface:
 
     def __deactivate_pkvpaket(self, pkvpaket_id):
         """PKV-Paket deaktivieren."""
-        print(f'### DatenInterface.deactivate_pkvpaket: Deactivate pkvpaket with id {pkvpaket_id}')
         self.pkvpakete[pkvpaket_id].aktiv = False
         self.pkvpakete[pkvpaket_id].speichern(self.db)
         self.pkvpakete.pop(pkvpaket_id)
@@ -1549,7 +1457,6 @@ class DatenInterface:
 
     def new_einrichtung(self, einrichtung):
         """Neue Einrichtung erstellen."""
-        print(f'### DatenInterface.new_einrichtung: New einrichtung')
         einrichtung.neu(self.db)
         self.einrichtungen.append(einrichtung)
         self.__list_einrichtungen_append(einrichtung)
@@ -1557,7 +1464,6 @@ class DatenInterface:
 
     def edit_einrichtung(self, einrichtung, einrichtung_id):
         """Einrichtung ändern."""
-        print(f'### DatenInterface.edit_einrichtung: Edit einrichtung with id {einrichtung_id}')
         self.einrichtungen[einrichtung_id] = einrichtung
         self.einrichtungen[einrichtung_id].speichern(self.db)
         self.__update_list_einrichtungen_id(einrichtung, einrichtung_id)
@@ -1567,7 +1473,6 @@ class DatenInterface:
 
     def delete_einrichtung(self, einrichtung_id):
         """Einrichtung löschen."""
-        print(f'### DatenInterface.delete_einrichtung: Delete einrichtung with id {einrichtung_id}')
         if self.__check_einrichtung_used(self.einrichtungen[einrichtung_id].db_id):
             return False
         self.einrichtungen[einrichtung_id].loeschen(self.db)
@@ -1578,7 +1483,6 @@ class DatenInterface:
 
     def deactivate_einrichtung(self, einrichtung_id):
         """Einrichtung deaktivieren."""
-        print(f'### DatenInterface.deactivate_einrichtung: Deactivate einrichtung with id {einrichtung_id}')
         if self.__check_einrichtung_used(self.einrichtungen[einrichtung_id].db_id):
             return False
         self.einrichtungen[einrichtung_id].aktiv = False
@@ -1594,13 +1498,11 @@ class DatenInterface:
             if rechnung.einrichtung_id == db_id:
                 print(f'### DatenInterface.__check_einrichtung_used: Einrichtung with id {db_id} is used in rechnung with id {rechnung.db_id}')
                 return True
-        print(f'### DatenInterface.__check_einrichtung_used: Einrichtung with id {db_id} is not used')
         return False
 
 
     def new_person(self, person):
         """Neue Person erstellen."""
-        print(f'### DatenInterface.new_person: New person')
         person.neu(self.db)
         self.personen.append(person)
         self.__list_personen_append(person)
@@ -1608,7 +1510,6 @@ class DatenInterface:
 
     def edit_person(self, person, person_id):
         """Person ändern."""
-        print(f'### DatenInterface.edit_person: Edit person with id {person_id}')
         self.personen[person_id] = person
         self.personen[person_id].speichern(self.db)
         self.__update_list_personen_id(person, person_id)
@@ -1618,7 +1519,6 @@ class DatenInterface:
 
     def delete_person(self, person_id):
         """Person löschen."""
-        print(f'### DatenInterface.delete_person: Delete person with id {person_id}')
         if self.__check_person_used(self.personen[person_id].db_id):
             return False
         self.personen[person_id].loeschen(self.db)
@@ -1629,7 +1529,6 @@ class DatenInterface:
 
     def deactivate_person(self, person_id):
         """Person deaktivieren."""
-        print(f'### DatenInterface.deactivate_person: Deactivate person with id {person_id}')
         if self.__check_person_used(self.personen[person_id].db_id):
             return False
         self.personen[person_id].aktiv = False
@@ -1645,7 +1544,6 @@ class DatenInterface:
             if rechnung.person_id == db_id:
                 print(f'### DatenInterface.__check_person_used: Person with id {db_id} is used in rechnung with id {rechnung.db_id}')
                 return True
-        print(f'### DatenInterface.__check_person_used: Person with id {db_id} is not used')
         return False
 
 
@@ -1655,17 +1553,13 @@ class DatenInterface:
         # Finde die Beihilfe-Einreichung
         for beihilfepaket in self.beihilfepakete:
             if beihilfepaket.db_id == db_id:
-                print(f'### DatenInterface.update_beihilfepaket_betrag: Found beihilfepaket with id {db_id}')
                 # Alle Rechnungen durchlaufen und den Betrag aktualisieren
                 beihilfepaket.betrag = 0
-                print(f'### DatenInterface.update_beihilfepaket_betrag: Beihilfepaket Betrag: {beihilfepaket.betrag}')
                 inhalt = False
                 for rechnung in self.rechnungen:
                     if rechnung.beihilfe_id == db_id:
-                        print(f'### DatenInterface.update_beihilfepaket_betrag: Found rechnung with id {rechnung.db_id}')
                         inhalt = True
                         beihilfepaket.betrag += rechnung.betrag * (rechnung.beihilfesatz / 100)
-                        print(f'### DatenInterface.update_beihilfepaket_betrag: Beihilfepaket Betrag: {beihilfepaket.betrag}')
                 # Die Beihilfe-Einreichung speichern
                 if inhalt:
                     print(f'### DatenInterface.update_beihilfepaket_betrag: Beihilfepaket with id {db_id} has content and is saved')
@@ -1680,19 +1574,17 @@ class DatenInterface:
 
     def update_pkvpaket_betrag(self, db_id):
         """Aktualisiert eine PKV-Einreichung einer Rechnung."""
-        print(f'### DatenInterface.update_pkvpaket_betrag: Update pkvpaket with id {db_id}')
         for pkvpaket in self.pkvpakete:
             if pkvpaket.db_id == db_id:
-                print(f'### DatenInterface.update_pkvpaket_betrag: Found pkvpaket with id {db_id}')
                 pkvpaket.betrag = 0
-                print(f'### DatenInterface.update_pkvpaket_betrag: PKV-Paket Betrag: {pkvpaket.betrag}')
                 inhalt = False
                 for rechnung in self.rechnungen:
                     if rechnung.pkv_id == db_id:
-                        print(f'### DatenInterface.update_pkvpaket_betrag: Found rechnung with id {rechnung.db_id}')
                         inhalt = True
-                        pkvpaket.betrag += rechnung.betrag * (1 - (rechnung.beihilfesatz / 100))
-                        print(f'### DatenInterface.update_pkvpaket_betrag: PKV-Paket Betrag: {pkvpaket.betrag}')
+                        if self.beihilfe_aktiv():
+                            pkvpaket.betrag += rechnung.betrag * (1 - (rechnung.beihilfesatz / 100))
+                        else:
+                            pkvpaket.betrag += rechnung.betrag
                 if inhalt:
                     print(f'### DatenInterface.update_pkvpaket_betrag: PKV-Paket with id {db_id} has content and is saved')
                     pkvpaket.speichern(self.db)
@@ -1708,7 +1600,6 @@ class DatenInterface:
         """Ermittelt den Index eines Elements einer Liste anhand der ID."""
         for i, element in enumerate(liste):
             if element.db_id == db_id:
-                print(f'### DatenInterface.__get_list_index_by_dbid: Found element with id {db_id} at index {i} in {liste}')
                 return i
         else:
             print(f'### DatenInterface.__get_list_index_by_dbid: No element found with id {db_id}')
@@ -1719,7 +1610,6 @@ class DatenInterface:
         """Gibt den Namen einer Person zurück."""
         for person in self.personen:
             if person.db_id == person_id:
-                print(f'### DatenInterface.__person_name: Found person {person.name} with id {person_id}')
                 return person.name
         print(f'### DatenInterface.__person_name: No person found with id {person_id}')
         return ''
@@ -1729,7 +1619,6 @@ class DatenInterface:
         """Gibt den Namen einer Einrichtung zurück."""
         for einrichtung in self.einrichtungen:
             if einrichtung.db_id == einrichtung_id:
-                print(f'### DatenInterface.__einrichtung_name: Found einrichtung {einrichtung.name} with id {einrichtung_id}')
                 return einrichtung.name
         print(f'### DatenInterface.__einrichtung_name: No einrichtung found with id {einrichtung_id}')
         return ''
@@ -1737,7 +1626,6 @@ class DatenInterface:
 
     def __row_from_rechnung(self, rechnung):
         """Erzeugt ein Row-Objekt aus einer Rechnung."""
-        print(f'### DatenInterface.__row_from_rechnung: Create row from rechnung with id {rechnung.db_id}')
         return {
             'db_id': rechnung.db_id,
             'betrag': rechnung.betrag,
@@ -1763,30 +1651,25 @@ class DatenInterface:
 
     def __list_rechnungen_append(self, rechnung):
         """Fügt der Liste der Rechnungen eine neue Rechnung hinzu."""
-        print(f'### DatenInterface.__list_rechnungen_append: Append rechnung with id {rechnung.db_id}')
         self.list_rechnungen.append(self.__row_from_rechnung(rechnung))
         
 
     def __update_list_rechnungen_id(self, rechnung, rg_id):
         """Ändert ein Element der Liste der Rechnungen."""
-        print(f'### DatenInterface.__update_list_rechnungen_id: Update rechnung with id {rechnung.db_id} at index {rg_id}')
         self.list_rechnungen[rg_id] = self.__row_from_rechnung(rechnung)
         
 
     def __update_rechnungen(self):
         """Aktualisiert die referenzierten Werte in den Rechnungen und speichert sie in der Datenbank."""
-        print(f'### DatenInterface.__update_rechnungen: Update referenced values in rechnungen')
 
         for i, rechnung in enumerate(self.rechnungen):
 
             # Aktualisiere die Beihilfe
             if rechnung.beihilfe_id:
-                print(f'### DatenInterface.__update_rechnungen: Check beihilfe with id {rechnung.beihilfe_id} in rechnung with id {rechnung.db_id}')
                 # Überprüfe ob die Beihilfe noch existiert
                 beihilfepaket_vorhanden = False
                 for beihilfepaket in self.beihilfepakete:
                     if beihilfepaket.db_id == rechnung.beihilfe_id:
-                        print(f'### DatenInterface.__update_rechnungen: Found beihilfepaket with id {rechnung.beihilfe_id}')
                         beihilfepaket_vorhanden = True
                         break
                 
@@ -1797,12 +1680,10 @@ class DatenInterface:
 
             # Aktualisiere die PKV
             if rechnung.pkv_id:
-                print(f'### DatenInterface.__update_rechnungen: Check pkv with id {rechnung.pkv_id} in rechnung with id {rechnung.db_id}')
                 # Überprüfe ob die PKV noch existiert
                 pkvpaket_vorhanden = False
                 for pkvpaket in self.pkvpakete:
                     if pkvpaket.db_id == rechnung.pkv_id:
-                        print(f'### DatenInterface.__update_rechnungen: Found pkvpaket with id {rechnung.pkv_id}')
                         pkvpaket_vorhanden = True
                         break
                 
@@ -1813,12 +1694,10 @@ class DatenInterface:
 
             # Aktualisiere die Einrichtung
             if rechnung.einrichtung_id:
-                print(f'### DatenInterface.__update_rechnungen: Check einrichtung with id {rechnung.einrichtung_id} in rechnung with id {rechnung.db_id}')
                 # Überprüfe ob die Einrichtung noch existiert
                 einrichtung_vorhanden = False
                 for einrichtung in self.einrichtungen:
                     if einrichtung.db_id == rechnung.einrichtung_id:
-                        print(f'### DatenInterface.__update_rechnungen: Found einrichtung with id {rechnung.einrichtung_id}')
                         einrichtung_vorhanden = True
                         break
                 
@@ -1829,12 +1708,10 @@ class DatenInterface:
 
             # Aktualisiere die Person
             if rechnung.person_id:
-                print(f'### DatenInterface.__update_rechnungen: Check person with id {rechnung.person_id} in rechnung with id {rechnung.db_id}')
                 # Überprüfe ob die Person noch existiert
                 person_vorhanden = False
                 for person in self.personen:
                     if person.db_id == rechnung.person_id:
-                        print(f'### DatenInterface.__update_rechnungen: Found person with id {rechnung.person_id}')
                         person_vorhanden = True
                         break
                 
@@ -1844,14 +1721,12 @@ class DatenInterface:
                     rechnung.person_id = None
             
             # Aktualisierte Rechnung speichern
-            print(f'### DatenInterface.__update_rechnungen: Save rechnung with id {rechnung.db_id}')
             rechnung.speichern(self.db)
             self.__update_list_rechnungen_id(rechnung, i)
 
 
     def __row_from_einrichtung(self, einrichtung):
         """Erzeugt ein Row-Objekt aus einer Einrichtung."""
-        print(f'### DatenInterface.__row_from_einrichtung: Create row from einrichtung with id {einrichtung.db_id}')
         return {
             'db_id': einrichtung.db_id,
             'name': einrichtung.name or '',
@@ -1868,19 +1743,16 @@ class DatenInterface:
 
     def __list_einrichtungen_append(self, einrichtung):
         """Fügt der Liste der Einrichtungen eine neue Einrichtung hinzu."""
-        print(f'### DatenInterface.__list_einrichtungen_append: Append einrichtung with id {einrichtung.db_id}')
         self.list_einrichtungen.append(self.__row_from_einrichtung(einrichtung))
         
 
     def __update_list_einrichtungen_id(self, einrichtung, einrichtung_id):
         """Ändert ein Element der Liste der Einrichtungen."""
-        print(f'### DatenInterface.__update_list_einrichtungen_id: Update einrichtung with id {einrichtung.db_id} at index {einrichtung_id}')
         self.list_einrichtungen[einrichtung_id] = self.__row_from_einrichtung(einrichtung)
 
 
     def __row_from_person(self, person):
         """Erzeugt ein Row-Objekt aus einer Person."""
-        print(f'### DatenInterface.__row_from_person: Create row from person with id {person.db_id}')
         return {
             'db_id': person.db_id,
             'name': person.name or '',
@@ -1891,26 +1763,22 @@ class DatenInterface:
     
     def __list_personen_append(self, person):
         """Fügt der Liste der Personen eine neue Person hinzu."""
-        print(f'### DatenInterface.__list_personen_append: Append person with id {person.db_id}')
         self.list_personen.append(self.__row_from_person(person))
         
 
     def __update_list_personen_id(self, person, person_id):    
         """Ändert ein Element der Liste der Personen."""
-        print(f'### DatenInterface.__update_list_personen_id: Update person with id {person.db_id} at index {person_id}')
         self.list_personen[person_id] = self.__row_from_person(person)
 
     
     def __update_list_beihilfepakete(self):
         """Aktualisiert die Liste der Beihilfepakete."""
-        print(f'### DatenInterface.__update_list_beihilfepakete: Update list beihilfepakete')
         for beihilfepaket_id in range(len(self.list_beihilfepakete)):
             self.__update_list_beihilfepakete_id(self.beihilfepakete[beihilfepaket_id], beihilfepaket_id)
 
 
     def __row_from_beihilfepaket(self, beihilfepaket):
         """Erzeugt ein Row-Objekt aus einem Beihilfepaket."""
-        print(f'### DatenInterface.__row_from_beihilfepaket: Create row from beihilfepaket with id {beihilfepaket.db_id}')
         return {
             'db_id': beihilfepaket.db_id,
             'betrag': beihilfepaket.betrag,
@@ -1922,27 +1790,23 @@ class DatenInterface:
 
 
     def __list_beihilfepakete_append(self, beihilfepaket):
-        print(f'### DatenInterface.__list_beihilfepakete_append: Append beihilfepaket with id {beihilfepaket.db_id}')
         """Fügt der Liste der Beihilfepakete ein neues Beihilfepaket hinzu."""
         self.list_beihilfepakete.append(self.__row_from_beihilfepaket(beihilfepaket))
 
     
     def __update_list_beihilfepakete_id(self, beihilfepaket, beihilfepaket_id):
         """Ändert ein Element der Liste der Beihilfepakete."""
-        print(f'### DatenInterface.__update_list_beihilfepakete_id: Update beihilfepaket with id {beihilfepaket.db_id} at index {beihilfepaket_id}')
         self.list_beihilfepakete[beihilfepaket_id] = self.__row_from_beihilfepaket(beihilfepaket)
         
 
     def __update_list_pkvpakete(self):
         """Aktualisiert die Liste der PKV-Pakete."""
-        print(f'### DatenInterface.__update_list_pkvpakete: Update list pkvpakete')
         for pkvpaket_id in range(len(self.list_pkvpakete)):
             self.__update_list_pkvpakete_id(self.pkvpakete[pkvpaket_id], pkvpaket_id)
 
 
     def __row_from_pkvpaket(self, pkvpaket):
         """Erzeugt ein Row-Objekt aus einem PKV-Paket."""
-        print(f'### DatenInterface.__row_from_pkvpaket: Create row from pkvpaket with id {pkvpaket.db_id}')
         return {
             'db_id': pkvpaket.db_id,
             'betrag': pkvpaket.betrag,
@@ -1955,24 +1819,18 @@ class DatenInterface:
 
     def __list_pkvpakete_append(self, pkvpaket):
         """Fügt der Liste der PKV-Pakete ein neues PKV-Paket hinzu."""
-        print(f'### DatenInterface.__list_pkvpakete_append: Append pkvpaket with id {pkvpaket.db_id}')
         self.list_pkvpakete.append(self.__row_from_pkvpaket(pkvpaket))
         
 
     def __update_list_pkvpakete_id(self, pkvpaket, pkvpaket_id):
         """Ändert ein Element der Liste der PKV-Pakete."""
-        print(f'### DatenInterface.__update_list_pkvpakete_id: Update pkvpaket with id {pkvpaket.db_id} at index {pkvpaket_id}')
         self.list_pkvpakete[pkvpaket_id] = self.__row_from_pkvpaket(pkvpaket)
         
 
     def __update_list_open_bookings(self):
         """Aktualisiert die Liste der offenen Buchungen."""
-        print(f'### DatenInterface.__update_list_open_bookings: Update list open bookings')
 
         self.list_open_bookings.clear()
-        print(f'### DatenInterface.__update_list_open_bookings: Cleared list open bookings')
-        for b in self.list_open_bookings:
-            print(f'### DatenInterface.__update_list_open_bookings: element: {b}')
 
         for rechnung in self.list_rechnungen:
             if not rechnung.bezahlt:
@@ -1983,18 +1841,17 @@ class DatenInterface:
                     'datum': rechnung.buchungsdatum,
                     'info': rechnung.info
                 })
-                print(f'### DatenInterface.__update_list_open_bookings: Added rechnung with id {rechnung.db_id} to list open bookings')
     
-        for beihilfepaket in self.beihilfepakete:
-            if not beihilfepaket.erhalten:
-                self.list_open_bookings.append({
-                    'db_id': beihilfepaket.db_id,
-                    'typ': 'Beihilfe',
-                    'betrag_euro': '+{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
-                    'datum': beihilfepaket.datum,
-                    'info': 'Beihilfe-Einreichung'
-                })
-                print(f'### DatenInterface.__update_list_open_bookings: Added beihilfepaket with id {beihilfepaket.db_id} to list open bookings')
+        if self.beihilfe_aktiv():
+            for beihilfepaket in self.beihilfepakete:
+                if not beihilfepaket.erhalten:
+                    self.list_open_bookings.append({
+                        'db_id': beihilfepaket.db_id,
+                        'typ': 'Beihilfe',
+                        'betrag_euro': '+{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
+                        'datum': beihilfepaket.datum,
+                        'info': 'Beihilfe-Einreichung'
+                    })
 
         for pkvpaket in self.pkvpakete:
             if not pkvpaket.erhalten:
@@ -2005,34 +1862,23 @@ class DatenInterface:
                     'datum': pkvpaket.datum,
                     'info': 'PKV-Einreichung'
                 })
-                print(f'### DatenInterface.__update_list_open_bookings: Added pkvpaket with id {pkvpaket.db_id} to list open bookings')
 
 
     def __update_list_rg_beihilfe(self):
         """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die Beihilfe."""
-        print(f'### DatenInterface.__update_list_rg_beihilfe: Update list rg beihilfe')
 
         self.list_rg_beihilfe.clear()
-        print(f'### DatenInterface.__update_list_rg_beihilfe: Cleared list rg beihilfe')
-        for b in self.list_rg_beihilfe:
-            print(f'### DatenInterface.__update_list_rg_beihilfe: element: {b}')
 
         for rechnung in self.rechnungen:
             if not rechnung.beihilfe_id:
                 self.list_rg_beihilfe.append(self.__row_from_rechnung(rechnung))
-                print(f'### DatenInterface.__update_list_rg_beihilfe: Added rechnung with id {rechnung.db_id} to list rg beihilfe')
 
 
     def __update_list_rg_pkv(self):
         """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die PKV."""
-        print(f'### DatenInterface.__update_list_rg_pkv: Update list rg pkv')
 
         self.list_rg_pkv.clear()
-        print(f'### DatenInterface.__update_list_rg_pkv: Cleared list rg pkv')
-        for b in self.list_rg_pkv:
-            print(f'### DatenInterface.__update_list_rg_pkv: element: {b}')
 
         for rechnung in self.rechnungen:
             if not rechnung.pkv_id:
                 self.list_rg_pkv.append(self.__row_from_rechnung(rechnung))
-                print(f'### DatenInterface.__update_list_rg_pkv: Added rechnung with id {rechnung.db_id} to list rg pkv')
