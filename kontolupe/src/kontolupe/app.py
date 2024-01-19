@@ -1632,6 +1632,15 @@ class Kontolupe(toga.App):
             enabled=False
         )
 
+        self.cmd_reset = toga.Command(
+            self.reset_app,
+            'Zurücksetzen',
+            tooltip = 'Setzt die Anwendung zurück.',
+            group = gruppe_tools,
+            order = 20,
+            enabled=True
+        )
+
         self.cmd_datenschutz = toga.Command(
             self.show_webview,
             'Datenschutz',
@@ -1652,6 +1661,7 @@ class Kontolupe(toga.App):
         self.commands.add(self.cmd_einrichtungen_anzeigen)
         self.commands.add(self.cmd_einrichtungen_neu)
         self.commands.add(self.cmd_archivieren)
+        self.commands.add(self.cmd_reset)
         self.commands.add(self.cmd_datenschutz)
 
 
@@ -1688,6 +1698,18 @@ class Kontolupe(toga.App):
             #self.main_window.content = self.sc_init_page
             self.show_mainpage(None)
         self.main_window.show()
+
+
+    async def reset_app(self, widget):
+        """Setzt die Anwendung zurück."""
+
+        # 1. Abfrage ob wirklich zurückgesetzt werden soll
+        if await self.main_window.question_dialog('Zurücksetzen', 'Soll die Anwendung wirklich zurückgesetzt werden? Es werden alle Daten gelöscht.'):
+            # 2. Abfrage ob wirklich zurückgesetzt werden soll
+            if await self.main_window.question_dialog('Ganz sicher?', 'Wirklich zurücksetzen? Es werden alle Daten gelöscht.'):
+                print('+++ Kontolupe.reset_app: Zurücksetzen doppelt bestätigt.')
+                self.daten.reset()
+                self.main_window.content = self.sc_init_page
         
 
 def main():

@@ -191,9 +191,10 @@ class Datenbank:
         print(f'### Database: load_init_file: Loaded init file {self.init_file}')
         return result
 
-    def reset_data(self):
+    def reset(self):
         """Setzt alle Daten zurück."""
         # create a backup of the database
+        self.__delete_backups()
         self.__create_backup()
 
         # delete the database
@@ -1034,6 +1035,12 @@ class DatenInterface:
         self.__update_list_rg_beihilfe()
         self.__update_list_rg_pkv()
         self.__update_archivables()
+
+    def reset(self):
+        """Zurücksetzen des Daten-Interfaces."""
+        print(f'### DatenInterface.reset: resetting all data')
+        self.db.reset()
+        self.__init__()
 
     def is_first_start(self):
         """Prüft, ob das Programm zum ersten Mal gestartet wird."""
