@@ -122,12 +122,12 @@ class Kontolupe(toga.App):
             status = False
 
         # Reset the buttons for the open bookings table
-        self.mainpage_table_buttons.set_enabled('confirm_payment', False)
+        self.mainpage_table_buttons.set_enabled('pay_receive', False)
         self.mainpage_table_buttons.set_enabled('edit_open_booking', False)
 
         match widget:
             case self.table_open_bookings:
-                self.mainpage_table_buttons.set_enabled('confirm_payment', status)
+                self.mainpage_table_buttons.set_enabled('pay_receive', status)
                 if self.table_open_bookings.selection and self.table_open_bookings.selection.typ == 'Rechnung':
                     self.mainpage_table_buttons.set_enabled('edit_open_booking', status)
             case self.table_bills:
@@ -306,8 +306,8 @@ class Kontolupe(toga.App):
         self.mainpage_table_buttons = ButtonBox(
             parent  = self.box_mainpage,
             labels  = ['Bezahlt/Erstattet', 'Bearbeiten'],
-            targets = [self.confirm_payment, self.edit_open_booking],
-            ids     = ['confirm_payment', 'edit_open_booking'],
+            targets = [self.pay_receive, self.edit_open_booking],
+            ids     = ['pay_receive', 'edit_open_booking'],
             enabled = [False, False]
         )
         
@@ -400,7 +400,7 @@ class Kontolupe(toga.App):
         self.list_bills_bottombox = ButtonBox(
             parent  = self.box_list_bills,
             labels  = ['Löschen', 'Bearbeiten', 'Neu'],
-            targets = [self.confirm_delete_bill, self.show_form_bill_edit, self.show_form_bill_new],
+            targets = [self.delete_bill, self.show_form_bill_edit, self.show_form_bill_new],
             ids     = ['delete_bill', 'edit_bill', 'new_bill'],
             enabled = [False, False, True]
         )  
@@ -640,77 +640,43 @@ class Kontolupe(toga.App):
             # Überprüfe ob eine verknüpfte Beihilfe-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
             if update_einreichung and rechnung.beihilfe_id is not None:
-                await self.main_window.confirm_dialog(
-                    'Zugehörige Beihilfe-Einreichung aktualisieren',
-                    'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
-                    on_result=self.update_beihilfepaket
-                )
+                if await self.main_window.question_dialog('Zugehörige Beihilfe-Einreichung aktualisieren', 'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?'):
+                    self.daten.update_beihilfepaket_betrag(rechnung.beihilfe_id)
 
             # Überprüfe ob eine verknüpfte PKV-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
             if update_einreichung and rechnung.pkv_id is not None:
-                await self.main_window.confirm_dialog(
-                    'Zugehörige PKV-Einreichung aktualisieren',
-                    'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
-                    on_result=self.update_pkvpaket
-                )
+                if await self.main_window.question_dialog('Zugehörige PKV-Einreichung aktualisieren', 'Soll die zugehörige PKV-Einreichung aktualisiert werden?'):
+                    self.daten.update_pkvpaket_betrag(rechnung.pkv_id)
 
         # Zeigt die Liste der Rechnungen an.
         self.show_list_bills(widget)     
 
 
-    def update_beihilfepaket(self, widget, result):  
-        """Aktualisiert die Beihilfe-Einreichung einer Rechnung."""
-        if result:
-            self.daten.update_beihilfepaket_betrag(self.daten.rechnungen[self.edit_bill_id].beihilfe_id) 
-
-
-    def update_pkvpaket(self, widget, result):  
-        """Aktualisiert die PKV-Einreichung einer Rechnung."""
-        if result:
-            self.daten.update_pkvpaket_betrag(self.daten.rechnungen[self.edit_bill_id].pkv_id)    
-
-
-    def confirm_delete_bill(self, widget):
-        """Bestätigt das Löschen einer Rechnung."""
-        if self.table_bills.selection:
-            self.main_window.confirm_dialog(
-                'Rechnung löschen', 
-                'Soll die ausgewählte Rechnung wirklich gelöscht werden?',
-                on_result=self.delete_bill
-            )
-
-
-    async def delete_bill(self, widget, result):
+    async def delete_bill(self, widget):
         """Löscht eine Rechnung."""
-        if self.table_bills.selection and result:
-            
-            # Index der ausgewählten Rechnung ermitteln
-            self.edit_bill_id = table_index_selection(self.table_bills)
+        if self.table_bills.selection:
+            if await self.main_window.question_dialog('Rechnung löschen', 'Soll die ausgewählte Rechnung wirklich gelöscht werden?'): 
+                # Index der ausgewählten Rechnung ermitteln
+                self.edit_bill_id = table_index_selection(self.table_bills)
 
-            # Setze Betrag der Rechnung auf 0, damit Einreichungen aktualisiert werden können
-            self.daten.rechnungen[self.edit_bill_id].betrag = 0
+                # Setze Betrag der Rechnung auf 0, damit Einreichungen aktualisiert werden können
+                self.daten.rechnungen[self.edit_bill_id].betrag = 0
 
-            # Überprüfe, ob Einreichungen existieren
-            if self.daten.rechnungen[self.edit_bill_id].beihilfe_id is not None:
-                await self.main_window.confirm_dialog(
-                    'Zugehörige Beihilfe-Einreichung aktualisieren',
-                    'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?',
-                    on_result=self.update_beihilfepaket
-                )
+                # Überprüfe, ob Einreichungen existieren
+                if self.daten.rechnungen[self.edit_bill_id].beihilfe_id is not None:
+                    if await self.main_window.question_dialog('Zugehörige Beihilfe-Einreichung aktualisieren', 'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?'):
+                        self.daten.update_beihilfepaket_betrag(self.daten.rechnungen[self.edit_bill_id].beihilfe_id)
 
-            if self.daten.rechnungen[self.edit_bill_id].pkv_id is not None:
-                await self.main_window.confirm_dialog(
-                    'Zugehörige PKV-Einreichung aktualisieren',
-                    'Soll die zugehörige PKV-Einreichung aktualisiert werden?',
-                    on_result=self.update_pkvpaket
-                )
+                if self.daten.rechnungen[self.edit_bill_id].pkv_id is not None:
+                    if await self.main_window.question_dialog('Zugehörige PKV-Einreichung aktualisieren', 'Soll die zugehörige PKV-Einreichung aktualisiert werden?'):
+                        self.daten.update_pkvpaket_betrag(self.daten.rechnungen[self.edit_bill_id].pkv_id)
 
-            # Rechnung löschen
-            self.daten.delete_rechnung(self.edit_bill_id)
+                # Rechnung löschen
+                self.daten.delete_rechnung(self.edit_bill_id)
 
-            # App aktualisieren
-            self.update_app(widget)
+                # App aktualisieren
+                self.update_app(widget)
 
 
     def create_list_institutions(self):
@@ -743,7 +709,7 @@ class Kontolupe(toga.App):
         self.list_institutions_bottombox = ButtonBox(
             parent  = self.box_list_institutions,
             labels  = ['Bearbeiten', 'Neu', 'Löschen', 'Info'],
-            targets = [self.show_form_institution_edit, self.show_form_institution_new, self.confirm_delete_institution, self.show_info_institution],
+            targets = [self.show_form_institution_edit, self.show_form_institution_new, self.delete_institution, self.show_info_institution],
             ids     = ['edit_institution', 'new_institution', 'delete_institution', 'info_institution'],
             enabled = [False, True, False, False]
         )
@@ -968,7 +934,7 @@ class Kontolupe(toga.App):
         box_seite_info_einrichtung_buttons = toga.Box(style=style_box_row)
         self.seite_info_einrichtung_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_institution_edit, style=style_button)
         box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_bearbeiten)
-        self.seite_info_einrichtung_button_loeschen = toga.Button('Löschen', on_press=self.confirm_delete_institution, style=style_button)
+        self.seite_info_einrichtung_button_loeschen = toga.Button('Löschen', on_press=self.delete_institution, style=style_button)
         box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_loeschen)
 
         # Inhaltselemente zur Seite hinzufügen
@@ -1028,28 +994,17 @@ class Kontolupe(toga.App):
             self.main_window.content = self.scroll_container_info_einrichtung
 
     
-    def confirm_delete_institution(self, widget):
+    async def delete_institution(self, widget):
         """Bestätigt das Löschen einer Einrichtung."""
         if self.tabelle_einrichtungen.selection:
-            self.main_window.confirm_dialog(
-                'Einrichtung löschen', 
-                'Soll die ausgewählte Einrichtung wirklich gelöscht werden?',
-                on_result=self.delete_institution
-            )
-
-
-    def delete_institution(self, widget, result):
-        """Deaktiviert eine Einrichtung."""
-        if self.tabelle_einrichtungen.selection and result:
-            if not self.daten.deactivate_einrichtung(table_index_selection(self.tabelle_einrichtungen)):
-                self.main_window.error_dialog(
-                    'Fehler beim Löschen',
-                    'Die Einrichtung wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
-                )
-                return
-
-            # Seite mit Liste der Einrichtungen anzeigen
-            self.update_app(widget)
+            if await self.main_window.question_dialog('Einrichtung löschen', 'Soll die ausgewählte Einrichtung wirklich gelöscht werden?'):
+                if not self.daten.deactivate_einrichtung(table_index_selection(self.tabelle_einrichtungen)):
+                    self.main_window.error_dialog(
+                        'Fehler beim Löschen',
+                        'Die Einrichtung wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
+                    )
+                    return
+                self.update_app(widget)
 
 
     def create_list_persons(self):
@@ -1080,7 +1035,7 @@ class Kontolupe(toga.App):
         self.list_persons_bottombox = ButtonBox(
             parent  = self.box_list_persons,
             labels  = ['Bearbeiten', 'Neu', 'Löschen'],
-            targets = [self.show_form_persons_edit, self.show_form_persons_new, self.confirm_delete_person],
+            targets = [self.show_form_persons_edit, self.show_form_persons_new, self.delete_person],
             ids     = ['edit_person', 'new_person', 'delete_person'],
             enabled = [False, True, False]
         )
@@ -1204,28 +1159,17 @@ class Kontolupe(toga.App):
         self.show_list_persons(widget)
 
 
-    def confirm_delete_person(self, widget):
+    async def delete_person(self, widget):
         """Bestätigt das Löschen einer Person."""
         if self.tabelle_personen.selection:
-            self.main_window.confirm_dialog(
-                'Person löschen', 
-                'Soll die ausgewählte Person wirklich gelöscht werden?',
-                on_result=self.delete_person
-            )
-
-
-    def delete_person(self, widget, result):
-        """Deaktiviert eine Person."""
-        if self.tabelle_personen.selection and result:
-            if not self.daten.deactivate_person(table_index_selection(self.tabelle_personen)):
-                self.main_window.error_dialog(
-                    'Fehler beim Löschen',
-                    'Die Person wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
-                )
-                return
-
-            # App aktualisieren
-            self.update_app(widget)
+            if await self.main_window.question_dialog('Person löschen', 'Soll die ausgewählte Person wirklich gelöscht werden?'):
+                if not self.daten.deactivate_person(table_index_selection(self.tabelle_personen)):
+                    self.main_window.error_dialog(
+                        'Fehler beim Löschen',
+                        'Die Person wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
+                    )
+                    return
+                self.update_app(widget)            
 
 
     def create_list_beihilfe(self):
@@ -1257,7 +1201,7 @@ class Kontolupe(toga.App):
         self.list_allowance_bottombox = ButtonBox(
             parent  = self.box_list_allowance,
             labels  = ['Zurücksetzen', 'Neu'],
-            targets = [self.confirm_delete_beihilfe, self.show_form_beihilfe_new],
+            targets = [self.delete_beihilfe, self.show_form_beihilfe_new],
             ids     = ['reset_allowance', 'new_allowance'],
             enabled = [False, True]
         )
@@ -1292,7 +1236,7 @@ class Kontolupe(toga.App):
         self.list_insurance_bottombox = ButtonBox(
             parent  = self.box_list_insurance,
             labels  = ['Zurücksetzen', 'Neu'],
-            targets = [self.confirm_delete_pkv, self.show_form_pkv_new],
+            targets = [self.delete_pkv, self.show_form_pkv_new],
             ids     = ['reset_insurance', 'new_insurance'],
             enabled = [False, True]
         )
@@ -1533,104 +1477,47 @@ class Kontolupe(toga.App):
         self.show_mainpage(widget)
 
 
-    def confirm_delete_beihilfe(self, widget):
-        """Bestätigt das Löschen einer Beihilfe-Einreichung."""
-        if self.table_allowance.selection:
-            self.main_window.confirm_dialog(
-                'Beihilfe-Einreichung zurücksetzen', 
-                'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.',
-                on_result=self.delete_beihilfe
-            )
-
-
-    def confirm_delete_pkv(self, widget):
-        """Bestätigt das Löschen einer PKV-Einreichung."""
-        if self.table_insurance.selection:
-            self.main_window.confirm_dialog(
-                'PKV-Einreichung zurücksetzen', 
-                'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.',
-                on_result=self.delete_pkv
-            )
-
-
-    def delete_beihilfe(self, widget, result):
+    async def delete_beihilfe(self, widget):
         """Löscht eine Beihilfe-Einreichung."""
-        if self.table_allowance.selection and result:
-            self.daten.delete_beihilfepaket(table_index_selection(self.table_allowance))
-            
-            # Anzeigen aktualisieren
-            self.update_app(widget)
+        if self.table_allowance.selection:
+            if await self.main_window.question_dialog('Beihilfe-Einreichung zurücksetzen', 'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.'):
+                self.daten.delete_beihilfepaket(table_index_selection(self.table_allowance))
+                self.update_app(widget)
 
 
-    def delete_pkv(self, widget, result):
+    async def delete_pkv(self, widget):
         """Löscht eine PKV-Einreichung."""
-        if self.table_insurance.selection and result:
-            self.daten.delete_pkvpaket(table_index_selection(self.table_insurance))
-            
-            # Anzeigen aktualisieren
-            self.update_app(widget)
+        if self.table_insurance.selection:
+            if await self.main_window.question_dialog('PKV-Einreichung zurücksetzen', 'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.'):
+                self.daten.delete_pkvpaket(table_index_selection(self.table_insurance))
+                self.update_app(widget)
             
 
-    def archivieren_bestaetigen(self, widget):
+    async def archivieren_bestaetigen(self, widget):
         """Bestätigt das Archivieren von Buchungen."""
         if self.daten.get_number_archivables() > 0:
-            self.main_window.confirm_dialog(
-                'Buchungen archivieren', 
-                'Sollen alle archivierbaren Buchungen wirklich archiviert werden? Sie werden dann in der App nicht mehr angezeigt.',
-                on_result=self.archivieren
-            )
-
-
-    def archivieren(self, widget, result):
-        if result:
-            self.daten.archive()
-            self.show_mainpage(widget)
+            if await self.main_window.question_dialog('Buchungen archivieren', 'Sollen alle archivierbaren Buchungen wirklich archiviert werden? Sie werden dann in der App nicht mehr angezeigt.'):
+                self.daten.archive()
+                self.show_mainpage(widget)
             
 
-    def confirm_payment(self, widget):
+    async def pay_receive(self, widget):
         """Bestätigt die Bezahlung einer Rechnung."""
         if self.table_open_bookings.selection:
             match self.table_open_bookings.selection.typ:
                 case 'Rechnung':
-                    self.main_window.confirm_dialog(
-                        'Rechnung bezahlt?', 
-                        'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?',
-                        on_result=self.rechnung_bezahlen
-                    )
+                    if await self.main_window.question_dialog('Rechnung bezahlt?', 'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?'):
+                        self.daten.pay_rechnung(self.table_open_bookings.selection.db_id)
+                        self.update_app(widget)
                 case 'Beihilfe':
-                    self.main_window.confirm_dialog(
-                        'Beihilfe-Einreichung erstattet?', 
-                        'Soll die ausgewählte Beihilfe wirklich als erstattet markiert werden?',
-                        on_result=self.beihilfe_erhalten
-                    )
+                    if await self.main_window.question_dialog('Beihilfe-Einreichung erstattet?', 'Soll die ausgewählte Beihilfe wirklich als erstattet markiert werden?'):
+                        self.daten.receive_beihilfe(self.table_open_bookings.selection.db_id)
+                        self.update_app(widget)
                 case 'PKV':
-                    self.main_window.confirm_dialog(
-                        'PKV-Einreichung erstattet?', 
-                        'Soll die ausgewählte PKV-Einreichung wirklich als erstattet markiert werden?',
-                        on_result=self.pkv_erhalten
-                    )
-    
+                    if await self.main_window.question_dialog('PKV-Einreichung erstattet?', 'Soll die ausgewählte PKV-Einreichung wirklich als erstattet markiert werden?'):                        
+                        self.daten.receive_pkv(self.table_open_bookings.selection.db_id)
+                        self.update_app(widget)
 
-    def rechnung_bezahlen(self, widget, result):
-        """Markiert eine Rechnung als bezahlt."""
-        if self.table_open_bookings.selection and result:
-            self.daten.pay_rechnung(self.table_open_bookings.selection.db_id)
-            self.update_app(widget)
-
-    
-    def beihilfe_erhalten(self, widget, result):
-        """Markiert eine Beihilfe als erhalten."""
-        if self.table_open_bookings.selection and result:
-            self.daten.receive_beihilfe(self.table_open_bookings.selection.db_id)
-            self.update_app(widget)
-
-
-    def pkv_erhalten(self, widget, result):
-        """Markiert eine PKV-Einreichung als erhalten."""
-        if self.table_open_bookings.selection and result:
-            self.daten.receive_pkv(self.table_open_bookings.selection.db_id)
-            self.update_app(widget)
-    
 
     def edit_open_booking(self, widget):
         """Öffnet die Seite zum Bearbeiten einer offenen Buchung."""
