@@ -294,10 +294,15 @@ class Kontolupe(toga.App):
 
         # Setze das Formular zurück
         self.init_persons_name.set_value('')
-        self.init_persons_beihilfe.set_value(50)
+        self.init_persons_beihilfe.set_value('')
         self.init_institutions_name.set_value('')
         self.init_institutions_city.set_value('')
         self.init_beihilfe.set_value(self.daten.init.get('beihilfe', True))
+        
+        if self.daten.init.get('beihilfe', True):
+            self.init_persons_beihilfe.show()
+        else:
+            self.init_persons_beihilfe.hide()
 
         # Ermittle den Status der Eingaben
         status_persons = False
@@ -349,7 +354,13 @@ class Kontolupe(toga.App):
         box_init_beihilfe = toga.Box(style=style_box_part_beihilfe)
         self.box_init_page.add(box_init_beihilfe)
         box_init_beihilfe.add(toga.Label('Beihilfe', style=style_label_subline_hell))
-        self.init_beihilfe = LabeledSwitch(box_init_beihilfe, '', style=style_switch_hell, value=True)
+        self.init_beihilfe = LabeledSwitch(
+            box_init_beihilfe, 
+            '', 
+            style=style_switch_hell, 
+            value=True,
+            on_change=self.init_beihilfe_changed
+        )
         box_init_beihilfe.add(toga.Label('Aktiviere diese Funktion, wenn Du beihilfeberechtigt bist.', style=style_description_hell))
 
         # Eingabebereich der Personen
@@ -361,7 +372,7 @@ class Kontolupe(toga.App):
         
         self.init_persons_name = LabeledTextInput(box_init_persons, 'Name:')
         self.init_persons_beihilfe = LabeledPercentInput(box_init_persons, 'Beihilfe in %:')
-        self.init_persons_beihilfe.set_value(50)
+        self.init_persons_beihilfe.set_value('')
 
         self.init_persons_buttons = ButtonBox(
             parent=box_init_persons,
@@ -387,9 +398,29 @@ class Kontolupe(toga.App):
         
         # Button zum Abschluss der Initialisierung
         box_init_page_button = toga.Box(style=style_box_part_button)
-        self.init_button = toga.Button('Initialisierung abschließen', style=style_button, on_press=None, enabled=False)
+        self.init_button = toga.Button('Initialisierung abschließen', style=style_button, on_press=self.finish_init, enabled=False)
         box_init_page_button.add(self.init_button)
         self.box_init_page.add(box_init_page_button)
+
+
+    def init_beihilfe_changed(self, widget):
+        """Reagiert auf die Änderung der Beihilfeeinstellung während der Initialisierung."""
+        self.daten.init['beihilfe'] = widget.value
+        self.daten.save_init_file()
+        self.update_init_page(widget)
+
+
+    def finish_init(self, widget):
+        """Speichert die Daten und beendet die Initialisierung."""
+        
+        # Speichere die Daten
+        self.daten.init['beihilfe'] = self.init_beihilfe.get_value()
+        self.daten.init['initialized'] = True
+        self.daten.save_init_file()
+
+        # Zeige die Startseite
+        self.show_mainpage(widget)
+
 
     def create_mainpage(self):
         """Erzeugt die Startseite der Anwendung."""
@@ -909,32 +940,41 @@ class Kontolupe(toga.App):
         """Prüft die Eingaben und speichert die Einrichtung."""
         nachricht = ''
 
-        # Prüfe, ob ein Name eingegeben wurde
-        if self.form_institution_name.is_empty():
-            nachricht += 'Bitte gib einen Namen ein.\n'
+        # Überprüfe die Eingaben auf Richtigkeit
+        if widget in self.form_institution_buttons.buttons:
 
-        # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
-        if not (self.form_institution_plz.is_valid() or self.form_institution_plz.is_empty()):
-                nachricht += 'Bitte gib eine gültige PLZ ein oder lasse das Feld leer.\n'
+            # Prüfe, ob ein Name eingegeben wurde
+            if self.form_institution_name.is_empty():
+                nachricht += 'Bitte gib einen Namen ein.\n'
 
-        # Prüfe, ob nichts oder eine gültige Telefonnummer eingegeben wurde
-        if not (self.form_institution_telefon.is_valid() or self.form_institution_telefon.is_empty()):
-                nachricht += 'Bitte gib eine gültige Telefonnummer ein oder lasse das Feld leer.\n'
+            # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
+            if not (self.form_institution_plz.is_valid() or self.form_institution_plz.is_empty()):
+                    nachricht += 'Bitte gib eine gültige PLZ ein oder lasse das Feld leer.\n'
 
-        # Prüfe, ob nichts oder eine gültige E-Mail-Adresse eingegeben wurde
-        if not (self.form_institution_email.is_valid() or  self.form_institution_email.is_empty()):
-                nachricht += 'Bitte gib eine gültige E-Mail-Adresse ein oder lasse das Feld leer.\n'
+            # Prüfe, ob nichts oder eine gültige Telefonnummer eingegeben wurde
+            if not (self.form_institution_telefon.is_valid() or self.form_institution_telefon.is_empty()):
+                    nachricht += 'Bitte gib eine gültige Telefonnummer ein oder lasse das Feld leer.\n'
 
-        # Prüfe, ob nichts oder eine gültige Webseite eingegeben wurde
-        if not (self.form_institution_webseite.is_valid() or self.form_institution_webseite.is_empty()):
-                nachricht += 'Bitte gib eine gültige Webseite ein oder lasse das Feld leer.\n'
+            # Prüfe, ob nichts oder eine gültige E-Mail-Adresse eingegeben wurde
+            if not (self.form_institution_email.is_valid() or  self.form_institution_email.is_empty()):
+                    nachricht += 'Bitte gib eine gültige E-Mail-Adresse ein oder lasse das Feld leer.\n'
+
+            # Prüfe, ob nichts oder eine gültige Webseite eingegeben wurde
+            if not (self.form_institution_webseite.is_valid() or self.form_institution_webseite.is_empty()):
+                    nachricht += 'Bitte gib eine gültige Webseite ein oder lasse das Feld leer.\n'
+
+        elif widget in self.init_institutions_buttons.buttons:
+
+            # Prüfe, ob ein Name eingegeben wurde
+            if self.init_institutions_name.is_empty():
+                nachricht += 'Bitte gib einen Namen ein.\n'
 
         if nachricht != '':
-            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
+            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht[0:-2])
             return
         
         # Beginn der Speicherroutine
-        if not self.flag_edit_institution:
+        if widget in self.form_institution_buttons.buttons and not self.flag_edit_institution:
         # Erstelle eine neue Einrichtung
             neue_einrichtung = Einrichtung()
             neue_einrichtung.name = self.form_institution_name.get_value()
@@ -948,7 +988,11 @@ class Kontolupe(toga.App):
 
             # Speichere die Einrichtung in der Datenbank
             self.daten.new_einrichtung(neue_einrichtung)
-        else:
+
+            # Zeige die Liste der Einrichtungen
+            self.show_list_institutions(widget)
+
+        elif widget in self.form_institution_buttons.buttons and self.flag_edit_institution:
             print('+++ Einrichtung bearbeiten')
             einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id, objekt=True)
 
@@ -968,9 +1012,23 @@ class Kontolupe(toga.App):
             # Flag zurücksetzen
             self.flag_edit_institution = False
 
+            # Zeige die Liste der Einrichtungen
+            self.show_list_institutions(widget)
 
-        # Zeige die Liste der Einrichtungen
-        self.show_list_institutions(widget)
+        elif widget in self.init_institutions_buttons.buttons:
+            print('+++ Einrichtung initialisieren')
+            neue_einrichtung = Einrichtung()
+            neue_einrichtung.name = self.init_institutions_name.get_value()
+            neue_einrichtung.ort = self.init_institutions_city.get_value()
+
+            # Speichere die Einrichtung in der Datenbank
+            self.daten.new_einrichtung(neue_einrichtung)
+
+            # Aktualisiere die Initialisierungsseite
+            self.update_init_page(widget)
+
+            # Show Success Message
+            self.main_window.info_dialog('Einrichtung gespeichert', neue_einrichtung.name + ' wurde erfolgreich gespeichert.')
 
 
     def create_info_institution(self):
@@ -1158,35 +1216,58 @@ class Kontolupe(toga.App):
 
     def save_person(self, widget):
         """Prüft die Eingaben und speichert die Person."""
+
+        # Überprüfe die Eingaben auf Richtigkeit
+
         nachricht = ''
 
-        # Prüfe, ob ein Name eingegeben wurde
-        if self.form_person_name.is_empty():
-            nachricht += 'Bitte gib einen Namen ein.\n'
+        if widget in self.form_person_buttons.buttons:
 
-        # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
-        if not self.form_person_beihilfe.is_valid():
-                nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
+            # Prüfe, ob ein Name eingegeben wurde
+            if self.form_person_name.is_empty():
+                nachricht += 'Bitte gib einen Namen ein.\n'
+
+            # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
+            if self.daten.init.get('beihilfe', True) and not self.form_person_beihilfe.is_valid():
+                    nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
+
+        elif widget in self.init_persons_buttons.buttons:
+                
+                # Prüfe, ob ein Name eingegeben wurde
+                if self.init_persons_name.is_empty():
+                    nachricht += 'Bitte gib einen Namen ein.\n'
+    
+                # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
+                if self.daten.init.get('beihilfe', True) and not self.init_persons_beihilfe.is_valid():
+                        nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
         if nachricht != '':
-            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
+            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht[0:-2])
             return
         
         # Beginn der Speicherroutine
-        if not self.flag_edit_person:
-        # Erstelle eine neue Person
+        if widget in self.form_person_buttons.buttons and not self.flag_edit_person:
+            # Erstelle eine neue Person
             neue_person = Person()
             neue_person.name = self.form_person_name.get_value()
-            neue_person.beihilfesatz = self.form_person_beihilfe.get_value()
+            
+            if self.daten.init.get('beihilfe', True):
+                neue_person.beihilfesatz = self.form_person_beihilfe.get_value()
 
             # Speichere die Person 
             self.daten.new_person(neue_person)
-        else:
+
+            # Zeige die Liste der Personen
+            self.show_list_persons(widget)
+
+        elif widget in self.form_person_buttons.buttons and  self.flag_edit_person:
+            # Bearbeite eine Person
             person = self.daten.get_person_by_index(self.edit_person_id, objekt=True)
 
             # Bearbeite die Person
             person.name = self.form_person_name.get_value()
-            person.beihilfesatz = self.form_person_beihilfe.get_value()
+            if self.daten.init.get('beihilfe', True):
+                person.beihilfesatz = self.form_person_beihilfe.get_value()
 
             # Speichere die Person in der Datenbank
             self.daten.edit_person(person, self.edit_person_id)
@@ -1194,8 +1275,25 @@ class Kontolupe(toga.App):
             # Flag zurücksetzen
             self.flag_edit_person = False
 
-        # Zeige die Liste der Personen
-        self.show_list_persons(widget)
+            # Zeige die Liste der Personen
+            self.show_list_persons(widget)
+
+        elif widget in self.init_persons_buttons.buttons:
+            # Erstelle eine neue Person
+            neue_person = Person()
+            neue_person.name = self.init_persons_name.get_value()
+            
+            if self.daten.init.get('beihilfe', True):
+                neue_person.beihilfesatz = self.init_persons_beihilfe.get_value()
+
+            # Speichere die Person 
+            self.daten.new_person(neue_person)
+
+            # Aktualisiere die Initialisierungsseite
+            self.update_init_page(widget)
+
+            # Show Success Message
+            self.main_window.info_dialog('Person gespeichert', neue_person.name + ' wurde erfolgreich gespeichert.')
 
 
     async def delete_person(self, widget):

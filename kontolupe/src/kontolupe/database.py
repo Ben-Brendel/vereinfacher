@@ -1079,7 +1079,7 @@ class DatenInterface:
 
     def save_init_file(self):
         """Speichert die Initialisierungsdatei."""
-        self.db.save_init_file(self.init)
+        self.db.save_init_file(**self.init)
 
     def load_init_file(self):
         """Lädt die Initialisierungsdatei und speichert sie in der Klassenvariable."""
@@ -1568,7 +1568,7 @@ class DatenInterface:
     def delete_einrichtung(self, einrichtung_id):
         """Einrichtung löschen."""
         print(f'### DatenInterface.delete_einrichtung: Delete einrichtung with id {einrichtung_id}')
-        if self.__check_einrichtung_used(einrichtung_id):
+        if self.__check_einrichtung_used(self.einrichtungen[einrichtung_id].db_id):
             return False
         self.einrichtungen[einrichtung_id].loeschen(self.db)
         self.einrichtungen.pop(einrichtung_id)
@@ -1579,7 +1579,7 @@ class DatenInterface:
     def deactivate_einrichtung(self, einrichtung_id):
         """Einrichtung deaktivieren."""
         print(f'### DatenInterface.deactivate_einrichtung: Deactivate einrichtung with id {einrichtung_id}')
-        if self.__check_einrichtung_used(einrichtung_id):
+        if self.__check_einrichtung_used(self.einrichtungen[einrichtung_id].db_id):
             return False
         self.einrichtungen[einrichtung_id].aktiv = False
         self.einrichtungen[einrichtung_id].speichern(self.db)
@@ -1588,13 +1588,13 @@ class DatenInterface:
         return True
 
 
-    def __check_einrichtung_used(self, einrichtung_id):
+    def __check_einrichtung_used(self, db_id):
         """Prüft, ob eine Einrichtung verwendet wird."""
         for rechnung in self.rechnungen:
-            if rechnung.einrichtung_id == einrichtung_id:
-                print(f'### DatenInterface.__check_einrichtung_used: Einrichtung with id {einrichtung_id} is used in rechnung with id {rechnung.db_id}')
+            if rechnung.einrichtung_id == db_id:
+                print(f'### DatenInterface.__check_einrichtung_used: Einrichtung with id {db_id} is used in rechnung with id {rechnung.db_id}')
                 return True
-        print(f'### DatenInterface.__check_einrichtung_used: Einrichtung with id {einrichtung_id} is not used')
+        print(f'### DatenInterface.__check_einrichtung_used: Einrichtung with id {db_id} is not used')
         return False
 
 
@@ -1619,7 +1619,7 @@ class DatenInterface:
     def delete_person(self, person_id):
         """Person löschen."""
         print(f'### DatenInterface.delete_person: Delete person with id {person_id}')
-        if self.__check_person_used(person_id):
+        if self.__check_person_used(self.personen[person_id].db_id):
             return False
         self.personen[person_id].loeschen(self.db)
         self.personen.pop(person_id)
@@ -1630,7 +1630,7 @@ class DatenInterface:
     def deactivate_person(self, person_id):
         """Person deaktivieren."""
         print(f'### DatenInterface.deactivate_person: Deactivate person with id {person_id}')
-        if self.__check_person_used(person_id):
+        if self.__check_person_used(self.personen[person_id].db_id):
             return False
         self.personen[person_id].aktiv = False
         self.personen[person_id].speichern(self.db)
@@ -1639,13 +1639,13 @@ class DatenInterface:
         return True
 
 
-    def __check_person_used(self, person_id):
+    def __check_person_used(self, db_id):
         """Prüft, ob eine Person verwendet wird."""
         for rechnung in self.rechnungen:
-            if rechnung.person_id == person_id:
-                print(f'### DatenInterface.__check_person_used: Person with id {person_id} is used in rechnung with id {rechnung.db_id}')
+            if rechnung.person_id == db_id:
+                print(f'### DatenInterface.__check_person_used: Person with id {db_id} is used in rechnung with id {rechnung.db_id}')
                 return True
-        print(f'### DatenInterface.__check_person_used: Person with id {person_id} is not used')
+        print(f'### DatenInterface.__check_person_used: Person with id {db_id} is not used')
         return False
 
 
