@@ -32,7 +32,7 @@ style_label_input_hell          = Pack(flex=1, padding=5, text_align=LEFT, color
 style_table                     = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_table_hell                = Pack(flex=1, padding=5, color=FARBE_HELL)
 style_switch                    = Pack(padding=5, color=FARBE_DUNKEL)
-style_switch_hell               = Pack(flex=1, padding=5, color=FARBE_HELL)
+style_switch_hell               = Pack(padding=5, color=FARBE_HELL)
 style_divider                   = Pack(padding=5, background_color=FARBE_MITTEL)
 
 # Spezifische Styles
@@ -65,6 +65,11 @@ style_box_column_dunkel         = Pack(direction=COLUMN, alignment=CENTER, backg
 
 # Init-Seite
 style_box_part                  = Pack(direction=COLUMN, alignment=CENTER, padding_top=5, padding_bottom=5, background_color=FARBE_HELLGRAU)
+style_box_part_beihilfe         = Pack(direction=COLUMN, alignment=CENTER, padding_top=5, padding_bottom=5, background_color=FARBE_LILA)
+style_box_part_button           = Pack(direction=COLUMN, alignment=CENTER, padding_top=5, padding_bottom=5, background_color=FARBE_GRUEN)
 style_box_headline              = Pack(direction=COLUMN, alignment=CENTER, background_color=FARBE_BLAU, padding_bottom=10)
+style_label_subline             = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=10, color=FARBE_DUNKEL)
+style_label_subline_hell        = Pack(font_size=11, font_weight='bold', text_align=CENTER, padding=5, padding_top=10, color=FARBE_HELL)
 style_label_headline            = Pack(font_size=14, font_weight='bold', text_align=CENTER, padding=5, padding_top=20, padding_bottom=20, color=FARBE_HELL)
-style_label_center              = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, padding_bottom=10, color=FARBE_DUNKEL)
+style_description               = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, padding_bottom=10, color=FARBE_DUNKEL)
+style_description_hell          = Pack(font_weight='normal', text_align=CENTER, padding_left=5, padding_right=5, padding_bottom=10, color=FARBE_HELL)

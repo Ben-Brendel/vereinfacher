@@ -293,17 +293,17 @@ class Kontolupe(toga.App):
         self.box_init_page.add(box_init_top)
 
         # Angabe der Beihilfeberechtigung
-        box_init_beihilfe = toga.Box(style=style_box_part)
+        box_init_beihilfe = toga.Box(style=style_box_part_beihilfe)
         self.box_init_page.add(box_init_beihilfe)
-        box_init_beihilfe.add(toga.Label('Beihilfe', style=style_label_h2))
-        self.init_beihilfe = LabeledSwitch(box_init_beihilfe, '')
-        box_init_beihilfe.add(toga.Label('Aktiviere diese Funktion, wenn Du beihilfeberechtigt bist.', style=style_label_center))
+        box_init_beihilfe.add(toga.Label('Beihilfe', style=style_label_subline_hell))
+        self.init_beihilfe = LabeledSwitch(box_init_beihilfe, '', style=style_switch_hell)
+        box_init_beihilfe.add(toga.Label('Aktiviere diese Funktion, wenn Du beihilfeberechtigt bist.', style=style_description_hell))
 
         # Eingabebereich der Personen
         box_init_persons = toga.Box(style=style_box_part)
         self.box_init_page.add(box_init_persons)
-        box_init_persons.add(toga.Label('Personen', style=style_label_h2))
-        self.init_persons_label = toga.Label('Bitte füge mindestens eine Person hinzu.', style=style_label_center)
+        box_init_persons.add(toga.Label('Personen', style=style_label_subline))
+        self.init_persons_label = toga.Label('Bitte füge mindestens eine Person hinzu.', style=style_description)
         box_init_persons.add(self.init_persons_label)
         
         self.init_persons_name = LabeledTextInput(box_init_persons, 'Name:')
@@ -319,8 +319,8 @@ class Kontolupe(toga.App):
         # Eingabebereich der Einrichtungen
         box_init_institutions = toga.Box(style=style_box_part)
         self.box_init_page.add(box_init_institutions)
-        box_init_institutions.add(toga.Label('Einrichtungen', style=style_label_h2))
-        self.init_institutions_label = toga.Label('Bitte füge mindestens eine Einrichtung hinzu.', style=style_label_center)
+        box_init_institutions.add(toga.Label('Einrichtungen', style=style_label_subline))
+        self.init_institutions_label = toga.Label('Bitte füge mindestens eine Einrichtung hinzu.', style=style_description)
         box_init_institutions.add(self.init_institutions_label)
 
         self.init_institutions_name = LabeledTextInput(box_init_institutions, 'Einrichtung:')
@@ -333,8 +333,10 @@ class Kontolupe(toga.App):
         )
         
         # Button zum Abschluss der Initialisierung
+        box_init_page_button = toga.Box(style=style_box_part_button)
         self.init_button = toga.Button('Initialisierung abschließen', style=style_button, on_press=None, enabled=False)
-        self.box_init_page.add(self.init_button)
+        box_init_page_button.add(self.init_button)
+        self.box_init_page.add(box_init_page_button)
 
     def create_mainpage(self):
         """Erzeugt die Startseite der Anwendung."""
