@@ -268,7 +268,7 @@ class Kontolupe(toga.App):
     def show_webview(self, widget):
         """Zeigt die WebView zur Anzeige von Webseiten."""
         match widget:
-            case self.link_info_einrichtung_webseite:
+            case self.info_institution_website.button:
                 self.webview.url = self.daten.list_einrichtungen[self.edit_institution_id].webseite
                 self.back_to = 'info_einrichtung'
             case self.cmd_datenschutz:
@@ -862,82 +862,34 @@ class Kontolupe(toga.App):
 
     def create_info_institution(self):
         """Erzeugt die Seite, auf der die Details einer Einrichtung angezeigt werden."""
-        box_seite_info_einrichtung_button_zurueck = toga.Button('Zurück', on_press=self.show_list_institutions, style=style_button)
-        self.label_info_einrichtung_name = toga.Label('', style=style_label_h1_hell)
-        box_seite_info_einrichtung_top = toga.Box(style=style_box_column_dunkel)
-        box_seite_info_einrichtung_top.add(box_seite_info_einrichtung_button_zurueck)
-        box_seite_info_einrichtung_top.add(self.label_info_einrichtung_name)
 
-        # Bereich mit den Details zur Straße
-        box_seite_info_einrichtung_strasse = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_strasse.add(toga.Label('Straße, Hausnr.: ', style=style_label_info))
-        self.label_info_einrichtung_strasse = toga.Label('', style=style_label_detail)
-        box_seite_info_einrichtung_strasse.add(self.label_info_einrichtung_strasse)
+        # Container
+        self.sc_info_institution = toga.ScrollContainer(style=style_scroll_container)
+        self.box_info_institution = toga.Box(style=style_box_column)
+        self.sc_info_institution.content = self.box_info_institution
 
-        # Bereich mit den Details zum Ort
-        box_seite_info_einrichtung_plz_ort = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_plz_ort.add(toga.Label('PLZ, Ort: ', style=style_label_info))
-        self.label_info_einrichtung_plz_ort = toga.Label('', style=style_label_detail)
-        box_seite_info_einrichtung_plz_ort.add(self.label_info_einrichtung_plz_ort)
-
-        # Bereich mit den Details zur Telefonnummer
-        box_seite_info_einrichtung_telefon = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_telefon.add(toga.Label('Telefon: ', style=style_label_info))
-        self.label_info_einrichtung_telefon = toga.Label('', style=style_label_detail)
-        box_seite_info_einrichtung_telefon.add(self.label_info_einrichtung_telefon)
-        #self.display_info_einrichtung_telefon = toga.TextInput(style=style_display, readonly=True)
-        #box_seite_info_einrichtung_telefon.add(self.display_info_einrichtung_telefon)
-        
-        # Bereich mit den Details zur E-Mail-Adresse
-        box_seite_info_einrichtung_email = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_email.add(toga.Label('E-Mail: ', style=style_label_info))
-        self.label_info_einrichtung_email = toga.Label('', style=style_label_detail)
-        box_seite_info_einrichtung_email.add(self.label_info_einrichtung_email)
-        #self.display_info_einrichtung_email = toga.TextInput(style=style_display, readonly=True)
-        #box_seite_info_einrichtung_email.add(self.display_info_einrichtung_email)
-
-        # Bereich mit den Details zur Webseite
-        self.box_seite_info_einrichtung_webseite = toga.Box(style=style_box_row)
-        # box_seite_info_einrichtung_webseite.add(toga.Label('Webseite: ', style=style_label_info))
-        # self.label_info_einrichtung_webseite = toga.Label('', style=style_label_detail)
-        # box_seite_info_einrichtung_webseite.add(self.label_info_einrichtung_webseite)
-        label_info_einrichtung_website = toga.Label('Webseite:', style=style_label_info)
-        self.link_info_einrichtung_webseite = toga.Button('', style=style_button_link, on_press=self.show_webview)
-        
-
-        # Bereich mit den Details zur Notiz
-        box_seite_info_einrichtung_notiz = toga.Box(style=style_box_row)
-        box_seite_info_einrichtung_notiz.add(toga.Label('Notiz: ', style=style_label_info))
-        self.label_info_einrichtung_notiz = toga.Label('', style=style_label_detail)
-        box_seite_info_einrichtung_notiz.add(self.label_info_einrichtung_notiz)
-
-        # Bereich mit den Buttons
-        box_seite_info_einrichtung_buttons = toga.Box(style=style_box_row)
-        self.seite_info_einrichtung_button_bearbeiten = toga.Button('Bearbeiten', on_press=self.show_form_institution_edit, style=style_button)
-        box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_bearbeiten)
-        self.seite_info_einrichtung_button_loeschen = toga.Button('Löschen', on_press=self.delete_institution, style=style_button)
-        box_seite_info_einrichtung_buttons.add(self.seite_info_einrichtung_button_loeschen)
-
-        # Inhaltselemente zur Seite hinzufügen
-        self.scroll_container_info_einrichtung = toga.ScrollContainer(style=style_scroll_container)
-        box_seite_info_einrichtung = toga.Box(
-            style=style_box_column,
-            children = [
-                box_seite_info_einrichtung_top,
-                box_seite_info_einrichtung_strasse,
-                box_seite_info_einrichtung_plz_ort,
-                toga.Divider(style=style_divider),
-                box_seite_info_einrichtung_telefon,
-                box_seite_info_einrichtung_email,
-                self.box_seite_info_einrichtung_webseite,
-                #label_info_einrichtung_website,
-                #self.link_info_einrichtung_webseite,
-                toga.Divider(style=style_divider),
-                box_seite_info_einrichtung_notiz,
-                box_seite_info_einrichtung_buttons
-            ]
+        # Überschrift und Button zurück
+        self.info_institution_topbox = TopBox(
+            parent=self.box_info_institution,
+            label_text='Einrichtung',
+            style_box=style_box_column_dunkel,
+            target_back=self.show_list_institutions
         )
-        self.scroll_container_info_einrichtung.content = box_seite_info_einrichtung
+
+        # Anzeige der Details
+        self.info_institution_street = InfoLabel(self.box_info_institution, 'Straße, Hausnr.:')
+        self.info_institution_city = InfoLabel(self.box_info_institution, 'PLZ, Ort:')
+        self.info_institution_phone = InfoLabel(self.box_info_institution, 'Telefon:')
+        self.info_institution_email = InfoLabel(self.box_info_institution, 'E-Mail:')
+        self.info_institution_website = InfoLink(self.box_info_institution, '', self.show_webview)
+        self.info_institution_note = InfoLabel(self.box_info_institution, 'Notiz:')
+
+        # ButtonBox
+        self.info_institution_buttons = ButtonBox(
+            parent=self.box_info_institution,
+            labels=['Bearbeiten', 'Löschen'],
+            targets=[self.show_form_institution_edit, self.delete_institution]
+        )
 
 
     def show_info_institution(self, widget, row=None):
@@ -953,26 +905,22 @@ class Kontolupe(toga.App):
 
             # Befülle die Labels mit den Details der Einrichtung
             # Die einzutragenden Werte können None sein, daher wird hier mit einem leeren String gearbeitet
-            self.label_info_einrichtung_name.text = einrichtung.name
-            self.label_info_einrichtung_strasse.text = einrichtung.strasse
-            self.label_info_einrichtung_plz_ort.text = einrichtung.plz_ort
-            self.label_info_einrichtung_telefon.text = einrichtung.telefon
-            self.label_info_einrichtung_email.text = einrichtung.email
+            self.info_institution_topbox.set_label(einrichtung.name)
+            self.info_institution_street.set_value(einrichtung.strasse)
+            self.info_institution_city.set_value(einrichtung.plz_ort)
+            self.info_institution_phone.set_value(einrichtung.telefon)
+            self.info_institution_email.set_value(einrichtung.email)
             
-            # Entferne die Inhalte der Box, damit die Webseite nicht mehrfach angezeigt wird
-            if self.link_info_einrichtung_webseite in self.box_seite_info_einrichtung_webseite.children:
-                self.box_seite_info_einrichtung_webseite.remove(self.link_info_einrichtung_webseite)
-
-            # Wenn eine gültige Webseite gespeichert ist, füge den Link wieder der Box hinzu
-            # und setze den Text des Links auf die Webseite
+            # Nur wenn eine Webseite angegeben wurde, wird der Button angezeigt
+            self.info_institution_website.hide_button()
             if einrichtung.webseite:
-                self.box_seite_info_einrichtung_webseite.add(self.link_info_einrichtung_webseite)
-                self.link_info_einrichtung_webseite.text = einrichtung.webseite
+                self.info_institution_website.show_button()
+                self.info_institution_website.set_text(einrichtung.webseite[8:])
                 
-            self.label_info_einrichtung_notiz.text = einrichtung.notiz
+            self.info_institution_note.set_value(einrichtung.notiz)
 
-            # Zeige die Seite
-            self.main_window.content = self.scroll_container_info_einrichtung
+            # Zeige die Info-Seite
+            self.main_window.content = self.sc_info_institution
 
     
     async def delete_institution(self, widget):

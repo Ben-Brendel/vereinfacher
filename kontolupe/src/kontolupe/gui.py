@@ -78,6 +78,46 @@ class TopBox:
         self.button.on_press = target_back
 
 
+class InfoLabel:
+    """Create two labels in a row with a title and a value."""
+
+    def __init__(self, parent, title, value=''):
+        self.box = toga.Box(style=style_box_row)
+        self.label_title = toga.Label(title, style=style_label_info)
+        self.label_value = toga.Label(value, style=style_label_detail)
+        self.box.add(self.label_title)
+        self.box.add(self.label_value)
+        self.__add_to_parent(parent)
+
+    def __add_to_parent(self, parent):
+        parent.add(self.box)
+
+    def set_value(self, value):
+        self.label_value.text = value
+
+
+class InfoLink:
+    """"Create a button with a hyperlink."""
+
+    def __init__(self, parent, text, on_press=None):
+        self.box = toga.Box(style=style_box_row)
+        self.button = toga.Button(text, on_press=on_press, style=style_button_link)
+        self.box.add(self.button)
+        self.__add_to_parent(parent)
+
+    def __add_to_parent(self, parent):
+        parent.add(self.box)
+
+    def hide_button(self):
+        self.box.remove(self.button)
+
+    def show_button(self):
+        self.box.add(self.button)
+
+    def set_text(self, text):
+        self.button.text = text
+
+
 class LabeledTextInput:
     """Create a box with a label and a text input."""
 
