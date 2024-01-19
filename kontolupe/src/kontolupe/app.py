@@ -1617,6 +1617,8 @@ class Kontolupe(toga.App):
         self.create_webview()
         self.create_commands()
 
+        # Check if it is the first start of the app after installation or reset
+
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)      
 

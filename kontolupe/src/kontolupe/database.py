@@ -22,6 +22,9 @@ class Datenbank:
         self.db_path = self.db_dir / 'kontolupe.db'
         print(f'### Database: {self.db_path}')
 
+        self.init_file = self.db_dir / 'init.txt'
+        print(f'### Database: {self.init_file}')
+
         # delete database
         #if self.db_path.exists(): 
         #    self.db_path.unlink()
@@ -100,6 +103,61 @@ class Datenbank:
 
         # Datenbank-Datei initialisieren
         self.__create_db()
+
+    def is_first_start(self):
+        """Prüfen, ob die App zum ersten Mal gestartet wird."""
+        return not self.init_file.exists()
+    
+    def save_init_file(self, **kwargs):
+        """Speichern der init.txt Datei."""
+        # create the init file
+        # write the variables to the init file
+        # if the value is a boolean, it should be converted to True or False
+        content = ''
+        for key, value in kwargs.items():
+            if isinstance(value, bool):
+                value = str(value).lower()
+            content += f'{key}={value}\n'
+
+        self.init_file.write_text(content)
+        print(f'### Database: save_init_file: Saved init file {self.init_file}')
+
+    def load_init_file(self):
+        """Laden der init.txt Datei und Rückgabe als Dictionary."""
+        # load the init file
+        # the value should be converted to the correct type
+        # return the variables as a dictionary
+        result = {}
+        for line in self.init_file.read_text().splitlines():
+            # check if there is an equal sign in the line
+            if '=' not in line:
+                print(f'### Database: load_init_file: Line {line} does not contain an equal sign. Skipping it.')
+                continue
+            key, value = line.split('=')
+            if value == 'true':
+                value = True
+            elif value == 'false':
+                value = False
+            elif value.isnumeric():
+                value = int(value)
+            result[key] = value
+        print(f'### Database: load_init_file: Loaded init file {self.init_file}')
+        return result
+
+    def reset_data(self):
+        """Setzt alle Daten zurück."""
+        # create a backup of the database
+        self.__create_backup()
+
+        # delete the database
+        if self.db_path.exists():
+            self.db_path.unlink()
+            print(f'### Database: Deleted database {self.db_path}')
+
+        # delete the init file
+        if self.init_file.exists():
+            self.init_file.unlink()
+            print(f'### Database: Deleted init file {self.init_file}')
 
     def __get_column_type(self, table_name, column_name):
         """Lade den Typ der Spalte aus dem self.__tables Dictionary."""
@@ -930,6 +988,17 @@ class DatenInterface:
         self.__update_list_rg_pkv()
         self.__update_archivables()
 
+    def is_first_start(self):
+        """Prüft, ob das Programm zum ersten Mal gestartet wird."""
+        return self.db.is_first_start()
+
+    def save_init_file(self, **kwargs):
+        """Speichert die Initialisierungsdatei."""
+        self.db.save_init_file(**kwargs)
+
+    def load_init_file(self):
+        """Lädt die Initialisierungsdatei und gibt ihren Inhalt als Dictionary zurück."""
+        return self.db.load_init_file()
 
     def __update_archivables(self):
         """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""
