@@ -146,7 +146,7 @@ class Kontolupe(toga.App):
                 self.list_persons_buttons.set_enabled('edit_person', status)
 
 
-    def show_info_dialog_booking(self, widget, row):
+    def info_dialog_booking(self, widget, row):
         """Zeigt die Info einer Buchung."""
         
         # Initialisierung Variablen
@@ -297,7 +297,7 @@ class Kontolupe(toga.App):
             accessors   = ['info', 'betrag_euro', 'datum'],
             data        = self.daten.list_open_bookings,    
             style       = style_table_offene_buchungen,
-            on_activate = self.show_info_dialog_booking,
+            on_activate = self.info_dialog_booking,
             on_select   = self.update_app
         )
         self.box_mainpage.add(self.table_open_bookings)
@@ -380,7 +380,7 @@ class Kontolupe(toga.App):
             data        = self.daten.list_rechnungen,
             style       = style_table,
             on_select   = self.update_app,
-            on_activate = self.show_info_dialog_booking
+            on_activate = self.info_dialog_booking
         )
         self.box_list_bills.add(self.table_bills)
 
@@ -1119,7 +1119,7 @@ class Kontolupe(toga.App):
             data        = self.daten.list_beihilfepakete,
             style       = style_table,
             on_select   = self.update_app,
-            on_activate = self.show_info_dialog_booking
+            on_activate = self.info_dialog_booking
         )
         self.box_list_allowance.add(self.table_allowance)
 
@@ -1154,7 +1154,7 @@ class Kontolupe(toga.App):
             data        = self.daten.list_pkvpakete,
             style       = style_table,
             on_select   = self.update_app,
-            on_activate = self.show_info_dialog_booking
+            on_activate = self.info_dialog_booking
         )
         self.box_list_insurance.add(self.table_insurance)
 
@@ -1209,7 +1209,7 @@ class Kontolupe(toga.App):
             data            = self.daten.list_rg_beihilfe,
             multiple_select = True,
             on_select       = self.on_select_beihilfe_bills,
-            on_activate     = self.show_info_dialog_booking,
+            on_activate     = self.info_dialog_booking,
             style           = style_table_auswahl
         )
         self.box_form_beihilfe.add(self.form_beihilfe_bills)
@@ -1254,7 +1254,7 @@ class Kontolupe(toga.App):
             data            = self.daten.list_rg_pkv,
             multiple_select = True,
             on_select       = self.on_select_pkv_bills,   
-            on_activate     = self.show_info_dialog_booking,
+            on_activate     = self.info_dialog_booking,
             style           = style_table_auswahl
         )
         self.box_form_pkv.add(self.form_pkv_bills)
