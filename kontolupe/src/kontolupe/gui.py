@@ -143,6 +143,14 @@ class LabeledTextInput:
 
     def _get_label(self):
         return self.label.text
+    
+    def hide(self):
+        self.box.remove(self.label)
+        self.box.remove(self.text_input)
+
+    def show(self):
+        self.box.add(self.label)
+        self.box.add(self.text_input)
 
     def set_value(self, value):
         self.text_input.value = value

@@ -16,9 +16,10 @@ from kontolupe.gui import *
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
         """Initialisierung der Anwendung."""
+        super().__init__(*args, **kwargs)
 
         # Hilfsvariablen zur Bearbeitung von Rechnungen
         self.flag_edit_bill = False
@@ -277,6 +278,63 @@ class Kontolupe(toga.App):
 
         self.main_window.content = self.box_webview
 
+
+    def create_init_page(self):
+        """Erzeugt die Seite zur Initialisierung der Anwendung nach dem ersten Start."""
+
+        # Container für die Seite
+        self.sc_init_page = toga.ScrollContainer(style=style_scroll_container)
+        self.box_init_page = toga.Box(style=style_box_column)
+        self.sc_init_page.content = self.box_init_page
+
+        # Überschrift und Begrüßungstext
+        box_init_top = toga.Box(style=style_box_headline)
+        box_init_top.add(toga.Label("Los geht's!", style=style_label_headline))
+        self.box_init_page.add(box_init_top)
+
+        # Angabe der Beihilfeberechtigung
+        box_init_beihilfe = toga.Box(style=style_box_part)
+        self.box_init_page.add(box_init_beihilfe)
+        box_init_beihilfe.add(toga.Label('Beihilfe', style=style_label_h2))
+        self.init_beihilfe = LabeledSwitch(box_init_beihilfe, '')
+        box_init_beihilfe.add(toga.Label('Aktiviere diese Funktion, wenn Du beihilfeberechtigt bist.', style=style_label_center))
+
+        # Eingabebereich der Personen
+        box_init_persons = toga.Box(style=style_box_part)
+        self.box_init_page.add(box_init_persons)
+        box_init_persons.add(toga.Label('Personen', style=style_label_h2))
+        self.init_persons_label = toga.Label('Bitte füge mindestens eine Person hinzu.', style=style_label_center)
+        box_init_persons.add(self.init_persons_label)
+        
+        self.init_persons_name = LabeledTextInput(box_init_persons, 'Name:')
+        self.init_persons_beihilfe = LabeledPercentInput(box_init_persons, 'Beihilfe in %:')
+        self.init_persons_beihilfe.set_value(50)
+
+        self.init_persons_buttons = ButtonBox(
+            parent=box_init_persons,
+            labels=['Speichern und neu'],
+            targets=[self.save_person]
+        )
+
+        # Eingabebereich der Einrichtungen
+        box_init_institutions = toga.Box(style=style_box_part)
+        self.box_init_page.add(box_init_institutions)
+        box_init_institutions.add(toga.Label('Einrichtungen', style=style_label_h2))
+        self.init_institutions_label = toga.Label('Bitte füge mindestens eine Einrichtung hinzu.', style=style_label_center)
+        box_init_institutions.add(self.init_institutions_label)
+
+        self.init_institutions_name = LabeledTextInput(box_init_institutions, 'Einrichtung:')
+        self.init_institutions_city = LabeledTextInput(box_init_institutions, 'Ort:')
+
+        self.init_institutions_buttons = ButtonBox(
+            parent=box_init_institutions,
+            labels=['Speichern und neu'],
+            targets=[self.save_institution]
+        )
+        
+        # Button zum Abschluss der Initialisierung
+        self.init_button = toga.Button('Initialisierung abschließen', style=style_button, on_press=None, enabled=False)
+        self.box_init_page.add(self.init_button)
 
     def create_mainpage(self):
         """Erzeugt die Startseite der Anwendung."""
@@ -1602,6 +1660,7 @@ class Kontolupe(toga.App):
         self.daten = DatenInterface()
 
         # Erzeuge alle GUI-Elemente
+        self.create_init_page()
         self.create_mainpage()
         self.create_list_bills()
         self.create_form_bill()
@@ -1617,13 +1676,15 @@ class Kontolupe(toga.App):
         self.create_webview()
         self.create_commands()
 
-        # Check if it is the first start of the app after installation or reset
-
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)      
 
-        # Zeige die Startseite
-        self.show_mainpage(None)
+        # Zeige die Startseite oder die Init-Seite
+        if self.daten.is_first_start():
+            self.main_window.content = self.sc_init_page
+        else:
+            #self.main_window.content = self.sc_init_page
+            self.show_mainpage(None)
         self.main_window.show()
         
 
