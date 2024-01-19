@@ -315,8 +315,7 @@ class ButtonBox:
             raise ValueError('There must be either no IDs or as many IDs as labels and targets.')
         
         if ids is None:
-            # if ids is None, it will be converted to a list of strings of integers of the same length than labels and targets
-            ids = [str(i) for i in range(len(labels))]
+            ids = [None] * len(labels)
 
         # enabled should be a list of booleans of the same length than labels and targets
         # if enabled is a boolean, it will be converted to a list of the same length than labels and targets
@@ -358,6 +357,9 @@ class ButtonBox:
         for button in self.buttons:
             if button.id == button_id:
                 button.enabled = status
+                return
+        else:
+            print("+++ Kontolupe: Button mit ID " + str(button_id) + " nicht gefunden.")
 
 
 class SubtextDivider:

@@ -466,7 +466,7 @@ class Kontolupe(toga.App):
         self.form_bill_bottombox = ButtonBox(
             parent=self.box_form_bill,
             labels=['Abbrechen', 'Speichern'],
-            targets=[self.show_list_bills, self.check_save_bill],
+            targets=[self.show_list_bills, self.save_bill],
         )
 
 
@@ -549,8 +549,8 @@ class Kontolupe(toga.App):
         self.main_window.content = self.sc_form_bill
 
 
-    async def check_save_bill(self, widget):
-        """Prüft, ob die Rechnung gespeichert werden soll."""
+    async def save_bill(self, widget):
+        """Prüft die Eingaben und speichert die Rechnung."""
 
         nachricht = ''
 
@@ -581,13 +581,9 @@ class Kontolupe(toga.App):
                 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
-        else:
-            await self.save_bill(widget)
-
-
-    async def save_bill(self, widget):
-        """Erstellt und speichert eine neue Rechnung."""
-
+            return
+        
+        # Beginn der Speicherroutine
         if not self.flag_edit_bill:
         # Erstelle eine neue Rechnung
             neue_rechnung = Rechnung()
@@ -755,7 +751,7 @@ class Kontolupe(toga.App):
         self.form_institution_bottombox = ButtonBox(
             parent=self.box_form_institution,
             labels=['Abbrechen', 'Speichern'],
-            targets=[self.show_list_institutions, self.check_save_institution]
+            targets=[self.show_list_institutions, self.save_institution]
         )
 
 
@@ -808,8 +804,8 @@ class Kontolupe(toga.App):
             self.main_window.content = self.sc_form_institution
 
 
-    def check_save_institution(self, widget):
-        """Prüft die Eingaben im Formular der Einrichtungen."""
+    def save_institution(self, widget):
+        """Prüft die Eingaben und speichert die Einrichtung."""
         nachricht = ''
 
         # Prüfe, ob ein Name eingegeben wurde
@@ -834,12 +830,9 @@ class Kontolupe(toga.App):
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
-        else:
-            self.save_institution(widget)
-
-
-    def save_institution(self, widget):
-        """Erstellt und speichert eine neue Einrichtung."""
+            return
+        
+        # Beginn der Speicherroutine
         if not self.flag_edit_institution:
         # Erstelle eine neue Einrichtung
             neue_einrichtung = Einrichtung()
@@ -1073,7 +1066,7 @@ class Kontolupe(toga.App):
         self.form_person_bottombox = ButtonBox(
             parent=self.box_form_person,
             labels=['Abbrechen', 'Speichern'],
-            targets=[self.show_list_persons, self.check_save_person]
+            targets=[self.show_list_persons, self.save_person]
         )
 
 
@@ -1114,8 +1107,8 @@ class Kontolupe(toga.App):
             self.main_window.content = self.sc_form_person
 
 
-    def check_save_person(self, widget):
-        """Prüft die Eingaben im Formular der Personen."""
+    def save_person(self, widget):
+        """Prüft die Eingaben und speichert die Person."""
         nachricht = ''
 
         # Prüfe, ob ein Name eingegeben wurde
@@ -1128,12 +1121,9 @@ class Kontolupe(toga.App):
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
-        else:
-            self.save_person(widget)
-
-
-    def save_person(self, widget):
-        """Erstellt und speichert eine neue Person."""
+            return
+        
+        # Beginn der Speicherroutine
         if not self.flag_edit_person:
         # Erstelle eine neue Person
             neue_person = Person()
@@ -1297,7 +1287,7 @@ class Kontolupe(toga.App):
         self.form_beihilfe_bottombox = ButtonBox(
             parent=self.box_form_beihilfe,
             labels=['Abbrechen', 'Speichern'],
-            targets=[self.show_list_beihilfe, self.check_save_beihilfe]
+            targets=[self.show_list_beihilfe, self.save_beihilfe]
         )
 
 
@@ -1342,7 +1332,7 @@ class Kontolupe(toga.App):
         self.form_pkv_bottombox = ButtonBox(
             parent=self.box_form_pkv,
             labels=['Abbrechen', 'Speichern'],
-            targets=[self.show_list_pkv, self.check_save_pkv]
+            targets=[self.show_list_pkv, self.save_pkv]
         )
 
 
@@ -1396,8 +1386,8 @@ class Kontolupe(toga.App):
         self.main_window.content = self.sc_form_pkv
 
 
-    def check_save_beihilfe(self, widget):
-        """Prüft, ob die Eingaben für eine neue Beihilfe-Einreichung korrekt sind."""
+    def save_beihilfe(self, widget):
+        """Prüft die Eingaben und speichert die Beihilfe-Einreichung."""
 
         nachricht = ''
 
@@ -1411,31 +1401,9 @@ class Kontolupe(toga.App):
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
-        else:
-            self.save_beihilfe(widget)
-
-
-    def check_save_pkv(self, widget):
-        """Prüft, ob Rechnungen für die PKV-Einreichungen ausgewählt sind."""
-        nachricht = ''
-
-        # Prüfe das Datum
-        if not self.form_pkv_datum.is_valid():
-            nachricht += 'Bitte gib ein gültiges Datum ein.\n'
-
-        # Prüfe ob Rechnungen ausgewählt wurden
-        if not self.form_pkv_bills.selection:
-            nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
-
-        if nachricht != '':
-            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
-        else:
-            self.save_pkv(widget)
-
-
-    def save_beihilfe(self, widget):
-        """Erstellt und speichert eine neue Beihilfe-Einreichung oder ändert eine bestehende."""
-
+            return
+        
+        # Beginn der Speicherroutine
         if not self.flag_edit_beihilfe:
             # Erstelle ein neues Beihilfepaket
             neues_beihilfepaket = BeihilfePaket()
@@ -1456,8 +1424,23 @@ class Kontolupe(toga.App):
 
 
     def save_pkv(self, widget):
-        """Erstellt und speichert eine neue PKV-Einreichung oder ändert eine bestehende."""
+        """Prüft die Eingaben und speichert die PKV-Einreichung."""
 
+        nachricht = ''
+
+        # Prüfe das Datum
+        if not self.form_pkv_datum.is_valid():
+            nachricht += 'Bitte gib ein gültiges Datum ein.\n'
+
+        # Prüfe ob Rechnungen ausgewählt wurden
+        if not self.form_pkv_bills.selection:
+            nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
+
+        if nachricht != '':
+            self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
+            return
+
+        # Beginn der Speicherroutine
         if not self.flag_edit_pkv:
             # Erstelle ein neues PKV-Paket
             neues_pkvpaket = PKVPaket()
@@ -1674,14 +1657,6 @@ class Kontolupe(toga.App):
         self.commands.add(self.cmd_einrichtungen_neu)
         self.commands.add(self.cmd_archivieren)
         self.commands.add(self.cmd_datenschutz)
-
-
-    def update_timer(self):
-        """Periodische Aktualisierung bestimmter Anzeigen - Workaround."""
-        if self.form_beihilfe_bills and not self.form_beihilfe_bills.selection:
-            self.form_beihilfe_betrag.set_value('')
-        if self.form_pkv_bills and not self.form_pkv_bills.selection:
-            self.form_pkv_betrag.set_value('')
 
 
     def startup(self):
