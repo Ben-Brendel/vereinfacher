@@ -4,6 +4,7 @@ resources
 src/kontolupe/app_old.py
 src/kontolupe/kontolupe.db
 src/kontolupe/*.db.backup*
+src/kontolupe/init.txt
 
 
 # Byte-compiled / optimized / DLL files

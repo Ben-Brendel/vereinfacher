@@ -134,7 +134,7 @@ class Datenbank:
                 print(f'### Database: __update_init: Init file {self.init_file} does not exist and database does not exist. Do not create init file.')
                 return
 
-        # load the init file
+        # load the init file when it exists
         init_file = self.load_init_file()
 
         # check if the version is in the init file
