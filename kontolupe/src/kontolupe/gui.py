@@ -1,6 +1,7 @@
 import toga
 from kontolupe.layout import *
 from kontolupe.validator import *
+from datetime import datetime
 
 def table_index_selection(widget):
     """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
@@ -148,15 +149,35 @@ class LabeledTextInput:
     def __init__(self, parent, label_text, **kwargs):
         self.validator = Validator(kwargs.get('validator', None))
         self.box = toga.Box(style=style_box_row)
-        self.label = toga.Label(label_text, style=style_label_input)
+        self.label_box = toga.Box(style=style_label_box)
+        self.label = toga.Label(label_text, style=style_label_input_noflex)
         self.text_input = toga.TextInput(
             style=style_input, 
             placeholder=kwargs.get('placeholder', None), 
             on_lose_focus=self.validator.rectify, 
             readonly=kwargs.get('readonly', False)
         )
-        self.box.add(self.label)
+
+        self.label_box.add(self.label)
+        self.box.add(self.label_box)
         self.box.add(self.text_input)
+
+        if 'helptext' in kwargs and 'window' in kwargs:
+            self.help_button = toga.Button(
+                '?', 
+                on_press=lambda widget: kwargs.get('window').info_dialog(kwargs.get('helptitle', 'Hilfe'), kwargs.get('helptext')), 
+                style=style_button_help
+            )
+            self.label_box.add(self.help_button)
+
+        if kwargs.get('button_today', False):
+            self.button_today = toga.Button(
+                'H', 
+                on_press=lambda widget: self.set_value(datetime.today().strftime('%d.%m.%Y')), 
+                style=style_button_help
+            )
+            self.label_box.add(self.button_today)
+
         self.__add_to_parent(parent)
 
     def __add_to_parent(self, parent):
@@ -169,11 +190,11 @@ class LabeledTextInput:
         return self.label.text
     
     def hide(self):
-        self.box.remove(self.label)
+        self.box.remove(self.label_box)
         self.box.remove(self.text_input)
 
     def show(self):
-        self.box.add(self.label)
+        self.box.add(self.label_box)
         self.box.add(self.text_input)
 
     def set_value(self, value):
@@ -197,8 +218,8 @@ class LabeledTextInput:
 class LabeledDateInput(LabeledTextInput):
     """Create a box with a label and a text input for dates."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, placeholder="TT.MM.JJJJ", validator='date', **kwargs)
+    def __init__(self, parent, label_text, button_today=False, **kwargs):
+        super().__init__(parent, label_text, placeholder='TT.MM.JJJJ', validator='date', button_today=button_today, **kwargs)
 
     def get_value_as_date(self):
         self.validator.rectify(self.text_input)

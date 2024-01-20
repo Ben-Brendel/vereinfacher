@@ -681,8 +681,15 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_bill, 'Optionale Felder')
 
-        self.form_bill_buchungsdatum = LabeledDateInput(self.box_form_bill, 'Bezahldatum:')
         self.form_bill_bezahlt = LabeledSwitch(self.box_form_bill, 'Bezahlt:')
+        self.form_bill_buchungsdatum = LabeledDateInput(
+            self.box_form_bill, 
+            'Bezahldatum:',
+            button_today=True,
+            helptitle   = 'Bezahldatum',
+            helptext    = 'Gib das Datum der bereits durchgeführten oder der geplanten Überweisung an.',
+            window      = self.main_window,
+        )
         self.form_bill_notiz = LabeledMultilineTextInput(self.box_form_bill, 'Notiz:')
 
         # Bereich der Buttons
@@ -1540,7 +1547,7 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_beihilfe, 'Pflichtfelder')
 
-        self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
+        self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:', button_today=True)
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_beihilfe_bills = toga.Table(
@@ -1585,7 +1592,7 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_pkv, 'Pflichtfelder')
 
-        self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
+        self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:', button_today=True)
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_pkv_bills = toga.Table(
@@ -1958,6 +1965,9 @@ class Kontolupe(toga.App):
     def startup(self):
         """Laden der Daten, Erzeugen der GUI-Elemente und des Hauptfensters."""
 
+        # Erstelle das Hauptfenster
+        self.main_window = toga.MainWindow(title=self.formal_name)
+
         # Daten-Interface initialisieren
         self.daten = DatenInterface()
 
@@ -1975,10 +1985,7 @@ class Kontolupe(toga.App):
         self.create_form_pkv()
         self.create_list_persons()
         self.create_form_person()
-        self.create_webview()
-
-        # Erstelle das Hauptfenster
-        self.main_window = toga.MainWindow(title=self.formal_name)      
+        self.create_webview()      
 
         # Zeige die Startseite oder die Init-Seite
         if self.daten.is_first_start():
