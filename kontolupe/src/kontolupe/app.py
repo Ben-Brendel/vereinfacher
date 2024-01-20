@@ -139,11 +139,11 @@ class Kontolupe(toga.App):
                 self.list_allowance_buttons.set_enabled('reset_allowance', status)
             case self.table_insurance:
                 self.list_insurance_buttons.set_enabled('reset_insurance', status)
-            case self.tabelle_einrichtungen:
+            case self.table_institutions:
                 self.list_institutions_buttons.set_enabled('delete_institution', status)
                 self.list_institutions_buttons.set_enabled('edit_institution', status)
                 self.list_institutions_buttons.set_enabled('info_institution', status)
-            case self.tabelle_personen:
+            case self.table_persons:
                 self.list_persons_buttons.set_enabled('delete_person', status)
                 self.list_persons_buttons.set_enabled('edit_person', status)
 
@@ -184,7 +184,7 @@ class Kontolupe(toga.App):
             case self.table_insurance:
                 typ = 'PKV'
                 element = self.daten.get_pkvpaket_by_index(table_index_selection(widget))
-            case self.tabelle_einrichtungen:
+            case self.table_institutions:
                 typ = 'Einrichtung'
                 element = self.daten.get_einrichtung_by_index(table_index_selection(widget))
 
@@ -299,6 +299,7 @@ class Kontolupe(toga.App):
         self.init_institutions_name.set_value('')
         self.init_institutions_city.set_value('')
         self.init_beihilfe.set_value(self.daten.init.get('beihilfe', True))
+        self.label_beihilfe.text = 'Beihilfe aktiv' if self.init_beihilfe.get_value() else 'Ohne Beihilfe nutzen'
         
         if self.daten.beihilfe_aktiv():
             self.init_persons_beihilfe.show()
@@ -332,10 +333,20 @@ class Kontolupe(toga.App):
         self.init_institutions_label.text = text_institutions
 
         # Aktiviere den Button, wenn alle Eingaben korrekt sind
-        if status_persons and status_institutions:
+        if self.init_button not in self.box_init_page_button.children and status_persons and status_institutions:
             self.init_button.enabled = True
-        else:
+            self.box_init_page_button.add(self.init_button)
+            # Show Info dialog
+            self.main_window.info_dialog(
+                'Spitze', 
+                'Die Eingaben sind ausreichend, um die App zu nutzen. '
+                'Klicke auf "Initialisierung abschließen", um fortzufahren '
+                'oder füge weitere Personen und Einrichtungen hinzu. '
+                'Du kannst die Personen und Einrichtungen später auch noch bearbeiten.'
+            )
+        elif self.init_button in self.box_init_page_button.children and (not status_persons or not status_institutions):
             self.init_button.enabled = False
+            self.box_init_page_button.remove(self.init_button)
 
 
     def create_init_page(self):
@@ -354,7 +365,8 @@ class Kontolupe(toga.App):
         # Angabe der Beihilfeberechtigung
         box_init_beihilfe = toga.Box(style=style_box_part_beihilfe)
         self.box_init_page.add(box_init_beihilfe)
-        box_init_beihilfe.add(toga.Label('Beihilfe', style=style_label_subline_hell))
+        self.label_beihilfe = toga.Label('Beihilfe aktiv', style=style_label_subline_hell)
+        box_init_beihilfe.add(self.label_beihilfe)
         self.init_beihilfe = LabeledSwitch(
             box_init_beihilfe, 
             '', 
@@ -396,12 +408,11 @@ class Kontolupe(toga.App):
             labels=['Speichern und neu'],
             targets=[self.save_institution]
         )
-        
+
         # Button zum Abschluss der Initialisierung
-        box_init_page_button = toga.Box(style=style_box_part_button)
+        self.box_init_page_button = toga.Box(style=style_box_part_button)
         self.init_button = toga.Button('Initialisierung abschließen', style=style_button, on_press=self.finish_init, enabled=False)
-        box_init_page_button.add(self.init_button)
-        self.box_init_page.add(box_init_page_button)
+        self.box_init_page.add(self.box_init_page_button)
 
 
     def init_beihilfe_changed(self, widget):
@@ -421,6 +432,17 @@ class Kontolupe(toga.App):
 
         # Erstelle die Menüs
         self.create_commands()
+
+        # Verknüpfe die ListSources mit den Tabellen
+        self.table_open_bookings.data = self.daten.list_open_bookings
+        self.table_bills.data = self.daten.list_rechnungen
+        self.table_allowance.data = self.daten.list_beihilfepakete
+        self.table_insurance.data = self.daten.list_pkvpakete
+        self.table_institutions.data = self.daten.list_einrichtungen
+        self.table_persons.data = self.daten.list_personen
+        self.form_beihilfe_bills.data = self.daten.list_rg_beihilfe
+        self.form_pkv_bills.data = self.daten.list_rg_pkv
+
 
         # Zeige die Startseite
         self.show_mainpage(widget)
@@ -844,7 +866,7 @@ class Kontolupe(toga.App):
 
         # Tabelle mit den Einrichtungen
 
-        self.tabelle_einrichtungen = toga.Table(
+        self.table_institutions = toga.Table(
             headings    = ['Name', 'Ort', 'Telefon'], 
             accessors   = ['name', 'ort', 'telefon'],
             data        = self.daten.list_einrichtungen,
@@ -852,7 +874,7 @@ class Kontolupe(toga.App):
             on_select   = self.update_app,
             on_activate = self.show_info_institution
         )
-        self.box_list_institutions.add(self.tabelle_einrichtungen)
+        self.box_list_institutions.add(self.table_institutions)
 
         # ButtonBox mit den Buttons
         self.list_institutions_buttons = ButtonBox(
@@ -930,9 +952,9 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Bearbeiten einer Einrichtung."""
         
         # Prüfe ob eine Einrichtung ausgewählt ist
-        if self.tabelle_einrichtungen.selection:
+        if self.table_institutions.selection:
             # Ermittle den Index der ausgewählten Rechnung
-            self.edit_institution_id = table_index_selection(self.tabelle_einrichtungen)
+            self.edit_institution_id = table_index_selection(self.table_institutions)
 
             # Hole die Einrichtung
             einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id, objekt=True)
@@ -955,7 +977,7 @@ class Kontolupe(toga.App):
             self.main_window.content = self.sc_form_institution
 
 
-    def save_institution(self, widget):
+    async def save_institution(self, widget):
         """Prüft die Eingaben und speichert die Einrichtung."""
         nachricht = ''
 
@@ -964,7 +986,7 @@ class Kontolupe(toga.App):
 
             # Prüfe, ob ein Name eingegeben wurde
             if self.form_institution_name.is_empty():
-                nachricht += 'Bitte gib einen Namen ein.\n'
+                nachricht += 'Bitte gib den Namen der Einrichtung an.\n'
 
             # Prüfe, ob nichts oder eine gültige PLZ eingegeben wurde
             if not (self.form_institution_plz.is_valid() or self.form_institution_plz.is_empty()):
@@ -986,7 +1008,7 @@ class Kontolupe(toga.App):
 
             # Prüfe, ob ein Name eingegeben wurde
             if self.init_institutions_name.is_empty():
-                nachricht += 'Bitte gib einen Namen ein.\n'
+                nachricht += 'Bitte gib den Namen der Einrichtung an.\n'
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht[0:-2])
@@ -1043,11 +1065,11 @@ class Kontolupe(toga.App):
             # Speichere die Einrichtung in der Datenbank
             self.daten.new_einrichtung(neue_einrichtung)
 
+            # Show Success Message
+            await self.main_window.info_dialog('Einrichtung gespeichert', neue_einrichtung.name + ' wurde erfolgreich gespeichert.')
+
             # Aktualisiere die Initialisierungsseite
             self.update_init_page(widget)
-
-            # Show Success Message
-            self.main_window.info_dialog('Einrichtung gespeichert', neue_einrichtung.name + ' wurde erfolgreich gespeichert.')
 
 
     def create_info_institution(self):
@@ -1085,10 +1107,10 @@ class Kontolupe(toga.App):
     def show_info_institution(self, widget, row=None):
         """Zeigt die Seite mit den Details einer Einrichtung."""
         # Prüfe, ob eine Einrichtung ausgewählt ist
-        if self.tabelle_einrichtungen.selection:
+        if self.table_institutions.selection:
 
             # Ermittle den Index der ausgewählten Einrichtung
-            self.edit_institution_id = table_index_selection(self.tabelle_einrichtungen)
+            self.edit_institution_id = table_index_selection(self.table_institutions)
 
             # Hole die Einrichtung
             einrichtung = self.daten.get_einrichtung_by_index(self.edit_institution_id)
@@ -1115,9 +1137,9 @@ class Kontolupe(toga.App):
     
     async def delete_institution(self, widget):
         """Bestätigt das Löschen einer Einrichtung."""
-        if self.tabelle_einrichtungen.selection:
+        if self.table_institutions.selection:
             if await self.main_window.question_dialog('Einrichtung löschen', 'Soll die ausgewählte Einrichtung wirklich gelöscht werden?'):
-                if not self.daten.deactivate_einrichtung(table_index_selection(self.tabelle_einrichtungen)):
+                if not self.daten.deactivate_einrichtung(table_index_selection(self.table_institutions)):
                     self.main_window.error_dialog(
                         'Fehler beim Löschen',
                         'Die Einrichtung wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
@@ -1141,14 +1163,14 @@ class Kontolupe(toga.App):
         )
 
         # Tabelle mit den Personen
-        self.tabelle_personen = toga.Table(
+        self.table_persons = toga.Table(
             headings    = ['Name', 'Beihilfe'], 
             accessors   = ['name', 'beihilfesatz_prozent'],
             data        = self.daten.list_personen,
             style       = style_table,
             on_select   = self.update_app
         )
-        self.box_list_persons.add(self.tabelle_personen)
+        self.box_list_persons.add(self.table_persons)
 
         # ButtonBox mit den Buttons
         self.list_persons_buttons = ButtonBox(
@@ -1164,10 +1186,10 @@ class Kontolupe(toga.App):
         """Zeigt die Seite mit der Liste der Personen."""
         self.update_app(widget)
 
-        if not self.daten.beihilfe_aktiv() and 'Beihilfe' in self.tabelle_personen.headings:
-            self.tabelle_personen.remove_column(1)
-        elif self.daten.beihilfe_aktiv() and 'Beihilfe' not in self.tabelle_personen.headings:
-            self.tabelle_personen.insert_column(1, 'Beihilfe', 'beihilfesatz_prozent')
+        if not self.daten.beihilfe_aktiv() and 'Beihilfe' in self.table_persons.headings:
+            self.table_persons.remove_column(1)
+        elif self.daten.beihilfe_aktiv() and 'Beihilfe' not in self.table_persons.headings:
+            self.table_persons.insert_column(1, 'Beihilfe', 'beihilfesatz_prozent')
 
         self.main_window.content = self.box_list_persons
 
@@ -1225,9 +1247,9 @@ class Kontolupe(toga.App):
         """Zeigt die Seite zum Bearbeiten einer Person."""
             
         # Prüfe ob eine Person ausgewählt ist
-        if self.tabelle_personen.selection:
+        if self.table_persons.selection:
             # Ermittle den Index der ausgewählten Person
-            self.edit_person_id = table_index_selection(self.tabelle_personen)
+            self.edit_person_id = table_index_selection(self.table_persons)
 
             # Hole die Person
             person = self.daten.get_person_by_index(self.edit_person_id, objekt=True)
@@ -1249,7 +1271,7 @@ class Kontolupe(toga.App):
             self.main_window.content = self.sc_form_person
 
 
-    def save_person(self, widget):
+    async def save_person(self, widget):
         """Prüft die Eingaben und speichert die Person."""
 
         # Überprüfe die Eingaben auf Richtigkeit
@@ -1260,7 +1282,7 @@ class Kontolupe(toga.App):
 
             # Prüfe, ob ein Name eingegeben wurde
             if self.form_person_name.is_empty():
-                nachricht += 'Bitte gib einen Namen ein.\n'
+                nachricht += 'Bitte gib den Namen der Person an.\n'
 
             # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
             if self.daten.beihilfe_aktiv() and not self.form_person_beihilfe.is_valid():
@@ -1270,7 +1292,7 @@ class Kontolupe(toga.App):
                 
                 # Prüfe, ob ein Name eingegeben wurde
                 if self.init_persons_name.is_empty():
-                    nachricht += 'Bitte gib einen Namen ein.\n'
+                    nachricht += 'Bitte gib den Namen der Person an.\n'
     
                 # Prüfe, ob eine gültige Prozentzahl eingegeben wurde
                 if self.daten.beihilfe_aktiv() and not self.init_persons_beihilfe.is_valid():
@@ -1324,18 +1346,18 @@ class Kontolupe(toga.App):
             # Speichere die Person 
             self.daten.new_person(neue_person)
 
+            # Show Success Message
+            await self.main_window.info_dialog('Person gespeichert', neue_person.name + ' wurde erfolgreich gespeichert.')
+
             # Aktualisiere die Initialisierungsseite
             self.update_init_page(widget)
-
-            # Show Success Message
-            self.main_window.info_dialog('Person gespeichert', neue_person.name + ' wurde erfolgreich gespeichert.')
 
 
     async def delete_person(self, widget):
         """Bestätigt das Löschen einer Person."""
-        if self.tabelle_personen.selection:
+        if self.table_persons.selection:
             if await self.main_window.question_dialog('Person löschen', 'Soll die ausgewählte Person wirklich gelöscht werden?'):
-                if not self.daten.deactivate_person(table_index_selection(self.tabelle_personen)):
+                if not self.daten.deactivate_person(table_index_selection(self.table_persons)):
                     self.main_window.error_dialog(
                         'Fehler beim Löschen',
                         'Die Person wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'

@@ -116,13 +116,14 @@ class Datenbank:
                 einrichtungen = self.lade_einrichtungen(only_active=False)
                 personen = self.lade_personen(only_active=False)
 
-                # check if there is any data
+                # update from the version before the init file was introduced
                 if rechnungen or beihilfepakete or pkvpakete or einrichtungen or personen:
-                    print(f'### Database: __update_init: Init file {self.init_file} does not exist and database has data. Create init file.')
+                    print(f'### Database: __update_init: Init file {self.init_file} does not exist and database has data. Create initialized init file.')
                     self.save_init_file(version=DATABASE_VERSION, initialized=True, beihilfe=True)
                     return
                 else:
-                    print(f'### Database: __update_init: Init file {self.init_file} does not exist and database is empty. Do not create init file.')
+                    print(f'### Database: __update_init: Init file {self.init_file} does not exist and database is empty. Create not initialized init file.')
+                    self.save_init_file()
                     return
             else:
                 print(f'### Database: __update_init: Init file {self.init_file} does not exist and database does not exist. Do not create init file.')
@@ -149,6 +150,7 @@ class Datenbank:
         """Prüfen, ob die App zum ersten Mal gestartet wird."""
         if not self.init_file.exists():
             print(f'### Database.is_first_start: Init file {self.init_file} does not exist. First start.')
+            self.save_init_file()
             return True
         init_file = self.load_init_file()
         if 'initialized' not in init_file:
@@ -164,6 +166,7 @@ class Datenbank:
         # if the value is a boolean, it should be converted to True or False
         content = ''
 
+        # default values for the first start of the app
         if 'version' not in kwargs:
             kwargs['version'] = DATABASE_VERSION
         if 'initialized' not in kwargs:
@@ -407,7 +410,6 @@ class Datenbank:
         for table_name, columns in self.__table_columns_rename.items():
             for column in columns:
                 Datenbank.__copy_column(self, cursor, table_name, column[0], column[1])
-                print(f'### Database.__migrate_data: Migrated data in table {table_name} from column {column[0]} to column {column[1]}')
 
     def __rename_tables(self, cursor):
         """Rename the tables."""
@@ -1022,7 +1024,28 @@ class DatenInterface:
     def reset(self):
         """Zurücksetzen des Daten-Interfaces."""
         print(f'### DatenInterface.reset: resetting all data')
+
+        # delete data variables
+        del self.rechnungen
+        del self.beihilfepakete
+        del self.pkvpakete
+        del self.einrichtungen
+        del self.personen
+
+        # delete list sources
+        del self.list_rechnungen
+        del self.list_rg_beihilfe
+        del self.list_rg_pkv
+        del self.list_einrichtungen
+        del self.list_personen
+        del self.list_beihilfepakete
+        del self.list_pkvpakete
+        del self.list_open_bookings
+
+        # reset database
         self.db.reset()
+
+        # initialize object again
         self.__init__()
 
     def is_first_start(self):
