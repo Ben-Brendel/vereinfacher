@@ -506,7 +506,7 @@ class Kontolupe(toga.App):
         # Section: Beihilfe-Einreichungen
         self.mainpage_section_allowance = Section(
             parent          = self.box_mainpage,
-            title           = 'Beihilfe-Einreichungen',
+            title           = 'Beihilfe',
             type            = 'beihilfe',
             on_press_show   = self.show_list_beihilfe,
             on_press_new    = self.show_form_beihilfe_new,
@@ -516,7 +516,7 @@ class Kontolupe(toga.App):
         # Section: PKV-Einreichungen
         self.mainpage_section_insurance = Section(
             parent          = self.box_mainpage,
-            title           = 'PKV-Einreichungen',
+            title           = 'Private KV',
             type            = 'pkv',
             on_press_show   = self.show_list_pkv,
             on_press_new    = self.show_form_pkv_new,
