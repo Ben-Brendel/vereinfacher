@@ -150,6 +150,7 @@ class LabeledTextInput:
         self.validator = Validator(kwargs.get('validator', None))
         self.box = toga.Box(style=style_box_row)
         self.label_box = toga.Box(style=style_label_box)
+        self.input_box = toga.Box(style=style_label_box)
         self.label = toga.Label(label_text, style=style_label_input_noflex)
         self.text_input = toga.TextInput(
             style=style_input, 
@@ -159,8 +160,9 @@ class LabeledTextInput:
         )
 
         self.label_box.add(self.label)
+        self.input_box.add(self.text_input)
         self.box.add(self.label_box)
-        self.box.add(self.text_input)
+        self.box.add(self.input_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
             self.help_button = toga.Button(
@@ -191,11 +193,11 @@ class LabeledTextInput:
     
     def hide(self):
         self.box.remove(self.label_box)
-        self.box.remove(self.text_input)
+        self.box.remove(self.input_box)
 
     def show(self):
         self.box.add(self.label_box)
-        self.box.add(self.text_input)
+        self.box.add(self.input_box)
 
     def set_value(self, value):
         self.text_input.value = value
@@ -221,6 +223,9 @@ class LabeledDateInput(LabeledTextInput):
     def __init__(self, parent, label_text, button_today=False, **kwargs):
         super().__init__(parent, label_text, placeholder='TT.MM.JJJJ', validator='date', button_today=button_today, **kwargs)
 
+        self.datepicker = toga.DateInput(style=style_datepicker, on_change=lambda widget: self.set_value(widget.value))
+        self.input_box.insert(0, self.datepicker)
+
     def get_value_as_date(self):
         self.validator.rectify(self.text_input)
         return None if not self.text_input.value else datetime.strptime(self.text_input.value, '%d.%m.%Y').date()
@@ -236,6 +241,8 @@ class LabeledDateInput(LabeledTextInput):
             self.text_input.value = value
         elif isinstance(value, datetime):
             self.text_input.value = value.strftime('%d.%m.%Y')
+        else:
+            self.text_input.value = value
 
         self.validator.rectify(self.text_input)
 

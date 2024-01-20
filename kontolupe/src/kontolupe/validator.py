@@ -127,11 +127,19 @@ class Validator:
         """Korrigiert die Eingabe, so dass nur noch ein gültiges Datum enthalten sein kann."""
 
         # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein . sind.
-        eingabe = ''.join(c for c in widget.value if c in '0123456789.')
+        eingabe = ''.join(c for c in widget.value if c in '0123456789.-')
         widget.value = eingabe
 
         if widget.value == '':
             return
+        
+        print(widget.value)
+        
+        if widget.value.count('-') == 2:
+            parts = widget.value.split('-')
+            widget.value = '.'.join(parts[::-1])
+
+        print (widget.value)
 
         # Überprüfe ob das Datum nur als Folge von Zahlen ohne . eingegeben wurde
         if widget.value.count('.') == 0:
