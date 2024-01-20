@@ -197,7 +197,7 @@ class Kontolupe(toga.App):
             inhalt += 'Beihilfe: {:.0f} %\n\n'.format(element.beihilfesatz)
             inhalt += 'Einrichtung: {}\n'.format(element.einrichtung_name)
             inhalt += 'Notiz: {}\n'.format(element.notiz)
-            inhalt += 'Buchungsdatum: {}\n'.format(element.buchungsdatum) if element.buchungsdatum else 'Buchungsdatum: -\n'
+            inhalt += 'Bezahldatum: {}\n'.format(element.buchungsdatum) if element.buchungsdatum else 'Bezahldatum: -\n'
             inhalt += 'Bezahlt: Ja' if element.bezahlt else 'Bezahlt: Nein'
         elif typ == 'Beihilfe' or typ == 'PKV':
             titel = 'Beihilfe-Einreichung' if typ == 'Beihilfe' else 'PKV-Einreichung'
@@ -1777,7 +1777,7 @@ class Kontolupe(toga.App):
 
         self.cmd_beihilfepakete_anzeigen = toga.Command(
             self.show_list_beihilfe,
-            'Beihilfe-Einreichungen anzeigen',
+            'Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
             group = gruppe_beihilfe,
             section = 0,
@@ -1787,7 +1787,7 @@ class Kontolupe(toga.App):
 
         self.cmd_beihilfepakete_neu = toga.Command(
             self.show_form_beihilfe_new,
-            'Neue Beihilfe-Einreichung',
+            'Neue Einreichung',
             tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
             group = gruppe_beihilfe,
             section = 0,
@@ -1799,7 +1799,7 @@ class Kontolupe(toga.App):
 
         self.cmd_pkvpakete_anzeigen = toga.Command(
             self.show_list_pkv,
-            'PKV-Einreichungen anzeigen',
+            'Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
             group = gruppe_pkv,
             section = 1,
@@ -1809,7 +1809,7 @@ class Kontolupe(toga.App):
 
         self.cmd_pkvpakete_neu = toga.Command(
             self.show_form_pkv_new,
-            'Neue PKV-Einreichung',
+            'Neue Einreichung',
             tooltip = 'Erstellt eine neue PKV-Einreichung.',
             group = gruppe_pkv,
             section = 1,
