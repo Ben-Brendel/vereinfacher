@@ -294,10 +294,10 @@ class Kontolupe(toga.App):
         """Aktualisiert die Initialisierungsseite."""
 
         # Setze das Formular zurück
-        self.init_persons_name.set_value('')
-        self.init_persons_beihilfe.set_value('')
-        self.init_institutions_name.set_value('')
-        self.init_institutions_city.set_value('')
+        # self.init_persons_name.set_value('')
+        # self.init_persons_beihilfe.set_value('')
+        # self.init_institutions_name.set_value('')
+        # self.init_institutions_city.set_value('')
         self.init_beihilfe.set_value(self.daten.init.get('beihilfe', True))
         if self.init_beihilfe.get_value():
             self.box_init_pkv.remove(self.box_init_beihilfe_content)
@@ -1081,6 +1081,10 @@ class Kontolupe(toga.App):
             # Show Success Message
             await self.main_window.info_dialog('Einrichtung gespeichert', neue_einrichtung.name + ' wurde erfolgreich gespeichert.')
 
+            # Leere Eingabefelder
+            self.init_institutions_name.set_value('')
+            self.init_institutions_city.set_value('')
+
             # Aktualisiere die Initialisierungsseite
             self.update_init_page(widget)
 
@@ -1361,6 +1365,10 @@ class Kontolupe(toga.App):
 
             # Show Success Message
             await self.main_window.info_dialog('Person gespeichert', neue_person.name + ' wurde erfolgreich gespeichert.')
+
+            # Leere Eingabefelder
+            self.init_persons_name.set_value('')
+            self.init_persons_beihilfe.set_value('')
 
             # Aktualisiere die Initialisierungsseite
             self.update_init_page(widget)
