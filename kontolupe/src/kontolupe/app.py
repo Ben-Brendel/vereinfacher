@@ -1763,7 +1763,7 @@ class Kontolupe(toga.App):
 
         self.cmd_beihilfepakete_anzeigen = toga.Command(
             self.show_list_beihilfe,
-            'Beihilfe anzeigen',
+            'Beihilfe-Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
             group = gruppe_beihilfe,
             section = 0,
@@ -1773,7 +1773,7 @@ class Kontolupe(toga.App):
 
         self.cmd_beihilfepakete_neu = toga.Command(
             self.show_form_beihilfe_new,
-            'Neue Beihilfe',
+            'Neue Beihilfe-Einreichung',
             tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
             group = gruppe_beihilfe,
             section = 0,
@@ -1781,11 +1781,11 @@ class Kontolupe(toga.App):
             enabled=False
         )
 
-        gruppe_pkv = toga.Group('PKV', order = 3)
+        gruppe_pkv = toga.Group('Private KV', order = 3)
 
         self.cmd_pkvpakete_anzeigen = toga.Command(
             self.show_list_pkv,
-            'PKV anzeigen',
+            'PKV-Einreichungen anzeigen',
             tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
             group = gruppe_pkv,
             section = 1,
@@ -1795,7 +1795,7 @@ class Kontolupe(toga.App):
 
         self.cmd_pkvpakete_neu = toga.Command(
             self.show_form_pkv_new,
-            'Neue PKV',
+            'Neue PKV-Einreichung',
             tooltip = 'Erstellt eine neue PKV-Einreichung.',
             group = gruppe_pkv,
             section = 1,
@@ -1855,7 +1855,18 @@ class Kontolupe(toga.App):
             tooltip = 'Archiviere alle bezahlten und erhaltenen Buchungen.',
             group = gruppe_tools,
             order = 10,
+            section = 1,
             enabled=False
+        )
+
+        self.cmd_datenschutz = toga.Command(
+            self.show_webview,
+            'Datenschutz',
+            tooltip = 'Öffne die Datenschutzerklärung.',
+            group = gruppe_tools,
+            order = 15,
+            section = 2,
+            enabled=True
         )
 
         self.cmd_reset = toga.Command(
@@ -1864,14 +1875,7 @@ class Kontolupe(toga.App):
             tooltip = 'Setzt die Anwendung zurück.',
             group = gruppe_tools,
             order = 20,
-            enabled=True
-        )
-
-        self.cmd_datenschutz = toga.Command(
-            self.show_webview,
-            'Datenschutz',
-            tooltip = 'Öffne die Datenschutzerklärung.',
-            order = 7,
+            section = 2,
             enabled=True
         )
 
