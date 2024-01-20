@@ -45,6 +45,48 @@ class Kontolupe(toga.App):
         self.back_to = 'startseite'
 
 
+    async def check_open_bills(self, widget):
+        """Aktualisiert die Bezahlstatus der offenen Rechnungen."""
+        
+        # loop through the list of open bookings
+        # if there is a bill, check if there is a payment date set
+        # and if the payment date is today or before today
+        # then open a question_dialog and ask if the bill has been paid
+        # if yes, set the payment date and set the bill to paid
+        # if no, do nothing
+
+        # check if self.daten.init (dictionary) contains the key 'queried_payment'
+        # if not, set the key 'queried_payment' to 01.01.1900 as a string
+        # and save the init file
+        if 'queried_payment' not in self.daten.init:
+            self.daten.init['queried_payment'] = '01.01.1900'
+            self.daten.save_init_file()
+
+        # check if the payment has been queried today
+        # if yes, exit early
+        # if no, set the key 'queried_payment' to today's date as a string
+        if self.daten.init['queried_payment'] == datetime.today().strftime('%d.%m.%Y'):
+            return
+        else:
+            self.daten.init['queried_payment'] = datetime.today().strftime('%d.%m.%Y')
+            self.daten.save_init_file()
+
+        needs_update = False
+        for booking in self.daten.list_open_bookings:
+            booking_date = datetime.strptime(booking.datum, '%d.%m.%Y')
+            if booking.typ == 'Rechnung' and booking.datum and booking_date.date() <= datetime.today().date():
+                result = await self.main_window.question_dialog(
+                    'Rechnung bezahlt?', 
+                    'Wurde die Rechnung bezahlt?\nSie war am {} geplant:\n\n{} wegen {}'.format(booking.datum, booking.betrag_euro[1:], booking.info)
+                )
+                if result:
+                    self.daten.pay_rechnung(booking.db_id)
+                    needs_update = True
+
+        if needs_update:
+            self.update_app(widget)
+
+
     def update_app(self, widget):
         """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
 
@@ -537,6 +579,9 @@ class Kontolupe(toga.App):
 
     def show_mainpage(self, widget):
         """Zurück zur Startseite."""
+
+        # Bezahlstatus der offenen Rechnungen abfragen
+        self.add_background_task(self.check_open_bills)
         
         self.update_app(widget)
 

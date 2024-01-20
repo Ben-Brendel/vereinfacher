@@ -1369,11 +1369,15 @@ class DatenInterface:
         del self.list_rechnungen[rg_id]
 
 
-    def pay_rechnung(self, db_id):
+    def pay_rechnung(self, db_id, date=None):
         """Rechnung bezahlen."""
         index = self.__get_list_index_by_dbid(self.list_rechnungen, db_id)
         self.rechnungen[index].bezahlt = True
-        self.rechnungen[index].buchungsdatum = datetime.now().strftime('%d.%m.%Y')
+        if date is not None:
+            self.rechnungen[index].buchungsdatum = date
+        elif not self.rechnungen[index].buchungsdatum:
+            self.rechnungen[index].buchungsdatum = datetime.now().strftime('%d.%m.%Y')
+            
         self.rechnungen[index].speichern(self.db)
         self.__update_list_rechnungen_id(self.rechnungen[index], index)
         self.__update_list_open_bookings()
