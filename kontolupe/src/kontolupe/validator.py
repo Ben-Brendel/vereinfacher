@@ -133,13 +133,9 @@ class Validator:
         if widget.value == '':
             return
         
-        print(widget.value)
-        
         if widget.value.count('-') == 2:
             parts = widget.value.split('-')
             widget.value = '.'.join(parts[::-1])
-
-        print (widget.value)
 
         # Überprüfe ob das Datum nur als Folge von Zahlen ohne . eingegeben wurde
         if widget.value.count('.') == 0:

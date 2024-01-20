@@ -172,14 +172,6 @@ class LabeledTextInput:
             )
             self.label_box.add(self.help_button)
 
-        if kwargs.get('button_today', False):
-            self.button_today = toga.Button(
-                'H', 
-                on_press=lambda widget: self.set_value(datetime.today().strftime('%d.%m.%Y')), 
-                style=style_button_help
-            )
-            self.label_box.add(self.button_today)
-
         self.__add_to_parent(parent)
 
     def __add_to_parent(self, parent):
@@ -225,6 +217,14 @@ class LabeledDateInput(LabeledTextInput):
 
         self.datepicker = toga.DateInput(style=style_datepicker, on_change=lambda widget: self.set_value(widget.value))
         self.input_box.insert(0, self.datepicker)
+
+        if button_today:
+            self.button_today = toga.Button(
+                'H', 
+                on_press=lambda widget: self.set_value(datetime.today().strftime('%d.%m.%Y')), 
+                style=style_button_help
+            )
+            self.label_box.add(self.button_today)
 
     def get_value_as_date(self):
         self.validator.rectify(self.text_input)
