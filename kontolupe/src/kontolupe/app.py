@@ -1327,6 +1327,8 @@ class Kontolupe(toga.App):
             
             if self.daten.beihilfe_aktiv():
                 neue_person.beihilfesatz = self.form_person_beihilfe.get_value()
+            else:
+                neue_person.beihilfesatz = 0
 
             # Speichere die Person 
             self.daten.new_person(neue_person)
@@ -1342,6 +1344,8 @@ class Kontolupe(toga.App):
             person.name = self.form_person_name.get_value()
             if self.daten.beihilfe_aktiv():
                 person.beihilfesatz = self.form_person_beihilfe.get_value()
+            else:
+                person.beihilfesatz = 0
 
             # Speichere die Person in der Datenbank
             self.daten.edit_person(person, self.edit_person_id)
@@ -1359,6 +1363,8 @@ class Kontolupe(toga.App):
             
             if self.daten.beihilfe_aktiv():
                 neue_person.beihilfesatz = self.init_persons_beihilfe.get_value()
+            else:
+                neue_person.beihilfesatz = 0
 
             # Speichere die Person 
             self.daten.new_person(neue_person)
