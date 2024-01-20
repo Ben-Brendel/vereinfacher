@@ -319,7 +319,7 @@ class LabeledWebsiteInput(LabeledTextInput):
     """Create a box with a label and a text input for website addresses."""
 
     def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, placeholder='https://...', validator='website', **kwargs)
+        super().__init__(parent, label_text, placeholder='www.', validator='website', **kwargs)
 
 
 class LabeledMultilineTextInput:

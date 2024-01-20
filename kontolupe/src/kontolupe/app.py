@@ -271,7 +271,7 @@ class Kontolupe(toga.App):
         """Zeigt die WebView zur Anzeige von Webseiten."""
         match widget:
             case self.info_institution_website.button:
-                self.webview.url = self.daten.list_einrichtungen[self.edit_institution_id].webseite
+                self.webview.url = 'https://' + self.daten.list_einrichtungen[self.edit_institution_id].webseite
                 self.back_to = 'info_einrichtung'
             case self.cmd_datenschutz:
                 self.webview.url = 'https://kontolupe.biberwerk.net/kontolupe-datenschutz.html'
@@ -1127,7 +1127,7 @@ class Kontolupe(toga.App):
             self.info_institution_website.hide_button()
             if einrichtung.webseite:
                 self.info_institution_website.show_button()
-                self.info_institution_website.set_text(einrichtung.webseite[8:])
+                self.info_institution_website.set_text(einrichtung.webseite)
                 
             self.info_institution_note.set_value(add_newlines(einrichtung.notiz, 50))
 

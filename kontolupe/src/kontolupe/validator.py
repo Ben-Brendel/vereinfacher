@@ -253,6 +253,12 @@ class Validator:
 
         # Entferne alle Zeichen, die nicht in einer Webadresse vorkommen dürfen
         eingabe = ''.join(c for c in widget.value if c in 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@.-_/:?%=#&')
+        
+        if eingabe[:7] == 'http://':
+            eingabe = eingabe[7:]
+        elif eingabe[:8] == 'https://':
+            eingabe = eingabe[8:]
+        
         widget.value = eingabe
 
 
@@ -265,19 +271,10 @@ class Validator:
         if widget.value == '':
             return False
 
-        # Überprüfe ob die Struktur der Webadresse korrekt ist
+        # Überprüfe ob die Struktur der Webadresse korrekt sein könnte
         if widget.value.count('.') < 1:
             return False
-        if widget.value[0] == '.':
+        if widget.value[0] in './:':
             return False
-        if widget.value[-1] == '.':
-            return False
-        
-        # Überprüfe ob die Webadresse mit http:// oder https:// beginnt
-        # Und ersetze http:// durch https:// oder füge https:// hinzu
-        if widget.value[:7] != 'http://' and widget.value[:8] != 'https://':
-            widget.value = 'https://' + widget.value
-        elif widget.value[:7] == 'http://':
-            widget.value = 'https://' + widget.value[7:]
         
         return True
