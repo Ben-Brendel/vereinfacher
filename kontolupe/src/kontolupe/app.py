@@ -315,22 +315,22 @@ class Kontolupe(toga.App):
         # Überprüfe die Personen
         if len(self.daten.personen) > 0:
             status_persons = True
-            text_persons = 'Personen: '
+            text_persons = ''
             for person in self.daten.personen:
                 text_persons += '{}, '.format(person.name)
-            text_persons = text_persons[:-2]
+            text_persons = text_persons.rstrip(', ')
 
         # Überprüfe die Einrichtungen
         if len(self.daten.einrichtungen) > 0:
             status_institutions = True
-            text_institutions = 'Einrichtungen: '
+            text_institutions = ''
             for einrichtung in self.daten.einrichtungen:
                 text_institutions += '{}, '.format(einrichtung.name)
-            text_institutions = text_institutions[:-2]
+            text_institutions = text_institutions.rstrip(', ')
 
         # Setze die Anzeigen
-        self.init_persons_label.text = text_persons
-        self.init_institutions_label.text = text_institutions
+        self.init_persons_label.text = add_newlines(text_persons, 50)
+        self.init_institutions_label.text = add_newlines(text_institutions, 50)
 
         # Aktiviere den Button, wenn alle Eingaben korrekt sind
         if self.init_button not in self.box_init_page_button.children and status_persons and status_institutions:
@@ -1129,7 +1129,7 @@ class Kontolupe(toga.App):
                 self.info_institution_website.show_button()
                 self.info_institution_website.set_text(einrichtung.webseite[8:])
                 
-            self.info_institution_note.set_value(einrichtung.notiz)
+            self.info_institution_note.set_value(add_newlines(einrichtung.notiz, 50))
 
             # Zeige die Info-Seite
             self.main_window.content = self.sc_info_institution

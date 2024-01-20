@@ -15,6 +15,20 @@ def table_index_selection(widget):
     else:
         print("+++ Kontolupe: Keine Zeile ausgewählt.")
         return None
+    
+
+def add_newlines(input_string, max_line_length):
+    lines = input_string.split(' ')
+    result_lines = []
+    current_line = ''
+    for line in lines:
+        if len(current_line) + len(line) + 1 > max_line_length:  # +1 for the comma
+            result_lines.append(current_line.rstrip(' '))
+            current_line = line + ' '
+        else:
+            current_line += line + ' '
+    result_lines.append(current_line.rstrip(' '))
+    return '\n'.join(result_lines)
 
 
 class Section:
