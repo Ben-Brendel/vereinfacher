@@ -65,7 +65,8 @@ class Kontolupe(toga.App):
         # check if the payment has been queried today
         # if yes, exit early
         # if no, set the key 'queried_payment' to today's date as a string
-        if self.daten.init['queried_payment'] == datetime.today().strftime('%d.%m.%Y'):
+        # if the function is called by the button on the main page it executes the code
+        if widget not in self.mainpage_table_buttons.buttons and self.daten.init['queried_payment'] == datetime.today().strftime('%d.%m.%Y'):
             return
         else:
             self.daten.init['queried_payment'] = datetime.today().strftime('%d.%m.%Y')
@@ -77,7 +78,7 @@ class Kontolupe(toga.App):
             if booking.typ == 'Rechnung' and booking.datum and booking_date.date() <= datetime.today().date():
                 result = await self.main_window.question_dialog(
                     'Rechnung bezahlt?', 
-                    'Wurde die Rechnung bezahlt?\nSie war am {} geplant:\n\n{} wegen {}'.format(booking.datum, booking.betrag_euro[1:], booking.info)
+                    'Wurde diese Rechnung bezahlt?\nSie war am {} geplant:\n\n{} wegen {}'.format(booking.datum, booking.betrag_euro[1:], booking.info)
                 )
                 if result:
                     self.daten.pay_rechnung(booking.db_id)
@@ -172,8 +173,8 @@ class Kontolupe(toga.App):
         match widget:
             case self.table_open_bookings:
                 self.mainpage_table_buttons.set_enabled('pay_receive', status)
-                if self.table_open_bookings.selection and self.table_open_bookings.selection.typ == 'Rechnung':
-                    self.mainpage_table_buttons.set_enabled('edit_open_booking', status)
+                # if self.table_open_bookings.selection and self.table_open_bookings.selection.typ == 'Rechnung':
+                #     self.mainpage_table_buttons.set_enabled('edit_open_booking', status)
             case self.table_bills:
                 self.list_bills_buttons.set_enabled('delete_bill', status)
                 self.list_bills_buttons.set_enabled('edit_bill', status)
@@ -530,10 +531,10 @@ class Kontolupe(toga.App):
         # Buttons zur Tabelle der offenen Buchungen
         self.mainpage_table_buttons = ButtonBox(
             parent  = self.box_mainpage,
-            labels  = ['Bezahlt/Erstattet', 'Bearbeiten'],
-            targets = [self.pay_receive, self.edit_open_booking],
-            ids     = ['pay_receive', 'edit_open_booking'],
-            enabled = [False, False]
+            labels  = ['Bezahlt/Erstattet', 'Aktualisieren'],
+            targets = [self.pay_receive, self.check_open_bills],
+            ids     = ['pay_receive', 'refresh'],
+            enabled = [False, True]
         )
 
         # Section: Rechnungen
@@ -685,7 +686,7 @@ class Kontolupe(toga.App):
         self.form_bill_buchungsdatum = LabeledDateInput(
             self.box_form_bill, 
             'Bezahldatum:',
-            button_today=True,
+
             helptitle   = 'Bezahldatum',
             helptext    = 'Gib das Datum der bereits durchgeführten oder der geplanten Überweisung an.',
             window      = self.main_window,
@@ -1547,7 +1548,7 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_beihilfe, 'Pflichtfelder')
 
-        self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:', button_today=True)
+        self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_beihilfe_bills = toga.Table(
@@ -1592,7 +1593,7 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_pkv, 'Pflichtfelder')
 
-        self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:', button_today=True)
+        self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_pkv_bills = toga.Table(
