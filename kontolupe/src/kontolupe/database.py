@@ -1003,19 +1003,33 @@ class DatenInterface:
             ]
         )
 
+
+        # Make initializations and create the list sources
         for rechnung in self.rechnungen:            
+            if rechnung.betrag == None:
+                rechnung.betrag = 0
+            if rechnung.abzug_beihilfe == None:
+                rechnung.abzug_beihilfe = 0
+            if rechnung.abzug_pkv == None:
+                rechnung.abzug_pkv = 0
             self.__list_rechnungen_append(rechnung)
 
         for einrichtung in self.einrichtungen:            
             self.__list_einrichtungen_append(einrichtung)
 
         for person in self.personen:            
+            if person.beihilfesatz == None:
+                person.beihilfesatz = 0
             self.__list_personen_append(person)
 
-        for beihilfepaket in self.beihilfepakete:            
+        for beihilfepaket in self.beihilfepakete:      
+            if beihilfepaket.betrag == None:
+                beihilfepaket.betrag = 0      
             self.__list_beihilfepakete_append(beihilfepaket)
 
-        for pkvpaket in self.pkvpakete:            
+        for pkvpaket in self.pkvpakete: 
+            if pkvpaket.betrag == None:
+                pkvpaket.betrag = 0           
             self.__list_pkvpakete_append(pkvpaket)
 
         self.__update_list_open_bookings()
@@ -1668,9 +1682,9 @@ class DatenInterface:
             'betrag': rechnung.betrag,
             'abzug_beihilfe': rechnung.abzug_beihilfe,
             'abzug_pkv': rechnung.abzug_pkv,
-            'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
-            'abzug_beihilfe_euro': '{:.2f} €'.format(rechnung.abzug_beihilfe).replace('.', ','),
-            'abzug_pkv_euro': '{:.2f} €'.format(rechnung.abzug_pkv).replace('.', ','),
+            'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ',') if rechnung.betrag else '0,00 €',
+            'abzug_beihilfe_euro': '{:.2f} €'.format(rechnung.abzug_beihilfe).replace('.', ',') if rechnung.abzug_beihilfe else '0,00 €',
+            'abzug_pkv_euro': '{:.2f} €'.format(rechnung.abzug_pkv).replace('.', ',') if rechnung.abzug_pkv else '0,00 €',
             'rechnungsdatum': rechnung.rechnungsdatum,
             'einrichtung_id': rechnung.einrichtung_id,
             'notiz': rechnung.notiz,
@@ -1679,7 +1693,7 @@ class DatenInterface:
             'einrichtung_name': self.__einrichtung_name(rechnung.einrichtung_id),
             'info': (self.__person_name(rechnung.person_id) + ', ' if self.__person_name(rechnung.person_id) else '') + self.__einrichtung_name(rechnung.einrichtung_id),
             'beihilfesatz': rechnung.beihilfesatz,
-            'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz),
+            'beihilfesatz_prozent': '{:.0f} %'.format(rechnung.beihilfesatz) if rechnung.beihilfesatz else '0 %',
             'buchungsdatum': rechnung.buchungsdatum,
             'bezahlt': rechnung.bezahlt,
             'bezahlt_text': 'Ja' if rechnung.bezahlt else 'Nein',
@@ -1822,10 +1836,10 @@ class DatenInterface:
         """Erzeugt ein Row-Objekt aus einem Beihilfepaket."""
         return {
             'db_id': beihilfepaket.db_id,
-            'betrag': beihilfepaket.betrag,
-            'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
-            'datum': beihilfepaket.datum,
-            'erhalten': beihilfepaket.erhalten,
+            'betrag': beihilfepaket.betrag or 0,
+            'betrag_euro': '{:.2f} €'.format(beihilfepaket.betrag).replace('.', ',') if beihilfepaket.betrag else '0,00 €',
+            'datum': beihilfepaket.datum or '',
+            'erhalten': beihilfepaket.erhalten or False,
             'erhalten_text': 'Ja' if beihilfepaket.erhalten else 'Nein'
         }
 
@@ -1850,10 +1864,10 @@ class DatenInterface:
         """Erzeugt ein Row-Objekt aus einem PKV-Paket."""
         return {
             'db_id': pkvpaket.db_id,
-            'betrag': pkvpaket.betrag,
-            'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag).replace('.', ','),
-            'datum': pkvpaket.datum,
-            'erhalten': pkvpaket.erhalten,
+            'betrag': pkvpaket.betrag or 0,
+            'betrag_euro': '{:.2f} €'.format(pkvpaket.betrag).replace('.', ',') if pkvpaket.betrag else '0,00 €',
+            'datum': pkvpaket.datum or '',
+            'erhalten': pkvpaket.erhalten or False,
             'erhalten_text': 'Ja' if pkvpaket.erhalten else 'Nein'
         }
         
@@ -1878,8 +1892,8 @@ class DatenInterface:
                 self.list_open_bookings.append({
                     'db_id': rechnung.db_id,
                     'typ': 'Rechnung',
-                    'betrag_euro': '-{:.2f} €'.format(rechnung.betrag).replace('.', ','),
-                    'datum': rechnung.buchungsdatum,
+                    'betrag_euro': '-{:.2f} €'.format(rechnung.betrag).replace('.', ',') if rechnung.betrag else '0,00 €',
+                    'datum': rechnung.buchungsdatum or '',
                     'info': rechnung.info
                 })
     
@@ -1889,8 +1903,8 @@ class DatenInterface:
                     self.list_open_bookings.append({
                         'db_id': beihilfepaket.db_id,
                         'typ': 'Beihilfe',
-                        'betrag_euro': '+{:.2f} €'.format(beihilfepaket.betrag).replace('.', ','),
-                        'datum': beihilfepaket.datum,
+                        'betrag_euro': '+{:.2f} €'.format(beihilfepaket.betrag).replace('.', ',') if beihilfepaket.betrag else '0,00 €',
+                        'datum': beihilfepaket.datum or '',
                         'info': 'Beihilfe-Einreichung'
                     })
 
@@ -1899,8 +1913,8 @@ class DatenInterface:
                 self.list_open_bookings.append({
                     'db_id': pkvpaket.db_id,
                     'typ': 'PKV',
-                    'betrag_euro': '+{:.2f} €'.format(pkvpaket.betrag).replace('.', ','),
-                    'datum': pkvpaket.datum,
+                    'betrag_euro': '+{:.2f} €'.format(pkvpaket.betrag).replace('.', ',') if pkvpaket.betrag else '0,00 €',
+                    'datum': pkvpaket.datum or '',
                     'info': 'PKV-Einreichung'
                 })
 
