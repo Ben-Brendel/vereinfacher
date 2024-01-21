@@ -408,8 +408,8 @@ class Kontolupe(toga.App):
         # self.init_persons_beihilfe.set_value('')
         # self.init_institutions_name.set_value('')
         # self.init_institutions_city.set_value('')
-        self.init_beihilfe.set_value(self.daten.init.get('beihilfe', True))
-        if self.init_beihilfe.get_value():
+        self.init_beihilfe.value = self.daten.init.get('beihilfe', True)
+        if self.init_beihilfe.value:
             self.box_init_pkv.remove(self.box_init_beihilfe_content)
             self.box_init_beihilfe.add(self.box_init_beihilfe_content)
             self.label_beihilfe.text = 'Private KV und Beihilfe'
@@ -490,13 +490,9 @@ class Kontolupe(toga.App):
 
         self.label_beihilfe = toga.Label('Private KV und Beihilfe', style=style_label_subline_hell)
         self.box_init_beihilfe_content.add(self.label_beihilfe)
-        self.init_beihilfe = LabeledSwitch(
-            self.box_init_beihilfe_content, 
-            '', 
-            style=style_switch_center_hell, 
-            value=True,
-            on_change=self.init_beihilfe_changed
-        )
+        self.init_beihilfe = toga.Switch('', style=style_switch_center_hell, on_change=self.init_beihilfe_changed, value=True)
+        box_init_beihilfe_switch = toga.Box(style=style_switch_box_center, children=[self.init_beihilfe])
+        self.box_init_beihilfe_content.add(box_init_beihilfe_switch)
         self.box_init_beihilfe_content.add(toga.Label('Aktiviere diese Funktion, wenn Du beihilfeberechtigt bist.', style=style_description_hell))
 
         # Eingabebereich der Personen
@@ -549,7 +545,7 @@ class Kontolupe(toga.App):
         """Speichert die Daten und beendet die Initialisierung."""
         
         # Speichere die Daten
-        self.daten.init['beihilfe'] = self.init_beihilfe.get_value()
+        self.daten.init['beihilfe'] = self.init_beihilfe.value
         self.daten.init['initialized'] = True
         self.daten.save_init_file()
 

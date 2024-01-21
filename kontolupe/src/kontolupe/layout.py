@@ -38,6 +38,7 @@ style_switch                    = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_switch_center             = Pack(padding=5, color=FARBE_DUNKEL)
 style_switch_hell               = Pack(flex=1, padding=5, color=FARBE_HELL)
 style_switch_center_hell        = Pack(padding=5, color=FARBE_HELL)
+style_switch_box_center         = Pack(direction=ROW, alignment=CENTER)
 style_divider                   = Pack(padding=5, background_color=FARBE_MITTEL)
 style_datepicker                = Pack(flex=0, padding=0, color=FARBE_DUNKEL, width=40)   
 
