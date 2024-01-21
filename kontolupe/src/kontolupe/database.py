@@ -871,8 +871,7 @@ class DatenInterface:
 
         # ListSources für die GUI erstellen
         # Diese enthalten alle Felder der Datenbank und zusätzliche Felder für die GUI
-        self.list_rechnungen = ListSource(
-            accessors = [
+        accessors_rechnungen = [
                 'db_id', 
                 'betrag', 
                 'abzug_beihilfe',
@@ -897,54 +896,16 @@ class DatenInterface:
                 'pkv_id'
                 'pkv_eingereicht'
             ]
+        self.list_rechnungen = ListSource(
+            accessors = accessors_rechnungen
         )
 
         self.list_rg_beihilfe = ListSource(
-            accessors = [
-                'db_id', 
-                'betrag', 
-                'betrag_euro',
-                'rechnungsdatum', 
-                'einrichtung_id', 
-                'notiz', 
-                'einrichtung_name', 
-                'info', 
-                'person_id',
-                'person_name',
-                'beihilfesatz', 
-                'beihilfesatz_prozent',
-                'buchungsdatum', 
-                'bezahlt', 
-                'bezahlt_text',
-                'beihilfe_id', 
-                'beihilfe_eingereicht',
-                'pkv_id'
-                'pkv_eingereicht'
-            ]
+            accessors = accessors_rechnungen
         )
 
         self.list_rg_pkv = ListSource(
-            accessors = [
-                'db_id', 
-                'betrag', 
-                'betrag_euro',
-                'rechnungsdatum', 
-                'einrichtung_id', 
-                'notiz', 
-                'einrichtung_name', 
-                'info', 
-                'person_id',
-                'person_name',
-                'beihilfesatz', 
-                'beihilfesatz_prozent',
-                'buchungsdatum', 
-                'bezahlt', 
-                'bezahlt_text',
-                'beihilfe_id', 
-                'beihilfe_eingereicht',
-                'pkv_id'
-                'pkv_eingereicht'
-            ]
+            accessors = accessors_rechnungen
         )
 
         self.list_einrichtungen = ListSource(
