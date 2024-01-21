@@ -50,6 +50,12 @@ class Kontolupe(toga.App):
         self.main_window.content = self.sc_settings
 
 
+    def on_change_setting(self, widget):
+        """Reagiert auf die Änderung einer Einstellung."""
+        self.daten.init['automatic_booking'] = self.settings_automatic_booking.get_value()
+        self.daten.save_init_file()
+
+
     def create_settings(self):
         """Erstellt die Seite mit den Einstellungen der App."""
 
@@ -70,13 +76,14 @@ class Kontolupe(toga.App):
             'Automatische Buchungen:',
             helptitle   = 'Automatische Buchungen',
             helptext    = 'Wenn diese Funktion aktiviert ist, werden die Rechnungen automatisch als "bezahlt" markiert, sobald das geplante Überweisungsdatum erreicht ist.',
-            window      = self.main_window
+            window      = self.main_window,
+            on_change   = self.on_change_setting
         )
 
 
 
     async def check_open_bills(self, widget):
-        """Aktualisiert die Bezahlstatus der offenen Rechnungen."""
+        """Aktualisiert den Bezahlstatus der offenen Rechnungen."""
         
         # loop through the list of open bookings
         # if there is a bill, check if there is a payment date set
@@ -92,27 +99,33 @@ class Kontolupe(toga.App):
             self.daten.init['queried_payment'] = '01.01.1900'
             self.daten.save_init_file()
 
-        # check if the payment has been queried today
-        # if yes, exit early
-        # if no, set the key 'queried_payment' to today's date as a string
-        # if the function is called by the button on the main page it executes the code
-        if widget not in self.mainpage_table_buttons.buttons and self.daten.init['queried_payment'] == datetime.today().strftime('%d.%m.%Y'):
+        # checks before executing the function
+        if widget not in self.mainpage_table_buttons.buttons and not self.daten.init.get('automatic_booking', False) and self.daten.init.get('queried_payment', '01.01.2000') == datetime.today().strftime('%d.%m.%Y'):
             return
         else:
             self.daten.init['queried_payment'] = datetime.today().strftime('%d.%m.%Y')
             self.daten.save_init_file()
 
         needs_update = False
-        for booking in self.daten.list_open_bookings:
+        # copy the list of open bookings
+        # because we will change the list while looping through it
+        # and that is not allowed
+        for booking in list(self.daten.list_open_bookings):
             booking_date = datetime.strptime(booking.datum, '%d.%m.%Y')
             if booking.typ == 'Rechnung' and booking.datum and booking_date.date() <= datetime.today().date():
-                result = await self.main_window.question_dialog(
-                    'Rechnung bezahlt?', 
-                    'Wurde diese Rechnung bezahlt?\nSie war am {} geplant:\n\n{} wegen {}'.format(booking.datum, booking.betrag_euro[1:], booking.info)
-                )
+                
+                result = self.daten.init.get('automatic_booking', False)
+
+                if not result:
+                    result = await self.main_window.question_dialog(
+                        'Rechnung bezahlt?', 
+                        'Wurde diese Rechnung bezahlt?\nSie war am {} geplant:\n\n{} wegen {}'.format(booking.datum, booking.betrag_euro[1:], booking.info)
+                    )
+                
                 if result:
                     self.daten.pay_rechnung(booking.db_id)
                     needs_update = True
+                    print('+++ Kontolupe.check_open_bills: Rechnung {} bezahlt.'.format(booking.db_id))
 
         if needs_update:
             self.update_app(widget)
@@ -198,7 +211,7 @@ class Kontolupe(toga.App):
 
         # Reset the buttons for the open bookings table
         self.mainpage_table_buttons.set_enabled('pay_receive', False)
-        self.mainpage_table_buttons.set_enabled('edit_open_booking', False)
+        #self.mainpage_table_buttons.set_enabled('edit_open_booking', False)
 
         match widget:
             case self.table_open_bookings:
