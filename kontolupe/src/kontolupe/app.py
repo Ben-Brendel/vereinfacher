@@ -749,6 +749,22 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_bill, 'Optionale Felder')
 
+        self.form_bill_abzug_beihilfe = LabeledFloatInput(
+            self.box_form_bill, 
+            'Abzug Beihilfe in €:',
+            helptitle   = 'Abzug Beihilfe',
+            helptext    = 'Gib den vollen Betrag der Rechnungspositionen an, die nicht beihilfefähig sind. ',
+            window      = self.main_window,
+        )
+
+        self.form_bill_abzug_pkv = LabeledFloatInput(
+            self.box_form_bill, 
+            'Abzug PKV in €:',
+            helptitle   = 'Abzug Private KV',
+            helptext    = 'Gib den vollen Betrag der Rechnungspositionen an, die nicht von Deiner privaten KV übernommen werden. ',
+            window      = self.main_window,
+        )
+
         self.form_bill_bezahlt = LabeledSwitch(self.box_form_bill, 'Bezahlt:')
         self.form_bill_buchungsdatum = LabeledDateInput(
             self.box_form_bill, 
@@ -774,6 +790,8 @@ class Kontolupe(toga.App):
         # Setze die Eingabefelder zurück
         self.form_bill_betrag.set_value('')
         self.form_bill_rechnungsdatum.set_value('')
+        self.form_bill_abzug_beihilfe.set_value('')
+        self.form_bill_abzug_pkv.set_value('')
 
         if len(self.daten.list_personen) > 0:
             self.form_bill_person.set_items(self.daten.list_personen)
@@ -794,8 +812,10 @@ class Kontolupe(toga.App):
 
         if not self.daten.beihilfe_aktiv():
             self.form_bill_beihilfe.hide()
+            self.form_bill_abzug_beihilfe.hide()
         else:
             self.form_bill_beihilfe.show()
+            self.form_bill_abzug_beihilfe.show()
 
         # Zeige die Seite
         self.main_window.content = self.sc_form_bill
@@ -840,6 +860,8 @@ class Kontolupe(toga.App):
         self.form_bill_betrag.set_value(rechnung.betrag)
         self.form_bill_rechnungsdatum.set_value(rechnung.rechnungsdatum)
         self.form_bill_beihilfe.set_value(rechnung.beihilfesatz)
+        self.form_bill_abzug_beihilfe.set_value(rechnung.abzug_beihilfe)
+        self.form_bill_abzug_pkv.set_value(rechnung.abzug_pkv)
         self.form_bill_notiz.set_value(rechnung.notiz)
         self.form_bill_buchungsdatum.set_value(rechnung.buchungsdatum)
         self.form_bill_bezahlt.set_value(rechnung.bezahlt)
@@ -850,8 +872,10 @@ class Kontolupe(toga.App):
 
         if not self.daten.beihilfe_aktiv():
             self.form_bill_beihilfe.hide()
+            self.form_bill_abzug_beihilfe.hide()
         else:
             self.form_bill_beihilfe.show()
+            self.form_bill_abzug_beihilfe.show()
 
         # Zeige die Seite
         self.main_window.content = self.sc_form_bill
@@ -884,6 +908,14 @@ class Kontolupe(toga.App):
         if self.daten.beihilfe_aktiv() and not self.form_bill_beihilfe.is_valid():
             nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
 
+        # Prüfe, ob der Abzug Beihilfe <= des Rechnungsbetrags ist
+        if self.daten.beihilfe_aktiv() and self.form_bill_abzug_beihilfe.get_value() > self.form_bill_betrag.get_value():
+            nachricht += 'Der Abzug Beihilfe darf nicht größer als der Rechnungsbetrag sein.\n'
+
+        # Prüfe, ob der Abzug PKV <= des Rechnungsbetrags ist
+        if self.form_bill_abzug_pkv.get_value() > self.form_bill_betrag.get_value():
+            nachricht += 'Der Abzug PKV darf nicht größer als der Rechnungsbetrag sein.\n'
+
         if not (self.form_bill_buchungsdatum.is_valid() or self.form_bill_buchungsdatum.is_empty()):
             nachricht += 'Bitte gib ein gültiges Buchungsdatum ein oder lasse das Feld leer.\n'
                 
@@ -905,6 +937,8 @@ class Kontolupe(toga.App):
             neue_rechnung.betrag = self.form_bill_betrag.get_value()
             neue_rechnung.buchungsdatum = self.form_bill_buchungsdatum.get_value()
             neue_rechnung.bezahlt = self.form_bill_bezahlt.get_value()
+            neue_rechnung.abzug_beihilfe = self.form_bill_abzug_beihilfe.get_value()
+            neue_rechnung.abzug_pkv = self.form_bill_abzug_pkv.get_value()
 
             # Übergebe die Rechnung dem Daten-Interface
             self.daten.new_rechnung(neue_rechnung)
@@ -918,6 +952,11 @@ class Kontolupe(toga.App):
             if rechnung.betrag != self.form_bill_betrag.get_value():
                 update_einreichung = True
             if self.daten.beihilfe_aktiv() and rechnung.beihilfesatz != self.form_bill_beihilfe.get_value():
+                update_einreichung = True
+
+            if self.daten.beihilfe_aktiv() and rechnung.abzug_beihilfe != self.form_bill_abzug_beihilfe.get_value():
+                update_einreichung = True
+            if rechnung.abzug_pkv != self.form_bill_abzug_pkv.get_value():
                 update_einreichung = True
 
             # Bearbeite die Rechnung
@@ -934,6 +973,8 @@ class Kontolupe(toga.App):
             rechnung.beihilfesatz = self.form_bill_beihilfe.get_value()
             rechnung.buchungsdatum = self.form_bill_buchungsdatum.get_value()
             rechnung.bezahlt = self.form_bill_bezahlt.get_value()
+            rechnung.abzug_beihilfe = self.form_bill_abzug_beihilfe.get_value()
+            rechnung.abzug_pkv = self.form_bill_abzug_pkv.get_value()
 
             # Übergabe die geänderte Rechnung an das Daten-Interface
             self.daten.edit_rechnung(rechnung, self.edit_bill_id)
@@ -966,6 +1007,8 @@ class Kontolupe(toga.App):
 
                 # Setze Betrag der Rechnung auf 0, damit Einreichungen aktualisiert werden können
                 self.daten.rechnungen[self.edit_bill_id].betrag = 0
+                self.daten.rechnungen[self.edit_bill_id].abzug_beihilfe = 0
+                self.daten.rechnungen[self.edit_bill_id].abzug_pkv = 0
 
                 # Überprüfe, ob Einreichungen existieren
                 if self.daten.beihilfe_aktiv() and self.daten.rechnungen[self.edit_bill_id].beihilfe_id is not None:
@@ -1693,7 +1736,7 @@ class Kontolupe(toga.App):
         for auswahl_rg in widget.selection:
             for rg in self.daten.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
-                    summe += rg.betrag * rg.beihilfesatz / 100
+                    summe += (rg.betrag - rg.abzug_beihilfe) * rg.beihilfesatz / 100
         self.form_beihilfe_betrag.set_value(summe)
 
 
@@ -1704,9 +1747,9 @@ class Kontolupe(toga.App):
             for rg in self.daten.rechnungen:
                 if auswahl_rg.db_id == rg.db_id:
                     if self.daten.beihilfe_aktiv():
-                        summe += rg.betrag * (100 - rg.beihilfesatz) / 100
+                        summe += (rg.betrag - rg.abzug_pkv) * (100 - rg.beihilfesatz) / 100
                     else:
-                        summe += rg.betrag
+                        summe += rg.betrag - rg.abzug_pkv
         self.form_pkv_betrag.set_value(summe)
 
 
