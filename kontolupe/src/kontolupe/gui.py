@@ -234,7 +234,6 @@ class LabeledDateInput(LabeledTextInput):
         pass
 
     def get_value_as_date(self):
-        self.validator.rectify(self.text_input)
         return None if not self.text_input.value else datetime.strptime(self.text_input.value, '%d.%m.%Y').date()
 
     def get_value(self):
