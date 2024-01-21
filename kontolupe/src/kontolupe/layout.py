@@ -50,6 +50,7 @@ style_divider_subtext           = Pack(padding=5, padding_bottom=0, padding_top=
 style_button_link               = Pack(padding=5, padding_top=10, text_align=CENTER, background_color=FARBE_HELL, color=FARBE_BLAU, font_weight='bold')
 style_display                   = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color=FARBE_DUNKEL)
 style_label_box                 = Pack(flex=1, direction=ROW, alignment=CENTER)
+style_switch_box                = Pack(direction=ROW, alignment=CENTER)
 
 # Startseite
 style_box_offene_buchungen      = Pack(direction=COLUMN, alignment=CENTER, background_color=FARBE_BLAU)

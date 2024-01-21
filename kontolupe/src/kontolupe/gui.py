@@ -420,23 +420,48 @@ class LabeledSwitch:
 
     def __init__(self, parent, label_text, **kwargs):
         self.box = toga.Box(style=style_box_row)
+        self.label_box = toga.Box(style=style_label_box)
+        self.switch_box = toga.Box(style=style_switch_box)
+        self.label = toga.Label(label_text, style=style_label_input_noflex)
+
         self.switch = toga.Switch(
-            label_text, 
+            '', 
             style=kwargs.get('style', style_switch), 
             on_change=kwargs.get('on_change', None), 
             value=kwargs.get('value', False)
         )
-        self.box.add(self.switch)
+
+        self.label_box.add(self.label)
+        self.switch_box.add(self.switch)
+        self.box.add(self.label_box)
+        self.box.add(self.switch_box)
+
+        if 'helptext' in kwargs and 'window' in kwargs:
+            self.help_button = toga.Button(
+                '?', 
+                on_press=lambda widget: kwargs.get('window').info_dialog(kwargs.get('helptitle', 'Hilfe'), kwargs.get('helptext')), 
+                style=style_button_help
+            )
+            self.label_box.add(self.help_button)
+
         self.__add_to_parent(parent)
 
     def __add_to_parent(self, parent):
         parent.add(self.box)
 
-    def _set_label(self, label_text):
+    def set_label(self, label_text):
         self.label.text = label_text
 
-    def _get_label(self):
+    def get_label(self):
         return self.label.text
+    
+    def hide(self):
+        self.box.remove(self.label_box)
+        self.box.remove(self.switch_box)
+
+    def show(self):
+        self.box.add(self.label_box)
+        self.box.add(self.switch_box)
 
     def set_value(self, value):
         self.switch.value = value

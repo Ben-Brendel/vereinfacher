@@ -45,6 +45,36 @@ class Kontolupe(toga.App):
         self.back_to = 'startseite'
 
 
+    def show_settings(self, widget):
+        """Zeigt die Seite für die Einstellungen der App."""
+        self.main_window.content = self.sc_settings
+
+
+    def create_settings(self):
+        """Erstellt die Seite mit den Einstellungen der App."""
+
+        # Container für die Seite
+        self.box_settings = toga.Box(style=style_box_column)
+        self.sc_settings = toga.ScrollContainer(content=self.box_settings, style=style_scroll_container)
+
+        # Überschrift und Button Zurück
+        self.settings_topbox = TopBox(
+            parent      = self.box_settings,
+            label_text  = 'Einstellungen', 
+            style_box   = style_box_column_dunkel,
+            target_back = self.show_mainpage
+        )
+
+        self.settings_automatic_booking = LabeledSwitch(
+            self.box_settings, 
+            'Automatische Buchungen:',
+            helptitle   = 'Automatische Buchungen',
+            helptext    = 'Wenn diese Funktion aktiviert ist, werden die Rechnungen automatisch als "bezahlt" markiert, sobald das geplante Überweisungsdatum erreicht ist.',
+            window      = self.main_window
+        )
+
+
+
     async def check_open_bills(self, widget):
         """Aktualisiert die Bezahlstatus der offenen Rechnungen."""
         
@@ -1916,12 +1946,22 @@ class Kontolupe(toga.App):
 
         gruppe_tools = toga.Group('Tools', order = 6)
 
+        self.cmd_settings = toga.Command(
+            self.show_settings,
+            'Einstellungen',
+            tooltip = 'Öffnet die Einstellungen.',
+            group = gruppe_tools,
+            order = 10,
+            section = 1,
+            enabled=True
+        )
+
         self.cmd_archivieren = toga.Command(
             self.archivieren_bestaetigen,
             'Archivieren',
             tooltip = 'Archiviere alle bezahlten und erhaltenen Buchungen.',
             group = gruppe_tools,
-            order = 10,
+            order = 5,
             section = 1,
             enabled=False
         )
@@ -1958,6 +1998,7 @@ class Kontolupe(toga.App):
         self.commands.add(self.cmd_personen_neu)
         self.commands.add(self.cmd_einrichtungen_anzeigen)
         self.commands.add(self.cmd_einrichtungen_neu)
+        self.commands.add(self.cmd_settings)
         self.commands.add(self.cmd_archivieren)
         self.commands.add(self.cmd_reset)
         self.commands.add(self.cmd_datenschutz)
@@ -1986,7 +2027,8 @@ class Kontolupe(toga.App):
         self.create_form_pkv()
         self.create_list_persons()
         self.create_form_person()
-        self.create_webview()      
+        self.create_webview()   
+        self.create_settings()
 
         # Zeige die Startseite oder die Init-Seite
         if self.daten.is_first_start():
