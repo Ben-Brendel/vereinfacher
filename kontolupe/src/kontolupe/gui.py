@@ -156,7 +156,8 @@ class LabeledTextInput:
             style=style_input, 
             placeholder=kwargs.get('placeholder', None), 
             on_lose_focus=self.validator.rectify, 
-            readonly=kwargs.get('readonly', False)
+            readonly=kwargs.get('readonly', False),
+            on_change=kwargs.get('on_change', None)
         )
 
         self.label_box.add(self.label)
@@ -212,19 +213,25 @@ class LabeledTextInput:
 class LabeledDateInput(LabeledTextInput):
     """Create a box with a label and a text input for dates."""
 
-    def __init__(self, parent, label_text, button_today=False, **kwargs):
-        super().__init__(parent, label_text, placeholder='TT.MM.JJJJ', validator='date', button_today=button_today, **kwargs)
+    def __init__(self, parent, label_text, **kwargs):
+        super().__init__(
+            parent, 
+            label_text, 
+            placeholder = 'TT.MM.JJJJ', 
+            validator = 'date', 
+            on_change = self.__on_textinput_change,
+            **kwargs
+        )
 
-        self.datepicker = toga.DateInput(style=style_datepicker, on_change=lambda widget: self.set_value(widget.value))
+        self.datepicker = toga.DateInput(style=style_datepicker, on_change=self.__on_datepicker_change)
         self.input_box.insert(0, self.datepicker)
 
-        if button_today:
-            self.button_today = toga.Button(
-                'H', 
-                on_press=lambda widget: self.set_value(datetime.today().strftime('%d.%m.%Y')), 
-                style=style_button_help
-            )
-            self.label_box.add(self.button_today)
+    def __on_datepicker_change(self, widget):
+        self.set_value(widget.value)
+
+    def __on_textinput_change(self, widget):
+        # self.datepicker.value = self.get_value_as_date()
+        pass
 
     def get_value_as_date(self):
         self.validator.rectify(self.text_input)

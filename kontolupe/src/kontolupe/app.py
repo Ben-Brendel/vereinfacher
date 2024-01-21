@@ -55,6 +55,8 @@ class Kontolupe(toga.App):
         self.daten.init['automatic_booking'] = self.settings_automatic_booking.get_value()
         self.daten.init['automatic_archive'] = self.settings_automatic_archive.get_value()
         self.daten.save_init_file()
+        
+        print(self.daten.init)
 
 
     def create_settings(self):
@@ -86,8 +88,8 @@ class Kontolupe(toga.App):
 
         self.settings_automatic_archive = LabeledSwitch(
             self.box_settings, 
-            'Automatisches Archivieren:',
-            helptitle   = 'Automatisches Archivieren',
+            'Automatische Archivierung:',
+            helptitle   = 'Automatische Archivierung',
             helptext    = (
                 'Wenn diese Funktion aktiviert ist, werden alle zusammengehörenden '
                 'Rechnungen und Einreichungen, die vollständig bezahlt bzw. erstattet '
