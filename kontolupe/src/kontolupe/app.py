@@ -390,6 +390,106 @@ class Kontolupe(toga.App):
         self.main_window.content = self.box_webview
 
 
+    def show_statistics(self, widget):
+        """Zeigt die Seite mit der Statistik."""
+        # Update the items of the type selection
+        if self.daten.beihilfe_aktiv():
+            self.statistics_type.set_items(['Alle', 'Rechnungen', 'Beihilfe', 'Private KV'])
+        else:
+            self.statistics_type.set_items(['Alle', 'Rechnungen', 'Private KV'])
+
+        # Update the items of the person and einrichtung selections
+        self.statistics_person.set_items(
+            (['Alle'] if len(self.daten.list_personen) > 1 else []) + [person.name for person in self.daten.list_personen]
+        )
+        self.statistics_institution.set_items(
+            (['Alle'] if len(self.daten.list_einrichtungen) > 1 else []) + [institution.name for institution in self.daten.list_einrichtungen]
+        )
+
+        self.main_window.content = self.sc_statistics
+
+
+    def statistics_changed(self, widget):
+        """Reagiert auf Änderungen in der Statistik-Auswahl."""
+        pass
+
+
+    def create_statistics(self):
+        """Erstellt die Seite mit der Statistik."""
+        self.box_statistics = toga.Box(style=style_box_column)
+        self.sc_statistics = toga.ScrollContainer(content=self.box_statistics, style=style_scroll_container)
+
+        # Überschrift und Button Zurück
+        self.statistics_topbox = TopBox(
+            parent      = self.box_statistics,
+            label_text  = 'Statistiken', 
+            style_box   = style_box_column_dunkel,
+            target_back = self.show_mainpage
+        )
+
+        # Selektion des Typs der Buchung
+        self.statistics_type = LabeledSelection(
+            self.box_statistics, 
+            'Typ(en) der Buchung(en):', 
+            ['Alle', 'Rechnungen', 'Beihilfe', 'Private KV'], 
+            on_select=self.statistics_changed
+        )
+
+        # Selektion der Person
+        self.statistics_person = LabeledSelection(
+            self.box_statistics, 
+            'Person(en):', 
+            ['Alle'], 
+            on_select=self.statistics_changed
+        )
+
+        # Selektion der Einrichtung
+        self.statistics_institution = LabeledSelection(
+            self.box_statistics, 
+            'Einrichtung(en):', 
+            ['Alle'], 
+            on_select=self.statistics_changed
+        )
+
+        # Selektion des Zeitraums
+        self.statistics_time_box = toga.Box(style=style_box_row)
+        self.statistics_month_from = toga.Selection(
+            'Von:', 
+            ['{:02d}'.format(month) for month in range(1, 13)],
+            on_change=self.statistics_changed
+        )
+        self.statistics_year_from = toga.Selection(
+            '', 
+            [str(year) for year in range(2000, datetime.today().year + 1)],
+            on_change=self.statistics_changed
+        )
+        self.statistics_month_to = toga.Selection(
+            'Bis:', 
+            ['{:02d}'.format(month) for month in range(1, 13)],
+            on_change=self.statistics_changed
+        )
+        self.statistics_year_to = toga.Selection(
+            '', 
+            [str(year) for year in range(2000, datetime.today().year + 1)],
+            on_change=self.statistics_changed
+            )
+        self.statistics_time_box.add(self.statistics_month_from)
+        self.statistics_time_box.add(self.statistics_year_from)
+        self.statistics_time_box.add(self.statistics_month_to)
+        self.statistics_time_box.add(self.statistics_year_to)
+
+        # ButtonBox
+        self.statistics_buttons = ButtonBox(
+            parent  = self.box_statistics,
+            labels  = ['Anzeigen', 'Exportieren'],
+            targets = [None, None],
+            ids     = ['show_statistic', 'export_statistic'],
+            enabled = [True, False]
+        )  
+
+        self.box_statistics.add(toga.Divider(style=style_divider))
+
+
     def show_init_page(self, widget):
         """Zeigt die Seite zur Initialisierung der Anwendung."""
 
@@ -2020,15 +2120,7 @@ class Kontolupe(toga.App):
             enabled=True
         )
 
-        self.cmd_settings = toga.Command(
-            self.show_settings,
-            'Einstellungen',
-            tooltip = 'Öffnet die Einstellungen.',
-            order = 6,
-            enabled=True
-        )
-
-        gruppe_tools = toga.Group('Tools', order = 7)
+        gruppe_tools = toga.Group('Tools', order = 6)
 
         self.cmd_archivieren = toga.Command(
             self.archivieren_bestaetigen,
@@ -2060,6 +2152,22 @@ class Kontolupe(toga.App):
             enabled=True
         )
 
+        self.cmd_settings = toga.Command(
+            self.show_settings,
+            'Einstellungen',
+            tooltip = 'Öffnet die Einstellungen.',
+            order = 7,
+            enabled=True
+        )
+
+        self.cmd_statistics = toga.Command(
+            self.show_statistics,
+            'Statistiken',
+            tooltip = 'Öffnet die Statistiken.',
+            order = 8,
+            enabled=True
+        )
+
         # Erstelle die Menüleiste
         self.commands.add(self.cmd_rechnungen_anzeigen)
         self.commands.add(self.cmd_rechnungen_neu)
@@ -2076,6 +2184,7 @@ class Kontolupe(toga.App):
         self.commands.add(self.cmd_archivieren)
         self.commands.add(self.cmd_reset)
         self.commands.add(self.cmd_datenschutz)
+        self.commands.add(self.cmd_statistics)
 
 
     def startup(self):
@@ -2103,6 +2212,7 @@ class Kontolupe(toga.App):
         self.create_form_person()
         self.create_webview()   
         self.create_settings()
+        self.create_statistics()
 
         # Zeige die Startseite oder die Init-Seite
         if self.daten.is_first_start():

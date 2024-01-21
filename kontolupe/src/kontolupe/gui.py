@@ -386,7 +386,7 @@ class LabeledMultilineTextInput:
 class LabeledSelection:
     """Create a box with a label and a selection."""
 
-    def __init__(self, parent, label_text, data, accessor, **kwargs):
+    def __init__(self, parent, label_text, data, accessor=None, **kwargs):
         self.box = toga.Box(style=style_box_row)
         self.label = toga.Label(label_text, style=style_label_input)
         self.selection = toga.Selection(
@@ -402,10 +402,10 @@ class LabeledSelection:
     def __add_to_parent(self, parent):
         parent.add(self.box)
 
-    def _set_label(self, label_text):
+    def set_label(self, label_text):
         self.label.text = label_text
 
-    def _get_label(self):
+    def get_label(self):
         return self.label.text
 
     def set_value(self, value):
@@ -417,7 +417,7 @@ class LabeledSelection:
     def set_items(self, items):
         self.selection.items = items
     
-    def _set_on_change(self, on_change):
+    def set_on_change(self, on_change):
         self.selection.on_change = on_change
 
 
