@@ -1979,17 +1979,15 @@ class Kontolupe(toga.App):
             enabled=True
         )
 
-        gruppe_tools = toga.Group('Tools', order = 6)
-
         self.cmd_settings = toga.Command(
             self.show_settings,
             'Einstellungen',
             tooltip = 'Öffnet die Einstellungen.',
-            group = gruppe_tools,
-            order = 10,
-            section = 1,
+            order = 6,
             enabled=True
         )
+
+        gruppe_tools = toga.Group('Tools', order = 7)
 
         self.cmd_archivieren = toga.Command(
             self.archivieren_bestaetigen,
