@@ -29,6 +29,8 @@ class Datenbank:
             'rechnungen': [
                 ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
                 ('betrag', 'REAL'),
+                ('abzug_beihilfe', 'REAL'),
+                ('abzug_pkv', 'REAL'),
                 ('einrichtung_id', 'INTEGER'),
                 ('rechnungsdatum', 'TEXT'),
                 ('notiz', 'TEXT'),
@@ -639,6 +641,8 @@ class Rechnung:
         """Initialisierung der Rechnung."""
         self.db_id = None
         self.betrag = 0
+        self.abzug_beihilfe = 0
+        self.abzug_pkv = 0
         self.rechnungsdatum = None
         self.einrichtung_id = None
         self.notiz = None
@@ -667,6 +671,8 @@ class Rechnung:
         ausgabe = 'ID: {}\n'.format(self.db_id)
         ausgabe += 'Rechnung vom {}\n'.format(self.rechnungsdatum)
         ausgabe += 'Betrag: {:.2f} €\n'.format(self.betrag).replace('.', ',')
+        ausgabe += 'Abzug Beihilfe: {:.2f} €\n'.format(self.abzug_beihilfe).replace('.', ',')
+        ausgabe += 'Abzug PKV: {:.2f} €\n'.format(self.abzug_pkv).replace('.', ',')
         ausgabe += 'Person: {}\n'.format(self.person_id)
         ausgabe += 'Beihilfesatz: {:.0f} %\n'.format(self.beihilfesatz)
         ausgabe += 'Einrichtung: {}\n'.format(self.einrichtung_id)
@@ -703,7 +709,7 @@ class BeihilfePaket:
         if rechnungen is not None:
             self.betrag = 0
             for rechnung in rechnungen:
-                self.betrag += rechnung.betrag * rechnung.beihilfesatz / 100
+                self.betrag += (rechnung.betrag - rechnung.abzug_beihilfe) * rechnung.beihilfesatz / 100
 
         # Beihilfepaket speichern
         self.db_id = db.neues_beihilfepaket(self)
@@ -748,7 +754,7 @@ class PKVPaket:
         if rechnungen is not None:
             self.betrag = 0
             for rechnung in rechnungen:
-                self.betrag += rechnung.betrag * (100 - rechnung.beihilfesatz) / 100
+                self.betrag += (rechnung.betrag - rechnung.abzug_pkv) * (100 - rechnung.beihilfesatz) / 100
 
         # PKV-Einreichung speichern
         self.db_id = db.neues_pkvpaket(self)
@@ -869,7 +875,11 @@ class DatenInterface:
             accessors = [
                 'db_id', 
                 'betrag', 
+                'abzug_beihilfe',
+                'abzug_pkv',
                 'betrag_euro',
+                'abzug_beihilfe_euro',
+                'abzug_pkv_euro',
                 'rechnungsdatum', 
                 'einrichtung_id', 
                 'notiz', 
@@ -1123,12 +1133,12 @@ class DatenInterface:
                 if rechnung.bezahlt == False:
                     sum -= rechnung.betrag
                 if rechnung.beihilfe_id == None and self.beihilfe_aktiv():
-                    sum += rechnung.betrag * (rechnung.beihilfesatz / 100)
+                    sum += (rechnung.betrag - rechnung.abzug_beihilfe) * (rechnung.beihilfesatz / 100)
                 if rechnung.pkv_id == None:
                     if self.beihilfe_aktiv():
-                        sum += rechnung.betrag * (1 - (rechnung.beihilfesatz / 100))
+                        sum += (rechnung.betrag - rechnung.abzug_pkv) * (1 - (rechnung.beihilfesatz / 100))
                     else:
-                        sum += rechnung.betrag
+                        sum += rechnung.betrag - rechnung.abzug_pkv
         
         if kwargs.get('beihilfe', True) and self.beihilfe_aktiv():
             for beihilfepaket in self.beihilfepakete:
@@ -1586,7 +1596,7 @@ class DatenInterface:
                 for rechnung in self.rechnungen:
                     if rechnung.beihilfe_id == db_id:
                         inhalt = True
-                        beihilfepaket.betrag += rechnung.betrag * (rechnung.beihilfesatz / 100)
+                        beihilfepaket.betrag += (rechnung.betrag - rechnung.abzug_beihilfe) * (rechnung.beihilfesatz / 100)
                 # Die Beihilfe-Einreichung speichern
                 if inhalt:
                     print(f'### DatenInterface.update_beihilfepaket_betrag: Beihilfepaket with id {db_id} has content and is saved')
@@ -1609,9 +1619,9 @@ class DatenInterface:
                     if rechnung.pkv_id == db_id:
                         inhalt = True
                         if self.beihilfe_aktiv():
-                            pkvpaket.betrag += rechnung.betrag * (1 - (rechnung.beihilfesatz / 100))
+                            pkvpaket.betrag += (rechnung.betrag - rechnung.abzug_pkv) * (1 - (rechnung.beihilfesatz / 100))
                         else:
-                            pkvpaket.betrag += rechnung.betrag
+                            pkvpaket.betrag += rechnung.betrag - rechnung.abzug_pkv
                 if inhalt:
                     print(f'### DatenInterface.update_pkvpaket_betrag: PKV-Paket with id {db_id} has content and is saved')
                     pkvpaket.speichern(self.db)
@@ -1656,7 +1666,11 @@ class DatenInterface:
         return {
             'db_id': rechnung.db_id,
             'betrag': rechnung.betrag,
+            'abzug_beihilfe': rechnung.abzug_beihilfe,
+            'abzug_pkv': rechnung.abzug_pkv,
             'betrag_euro': '{:.2f} €'.format(rechnung.betrag).replace('.', ','),
+            'abzug_beihilfe_euro': '{:.2f} €'.format(rechnung.abzug_beihilfe).replace('.', ','),
+            'abzug_pkv_euro': '{:.2f} €'.format(rechnung.abzug_pkv).replace('.', ','),
             'rechnungsdatum': rechnung.rechnungsdatum,
             'einrichtung_id': rechnung.einrichtung_id,
             'notiz': rechnung.notiz,
