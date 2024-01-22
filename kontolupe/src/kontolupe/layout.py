@@ -28,6 +28,7 @@ style_button                    = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_button_help               = Pack(flex=0, padding=0, color=FARBE_DUNKEL, font_weight='bold', width=35, height=40, font_size=9)
 style_input                     = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_selection                 = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
+style_selection_flex2           = Pack(flex=2, padding=5, color=FARBE_DUNKEL)
 style_selection_noflex          = Pack(padding=5, color=FARBE_DUNKEL)
 style_label_input               = Pack(flex=1, padding=5, text_align=LEFT, color=FARBE_DUNKEL)
 style_label_input_hell          = Pack(flex=1, padding=5, text_align=LEFT, color=FARBE_HELL)
@@ -53,6 +54,7 @@ style_divider_subtext           = Pack(padding=5, padding_bottom=0, padding_top=
 style_button_link               = Pack(padding=5, padding_top=10, text_align=CENTER, background_color=FARBE_HELL, color=FARBE_BLAU, font_weight='bold')
 style_display                   = Pack(flex=1, padding=5, padding_top=10, text_align=LEFT, color=FARBE_DUNKEL)
 style_flex_box                  = Pack(flex=1, direction=ROW, alignment=CENTER)
+style_flex_box2                 = Pack(flex=2, direction=ROW, alignment=CENTER)
 style_noflex_box                = Pack(direction=ROW, alignment=CENTER)
 
 # Startseite

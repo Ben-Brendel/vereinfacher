@@ -427,6 +427,8 @@ class Kontolupe(toga.App):
             target_back = self.show_mainpage
         )
 
+        SubtextDivider(self.box_statistics, 'Datenauswahl')
+
         # Selektion des Typs der Buchung
         self.statistics_type = LabeledSelection(
             self.box_statistics, 
@@ -451,21 +453,23 @@ class Kontolupe(toga.App):
             on_change=self.statistics_changed
         )
 
+        SubtextDivider(self.box_statistics, 'Auswertungszeitraum')
+
         # Daten für die Selektion des Zeitraums
         months = ['{:02d}'.format(month) for month in range(1, 13)]
-        years = [str(year) for year in range(2000, datetime.today().year + 1)]
+        years = [str(year) for year in range(2020, datetime.today().year + 1)]
 
         # Selektion des Zeitraums
         self.statistics_from = LabeledDoubleSelection(
             self.box_statistics, 
-            'Auswertung von:', 
+            'Von:', 
             data = [months, years], 
             on_change=[self.statistics_changed, self.statistics_changed]
         )
 
         self.statistics_to = LabeledDoubleSelection(
             self.box_statistics, 
-            'Auswertung bis:', 
+            'Bis:', 
             data = [months, years], 
             on_change=[self.statistics_changed, self.statistics_changed]
         )

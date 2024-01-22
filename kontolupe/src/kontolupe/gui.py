@@ -471,22 +471,22 @@ class LabeledDoubleSelection:
         self.selections = []
 
         self.selections.append(toga.Selection(
-            style=style_selection_noflex,
+            style=style_selection,
             items=data[0],
             accessor=accessors[0],
             on_change=kwargs.get('on_change', [None, None])[0]
         ))
 
         self.selections.append(toga.Selection(
-            style=style_selection_noflex,
+            style=style_selection_flex2,
             items=data[1],
             accessor=accessors[1],
             on_change=kwargs.get('on_change', [None, None])[1]
         ))
 
         # Boxes
-        self.label_box = toga.Box(style=style_noflex_box, children=[self.label])
-        self.selection_box = toga.Box(style=style_flex_box, children=self.selections)
+        self.label_box = toga.Box(style=style_flex_box, children=[self.label])
+        self.selection_box = toga.Box(style=style_flex_box2, children=self.selections)
         self.box = toga.Box(style=style_box_row, children=[self.label_box, self.selection_box])
 
         # Help Button
