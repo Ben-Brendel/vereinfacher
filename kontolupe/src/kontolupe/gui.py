@@ -164,8 +164,8 @@ class LabeledTextInput:
     def __init__(self, parent, label_text, **kwargs):
         self.validator = Validator(kwargs.get('validator', None))
         self.box = toga.Box(style=style_box_row)
-        self.label_box = toga.Box(style=style_label_box)
-        self.input_box = toga.Box(style=style_label_box)
+        self.label_box = toga.Box(style=style_flex_box)
+        self.input_box = toga.Box(style=style_flex_box)
         self.label = toga.Label(label_text, style=style_label_input_noflex)
         self.text_input = toga.TextInput(
             style=style_input, 
@@ -373,8 +373,8 @@ class LabeledMultilineTextInput:
         self.label = toga.Label(label_text, style=style_label_input)
         self.text_input = toga.MultilineTextInput(style=style_input, readonly=kwargs.get('readonly', False))
         
-        self.label_box = toga.Box(style=style_label_box, children=[self.label])
-        self.input_box = toga.Box(style=style_label_box, children=[self.text_input])
+        self.label_box = toga.Box(style=style_flex_box, children=[self.label])
+        self.input_box = toga.Box(style=style_flex_box, children=[self.text_input])
         self.box = toga.Box(style=style_box_row, children=[self.label_box, self.input_box])
 
         # Help Button
@@ -421,8 +421,8 @@ class LabeledSelection:
             on_change=kwargs.get('on_change', None)
         )
         
-        self.label_box = toga.Box(style=style_label_box, children=[self.label])
-        self.selection_box = toga.Box(style=style_label_box, children=[self.selection])
+        self.label_box = toga.Box(style=style_flex_box, children=[self.label])
+        self.selection_box = toga.Box(style=style_flex_box, children=[self.selection])
         self.box = toga.Box(style=style_box_row, children=[self.label_box, self.selection_box])
 
         # Help Button
@@ -466,7 +466,7 @@ class LabeledDoubleSelection:
 
     def __init__(self, parent, label_text, data, accessors=[None, None], **kwargs):
 
-        self.label = toga.Label(label_text, style=style_label_input_noflex)
+        self.label = toga.Label(label_text, style=style_label_input)
 
         self.selections = []
 
@@ -485,8 +485,8 @@ class LabeledDoubleSelection:
         ))
 
         # Boxes
-        self.label_box = toga.Box(style=style_label_box, children=[self.label])
-        self.selection_box = toga.Box(style=style_switch_box, children=self.selections)
+        self.label_box = toga.Box(style=style_noflex_box, children=[self.label])
+        self.selection_box = toga.Box(style=style_flex_box, children=self.selections)
         self.box = toga.Box(style=style_box_row, children=[self.label_box, self.selection_box])
 
         # Help Button
@@ -522,8 +522,8 @@ class LabeledSwitch:
 
     def __init__(self, parent, label_text, **kwargs):
         self.box = toga.Box(style=style_box_row)
-        self.label_box = toga.Box(style=style_label_box)
-        self.switch_box = toga.Box(style=style_switch_box)
+        self.label_box = toga.Box(style=style_flex_box)
+        self.switch_box = toga.Box(style=style_noflex_box)
         self.label = toga.Label(label_text, style=style_label_input_noflex)
 
         self.switch = toga.Switch(

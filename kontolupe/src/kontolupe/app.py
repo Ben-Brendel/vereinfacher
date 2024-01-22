@@ -430,7 +430,7 @@ class Kontolupe(toga.App):
         # Selektion des Typs der Buchung
         self.statistics_type = LabeledSelection(
             self.box_statistics, 
-            'Typ(en) der Buchung(en):', 
+            'Typ(en):', 
             ['Alle', 'Rechnungen', 'Beihilfe', 'Private KV'], 
             on_change=self.statistics_changed
         )
