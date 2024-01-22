@@ -432,7 +432,7 @@ class Kontolupe(toga.App):
             self.box_statistics, 
             'Typ(en) der Buchung(en):', 
             ['Alle', 'Rechnungen', 'Beihilfe', 'Private KV'], 
-            on_select=self.statistics_changed
+            on_change=self.statistics_changed
         )
 
         # Selektion der Person
@@ -440,7 +440,7 @@ class Kontolupe(toga.App):
             self.box_statistics, 
             'Person(en):', 
             ['Alle'], 
-            on_select=self.statistics_changed
+            on_change=self.statistics_changed
         )
 
         # Selektion der Einrichtung
@@ -448,35 +448,27 @@ class Kontolupe(toga.App):
             self.box_statistics, 
             'Einrichtung(en):', 
             ['Alle'], 
-            on_select=self.statistics_changed
+            on_change=self.statistics_changed
         )
 
+        # Daten für die Selektion des Zeitraums
+        months = ['{:02d}'.format(month) for month in range(1, 13)]
+        years = [str(year) for year in range(2000, datetime.today().year + 1)]
+
         # Selektion des Zeitraums
-        self.statistics_time_box = toga.Box(style=style_box_row)
-        self.statistics_month_from = toga.Selection(
-            'Von:', 
-            ['{:02d}'.format(month) for month in range(1, 13)],
-            on_change=self.statistics_changed
+        self.statistics_from = LabeledDoubleSelection(
+            self.box_statistics, 
+            'Auswertung von:', 
+            data = [months, years], 
+            on_change=[self.statistics_changed, self.statistics_changed]
         )
-        self.statistics_year_from = toga.Selection(
-            '', 
-            [str(year) for year in range(2000, datetime.today().year + 1)],
-            on_change=self.statistics_changed
+
+        self.statistics_to = LabeledDoubleSelection(
+            self.box_statistics, 
+            'Auswertung bis:', 
+            data = [months, years], 
+            on_change=[self.statistics_changed, self.statistics_changed]
         )
-        self.statistics_month_to = toga.Selection(
-            'Bis:', 
-            ['{:02d}'.format(month) for month in range(1, 13)],
-            on_change=self.statistics_changed
-        )
-        self.statistics_year_to = toga.Selection(
-            '', 
-            [str(year) for year in range(2000, datetime.today().year + 1)],
-            on_change=self.statistics_changed
-            )
-        self.statistics_time_box.add(self.statistics_month_from)
-        self.statistics_time_box.add(self.statistics_year_from)
-        self.statistics_time_box.add(self.statistics_month_to)
-        self.statistics_time_box.add(self.statistics_year_to)
 
         # ButtonBox
         self.statistics_buttons = ButtonBox(

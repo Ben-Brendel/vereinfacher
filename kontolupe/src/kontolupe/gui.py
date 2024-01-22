@@ -143,6 +143,21 @@ class InfoLink:
         self.button.text = text
 
 
+class _HelpButton(toga.Button):
+    """Create a button with a help text."""
+
+    def __init__(self, parent, **kwargs):
+        super().__init__(
+            '?', 
+            on_press=lambda widget: kwargs.get('window', None).info_dialog(kwargs.get('helptitle', 'Hilfe'), kwargs.get('helptext', 'Keine Hilfe verfügbar.')), 
+            style=style_button_help
+        )
+        self.__add_to_parent(parent)
+
+    def __add_to_parent(self, parent):
+        parent.add(self)
+
+
 class LabeledTextInput:
     """Create a box with a label and a text input."""
 
@@ -166,12 +181,7 @@ class LabeledTextInput:
         self.box.add(self.input_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
-            self.help_button = toga.Button(
-                '?', 
-                on_press=lambda widget: kwargs.get('window').info_dialog(kwargs.get('helptitle', 'Hilfe'), kwargs.get('helptext')), 
-                style=style_button_help
-            )
-            self.label_box.add(self.help_button)
+            _HelpButton(self.label_box, **kwargs), 
 
         self.__add_to_parent(parent)
 
@@ -360,20 +370,34 @@ class LabeledMultilineTextInput:
     """Create a box with a label and a multiline text input."""
 
     def __init__(self, parent, label_text, **kwargs):
-        self.box = toga.Box(style=style_box_row)
         self.label = toga.Label(label_text, style=style_label_input)
         self.text_input = toga.MultilineTextInput(style=style_input, readonly=kwargs.get('readonly', False))
-        self.box.add(self.label)
-        self.box.add(self.text_input)
+        
+        self.label_box = toga.Box(style=style_label_box, children=[self.label])
+        self.input_box = toga.Box(style=style_label_box, children=[self.text_input])
+        self.box = toga.Box(style=style_box_row, children=[self.label_box, self.input_box])
+
+        # Help Button
+        if 'helptext' in kwargs and 'window' in kwargs:
+            _HelpButton(self.label_box, **kwargs)
+
         self.__add_to_parent(parent)
 
     def __add_to_parent(self, parent):
         parent.add(self.box)
 
-    def _set_label(self, label_text):
+    def show(self):
+        self.box.add(self.label_box)
+        self.box.add(self.input_box)
+
+    def hide(self):
+        self.box.remove(self.label_box)
+        self.box.remove(self.input_box)
+
+    def set_label(self, label_text):
         self.label.text = label_text
 
-    def _get_label(self):
+    def get_label(self):
         return self.label.text
 
     def set_value(self, value):
@@ -387,20 +411,36 @@ class LabeledSelection:
     """Create a box with a label and a selection."""
 
     def __init__(self, parent, label_text, data, accessor=None, **kwargs):
-        self.box = toga.Box(style=style_box_row)
+        
         self.label = toga.Label(label_text, style=style_label_input)
+
         self.selection = toga.Selection(
             style=style_selection,
             items=data,
             accessor=accessor,
             on_change=kwargs.get('on_change', None)
         )
-        self.box.add(self.label)
-        self.box.add(self.selection)
+        
+        self.label_box = toga.Box(style=style_label_box, children=[self.label])
+        self.selection_box = toga.Box(style=style_label_box, children=[self.selection])
+        self.box = toga.Box(style=style_box_row, children=[self.label_box, self.selection_box])
+
+        # Help Button
+        if 'helptext' in kwargs and 'window' in kwargs:
+            _HelpButton(self.label_box, **kwargs)
+        
         self.__add_to_parent(parent)
 
     def __add_to_parent(self, parent):
         parent.add(self.box)
+
+    def show(self):
+        self.box.add(self.label_box)
+        self.box.add(self.selection_box)
+
+    def hide(self):
+        self.box.remove(self.label_box)
+        self.box.remove(self.selection_box)
 
     def set_label(self, label_text):
         self.label.text = label_text
@@ -419,6 +459,62 @@ class LabeledSelection:
     
     def set_on_change(self, on_change):
         self.selection.on_change = on_change
+
+
+class LabeledDoubleSelection:
+    """Create a box with a label and two selection fields."""
+
+    def __init__(self, parent, label_text, data, accessors=[None, None], **kwargs):
+
+        self.label = toga.Label(label_text, style=style_label_input_noflex)
+
+        self.selections = []
+
+        self.selections.append(toga.Selection(
+            style=style_selection_noflex,
+            items=data[0],
+            accessor=accessors[0],
+            on_change=kwargs.get('on_change', [None, None])[0]
+        ))
+
+        self.selections.append(toga.Selection(
+            style=style_selection_noflex,
+            items=data[1],
+            accessor=accessors[1],
+            on_change=kwargs.get('on_change', [None, None])[1]
+        ))
+
+        # Boxes
+        self.label_box = toga.Box(style=style_label_box, children=[self.label])
+        self.selection_box = toga.Box(style=style_switch_box, children=self.selections)
+        self.box = toga.Box(style=style_box_row, children=[self.label_box, self.selection_box])
+
+        # Help Button
+        if 'helptext' in kwargs and 'window' in kwargs:
+            _HelpButton(self.label_box, **kwargs)
+
+        self.__add_to_parent(parent)
+
+    def __add_to_parent(self, parent):
+        parent.add(self.box)
+
+    def set_label(self, label_text):
+        self.label.text = label_text
+
+    def get_label(self):
+        return self.label.text
+
+    def set_value(self, index, value):
+        self.selections[index].value = value
+
+    def get_value(self, index):
+        return self.selections[index].value
+    
+    def set_items(self, index, items):
+        self.selections[index].items = items
+    
+    def set_on_change(self, index, on_change):
+        self.selections[index].on_change = on_change
 
 
 class LabeledSwitch:
@@ -443,12 +539,7 @@ class LabeledSwitch:
         self.box.add(self.switch_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
-            self.help_button = toga.Button(
-                '?', 
-                on_press=lambda widget: kwargs.get('window').info_dialog(kwargs.get('helptitle', 'Hilfe'), kwargs.get('helptext')), 
-                style=style_button_help
-            )
-            self.label_box.add(self.help_button)
+            _HelpButton(self.label_box, **kwargs)
 
         self.__add_to_parent(parent)
 
