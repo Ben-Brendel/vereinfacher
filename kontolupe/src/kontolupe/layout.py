@@ -25,7 +25,7 @@ style_label_hell                = Pack(text_align=LEFT, padding_left=5, padding_
 style_label_center              = Pack(text_align=CENTER, padding_left=5, padding_right=5, color=FARBE_DUNKEL)
 style_label_center_hell         = Pack(text_align=CENTER, padding_left=5, padding_right=5, color=FARBE_HELL)
 style_button                    = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
-style_button_help               = Pack(flex=0, padding=0, color=FARBE_DUNKEL, font_weight='bold', width=40, height=40, font_size=9)
+style_button_help               = Pack(flex=0, padding=0, color=FARBE_DUNKEL, font_weight='bold', width=35, height=40, font_size=9)
 style_input                     = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_selection                 = Pack(flex=1, padding=5, color=FARBE_DUNKEL)
 style_selection_noflex          = Pack(padding=0, padding_top=5, padding_bottom=5, color=FARBE_DUNKEL)

@@ -790,11 +790,6 @@ class Kontolupe(toga.App):
         self.main_window.content = self.box_list_bills
 
 
-    def update_form_bill(self, widget):
-        """Ermittelt den Beihilfesatz der ausgewählten Person und trägt ihn in das entsprechende Feld ein."""
-        self.form_bill_beihilfe.set_value(self.daten.get_beihilfesatz_by_name(widget.value.name))
-
-
     def create_form_bill(self):
         """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Rechnung."""
         
@@ -818,11 +813,8 @@ class Kontolupe(toga.App):
             parent=self.box_form_bill,
             label_text='Person:',
             data=self.daten.list_personen,
-            accessor='name',
-            on_change=self.update_form_bill
+            accessor='name'
         )
-
-        self.form_bill_beihilfe = LabeledPercentInput(self.box_form_bill, 'Beihilfe in %:', readonly=True)
 
         self.form_bill_rechnungsdatum = LabeledDateInput(self.box_form_bill, 'Rechnungsdatum:')
         self.form_bill_betrag = LabeledFloatInput(self.box_form_bill, 'Betrag in €:')
@@ -884,7 +876,6 @@ class Kontolupe(toga.App):
         if len(self.daten.list_personen) > 0:
             self.form_bill_person.set_items(self.daten.list_personen)
             self.form_bill_person.set_value(self.daten.list_personen[0])
-            self.form_bill_beihilfe.set_value(str(self.daten.list_personen[0].beihilfesatz))
         
         if len(self.daten.list_einrichtungen) > 0:
             self.form_bill_einrichtung.set_items(self.daten.list_einrichtungen)
@@ -899,10 +890,8 @@ class Kontolupe(toga.App):
         self.form_bill_topbox.set_label('Neue Rechnung')
 
         if not self.daten.beihilfe_aktiv():
-            self.form_bill_beihilfe.hide()
             self.form_bill_abzug_beihilfe.hide()
         else:
-            self.form_bill_beihilfe.show()
             self.form_bill_abzug_beihilfe.show()
 
         # Zeige die Seite
@@ -947,7 +936,6 @@ class Kontolupe(toga.App):
         # Befülle die Eingabefelder
         self.form_bill_betrag.set_value(rechnung.betrag)
         self.form_bill_rechnungsdatum.set_value(rechnung.rechnungsdatum)
-        self.form_bill_beihilfe.set_value(rechnung.beihilfesatz)
         self.form_bill_abzug_beihilfe.set_value(rechnung.abzug_beihilfe)
         self.form_bill_abzug_pkv.set_value(rechnung.abzug_pkv)
         self.form_bill_notiz.set_value(rechnung.notiz)
@@ -959,10 +947,8 @@ class Kontolupe(toga.App):
         self.form_bill_topbox.set_label('Rechnung bearbeiten')
 
         if not self.daten.beihilfe_aktiv():
-            self.form_bill_beihilfe.hide()
             self.form_bill_abzug_beihilfe.hide()
         else:
-            self.form_bill_beihilfe.show()
             self.form_bill_abzug_beihilfe.show()
 
         # Zeige die Seite
@@ -992,10 +978,6 @@ class Kontolupe(toga.App):
             if self.form_bill_einrichtung.get_value() is None:
                 nachricht += 'Bitte wähle eine Einrichtung aus.\n'
 
-        # Prüfe, ob ein Beihilfe eingegeben wurde
-        if self.daten.beihilfe_aktiv() and not self.form_bill_beihilfe.is_valid():
-            nachricht += 'Bitte gib einen gültigen Beihilfesatz ein.\n'
-
         # Prüfe, ob der Abzug Beihilfe <= des Rechnungsbetrags ist
         if self.daten.beihilfe_aktiv() and self.form_bill_abzug_beihilfe.get_value() > self.form_bill_betrag.get_value():
             nachricht += 'Der Abzug Beihilfe darf nicht größer als der Rechnungsbetrag sein.\n'
@@ -1018,7 +1000,7 @@ class Kontolupe(toga.App):
             neue_rechnung.rechnungsdatum = self.form_bill_rechnungsdatum.get_value()
             if len(self.daten.personen) > 0:
                 neue_rechnung.person_id = self.form_bill_person.get_value().db_id
-            neue_rechnung.beihilfesatz = self.form_bill_beihilfe.get_value()
+            neue_rechnung.beihilfesatz = self.daten.get_beihilfesatz_by_name(self.form_bill_person.get_value().name)
             if len(self.daten.einrichtungen) > 0:
                 neue_rechnung.einrichtung_id = self.form_bill_einrichtung.get_value().db_id
             neue_rechnung.notiz = self.form_bill_notiz.get_value()
@@ -1039,7 +1021,7 @@ class Kontolupe(toga.App):
             
             if rechnung.betrag != self.form_bill_betrag.get_value():
                 update_einreichung = True
-            if self.daten.beihilfe_aktiv() and rechnung.beihilfesatz != self.form_bill_beihilfe.get_value():
+            if self.daten.beihilfe_aktiv() and rechnung.beihilfesatz != self.daten.get_beihilfesatz_by_name(self.form_bill_person.get_value().name):
                 update_einreichung = True
 
             if self.daten.beihilfe_aktiv() and rechnung.abzug_beihilfe != self.form_bill_abzug_beihilfe.get_value():
@@ -1058,7 +1040,7 @@ class Kontolupe(toga.App):
 
             rechnung.notiz = self.form_bill_notiz.get_value()
             rechnung.betrag = self.form_bill_betrag.get_value()
-            rechnung.beihilfesatz = self.form_bill_beihilfe.get_value()
+            rechnung.beihilfesatz = self.daten.get_beihilfesatz_by_name(self.form_bill_person.get_value().name)
             rechnung.buchungsdatum = self.form_bill_buchungsdatum.get_value()
             rechnung.bezahlt = self.form_bill_bezahlt.get_value()
             rechnung.abzug_beihilfe = self.form_bill_abzug_beihilfe.get_value()
