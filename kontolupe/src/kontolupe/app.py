@@ -1914,6 +1914,7 @@ class Kontolupe(toga.App):
         # Prüfe ob Rechnungen ausgewählt wurden
         if not self.form_beihilfe_bills.selection:
             nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
+            self.form_beihilfe_betrag.set_value(0)
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
@@ -1951,6 +1952,7 @@ class Kontolupe(toga.App):
         # Prüfe ob Rechnungen ausgewählt wurden
         if not self.form_pkv_bills.selection:
             nachricht += 'Es wurde keine Rechnung zum Einreichen ausgewählt.\n'
+            self.form_pkv_betrag.set_value(0)
 
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
