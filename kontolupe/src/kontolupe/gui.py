@@ -158,6 +158,94 @@ class _HelpButton(toga.Button):
         parent.add(self)
 
 
+class OpenBooking:
+    """Erstellt eine Box mit Labels und Buttons für eine offene Buchung auf der Startseite."""
+
+    def __init__(self, parent, booking, index, on_press_pay, on_press_info, **kwargs):
+        
+        # create the label texts depending on booking
+        if booking.typ == 'Rechnung':
+            label_top_left_text = 'Rg. ' + booking.info
+            label_top_right_text = ' vom ' + booking.datum
+            label_bottom_text = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum) if booking.buchungsdatum else ''
+            button_pay_text = 'Bezahlt'
+        elif booking.typ == 'Beihilfe':
+            label_top_left_text = 'Beihilfe'
+            label_top_right_text = ' vom ' + booking.datum	
+            label_bottom_text = 'über ' + booking.betrag_euro 
+            button_pay_text = 'Erstattet'
+        elif booking.typ == 'PKV':
+            label_top_left_text = 'Private KV' 
+            label_top_right_text = ' vom ' + booking.datum
+            label_bottom_text = 'über ' + booking.betrag_euro
+            button_pay_text = 'Erstattet'
+        else:
+            label_top_left_text = 'Unbekannter Buchungstyp'
+            label_top_right_text = ''
+            label_bottom_text = 'vom ' + booking.datum + ' über ' + booking.betrag_euro
+            button_pay_text = 'Gebucht'
+
+        # create the styles depending on even
+        if index % 2 == 0:
+            style_box = style_ob_box_even
+        else:
+            style_box = style_ob_box_odd
+
+        # create the elements        
+        self.box = toga.Box(style=style_box)
+        self.label_box = toga.Box(style=style_ob_label_box)
+        self.label_inner_box = toga.Box(style=style_box_column_left)
+        self.label_inner_upper_box = toga.Box(style=style_box_row)
+        self.button_box = toga.Box(style=style_ob_button_box)
+
+        self.label_top_left = toga.Label(label_top_left_text, style=style_ob_label_top_left)
+        self.label_top_right = toga.Label(label_top_right_text, style=style_ob_label_top_right)
+        self.label_bottom = toga.Label(label_bottom_text, style=style_ob_label_bottom) 
+
+        self.button_pay = toga.Button(button_pay_text, id=str(index), style=style_ob_button_pay, on_press=on_press_pay)
+        self.button_info = toga.Button('?', id='i'+str(index), style=style_ob_button_help, on_press=on_press_info)
+
+        self.label_box.add(self.label_inner_box)
+        self.label_inner_box.add(self.label_inner_upper_box)
+        self.label_inner_upper_box.add(self.label_top_left)
+        self.label_inner_upper_box.add(self.label_top_right)
+        self.label_inner_box.add(self.label_bottom)
+        
+        self.button_box.add(self.button_pay)
+        self.button_box.add(self.button_info)
+
+        self.box.add(self.label_box)
+        self.box.add(self.button_box)
+        
+        self.__add_to_parent(parent)
+
+    def __add_to_parent(self, parent):
+        parent.add(self.box)
+
+    def show(self):
+        self.box.add(self.label_box)
+        self.box.add(self.button_box)
+
+    def hide(self):
+        self.box.remove(self.label_box)
+        self.box.remove(self.button_box)
+
+    def delete(self):
+        self.box.remove(self.label_box)
+        self.box.remove(self.button_box)
+    
+        self.label_top = None
+        self.label_bottom = None
+        self.label_inner_box = None
+        self.label_box = None
+        
+        self.button_pay = None
+        self.button_info = None
+        self.button_box = None
+        self.box = None
+
+
+
 class LabeledTextInput:
     """Create a box with a label and a text input."""
 

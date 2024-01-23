@@ -44,6 +44,9 @@ class Kontolupe(toga.App):
         # Weitere Hilfsvariablen
         self.back_to = 'startseite'
 
+        # Container für die Objekte der OpenBookings
+        self.oob = []
+
 
     def show_settings(self, widget):
         """Zeigt die Seite für die Einstellungen der App."""
@@ -129,21 +132,23 @@ class Kontolupe(toga.App):
         # because we will change the list while looping through it
         # and that is not allowed
         for booking in list(self.daten.list_open_bookings):
-            booking_date = datetime.strptime(booking.datum, '%d.%m.%Y')
-            if booking.typ == 'Rechnung' and booking.datum and booking_date.date() <= datetime.today().date():
-                
-                result = self.daten.init.get('automatic_booking', False)
+            
+            if booking.typ == 'Rechnung' and booking.buchungsdatum:
+                booking_date = datetime.strptime(booking.buchungsdatum, '%d.%m.%Y')
+                if booking_date.date() <= datetime.today().date():
+                    
+                    result = self.daten.init.get('automatic_booking', False)
 
-                if not result:
-                    result = await self.main_window.question_dialog(
-                        'Rechnung bezahlt?', 
-                        'Wurde diese Rechnung bezahlt?\nSie war am {} geplant:\n\n{} wegen {}'.format(booking.datum, booking.betrag_euro[1:], booking.info)
-                    )
-                
-                if result:
-                    self.daten.pay_rechnung(booking.db_id)
-                    needs_update = True
-                    print('+++ Kontolupe.check_open_bills: Rechnung {} bezahlt.'.format(booking.db_id))
+                    if not result:
+                        result = await self.main_window.question_dialog(
+                            'Rechnung bezahlt?', 
+                            'Wurde diese Rechnung bezahlt?\nSie war am {} geplant:\n\n{} wegen {}'.format(booking.buchungsdatum, booking.betrag_euro[1:], booking.info)
+                        )
+                    
+                    if result:
+                        self.daten.pay_rechnung(booking.db_id)
+                        needs_update = True
+                        print('+++ Kontolupe.check_open_bills: Rechnung {} bezahlt.'.format(booking.db_id))
 
         if needs_update:
             self.update_app(widget)
@@ -154,6 +159,25 @@ class Kontolupe(toga.App):
 
         # Anzeige des offenen Betrags aktualisieren
         self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')
+
+        # Lösche den Inhalt der Box mit den offenen Buchungen
+        for child in self.box_mainpage_open_bookings.children:
+            self.box_mainpage_open_bookings.remove(child)
+
+        # Lösche die OpenBooking-Objekte
+        for oob in self.oob:
+            oob.delete()
+        self.oob = []
+
+        # Aktualisiere die Liste der offenen Buchungen
+        for index, booking in enumerate(self.daten.list_open_bookings):
+            self.oob.append(OpenBooking(
+                parent          = self.box_mainpage_open_bookings, 
+                booking         = booking, 
+                index           = index, 
+                on_press_pay    = self.pay_receive,
+                on_press_info   = self.info_dialog_booking
+            ))
 
         # Anzeige und Buttons der offenen Rechnungen aktualisieren
         anzahl = self.daten.get_number_rechnungen_not_paid()
@@ -210,7 +234,7 @@ class Kontolupe(toga.App):
             self.cmd_archivieren.enabled = False
         else:
             self.box_startseite_daten.add(self.button_start_archiv)
-        # Anzeige und Button der archivierbaren Items aktualisieren
+            # Anzeige und Button der archivierbaren Items aktualisieren
             anzahl = self.daten.get_number_archivables()
             match anzahl:
                 case 0:
@@ -234,12 +258,12 @@ class Kontolupe(toga.App):
             status = False
 
         # Reset the buttons for the open bookings table
-        self.mainpage_table_buttons.set_enabled('pay_receive', False)
-        #self.mainpage_table_buttons.set_enabled('edit_open_booking', False)
+        # self.mainpage_table_buttons.set_enabled('pay_receive', False)
+        # self.mainpage_table_buttons.set_enabled('edit_open_booking', False)
 
         match widget:
-            case self.table_open_bookings:
-                self.mainpage_table_buttons.set_enabled('pay_receive', status)
+            # case self.table_open_bookings:
+                # self.mainpage_table_buttons.set_enabled('pay_receive', status)
                 # if self.table_open_bookings.selection and self.table_open_bookings.selection.typ == 'Rechnung':
                 #     self.mainpage_table_buttons.set_enabled('edit_open_booking', status)
             case self.table_bills:
@@ -258,7 +282,7 @@ class Kontolupe(toga.App):
                 self.list_persons_buttons.set_enabled('edit_person', status)
 
 
-    def info_dialog_booking(self, widget, row):
+    def info_dialog_booking(self, widget, row=None):
         """Zeigt die Info einer Buchung."""
         
         # Initialisierung Variablen
@@ -268,35 +292,50 @@ class Kontolupe(toga.App):
         # Ermittlung der Buchungsart
         typ = ''
         element = None
-        match widget:
-            case self.table_open_bookings:
-                typ = row.typ
-                match typ:
-                    case 'Rechnung':
-                        element = self.daten.get_rechnung_by_dbid(row.db_id)
-                    case 'Beihilfe':
-                        element = self.daten.get_beihilfepaket_by_dbid(row.db_id)
-                    case 'PKV':
-                        element = self.daten.get_pkvpaket_by_dbid(row.db_id)
-                        
-            case self.form_beihilfe_bills:
-                typ = 'Rechnung'
-                element = self.daten.get_rechnung_by_dbid(row.db_id)
-            case self.form_pkv_bills:
-                typ = 'Rechnung'
-                element = self.daten.get_rechnung_by_dbid(row.db_id)
-            case self.table_bills:
-                typ = 'Rechnung'
-                element = self.daten.get_rechnung_by_index(table_index_selection(widget))
-            case self.table_allowance:
-                typ = 'Beihilfe'
-                element = self.daten.get_beihilfepaket_by_index(table_index_selection(widget))
-            case self.table_insurance:
-                typ = 'PKV'
-                element = self.daten.get_pkvpaket_by_index(table_index_selection(widget))
-            case self.table_institutions:
-                typ = 'Einrichtung'
-                element = self.daten.get_einrichtung_by_index(table_index_selection(widget))
+
+        if row is None:
+            # It should be one of the help buttons in the list of open bookings
+            booking = self.daten.list_open_bookings[int(widget.id[1:])]
+
+            typ = booking.typ
+
+            match typ:
+                case 'Rechnung':
+                    element = self.daten.get_rechnung_by_dbid(booking.db_id)
+                case 'Beihilfe':
+                    element = self.daten.get_beihilfepaket_by_dbid(booking.db_id)
+                case 'PKV':
+                    element = self.daten.get_pkvpaket_by_dbid(booking.db_id)
+        else:
+            match widget:
+                # case self.table_open_bookings:
+                #     typ = row.typ
+                #     match typ:
+                #         case 'Rechnung':
+                #             element = self.daten.get_rechnung_by_dbid(row.db_id)
+                #         case 'Beihilfe':
+                #             element = self.daten.get_beihilfepaket_by_dbid(row.db_id)
+                #         case 'PKV':
+                #             element = self.daten.get_pkvpaket_by_dbid(row.db_id)
+                            
+                case self.form_beihilfe_bills:
+                    typ = 'Rechnung'
+                    element = self.daten.get_rechnung_by_dbid(row.db_id)
+                case self.form_pkv_bills:
+                    typ = 'Rechnung'
+                    element = self.daten.get_rechnung_by_dbid(row.db_id)
+                case self.table_bills:
+                    typ = 'Rechnung'
+                    element = self.daten.get_rechnung_by_index(table_index_selection(widget))
+                case self.table_allowance:
+                    typ = 'Beihilfe'
+                    element = self.daten.get_beihilfepaket_by_index(table_index_selection(widget))
+                case self.table_insurance:
+                    typ = 'PKV'
+                    element = self.daten.get_pkvpaket_by_index(table_index_selection(widget))
+                case self.table_institutions:
+                    typ = 'Einrichtung'
+                    element = self.daten.get_einrichtung_by_index(table_index_selection(widget))
 
         # Ermittlung der Texte
         if typ == 'Rechnung':
@@ -686,16 +725,20 @@ class Kontolupe(toga.App):
         self.box_mainpage_sum.add(self.mainpage_label_sum)
         self.box_mainpage.add(self.box_mainpage_sum)
 
+        # Box für die offenen Buchungen
+        self.box_mainpage_open_bookings = toga.Box(style=style_box_column)
+        self.box_mainpage.add(self.box_mainpage_open_bookings)
+
         # Tabelle mit allen offenen Buchungen
-        self.table_open_bookings = toga.Table(
-            headings    = ['Info', 'Betrag', 'Datum'],
-            accessors   = ['info', 'betrag_euro', 'datum'],
-            data        = self.daten.list_open_bookings,    
-            style       = style_table_offene_buchungen,
-            on_activate = self.info_dialog_booking,
-            on_select   = self.update_app
-        )
-        self.box_mainpage.add(self.table_open_bookings)
+        # self.table_open_bookings = toga.Table(
+        #     headings    = ['Info', 'Betrag', 'Datum'],
+        #     accessors   = ['info', 'betrag_euro', 'datum'],
+        #     data        = self.daten.list_open_bookings,    
+        #     style       = style_table_offene_buchungen,
+        #     on_activate = self.info_dialog_booking,
+        #     on_select   = self.update_app
+        # )
+        # self.box_mainpage.add(self.table_open_bookings)
 
         # Buttons zur Tabelle der offenen Buchungen
         self.mainpage_table_buttons = ButtonBox(
@@ -1972,21 +2015,39 @@ class Kontolupe(toga.App):
             
 
     async def pay_receive(self, widget):
-        """Bestätigt die Bezahlung einer Rechnung."""
-        if self.table_open_bookings.selection:
-            match self.table_open_bookings.selection.typ:
-                case 'Rechnung':
-                    if await self.main_window.question_dialog('Rechnung bezahlt?', 'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?'):
-                        self.daten.pay_rechnung(self.table_open_bookings.selection.db_id)
-                        self.update_app(widget)
-                case 'Beihilfe':
-                    if await self.main_window.question_dialog('Beihilfe-Einreichung erstattet?', 'Soll die ausgewählte Beihilfe wirklich als erstattet markiert werden?'):
-                        self.daten.receive_beihilfe(self.table_open_bookings.selection.db_id)
-                        self.update_app(widget)
-                case 'PKV':
-                    if await self.main_window.question_dialog('PKV-Einreichung erstattet?', 'Soll die ausgewählte PKV-Einreichung wirklich als erstattet markiert werden?'):                        
-                        self.daten.receive_pkv(self.table_open_bookings.selection.db_id)
-                        self.update_app(widget)
+        """Bestätigt die Bezahlung einer Rechnung oder Erstattung einer Einreichung."""
+
+        booking = self.daten.list_open_bookings[int(widget.id)]
+
+        match booking.typ:
+            case 'Rechnung':
+                if await self.main_window.question_dialog('Rechnung bezahlt?', 'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?'):
+                    self.daten.pay_rechnung(booking.db_id)
+                    self.update_app(widget)
+            case 'Beihilfe':
+                if await self.main_window.question_dialog('Beihilfe-Einreichung erstattet?', 'Soll die ausgewählte Beihilfe wirklich als erstattet markiert werden?'):
+                    self.daten.receive_beihilfe(booking.db_id)
+                    self.update_app(widget)
+            case 'PKV':
+                if await self.main_window.question_dialog('PKV-Einreichung erstattet?', 'Soll die ausgewählte PKV-Einreichung wirklich als erstattet markiert werden?'):                        
+                    self.daten.receive_pkv(booking.db_id)
+                    self.update_app(widget)
+
+
+        # if self.table_open_bookings.selection:
+        #     match self.table_open_bookings.selection.typ:
+        #         case 'Rechnung':
+        #             if await self.main_window.question_dialog('Rechnung bezahlt?', 'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?'):
+        #                 self.daten.pay_rechnung(self.table_open_bookings.selection.db_id)
+        #                 self.update_app(widget)
+        #         case 'Beihilfe':
+        #             if await self.main_window.question_dialog('Beihilfe-Einreichung erstattet?', 'Soll die ausgewählte Beihilfe wirklich als erstattet markiert werden?'):
+        #                 self.daten.receive_beihilfe(self.table_open_bookings.selection.db_id)
+        #                 self.update_app(widget)
+        #         case 'PKV':
+        #             if await self.main_window.question_dialog('PKV-Einreichung erstattet?', 'Soll die ausgewählte PKV-Einreichung wirklich als erstattet markiert werden?'):                        
+        #                 self.daten.receive_pkv(self.table_open_bookings.selection.db_id)
+        #                 self.update_app(widget)
 
 
     def edit_open_booking(self, widget):

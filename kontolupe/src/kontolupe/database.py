@@ -959,7 +959,8 @@ class DatenInterface:
                 'db_id',                        # Datenbank-Id des jeweiligen Elements
                 'typ',                          # Typ des Elements (Rechnung, Beihilfe, PKV)
                 'betrag_euro',                  # Betrag der Buchung in Euro
-                'datum',                        # Datum der Buchung (Plandatum der Rechnung oder Einreichungsdatum der Beihilfe/PKV)
+                'datum',                        # Rechnungsdatum oder Einreichungsdatum der Beihilfe/PKV
+                'buchungsdatum',                # Buchungsdatum der Rechnung
                 'info'                          # Info-Text der Buchung
             ]
         )
@@ -1164,62 +1165,62 @@ class DatenInterface:
         return count
         
 
-    def get_rechnung_by_dbid(self, id, objekt=False):
+    def get_rechnung_by_dbid(self, db_id, objekt=False):
         """Gibt eine Rechnung anhand der ID zurück."""
         rechnungen = self.rechnungen if objekt else self.list_rechnungen
 
         for rechnung in rechnungen:
-            if rechnung['db_id'] == id:
+            if rechnung.db_id == db_id:
                 return rechnung
-        print(f'### DatenInterface.get_rechnung_by_dbid: No rechnung found with id {id}')
+        print(f'### DatenInterface.get_rechnung_by_dbid: No rechnung found with id {db_id}')
 
         return None
     
 
-    def get_beihilfepaket_by_dbid(self, id, objekt=False):
+    def get_beihilfepaket_by_dbid(self, db_id, objekt=False):
         """Gibt ein Beihilfepaket anhand der ID zurück."""
         beihilfepakete = self.beihilfepakete if objekt else self.list_beihilfepakete
 
         for beihilfepaket in beihilfepakete:
-            if beihilfepaket.db_id == id:
+            if beihilfepaket.db_id == db_id:
                 return beihilfepaket
-        print(f'### DatenInterface.get_beihilfepaket_by_dbid: No beihilfepaket found with id {id}')
+        print(f'### DatenInterface.get_beihilfepaket_by_dbid: No beihilfepaket found with id {db_id}')
             
         return None
     
 
-    def get_pkvpaket_by_dbid(self, id, objekt=False):
+    def get_pkvpaket_by_dbid(self, db_id, objekt=False):
         """Gibt ein PKV-Paket anhand der ID zurück."""
         pkvpakete = self.pkvpakete if objekt else self.list_pkvpakete
 
         for pkvpaket in pkvpakete:
-            if pkvpaket.db_id == id:
+            if pkvpaket.db_id == db_id:
                 return pkvpaket
-        print(f'### DatenInterface.get_pkvpaket_by_dbid: No pkvpaket found with id {id}')
+        print(f'### DatenInterface.get_pkvpaket_by_dbid: No pkvpaket found with id {db_id}')
             
         return None
     
 
-    def get_einrichtung_by_dbid(self, id, objekt=False):
+    def get_einrichtung_by_dbid(self, db_id, objekt=False):
         """Gibt eine Einrichtung anhand der ID zurück."""
         einrichtungen = self.einrichtungen if objekt else self.list_einrichtungen
 
         for einrichtung in einrichtungen:
-            if einrichtung.db_id == id:
+            if einrichtung.db_id == db_id:
                 return einrichtung
-        print(f'### DatenInterface.get_einrichtung_by_dbid: No einrichtung found with id {id}')
+        print(f'### DatenInterface.get_einrichtung_by_dbid: No einrichtung found with id {db_id}')
             
         return None
     
 
-    def get_person_by_dbid(self, id, objekt=False):
+    def get_person_by_dbid(self, db_id, objekt=False):
         """Gibt eine Person anhand der ID zurück."""
         personen = self.personen if objekt else self.list_personen
 
         for person in personen:
-            if person.db_id == id:
+            if person.db_id == db_id:
                 return person
-        print(f'### DatenInterface.get_person_by_dbid: No person found with id {id}')
+        print(f'### DatenInterface.get_person_by_dbid: No person found with id {db_id}')
             
         return None
     
@@ -1854,7 +1855,8 @@ class DatenInterface:
                     'db_id': rechnung.db_id,
                     'typ': 'Rechnung',
                     'betrag_euro': '-{:.2f} €'.format(rechnung.betrag).replace('.', ',') if rechnung.betrag else '0,00 €',
-                    'datum': rechnung.buchungsdatum or '',
+                    'datum': rechnung.rechnungsdatum or '',
+                    'buchungsdatum': rechnung.buchungsdatum or '',
                     'info': rechnung.info
                 })
     
@@ -1866,6 +1868,7 @@ class DatenInterface:
                         'typ': 'Beihilfe',
                         'betrag_euro': '+{:.2f} €'.format(beihilfepaket.betrag).replace('.', ',') if beihilfepaket.betrag else '0,00 €',
                         'datum': beihilfepaket.datum or '',
+                        'buchungsdatum': '',
                         'info': 'Beihilfe-Einreichung'
                     })
 
@@ -1876,6 +1879,7 @@ class DatenInterface:
                     'typ': 'PKV',
                     'betrag_euro': '+{:.2f} €'.format(pkvpaket.betrag).replace('.', ',') if pkvpaket.betrag else '0,00 €',
                     'datum': pkvpaket.datum or '',
+                    'buchungsdatum': '',
                     'info': 'PKV-Einreichung'
                 })
 
