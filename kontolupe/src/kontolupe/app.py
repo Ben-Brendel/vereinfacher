@@ -483,6 +483,16 @@ class Kontolupe(toga.App):
             enabled = [True, False]
         )  
 
+        # Auswertungsschritt angeben, monatlich, quartalsweise, jährlich
+        #SubtextDivider(self.box_statistics, 'Auswertungsschritt')
+
+        self.statistics_step = LabeledSelection(
+            self.box_statistics, 
+            'Auswertungsschritt:', 
+            ['Monat', 'Quartal', 'Jahr'], 
+            on_change=self.statistics_changed
+        )
+
         self.box_statistics.add(toga.Divider(style=style_divider))
 
 
