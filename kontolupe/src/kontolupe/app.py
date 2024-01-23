@@ -1771,8 +1771,6 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_beihilfe, 'Pflichtfelder')
 
-        self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
-
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_beihilfe_bills = toga.Table(
             headings        = ['Info', 'Betrag', 'Bezahlt'],
@@ -1784,6 +1782,8 @@ class Kontolupe(toga.App):
             style           = style_table_auswahl
         )
         self.box_form_beihilfe.add(self.form_beihilfe_bills)
+
+        self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
 
         SubtextDivider(self.box_form_beihilfe, 'Optionale Felder')
 
@@ -1816,8 +1816,6 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_pkv, 'Pflichtfelder')
 
-        self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
-
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_pkv_bills = toga.Table(
             headings        = ['Info', 'Betrag', 'Bezahlt'],
@@ -1829,6 +1827,8 @@ class Kontolupe(toga.App):
             style           = style_table_auswahl
         )
         self.box_form_pkv.add(self.form_pkv_bills)
+
+        self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
 
         SubtextDivider(self.box_form_pkv, 'Optionale Felder')
 
@@ -1869,7 +1869,7 @@ class Kontolupe(toga.App):
     def show_form_beihilfe_new(self, widget):
         """Zeigt die Seite zum Erstellen eines Beihilfepakets."""
         # Setze die Eingabefelder zurück
-        self.form_beihilfe_betrag.set_value('')
+        self.form_beihilfe_betrag.set_value(0)
         self.form_beihilfe_datum.set_value(datetime.now())
         self.form_beihilfe_erhalten.set_value(False)
 
@@ -1884,7 +1884,7 @@ class Kontolupe(toga.App):
     def show_form_pkv_new(self, widget):
         """Zeigt die Seite zum Erstellen einer PKV-Einreichung."""
         # Setze die Eingabefelder zurück
-        self.form_pkv_betrag.set_value('')
+        self.form_pkv_betrag.set_value(0)
         self.form_pkv_datum.set_value(datetime.now())
         self.form_pkv_erhalten.set_value(False)
 

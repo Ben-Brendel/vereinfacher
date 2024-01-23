@@ -372,6 +372,8 @@ class LabeledFloatInput(LabeledTextInput):
             self.text_input.value = value
         elif isinstance(value, float):
             self.text_input.value = format(value, '.2f').replace('.', ',')
+        elif isinstance(value, int):
+            self.text_input.value = format(float(value), '.2f').replace('.', ',')
 
         self.validator.rectify(self.text_input)
     
