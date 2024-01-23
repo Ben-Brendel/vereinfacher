@@ -50,6 +50,11 @@ class Kontolupe(toga.App):
 
     def show_settings(self, widget):
         """Zeigt die Seite für die Einstellungen der App."""
+
+        # update the switches states
+        self.settings_automatic_booking.set_value(self.daten.init.get('automatic_booking', False))
+        self.settings_automatic_archive.set_value(self.daten.init.get('automatic_archive', False))
+
         self.main_window.content = self.sc_settings
 
 
