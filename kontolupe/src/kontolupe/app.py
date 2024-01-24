@@ -1141,18 +1141,24 @@ class Kontolupe(toga.App):
                 self.edit_bill_id = table_index_selection(self.table_bills)
 
                 # Setze Betrag der Rechnung auf 0, damit Einreichungen aktualisiert werden können
-                self.daten.rechnungen[self.edit_bill_id].betrag = 0
-                self.daten.rechnungen[self.edit_bill_id].abzug_beihilfe = 0
-                self.daten.rechnungen[self.edit_bill_id].abzug_pkv = 0
+                # self.daten.rechnungen[self.edit_bill_id].betrag = 0
+                # self.daten.rechnungen[self.edit_bill_id].abzug_beihilfe = 0
+                # self.daten.rechnungen[self.edit_bill_id].abzug_pkv = 0
+
+                # Zwischenspeichern der Beihilfe- und PKV-IDs und auf None setzen um Pakete ggf. löschen zu können
+                beihilfe_id = self.daten.rechnungen[self.edit_bill_id].beihilfe_id
+                pkv_id = self.daten.rechnungen[self.edit_bill_id].pkv_id
+                self.daten.rechnungen[self.edit_bill_id].beihilfe_id = None
+                self.daten.rechnungen[self.edit_bill_id].pkv_id = None
 
                 # Überprüfe, ob Einreichungen existieren
-                if self.daten.beihilfe_aktiv() and self.daten.rechnungen[self.edit_bill_id].beihilfe_id is not None:
+                if self.daten.beihilfe_aktiv() and beihilfe_id is not None:
                     if await self.main_window.question_dialog('Zugehörige Beihilfe-Einreichung aktualisieren', 'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?'):
-                        self.daten.update_beihilfepaket_betrag(self.daten.rechnungen[self.edit_bill_id].beihilfe_id)
+                        self.daten.update_beihilfepaket_betrag(beihilfe_id)
 
-                if self.daten.rechnungen[self.edit_bill_id].pkv_id is not None:
+                if pkv_id is not None:
                     if await self.main_window.question_dialog('Zugehörige PKV-Einreichung aktualisieren', 'Soll die zugehörige PKV-Einreichung aktualisiert werden?'):
-                        self.daten.update_pkvpaket_betrag(self.daten.rechnungen[self.edit_bill_id].pkv_id)
+                        self.daten.update_pkvpaket_betrag(pkv_id)
 
                 # Rechnung löschen
                 self.daten.delete_rechnung(self.edit_bill_id)
