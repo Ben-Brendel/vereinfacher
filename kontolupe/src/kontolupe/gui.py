@@ -161,7 +161,16 @@ class HelpButton(toga.Button):
 class TableEntry:
     """Erstellt eine Zeile der app-eigenen Tabellenklasse."""
 
-    def __init__(self, parent, text_top_left, text_top_right, text_bottom, even=False, button_text=[None], on_press=[None], button_id=[None], button_styles=[None], **kwargs):
+    def __init__(
+            self, 
+            parent, 
+            text_top_left, 
+            text_top_right, 
+            text_bottom, 
+            even=False, 
+            buttons={}, 
+            **kwargs
+        ):
 
         # create the row style depending on even
         if even:
@@ -186,12 +195,59 @@ class TableEntry:
         self.label_inner_upper_box.add(self.label_top_right)
         self.label_inner_box.add(self.label_bottom)
 
-        # get number of buttons by choosing the lower value of the length of button_text and on_press
-        number_of_buttons = min(len(button_text), len(on_press))
+        # get the maximum number of buttons in the dictionary
+        number_of_buttons = max([len(buttons[key]) for key in buttons.keys()])
+
+        # prepare the dictionary for the buttons
+        # if the key text is not present or shorter than number_of_buttons fill it up with empty strings
+        # if the key on_press is not present or shorter than number_of_buttons fill it up with None
+        # if the key button_id is not present or shorter than number_of_buttons fill it up with None
+        # if the key style is not present or shorter than number_of_buttons fill it up with style_table_button
+        for key in buttons.keys():
+            if key == 'text':
+                if len(buttons[key]) < number_of_buttons:
+                    buttons[key] += [''] * (number_of_buttons - len(buttons[key]))
+            elif key == 'on_press':
+                if len(buttons[key]) < number_of_buttons:
+                    buttons[key] += [None] * (number_of_buttons - len(buttons[key]))
+            elif key == 'button_id':
+                if len(buttons[key]) < number_of_buttons:
+                    buttons[key] += [None] * (number_of_buttons - len(buttons[key]))
+            elif key == 'style':
+                if len(buttons[key]) < number_of_buttons:
+                    buttons[key] += [style_table_button] * (number_of_buttons - len(buttons[key]))
+            else:
+                print('+++ Kontolupe: Unbekannter Key in TableEntry.__init__(): ' + key)
+
+        # if the key 'text' is not present in the dictionary, add it with empty strings of length number_of_buttons
+        if 'text' not in buttons.keys():
+            buttons['text'] = [''] * number_of_buttons
+
+        # if the key 'on_press' is not present in the dictionary, add it with None of length number_of_buttons
+        if 'on_press' not in buttons.keys():
+            buttons['on_press'] = [None] * number_of_buttons
+
+        # if the key 'button_id' is not present in the dictionary, add it with None of length number_of_buttons
+        if 'button_id' not in buttons.keys():
+            buttons['button_id'] = [None] * number_of_buttons
+
+        # if the key 'style' is not present in the dictionary, add it with style_table_button of length number_of_buttons
+        if 'style' not in buttons.keys():
+            buttons['style'] = [style_table_button] * number_of_buttons
+
+        # if any of the values in the list with the key 'style' is None, replace it with style_table_button
+        for i in range(number_of_buttons):
+            if buttons['style'][i] is None:
+                buttons['style'][i] = style_table_button
 
         # create the buttons
         for i in range(number_of_buttons):
-            self.button_box.add(toga.Button(button_text[i], on_press=on_press[i], id=(button_id[i] or None), style=(button_styles[i] or style_table_button)))
+            self.button_box.add(toga.Button(
+                buttons['text'][i], 
+                id=buttons['button_id'][i], 
+                style=buttons['style'][i],
+                on_press=buttons['on_press'][i]
+            ))
 
         self.box.add(self.label_box)
         self.box.add(self.button_box)
@@ -218,12 +274,43 @@ class TableEntry:
         self.label_inner_box = None
         self.label_box = None
         
-        for child in self.button_box.children:
-            child = None
+        while self.button_box.children:
+            self.button_box.remove(self.button_box.children[0])
 
         self.button_box = None
         self.box = None
 
+
+class Table:
+    """Grundklasse für eine app-eigene Tabelle."""
+
+    def __init__(self, parent, data=[[None]], buttons={}, **kwargs):
+        # Speichere die übergebenen Parameter für die Aktualisierung
+        self.__entries = []
+        self.__parent = parent
+        self.__buttons = buttons
+        self.__data = data
+        self.__create_table()
+
+    def __create_table(self):
+        for index, row in enumerate(self.__data):
+            self.__entries.append(TableEntry(
+                parent          = self.__parent, 
+                text_top_left   = row[0],
+                text_top_right  = row[1],
+                text_bottom     = row[2],
+                even            = (index % 2 == 0),
+                buttons         = self.__buttons
+            ))
+
+    def delete(self):
+        for entry in self.__entries:
+            entry.delete()
+        self.__entries = []
+
+    def update(self):
+        self.delete()
+        self.__create_table()
     
 
 class OpenBooking(TableEntry):
@@ -236,7 +323,7 @@ class OpenBooking(TableEntry):
             case 'Rechnung':
                 label_top_left_text = 'Rg. ' + booking.info
                 label_top_right_text = ''
-                label_bottom_text = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum) if booking.buchungsdatum else ''
+                label_bottom_text = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum if booking.buchungsdatum else '')
                 button_pay_text = 'Bezahlt'
             case 'Beihilfe':
                 label_top_left_text = 'Beihilfe'
@@ -259,11 +346,13 @@ class OpenBooking(TableEntry):
             label_top_left_text, 
             label_top_right_text, 
             label_bottom_text, 
-            even            = (index % 2 == 0), 
-            button_text     = [button_pay_text, '?'], 
-            on_press        = [on_press_pay, on_press_info], 
-            button_id       = [str(index), 'i'+str(index)], 
-            button_styles   = [None, style_button_help],
+            even  = (index % 2 == 0), 
+            buttons = {
+                'text':     [button_pay_text, '?'], 
+                'on_press': [on_press_pay, on_press_info], 
+                'button_id': [str(index), 'i'+str(index)], 
+                'style':    [None, style_button_help]
+            },
             **kwargs
         )
 
