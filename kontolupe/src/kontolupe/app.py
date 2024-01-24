@@ -1496,10 +1496,10 @@ class Kontolupe(toga.App):
         # ButtonBox mit den Buttons
         self.list_persons_buttons = ButtonBox(
             parent  = self.box_list_persons,
-            labels  = ['Bearbeiten', 'Neu', 'Löschen'],
-            targets = [self.show_form_persons_edit, self.show_form_persons_new, self.delete_person],
-            ids     = ['edit_person', 'new_person', 'delete_person'],
-            enabled = [False, True, False]
+            labels  = ['Löschen', 'Bearbeiten', 'Neu'],
+            targets = [self.delete_person, self.show_form_persons_edit, self.show_form_persons_new],
+            ids     = ['delete_person', 'edit_person', 'new_person'],
+            enabled = [False, False, True]
         )
 
 
