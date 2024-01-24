@@ -52,7 +52,12 @@ class Validator:
         """Korrigiert die Eingabe, sodass nur noch Zahlen von 0 bis 9 und ein , enthalten sind."""
 
         # Entferne alle Zeichen, die keine Zahl von 0 bis 9 oder ein , sind.
-        eingabe = ''.join(c for c in widget.value if c in '0123456789,')
+        eingabe = ''.join(c for c in widget.value if c in '0123456789,.')
+
+        if eingabe.count(',') == 0 and eingabe.count('.') == 1:
+            eingabe = eingabe.replace('.', ',')
+        elif eingabe.count('.') > 0:
+            eingabe = eingabe.replace('.', '')
         
         # Entferne alle , außer dem letzten
         if eingabe.count(',') > 1:

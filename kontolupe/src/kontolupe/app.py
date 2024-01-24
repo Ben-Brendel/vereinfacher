@@ -867,7 +867,7 @@ class Kontolupe(toga.App):
         )
 
         self.form_bill_rechnungsdatum = LabeledDateInput(self.box_form_bill, 'Rechnungsdatum:')
-        self.form_bill_betrag = LabeledFloatInput(self.box_form_bill, 'Betrag in €:')
+        self.form_bill_betrag = LabeledFloatInput(self.box_form_bill, 'Betrag:', suffix='€')
 
         # Bereich zur Auswahl der Einrichtung
         self.form_bill_einrichtung = LabeledSelection(
@@ -881,7 +881,8 @@ class Kontolupe(toga.App):
 
         self.form_bill_abzug_beihilfe = LabeledFloatInput(
             self.box_form_bill, 
-            'Abzug Beihilfe in €:',
+            'Abzug Beihilfe:',
+            suffix      = '€',
             helptitle   = 'Abzug Beihilfe',
             helptext    = 'Gib den vollen Betrag der Rechnungspositionen an, die nicht beihilfefähig sind. ',
             window      = self.main_window,
@@ -889,7 +890,8 @@ class Kontolupe(toga.App):
 
         self.form_bill_abzug_pkv = LabeledFloatInput(
             self.box_form_bill, 
-            'Abzug PKV in €:',
+            'Abzug PKV:',
+            suffix      = '€',
             helptitle   = 'Abzug Private KV',
             helptext    = 'Gib den vollen Betrag der Rechnungspositionen an, die nicht von Deiner privaten KV übernommen werden. ',
             window      = self.main_window,
@@ -1792,7 +1794,7 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_beihilfe, 'Optionale Felder')
 
-        self.form_beihilfe_betrag = LabeledFloatInput(self.box_form_beihilfe, 'Betrag in €:', readonly=True)
+        self.form_beihilfe_betrag = LabeledFloatInput(self.box_form_beihilfe, 'Betrag :', suffix='€', readonly=True)
         self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
 
         # ButtonBox
@@ -1837,7 +1839,7 @@ class Kontolupe(toga.App):
 
         SubtextDivider(self.box_form_pkv, 'Optionale Felder')
 
-        self.form_pkv_betrag = LabeledFloatInput(self.box_form_pkv, 'Betrag in €:', readonly=True)
+        self.form_pkv_betrag = LabeledFloatInput(self.box_form_pkv, 'Betrag:',  suffix='€', readonly=True)
         self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')
 
         # ButtonBox

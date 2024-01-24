@@ -166,7 +166,8 @@ class OpenBooking:
         # create the label texts depending on booking
         if booking.typ == 'Rechnung':
             label_top_left_text = 'Rg. ' + booking.info
-            label_top_right_text = ' vom ' + booking.datum
+            #label_top_right_text = ' vom ' + booking.datum
+            label_top_right_text = ''
             label_bottom_text = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum) if booking.buchungsdatum else ''
             button_pay_text = 'Bezahlt'
         elif booking.typ == 'Beihilfe':
@@ -256,7 +257,7 @@ class LabeledTextInput:
         self.input_box = toga.Box(style=style_flex_box)
         self.label = toga.Label(label_text, style=style_label_input_noflex)
         self.text_input = toga.TextInput(
-            style=style_input, 
+            style=kwargs.get('style_input', style_input), 
             placeholder=kwargs.get('placeholder', None), 
             on_lose_focus=self.validator.rectify, 
             readonly=kwargs.get('readonly', False),
@@ -265,6 +266,10 @@ class LabeledTextInput:
 
         self.label_box.add(self.label)
         self.input_box.add(self.text_input)
+
+        if kwargs.get('suffix', None):
+            self.input_box.add(toga.Label(kwargs.get('suffix'), style=style_label_input_suffix))
+
         self.box.add(self.label_box)
         self.box.add(self.input_box)
 
@@ -316,8 +321,9 @@ class LabeledDateInput(LabeledTextInput):
             parent, 
             label_text, 
             placeholder = 'TT.MM.JJJJ', 
-            validator = 'date', 
-            on_change = self.__on_textinput_change,
+            validator   = 'date', 
+            on_change   = self.__on_textinput_change,
+            style_input = style_input_datepicker,
             **kwargs
         )
 
@@ -354,8 +360,8 @@ class LabeledDateInput(LabeledTextInput):
 class LabeledFloatInput(LabeledTextInput):
     """Create a box with a label and a text input for floats."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, validator='float', **kwargs)
+    def __init__(self, parent, label_text, suffix=None, **kwargs):
+        super().__init__(parent, label_text, suffix=suffix, validator='float', **kwargs)
 
     def get_value(self):
         self.validator.rectify(self.text_input)
