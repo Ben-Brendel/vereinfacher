@@ -91,16 +91,13 @@ style_label_headline            = Pack(font_size=14, font_weight='bold', text_al
 style_description               = Pack(font_weight='normal', text_align=CENTER, padding=10, padding_top=0, color=FARBE_DUNKEL)
 style_description_hell          = Pack(font_weight='normal', text_align=CENTER, padding=10, padding_top=0, color=FARBE_HELL)
 
-style_button_help               = Pack(flex=0, padding=0, color=FARBE_DUNKEL, font_weight='bold', width=35, height=40, font_size=9)
-
-# Open Bookings
-style_ob_label_top_left         = Pack(color=FARBE_DUNKEL, font_weight='bold')
-style_ob_label_top_right        = Pack(color=FARBE_DUNKEL)
-style_ob_label_bottom           = Pack(color=FARBE_DUNKEL)
-style_ob_button_pay             = Pack(flex=0, padding=0, color=FARBE_DUNKEL, height=40, font_size=9)
-style_ob_button_help            = Pack(flex=0, padding=0, color=FARBE_DUNKEL, font_weight='bold', width=35, height=40, font_size=9)
-style_ob_label_box              = Pack(flex=1, direction=ROW, alignment=LEFT, padding=10)
-style_ob_button_box             = Pack(direction=ROW, alignment=RIGHT, padding_right=10)
-
-style_ob_box_odd                = Pack(direction=ROW, alignment=CENTER, background_color=FARBE_HELLGRAU)
-style_ob_box_even               = Pack(direction=ROW, alignment=CENTER, background_color=FARBE_HELL)
+# Table styles
+style_table_label_top_left      = Pack(color=FARBE_DUNKEL, font_weight='bold')
+style_table_label_top_right     = Pack(color=FARBE_DUNKEL)
+style_table_label_bottom        = Pack(color=FARBE_DUNKEL)
+style_table_button              = Pack(flex=0, padding=0, color=FARBE_DUNKEL, height=40, font_size=9)
+style_button_help               = Pack(flex=0, padding=0, color=FARBE_DUNKEL, width=35, height=40, font_size=9)
+style_table_label_box           = Pack(flex=1, direction=ROW, alignment=LEFT, padding=10)
+style_table_button_box          = Pack(direction=ROW, alignment=RIGHT, padding_right=10)
+style_table_box_odd             = Pack(direction=ROW, alignment=CENTER, background_color=FARBE_HELLGRAU)
+style_table_box_even            = Pack(direction=ROW, alignment=CENTER, background_color=FARBE_HELL)

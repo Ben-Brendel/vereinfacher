@@ -44,9 +44,6 @@ class Kontolupe(toga.App):
         # Weitere Hilfsvariablen
         self.back_to = 'startseite'
 
-        # Container für die Objekte der OpenBookings
-        self.oob = []
-
 
     def show_settings(self, widget):
         """Zeigt die Seite für die Einstellungen der App."""
@@ -165,24 +162,8 @@ class Kontolupe(toga.App):
         # Anzeige des offenen Betrags aktualisieren
         self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')
 
-        # Lösche den Inhalt der Box mit den offenen Buchungen
-        for child in self.box_mainpage_open_bookings.children:
-            self.box_mainpage_open_bookings.remove(child)
-
-        # Lösche die OpenBooking-Objekte
-        for oob in self.oob:
-            oob.delete()
-        self.oob = []
-
-        # Aktualisiere die Liste der offenen Buchungen
-        for index, booking in enumerate(self.daten.list_open_bookings):
-            self.oob.append(OpenBooking(
-                parent          = self.box_mainpage_open_bookings, 
-                booking         = booking, 
-                index           = index, 
-                on_press_pay    = self.pay_receive,
-                on_press_info   = self.info_dialog_booking
-            ))
+        # Aktualisiere die Tabelle der offenen Buchungen
+        self.table_open_bookings.update()        
 
         # Anzeige und Buttons der offenen Rechnungen aktualisieren
         anzahl = self.daten.get_number_rechnungen_not_paid()
@@ -745,8 +726,14 @@ class Kontolupe(toga.App):
         self.box_mainpage_sum.add(box_mainpage_sum_content)
         self.box_mainpage.add(self.box_mainpage_sum)
 
-        # Box für die offenen Buchungen
+        # Tabelle der offenen Buchungen
         self.box_mainpage_open_bookings = toga.Box(style=style_box_column)
+        self.table_open_bookings = TableOpenBookings(
+            self.box_mainpage_open_bookings, 
+            self.daten.list_open_bookings, 
+            self.pay_receive,
+            self.info_dialog_booking
+        )
         self.box_mainpage.add(self.box_mainpage_open_bookings)
 
         # Buttons zur Tabelle der offenen Buchungen

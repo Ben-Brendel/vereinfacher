@@ -158,62 +158,40 @@ class HelpButton(toga.Button):
         parent.add(self)
 
 
-class OpenBooking:
-    """Erstellt eine Box mit Labels und Buttons für eine offene Buchung auf der Startseite."""
+class TableEntry:
+    """Erstellt eine Zeile der app-eigenen Tabellenklasse."""
 
-    def __init__(self, parent, booking, index, on_press_pay, on_press_info, **kwargs):
-        
-        # create the label texts depending on booking
-        if booking.typ == 'Rechnung':
-            label_top_left_text = 'Rg. ' + booking.info
-            #label_top_right_text = ' vom ' + booking.datum
-            label_top_right_text = ''
-            label_bottom_text = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum) if booking.buchungsdatum else ''
-            button_pay_text = 'Bezahlt'
-        elif booking.typ == 'Beihilfe':
-            label_top_left_text = 'Beihilfe'
-            label_top_right_text = ' vom ' + booking.datum	
-            label_bottom_text = 'über ' + booking.betrag_euro 
-            button_pay_text = 'Erstattet'
-        elif booking.typ == 'PKV':
-            label_top_left_text = 'Private KV' 
-            label_top_right_text = ' vom ' + booking.datum
-            label_bottom_text = 'über ' + booking.betrag_euro
-            button_pay_text = 'Erstattet'
-        else:
-            label_top_left_text = 'Unbekannter Buchungstyp'
-            label_top_right_text = ''
-            label_bottom_text = 'vom ' + booking.datum + ' über ' + booking.betrag_euro
-            button_pay_text = 'Gebucht'
+    def __init__(self, parent, text_top_left, text_top_right, text_bottom, even=False, button_text=[None], on_press=[None], button_id=[None], button_styles=[None], **kwargs):
 
-        # create the styles depending on even
-        if index % 2 == 0:
-            style_box = style_ob_box_even
+        # create the row style depending on even
+        if even:
+            style_box = style_table_box_even
         else:
-            style_box = style_ob_box_odd
+            style_box = style_table_box_odd
 
         # create the elements        
         self.box = toga.Box(style=style_box)
-        self.label_box = toga.Box(style=style_ob_label_box)
+        self.label_box = toga.Box(style=style_table_label_box)
         self.label_inner_box = toga.Box(style=style_box_column_left)
         self.label_inner_upper_box = toga.Box(style=style_box_row)
-        self.button_box = toga.Box(style=style_ob_button_box)
+        self.button_box = toga.Box(style=style_table_button_box)
 
-        self.label_top_left = toga.Label(label_top_left_text, style=style_ob_label_top_left)
-        self.label_top_right = toga.Label(label_top_right_text, style=style_ob_label_top_right)
-        self.label_bottom = toga.Label(label_bottom_text, style=style_ob_label_bottom) 
-
-        self.button_pay = toga.Button(button_pay_text, id=str(index), style=style_ob_button_pay, on_press=on_press_pay)
-        self.button_info = toga.Button('?', id='i'+str(index), style=style_ob_button_help, on_press=on_press_info)
+        self.label_top_left = toga.Label(text_top_left, style=style_table_label_top_left)
+        self.label_top_right = toga.Label(text_top_right, style=style_table_label_top_right)
+        self.label_bottom = toga.Label(text_bottom, style=style_table_label_bottom) 
 
         self.label_box.add(self.label_inner_box)
         self.label_inner_box.add(self.label_inner_upper_box)
         self.label_inner_upper_box.add(self.label_top_left)
         self.label_inner_upper_box.add(self.label_top_right)
         self.label_inner_box.add(self.label_bottom)
-        
-        self.button_box.add(self.button_pay)
-        self.button_box.add(self.button_info)
+
+        # get number of buttons by choosing the lower value of the length of button_text and on_press
+        number_of_buttons = min(len(button_text), len(on_press))
+
+        # create the buttons
+        for i in range(number_of_buttons):
+            self.button_box.add(toga.Button(button_text[i], on_press=on_press[i], id=(button_id[i] or None), style=(button_styles[i] or style_table_button)))
 
         self.box.add(self.label_box)
         self.box.add(self.button_box)
@@ -240,11 +218,95 @@ class OpenBooking:
         self.label_inner_box = None
         self.label_box = None
         
-        self.button_pay = None
-        self.button_info = None
+        for child in self.button_box.children:
+            child = None
+
         self.button_box = None
         self.box = None
 
+    
+
+class OpenBooking(TableEntry):
+    """Erstellt eine Box mit Labels und Buttons für eine offene Buchung auf der Startseite."""
+
+    def __init__(self, parent, booking, index, on_press_pay, on_press_info, **kwargs):
+        
+        # create the label texts depending on booking
+        match booking.typ:
+            case 'Rechnung':
+                label_top_left_text = 'Rg. ' + booking.info
+                label_top_right_text = ''
+                label_bottom_text = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum) if booking.buchungsdatum else ''
+                button_pay_text = 'Bezahlt'
+            case 'Beihilfe':
+                label_top_left_text = 'Beihilfe'
+                label_top_right_text = ' vom ' + booking.datum	
+                label_bottom_text = 'über ' + booking.betrag_euro 
+                button_pay_text = 'Erstattet'
+            case 'PKV':
+                label_top_left_text = 'Private KV' 
+                label_top_right_text = ' vom ' + booking.datum
+                label_bottom_text = 'über ' + booking.betrag_euro
+                button_pay_text = 'Erstattet'
+            case _:
+                label_top_left_text = 'Unbekannter Buchungstyp'
+                label_top_right_text = ''
+                label_bottom_text = 'vom ' + booking.datum + ' über ' + booking.betrag_euro
+                button_pay_text = 'Gebucht'
+
+        super().__init__(
+            parent, 
+            label_top_left_text, 
+            label_top_right_text, 
+            label_bottom_text, 
+            even            = (index % 2 == 0), 
+            button_text     = [button_pay_text, '?'], 
+            on_press        = [on_press_pay, on_press_info], 
+            button_id       = [str(index), 'i'+str(index)], 
+            button_styles   = [None, style_button_help],
+            **kwargs
+        )
+
+
+class TableOpenBookings:
+    """Erstellt eine Tabelle mit den offenen Buchungen."""
+
+    def __init__(self, parent, list_bookings, on_press_pay, on_press_info, **kwargs):
+
+        # Speichere die übergebenen Parameter für die Aktualisierung
+        self.__entries = []
+        self.__parent = parent
+        self.__on_press_pay = on_press_pay
+        self.__on_press_info = on_press_info
+        self.__list_bookings = list_bookings
+
+        # Aktualisiere die Liste der offenen Buchungen
+        for index, booking in enumerate(self.__list_bookings):
+            self.__entries.append(OpenBooking(
+                parent          = self.__parent, 
+                booking         = booking, 
+                index           = index, 
+                on_press_pay    = self.__on_press_pay,
+                on_press_info   = self.__on_press_info
+            ))
+
+
+    def delete(self):
+        for entry in self.__entries:
+            entry.delete()
+        self.__entries = []
+
+
+    def update(self):
+        self.delete()
+        for index, booking in enumerate(self.__list_bookings):
+            self.__entries.append(OpenBooking(
+                parent          = self.__parent, 
+                booking         = booking, 
+                index           = index, 
+                on_press_pay    = self.__on_press_pay,
+                on_press_info   = self.__on_press_info
+            ))
 
 
 class LabeledTextInput:
