@@ -726,8 +726,23 @@ class Kontolupe(toga.App):
         
         # Bereich, der die Summe der offenen Buchungen anzeigt
         self.box_mainpage_sum = toga.Box(style=style_box_offene_buchungen)
+        box_mainpage_sum_content = toga.Box(style=style_box_row)
         self.mainpage_label_sum = toga.Label('Offener Betrag: ', style=style_start_summe)
-        self.box_mainpage_sum.add(self.mainpage_label_sum)
+        box_mainpage_sum_content.add(self.mainpage_label_sum)
+        box_mainpage_sum_content.add(HelpButton(
+            parent      = self.box_mainpage_sum,
+            window      = self.main_window,
+            helptitle   = 'Offener Betrag',
+            helptext    = (
+                'Dieser Wert zeigt Dir an, wie viel Geld Dir in Summe noch zusteht,'
+                ' oder Du noch bezahlen musst, wenn alle Rechnungen bezahlt und erstattet sind.\n\n'
+                'Er berechnet sich so:\n'
+                '- Noch nicht bezahlte Rechnungen werden abgezogen.\n'
+                '- Noch nicht eingereichte Rechnungen werden hinzugezählt.\n'
+                '- Noch nicht erstattete Einreichungen werden hinzugezählt.\n'
+            )
+        ))
+        self.box_mainpage_sum.add(box_mainpage_sum_content)
         self.box_mainpage.add(self.box_mainpage_sum)
 
         # Box für die offenen Buchungen

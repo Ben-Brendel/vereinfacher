@@ -143,7 +143,7 @@ class InfoLink:
         self.button.text = text
 
 
-class _HelpButton(toga.Button):
+class HelpButton(toga.Button):
     """Create a button with a help text."""
 
     def __init__(self, parent, **kwargs):
@@ -274,7 +274,7 @@ class LabeledTextInput:
         self.box.add(self.input_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
-            _HelpButton(self.label_box, **kwargs), 
+            HelpButton(self.label_box, **kwargs), 
 
         self.__add_to_parent(parent)
 
@@ -475,7 +475,7 @@ class LabeledMultilineTextInput:
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
-            _HelpButton(self.label_box, **kwargs)
+            HelpButton(self.label_box, **kwargs)
 
         self.__add_to_parent(parent)
 
@@ -523,7 +523,7 @@ class LabeledSelection:
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
-            _HelpButton(self.label_box, **kwargs)
+            HelpButton(self.label_box, **kwargs)
         
         self.__add_to_parent(parent)
 
@@ -587,7 +587,7 @@ class LabeledDoubleSelection:
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
-            _HelpButton(self.label_box, **kwargs)
+            HelpButton(self.label_box, **kwargs)
 
         self.__add_to_parent(parent)
 
@@ -635,7 +635,7 @@ class LabeledSwitch:
         self.box.add(self.switch_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
-            _HelpButton(self.label_box, **kwargs)
+            HelpButton(self.label_box, **kwargs)
 
         self.__add_to_parent(parent)
 

@@ -1128,7 +1128,8 @@ class DatenInterface:
 
         print(f'### DatenInterface.get_open_sum: Open sum: {sum} €')
 
-        return round(sum, 2)
+        result = round(sum, 2)
+        return 0.00 if result == -0.00 else result
     
 
     def get_number_rechnungen_not_paid(self):
