@@ -735,11 +735,11 @@ class Kontolupe(toga.App):
             helptitle   = 'Offener Betrag',
             helptext    = (
                 'Dieser Wert zeigt Dir an, wie viel Geld Dir in Summe noch zusteht,'
-                ' oder Du noch bezahlen musst, wenn alle Rechnungen bezahlt und erstattet sind.\n\n'
+                ' oder Du noch bezahlen musst.\n\n'
                 'Er berechnet sich so:\n'
-                '- Noch nicht bezahlte Rechnungen werden abgezogen.\n'
-                '- Noch nicht eingereichte Rechnungen werden hinzugezählt.\n'
-                '- Noch nicht erstattete Einreichungen werden hinzugezählt.\n'
+                '- Nicht bezahlte Rechnungen werden abgezogen.\n'
+                '- Nicht eingereichte Rechnungen werden hinzugezählt.\n'
+                '- Nicht erstattete Einreichungen werden hinzugezählt.\n'
             )
         ))
         self.box_mainpage_sum.add(box_mainpage_sum_content)
