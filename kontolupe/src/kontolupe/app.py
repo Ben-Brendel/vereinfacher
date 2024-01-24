@@ -1725,7 +1725,7 @@ class Kontolupe(toga.App):
         # Buttons
         self.list_allowance_buttons = ButtonBox(
             parent  = self.box_list_allowance,
-            labels  = ['Zurücksetzen', 'Erstattet', 'Neu'],
+            labels  = ['Reset', 'Erstattet', 'Neu'],
             targets = [self.delete_beihilfe, self.pay_receive, self.show_form_beihilfe_new],
             ids     = ['reset_allowance', 'receive_allowance', 'new_allowance'],
             enabled = [False, False, True]
@@ -1760,7 +1760,7 @@ class Kontolupe(toga.App):
         # Buttons
         self.list_insurance_buttons = ButtonBox(
             parent  = self.box_list_insurance,
-            labels  = ['Zurücksetzen', 'Erstattet', 'Neu'],
+            labels  = ['Reset', 'Erstattet', 'Neu'],
             targets = [self.delete_pkv, self.pay_receive, self.show_form_pkv_new],
             ids     = ['reset_insurance', 'receive_insurance', 'new_insurance'],
             enabled = [False, False, True]
