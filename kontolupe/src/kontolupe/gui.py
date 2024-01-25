@@ -1,4 +1,5 @@
 import toga
+from toga.sources import Listener
 from kontolupe.layout import *
 from kontolupe.validator import *
 from datetime import datetime
@@ -249,7 +250,7 @@ class TableEntry:
 
         self.box.add(self.label_box)
         self.box.add(self.button_box)
-        
+
         self.__add_to_parent(parent)
 
     def __add_to_parent(self, parent):
@@ -282,78 +283,101 @@ class TableEntry:
 class Table:
     """Grundklasse für eine app-eigene Tabelle."""
 
-    def __init__(self, parent, data=[[None]], buttons=[{None}], **kwargs):
-        # Speichere die übergebenen Parameter für die Aktualisierung
-        self.__entries = []
-        self.__parent = parent
-        self.__data = data
-        self.__buttons = buttons
-        self.__create_table()
+    def __init__(self, parent, list_source, **kwargs):
+        self.entries = []
+        self.parent = parent
+        self.list_source = list_source
+        self.listener = TableListener(self)
+        self.list_source.add_listener(self.listener)
+        self.create()
 
-    def __create_table(self):
-        number_of_rows = min(len(self.__data), len(self.__buttons))
-        for index in range(number_of_rows):
-            self.__entries.append(TableEntry(
-                parent          = self.__parent, 
-                texts           = self.__data[index],
+    def create(self):
+        for index in range(len(self.list_source)):
+            row = self.convert(index)
+            self.entries.append(TableEntry(
+                parent          = self.parent, 
+                texts           = row[0],
                 even            = (index % 2 == 0),
-                buttons         = self.__buttons[index]
+                buttons         = row[1]
             ))
 
+    def convert(self, index):
+        texts = ['', '', '']
+        button = {
+            'text': [''],
+            'button_id': [str(index)],
+            'style': [None],
+            'on_press': [None]
+        }
+        return [texts, button]
+
     def delete(self):
-        for entry in self.__entries:
+        for entry in self.entries:
             entry.delete()
-        self.__entries = []
+        self.entries = []
 
     def update(self):
         self.delete()
-        self.__create_table()
+        self.create()
 
 
 class TableOpenBookings(Table):
     """Erstellt die Tabelle zur Anzeige der offenen Buchungen."""
 
     def __init__(self, parent, list_bookings, on_press_pay, on_press_info, **kwargs):
+        self.on_press_pay = on_press_pay
+        self.on_press_info = on_press_info
+        super().__init__(parent, list_bookings, **kwargs)
+    
+    def convert(self, index):
+        booking = self.list_source[index]
+        texts = ['', '', '']
+        button = {
+            'button_id': [str(index), 'i'+str(index)],
+            'style': [None, style_button_help],
+            'on_press': [self.on_press_pay, self.on_press_info]
+        }
+        match booking.typ:
+            case 'Rechnung':
+                texts[0] = 'Rg. ' + booking.info
+                texts[1] = ''
+                texts[2] = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum if booking.buchungsdatum else '')
+                button['text'] = ['Bezahlt', '?']
+            case 'Beihilfe':
+                texts[0] = 'Beihilfe'
+                texts[1] = ' vom ' + booking.datum	
+                texts[2] = 'über ' + booking.betrag_euro 
+                button['text'] = ['Erstattet', '?']
+            case 'PKV':
+                texts[0] = 'Private KV' 
+                texts[1] = ' vom ' + booking.datum
+                texts[2] = 'über ' + booking.betrag_euro
+                button['text'] = ['Erstattet', '?']
+            case _:
+                texts[0] = 'Unbekannter Buchungstyp'
+                texts[1] = ''
+                texts[2] = 'vom ' + booking.datum + ' über ' + booking.betrag_euro
+                button['text'] = ['Gebucht', '?']
 
-        # create the buttons dictionary
+        return [texts, button]
 
-        data = []
-        buttons = []
 
-        for index, booking in enumerate(list_bookings):
-            texts = ['', '', '']
-            button = {
-                'button_id': [str(index), 'i'+str(index)],
-                'style': [None, style_button_help],
-                'on_press': [on_press_pay, on_press_info]
-            }
-            match booking.typ:
-                case 'Rechnung':
-                    texts[0] = 'Rg. ' + booking.info
-                    texts[1] = ''
-                    texts[2] = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum if booking.buchungsdatum else '')
-                    button['text'] = ['Bezahlt', '?']
-                case 'Beihilfe':
-                    texts[0] = 'Beihilfe'
-                    texts[1] = ' vom ' + booking.datum	
-                    texts[2] = 'über ' + booking.betrag_euro 
-                    button['text'] = ['Erstattet', '?']
-                case 'PKV':
-                    texts[0] = 'Private KV' 
-                    texts[1] = ' vom ' + booking.datum
-                    texts[2] = 'über ' + booking.betrag_euro
-                    button['text'] = ['Erstattet', '?']
-                case _:
-                    texts[0] = 'Unbekannter Buchungstyp'
-                    texts[1] = ''
-                    texts[2] = 'vom ' + booking.datum + ' über ' + booking.betrag_euro
-                    button['text'] = ['Gebucht', '?']
-            
-            data.append(texts)
-            buttons.append(button)
-        
-        super().__init__(parent, data=data, buttons=buttons, **kwargs)
+class TableListener(Listener):
 
+    def __init__(self, table):
+        self.__table = table
+
+    def change(self, item):
+        self.__table.update()
+
+    def clear(self):
+        self.__table.update()
+
+    def insert(self, index, item):
+        self.__table.update()
+
+    def remove(self, index, item):  
+        self.__table.update()
 
 class LabeledTextInput:
     """Create a box with a label and a text input."""
