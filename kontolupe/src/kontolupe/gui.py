@@ -35,24 +35,12 @@ def add_newlines(input_string, max_line_length):
     return '\n'.join(result_lines)
 
 
-class Section:
+class Section(toga.Box):
     """Create a section on the mainpage."""
 
-    def __init__(self, parent, title, type=None, on_press_show=None, on_press_new=None, new_enabled=True):
+    def __init__(self, style, title, on_press_show=None, on_press_new=None, new_enabled=True):
 
-        match type:
-            case 'rechnungen':
-                style = style_section_rechnungen
-            case 'beihilfe':
-                style = style_section_beihilfe
-            case 'pkv':
-                style = style_section_pkv
-            case 'daten':
-                style = style_section_daten
-            case _:
-                style = style_section_daten
-
-        self.section_box = toga.Box(style=style)
+        super().__init__(style=style)
         self.button_box = toga.Box(style=style_box_buttons_start)
         self.title = toga.Label(title, style=style_label_h2_start)
         self.info = toga.Label('', style=style_label_section)
@@ -60,29 +48,64 @@ class Section:
         self.button_new = toga.Button('Neu', on_press=on_press_new, style=style_button, enabled=new_enabled)
         self.button_box.add(self.button_show)
         self.button_box.add(self.button_new)
-        self.section_box.add(self.title)
-        self.section_box.add(self.info)
-        self.section_box.add(self.button_box)
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.section_box)
+        self.add(self.title)
+        self.add(self.info)
+        self.add(self.button_box)
 
     def hide(self):
-        self.section_box.remove(self.title)
-        self.section_box.remove(self.info)
-        self.section_box.remove(self.button_box)
+        self.remove(self.title)
+        self.remove(self.info)
+        self.remove(self.button_box)
 
     def show(self):
-        self.section_box.add(self.title)
-        self.section_box.add(self.info)
-        self.section_box.add(self.button_box)
+        self.add(self.title)
+        self.add(self.info)
+        self.add(self.button_box)
 
     def set_info(self, info_text):
         self.info.text = info_text
 
     def set_enabled_new(self, status):
         self.button_new.enabled = status
+
+
+class SectionBills(Section):
+    """Create the section for the bills."""
+
+    def __init__(self, on_press_show=None, on_press_new=None):
+        super().__init__(
+            style = style_section_rechnungen, 
+            title = 'Rechnungen', 
+            on_press_show = on_press_show, 
+            on_press_new = on_press_new,
+            new_enabled = True
+        )
+
+
+class SectionAllowance(Section):
+    """Create the section for the allowance."""
+
+    def __init__(self, on_press_show=None, on_press_new=None):
+        super().__init__(
+            style = style_section_beihilfe, 
+            title = 'Beihilfe', 
+            on_press_show = on_press_show, 
+            on_press_new = on_press_new,
+            new_enabled = False
+        )
+
+
+class SectionInsurance(Section):
+    """Create the section for the insurance."""
+
+    def __init__(self, on_press_show=None, on_press_new=None):
+        super().__init__(
+            style = style_section_pkv, 
+            title = 'Private KV', 
+            on_press_show = on_press_show, 
+            on_press_new = on_press_new,
+            new_enabled = False
+        )
 
 
 class TopBox:

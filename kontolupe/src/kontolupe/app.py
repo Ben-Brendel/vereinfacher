@@ -740,33 +740,25 @@ class Kontolupe(toga.App):
         )
 
         # Section: Rechnungen
-        self.mainpage_section_bills = Section(
-            parent          = self.box_mainpage,
-            title           = 'Rechnungen',
-            type            = 'rechnungen',
+        self.mainpage_section_bills = SectionBills(
             on_press_show   = self.show_list_bills,
             on_press_new    = self.show_form_bill_new
         )
+        self.box_mainpage.add(self.mainpage_section_bills)
         
         # Section: Beihilfe-Einreichungen
-        self.mainpage_section_allowance = Section(
-            parent          = self.box_mainpage,
-            title           = 'Beihilfe',
-            type            = 'beihilfe',
+        self.mainpage_section_allowance = SectionAllowance(
             on_press_show   = self.show_list_beihilfe,
             on_press_new    = self.show_form_beihilfe_new,
-            new_enabled     = False
         )
+        self.box_mainpage.add(self.mainpage_section_allowance)
 
         # Section: PKV-Einreichungen
-        self.mainpage_section_insurance = Section(
-            parent          = self.box_mainpage,
-            title           = 'Private KV',
-            type            = 'pkv',
+        self.mainpage_section_insurance = SectionInsurance(
             on_press_show   = self.show_list_pkv,
             on_press_new    = self.show_form_pkv_new,
-            new_enabled     = False
         )
+        self.box_mainpage.add(self.mainpage_section_insurance)
 
         # Weitere Funktionen
         self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
