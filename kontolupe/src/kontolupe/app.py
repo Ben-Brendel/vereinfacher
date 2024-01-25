@@ -160,10 +160,7 @@ class Kontolupe(toga.App):
         """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
 
         # Anzeige des offenen Betrags aktualisieren
-        self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')
-
-        # Aktualisiere die Tabelle der offenen Buchungen
-        #self.table_open_bookings.update()        
+        self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')    
 
         # Anzeige und Buttons der offenen Rechnungen aktualisieren
         anzahl = self.daten.get_number_rechnungen_not_paid()

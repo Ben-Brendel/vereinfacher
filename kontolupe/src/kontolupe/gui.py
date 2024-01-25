@@ -1,7 +1,9 @@
+"""GUI-Objekte für die Kontolupe-App."""
+
 import toga
-from toga.sources import Listener
 from kontolupe.layout import *
 from kontolupe.validator import *
+from kontolupe.listeners import *
 from datetime import datetime
 
 def table_index_selection(widget):
@@ -361,23 +363,6 @@ class TableOpenBookings(Table):
 
         return [texts, button]
 
-
-class TableListener(Listener):
-
-    def __init__(self, table):
-        self.__table = table
-
-    def change(self, item):
-        self.__table.update()
-
-    def clear(self):
-        self.__table.update()
-
-    def insert(self, index, item):
-        self.__table.update()
-
-    def remove(self, index, item):  
-        self.__table.update()
 
 class LabeledTextInput:
     """Create a box with a label and a text input."""
