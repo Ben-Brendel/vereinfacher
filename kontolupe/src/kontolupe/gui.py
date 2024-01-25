@@ -164,11 +164,9 @@ class TableEntry:
     def __init__(
             self, 
             parent, 
-            text_top_left, 
-            text_top_right, 
-            text_bottom, 
-            even=False, 
-            buttons={}, 
+            even = False, 
+            texts = ['', '', ''],
+            buttons = {'text': [''], 'button_id': [None], 'style': [None], 'on_press': [None]}, 
             **kwargs
         ):
 
@@ -185,9 +183,9 @@ class TableEntry:
         self.label_inner_upper_box = toga.Box(style=style_box_row)
         self.button_box = toga.Box(style=style_table_button_box)
 
-        self.label_top_left = toga.Label(text_top_left, style=style_table_label_top_left)
-        self.label_top_right = toga.Label(text_top_right, style=style_table_label_top_right)
-        self.label_bottom = toga.Label(text_bottom, style=style_table_label_bottom) 
+        self.label_top_left = toga.Label(texts[0], style=style_table_label_top_left)
+        self.label_top_right = toga.Label(texts[1], style=style_table_label_top_right)
+        self.label_bottom = toga.Label(texts[2], style=style_table_label_bottom) 
 
         self.label_box.add(self.label_inner_box)
         self.label_inner_box.add(self.label_inner_upper_box)
@@ -207,25 +205,21 @@ class TableEntry:
             if key == 'text':
                 if len(buttons[key]) < number_of_buttons:
                     buttons[key] += [''] * (number_of_buttons - len(buttons[key]))
-            elif key == 'on_press':
-                if len(buttons[key]) < number_of_buttons:
-                    buttons[key] += [None] * (number_of_buttons - len(buttons[key]))
             elif key == 'button_id':
                 if len(buttons[key]) < number_of_buttons:
                     buttons[key] += [None] * (number_of_buttons - len(buttons[key]))
             elif key == 'style':
                 if len(buttons[key]) < number_of_buttons:
                     buttons[key] += [style_table_button] * (number_of_buttons - len(buttons[key]))
+            elif key == 'on_press':
+                if len(buttons[key]) < number_of_buttons:
+                    buttons[key] += [None] * (number_of_buttons - len(buttons[key]))
             else:
                 print('+++ Kontolupe: Unbekannter Key in TableEntry.__init__(): ' + key)
 
         # if the key 'text' is not present in the dictionary, add it with empty strings of length number_of_buttons
         if 'text' not in buttons.keys():
             buttons['text'] = [''] * number_of_buttons
-
-        # if the key 'on_press' is not present in the dictionary, add it with None of length number_of_buttons
-        if 'on_press' not in buttons.keys():
-            buttons['on_press'] = [None] * number_of_buttons
 
         # if the key 'button_id' is not present in the dictionary, add it with None of length number_of_buttons
         if 'button_id' not in buttons.keys():
@@ -239,6 +233,10 @@ class TableEntry:
         for i in range(number_of_buttons):
             if buttons['style'][i] is None:
                 buttons['style'][i] = style_table_button
+
+        # if the key 'on_press' is not present in the dictionary, add it with None of length number_of_buttons
+        if 'on_press' not in buttons.keys():
+            buttons['on_press'] = [None] * number_of_buttons
 
         # create the buttons
         for i in range(number_of_buttons):
@@ -284,23 +282,22 @@ class TableEntry:
 class Table:
     """Grundklasse für eine app-eigene Tabelle."""
 
-    def __init__(self, parent, data=[[None]], buttons={}, **kwargs):
+    def __init__(self, parent, data=[[None]], buttons=[{None}], **kwargs):
         # Speichere die übergebenen Parameter für die Aktualisierung
         self.__entries = []
         self.__parent = parent
-        self.__buttons = buttons
         self.__data = data
+        self.__buttons = buttons
         self.__create_table()
 
     def __create_table(self):
-        for index, row in enumerate(self.__data):
+        number_of_rows = min(len(self.__data), len(self.__buttons))
+        for index in range(number_of_rows):
             self.__entries.append(TableEntry(
                 parent          = self.__parent, 
-                text_top_left   = row[0],
-                text_top_right  = row[1],
-                text_bottom     = row[2],
+                texts           = self.__data[index],
                 even            = (index % 2 == 0),
-                buttons         = self.__buttons
+                buttons         = self.__buttons[index]
             ))
 
     def delete(self):
@@ -311,91 +308,51 @@ class Table:
     def update(self):
         self.delete()
         self.__create_table()
-    
-
-class OpenBooking(TableEntry):
-    """Erstellt eine Box mit Labels und Buttons für eine offene Buchung auf der Startseite."""
-
-    def __init__(self, parent, booking, index, on_press_pay, on_press_info, **kwargs):
-        
-        # create the label texts depending on booking
-        match booking.typ:
-            case 'Rechnung':
-                label_top_left_text = 'Rg. ' + booking.info
-                label_top_right_text = ''
-                label_bottom_text = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum if booking.buchungsdatum else '')
-                button_pay_text = 'Bezahlt'
-            case 'Beihilfe':
-                label_top_left_text = 'Beihilfe'
-                label_top_right_text = ' vom ' + booking.datum	
-                label_bottom_text = 'über ' + booking.betrag_euro 
-                button_pay_text = 'Erstattet'
-            case 'PKV':
-                label_top_left_text = 'Private KV' 
-                label_top_right_text = ' vom ' + booking.datum
-                label_bottom_text = 'über ' + booking.betrag_euro
-                button_pay_text = 'Erstattet'
-            case _:
-                label_top_left_text = 'Unbekannter Buchungstyp'
-                label_top_right_text = ''
-                label_bottom_text = 'vom ' + booking.datum + ' über ' + booking.betrag_euro
-                button_pay_text = 'Gebucht'
-
-        super().__init__(
-            parent, 
-            label_top_left_text, 
-            label_top_right_text, 
-            label_bottom_text, 
-            even  = (index % 2 == 0), 
-            buttons = {
-                'text':     [button_pay_text, '?'], 
-                'on_press': [on_press_pay, on_press_info], 
-                'button_id': [str(index), 'i'+str(index)], 
-                'style':    [None, style_button_help]
-            },
-            **kwargs
-        )
 
 
-class TableOpenBookings:
-    """Erstellt eine Tabelle mit den offenen Buchungen."""
+class TableOpenBookings(Table):
+    """Erstellt die Tabelle zur Anzeige der offenen Buchungen."""
 
     def __init__(self, parent, list_bookings, on_press_pay, on_press_info, **kwargs):
 
-        # Speichere die übergebenen Parameter für die Aktualisierung
-        self.__entries = []
-        self.__parent = parent
-        self.__on_press_pay = on_press_pay
-        self.__on_press_info = on_press_info
-        self.__list_bookings = list_bookings
+        # create the buttons dictionary
 
-        # Aktualisiere die Liste der offenen Buchungen
-        for index, booking in enumerate(self.__list_bookings):
-            self.__entries.append(OpenBooking(
-                parent          = self.__parent, 
-                booking         = booking, 
-                index           = index, 
-                on_press_pay    = self.__on_press_pay,
-                on_press_info   = self.__on_press_info
-            ))
+        data = []
+        buttons = []
 
-
-    def delete(self):
-        for entry in self.__entries:
-            entry.delete()
-        self.__entries = []
-
-
-    def update(self):
-        self.delete()
-        for index, booking in enumerate(self.__list_bookings):
-            self.__entries.append(OpenBooking(
-                parent          = self.__parent, 
-                booking         = booking, 
-                index           = index, 
-                on_press_pay    = self.__on_press_pay,
-                on_press_info   = self.__on_press_info
-            ))
+        for index, booking in enumerate(list_bookings):
+            texts = ['', '', '']
+            button = {
+                'button_id': [str(index), 'i'+str(index)],
+                'style': [None, style_button_help],
+                'on_press': [on_press_pay, on_press_info]
+            }
+            match booking.typ:
+                case 'Rechnung':
+                    texts[0] = 'Rg. ' + booking.info
+                    texts[1] = ''
+                    texts[2] = booking.betrag_euro + (', geplant am ' + booking.buchungsdatum if booking.buchungsdatum else '')
+                    button['text'] = ['Bezahlt', '?']
+                case 'Beihilfe':
+                    texts[0] = 'Beihilfe'
+                    texts[1] = ' vom ' + booking.datum	
+                    texts[2] = 'über ' + booking.betrag_euro 
+                    button['text'] = ['Erstattet', '?']
+                case 'PKV':
+                    texts[0] = 'Private KV' 
+                    texts[1] = ' vom ' + booking.datum
+                    texts[2] = 'über ' + booking.betrag_euro
+                    button['text'] = ['Erstattet', '?']
+                case _:
+                    texts[0] = 'Unbekannter Buchungstyp'
+                    texts[1] = ''
+                    texts[2] = 'vom ' + booking.datum + ' über ' + booking.betrag_euro
+                    button['text'] = ['Gebucht', '?']
+            
+            data.append(texts)
+            buttons.append(button)
+        
+        super().__init__(parent, data=data, buttons=buttons, **kwargs)
 
 
 class LabeledTextInput:
