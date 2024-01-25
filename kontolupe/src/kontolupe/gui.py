@@ -161,26 +161,25 @@ class HelpButton(toga.Button):
         parent.add(self)
 
 
-class TableEntry:
+class TableEntry(toga.Box):
     """Erstellt eine Zeile der app-eigenen Tabellenklasse."""
 
     def __init__(
             self, 
-            parent, 
             even = False, 
             texts = ['', '', ''],
             buttons = {'text': [''], 'button_id': [None], 'style': [None], 'on_press': [None]}, 
             **kwargs
         ):
 
-        # create the row style depending on even
         if even:
             style_box = style_table_box_even
         else:
             style_box = style_table_box_odd
 
+        super().__init__(style=style_box)
+    
         # create the elements        
-        self.box = toga.Box(style=style_box)
         self.label_box = toga.Box(style=style_table_label_box)
         self.label_inner_box = toga.Box(style=style_box_column_left)
         self.label_inner_upper_box = toga.Box(style=style_box_row)
@@ -250,44 +249,23 @@ class TableEntry:
                 on_press=buttons['on_press'][i]
             ))
 
-        self.box.add(self.label_box)
-        self.box.add(self.button_box)
-
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
+        self.add(self.label_box)
+        self.add(self.button_box)
 
     def show(self):
-        self.box.add(self.label_box)
-        self.box.add(self.button_box)
+        self.add(self.label_box)
+        self.add(self.button_box)
 
     def hide(self):
-        self.box.remove(self.label_box)
-        self.box.remove(self.button_box)
-
-    def delete(self):
-        self.box.remove(self.label_box)
-        self.box.remove(self.button_box)
-    
-        self.label_top = None
-        self.label_bottom = None
-        self.label_inner_box = None
-        self.label_box = None
-        
-        while self.button_box.children:
-            self.button_box.remove(self.button_box.children[0])
-
-        self.button_box = None
-        self.box = None
+        self.remove(self.label_box)
+        self.remove(self.button_box)
 
 
-class Table:
+class Table(toga.Box):
     """Grundklasse für eine app-eigene Tabelle."""
 
-    def __init__(self, parent, list_source, **kwargs):
-        self.entries = []
-        self.parent = parent
+    def __init__(self, list_source, **kwargs):
+        super().__init__(style=style_box_column)
         self.list_source = list_source
         self.listener = TableListener(self)
         self.list_source.add_listener(self.listener)
@@ -296,11 +274,10 @@ class Table:
     def create(self):
         for index in range(len(self.list_source)):
             row = self.convert(index)
-            self.entries.append(TableEntry(
-                parent          = self.parent, 
-                texts           = row[0],
-                even            = (index % 2 == 0),
-                buttons         = row[1]
+            self.add(TableEntry(
+                texts   = row[0],
+                even    = (index % 2 == 0),
+                buttons = row[1]
             ))
 
     def convert(self, index):
@@ -312,24 +289,40 @@ class Table:
             'on_press': [None]
         }
         return [texts, button]
+    
+    def clear(self):
+        while len(self.children) > 0:
+            self.remove(self.children[0])
 
-    def delete(self):
-        for entry in self.entries:
-            entry.delete()
-        self.entries = []
+    def change_row(self, item):
+        index = self.list_source.index(item)
+        row = self.convert(index)
+        self.remove(self.children[index])
+        self.insert(index, row)
+
+    def insert_row(self, index, item):
+        row = self.convert(index)
+        self.insert(
+            index,
+            TableEntry(
+                texts   = row[0],
+                even    = (index % 2 == 0),
+                buttons = row[1]
+            )
+        )
 
     def update(self):
-        self.delete()
+        self.clear()
         self.create()
 
 
 class TableOpenBookings(Table):
     """Erstellt die Tabelle zur Anzeige der offenen Buchungen."""
 
-    def __init__(self, parent, list_bookings, on_press_pay, on_press_info, **kwargs):
+    def __init__(self, list_bookings, on_press_pay, on_press_info, **kwargs):
         self.on_press_pay = on_press_pay
         self.on_press_info = on_press_info
-        super().__init__(parent, list_bookings, **kwargs)
+        super().__init__(list_bookings, **kwargs)
     
     def convert(self, index):
         booking = self.list_source[index]

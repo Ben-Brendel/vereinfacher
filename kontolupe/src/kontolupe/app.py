@@ -724,14 +724,12 @@ class Kontolupe(toga.App):
         self.box_mainpage.add(self.box_mainpage_sum)
 
         # Tabelle der offenen Buchungen
-        self.box_mainpage_open_bookings = toga.Box(style=style_box_column)
         self.table_open_bookings = TableOpenBookings(
-            self.box_mainpage_open_bookings, 
             self.daten.list_open_bookings, 
             self.pay_receive,
             self.info_dialog_booking
         )
-        self.box_mainpage.add(self.box_mainpage_open_bookings)
+        self.box_mainpage.add(self.table_open_bookings)
 
         # Buttons zur Tabelle der offenen Buchungen
         self.mainpage_table_buttons = ButtonBox(

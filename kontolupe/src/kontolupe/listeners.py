@@ -6,19 +6,19 @@ from toga.sources import Listener
 class TableListener(Listener):
 
     def __init__(self, table):
-        self.__table = table
+        self.table = table
 
     def change(self, item):
-        self.__table.update()
+        self.table.change_row(item)
 
     def clear(self):
-        self.__table.update()
+        self.table.clear()
 
     def insert(self, index, item):
-        self.__table.update()
+        self.table.insert_row(index, item)
 
     def remove(self, index, item):  
-        self.__table.update()
+        self.table.remove(index, item)
 
 
 class ButtonListener(Listener):
