@@ -38,9 +38,13 @@ def add_newlines(input_string, max_line_length):
 class Section(toga.Box):
     """Create a section on the mainpage."""
 
-    def __init__(self, style, title, on_press_show=None, on_press_new=None, new_enabled=True):
+    def __init__(self, list_source, style, title, on_press_show=None, on_press_new=None, new_enabled=True):
 
+        self.list_source = list_source
+        self.listener = SectionListener(self)
+        self.list_source.add_listener(self.listener)
         super().__init__(style=style)
+
         self.button_box = toga.Box(style=style_box_buttons_start)
         self.title = toga.Label(title, style=style_label_h2_start)
         self.info = toga.Label('', style=style_label_section)
@@ -51,6 +55,8 @@ class Section(toga.Box):
         self.add(self.title)
         self.add(self.info)
         self.add(self.button_box)
+
+        self.update_info()
 
     def hide(self):
         self.remove(self.title)
@@ -65,6 +71,9 @@ class Section(toga.Box):
     def set_info(self, info_text):
         self.info.text = info_text
 
+    def update_info(self, *args):
+        pass
+
     def set_enabled_new(self, status):
         self.button_new.enabled = status
 
@@ -72,21 +81,37 @@ class Section(toga.Box):
 class SectionBills(Section):
     """Create the section for the bills."""
 
-    def __init__(self, on_press_show=None, on_press_new=None):
+    def __init__(self, list_source, on_press_show=None, on_press_new=None):
         super().__init__(
+            list_source = list_source,
             style = style_section_rechnungen, 
             title = 'Rechnungen', 
             on_press_show = on_press_show, 
             on_press_new = on_press_new,
             new_enabled = True
         )
+    
+    def update_info(self, *args):
+        count = 0
+        for row in self.list_source:
+            if row.bezahlt == False:
+                count += 1
+        
+        match count:
+            case 0:
+                self.info.text = 'Keine offenen Rechnungen.'
+            case 1:
+                self.info.text = '1 Rechnung noch nicht bezahlt.'
+            case _:
+                self.info.text = f'{count} Rechnungen noch nicht bezahlt.'
 
 
 class SectionAllowance(Section):
     """Create the section for the allowance."""
 
-    def __init__(self, on_press_show=None, on_press_new=None):
+    def __init__(self, list_source, on_press_show=None, on_press_new=None):
         super().__init__(
+            list_source = list_source,
             style = style_section_beihilfe, 
             title = 'Beihilfe', 
             on_press_show = on_press_show, 
@@ -94,18 +119,48 @@ class SectionAllowance(Section):
             new_enabled = False
         )
 
+    def update_info(self, *args):
+        count = 0
+        for row in self.list_source:
+            if row.beihilfe_id == None:
+                count += 1
+        
+        match count:
+            case 0:
+                self.info.text = 'Keine offenen Rechnungen.'
+            case 1:
+                self.info.text = '1 Rechnung noch nicht eingereicht.'
+            case _:
+                self.info.text = f'{count} Rechnungen noch nicht eingereicht.'
+
 
 class SectionInsurance(Section):
     """Create the section for the insurance."""
 
-    def __init__(self, on_press_show=None, on_press_new=None):
+    def __init__(self, list_source, on_press_show=None, on_press_new=None):
         super().__init__(
+            list_source = list_source,
             style = style_section_pkv, 
             title = 'Private KV', 
             on_press_show = on_press_show, 
             on_press_new = on_press_new,
             new_enabled = False
         )
+
+    def update_info(self, *args):
+        # Anzeige und Buttons der offenen Rechnungen aktualisieren
+        count = 0
+        for row in self.list_source:
+            if row.pkv_id == None:
+                count += 1
+        
+        match count:
+            case 0:
+                self.info.text = 'Keine offenen Rechnungen.'
+            case 1:
+                self.info.text = '1 Rechnung noch nicht eingereicht.'
+            case _:
+                self.info.text = f'{count} Rechnungen noch nicht eingereicht.'
 
 
 class TopBox:

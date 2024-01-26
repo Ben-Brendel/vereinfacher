@@ -21,10 +21,28 @@ class TableListener(Listener):
         self.table.remove(index, item)
 
 
+class SectionListener(Listener):
+
+    def __init__(self, section):
+        self.section = section
+
+    def change(self, item):
+        self.section.update_info(item)
+
+    def clear(self):
+        self.section.update_info()
+
+    def insert(self, index, item):
+        self.section.update_info(index, item)
+
+    def remove(self, index, item):  
+        self.section.update_info(index, item)
+
+
 class ButtonListener(Listener):
 
     def __init__(self, button):
-        self.__button = button
+        self.button = button
 
     def change(self, item):
         pass

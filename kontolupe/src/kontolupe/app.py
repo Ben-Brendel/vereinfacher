@@ -162,16 +162,6 @@ class Kontolupe(toga.App):
         # Anzeige des offenen Betrags aktualisieren
         self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')    
 
-        # Anzeige und Buttons der offenen Rechnungen aktualisieren
-        anzahl = self.daten.get_number_rechnungen_not_paid()
-        match anzahl:
-            case 0:
-                self.mainpage_section_bills.set_info('Keine offenen Rechnungen.')
-            case 1:
-                self.mainpage_section_bills.set_info('1 Rechnung noch nicht bezahlt.')
-            case _:
-                self.mainpage_section_bills.set_info('{} Rechnungen noch nicht bezahlt.'.format(anzahl))
-
         # Anzeige und Buttons der offenen Beihilfe-Einreichungen aktualisieren
         if self.daten.beihilfe_aktiv():
             anzahl = self.daten.get_number_rechnungen_not_submitted_beihilfe()
@@ -741,20 +731,24 @@ class Kontolupe(toga.App):
 
         # Section: Rechnungen
         self.mainpage_section_bills = SectionBills(
+            self.daten.list_rechnungen,
             on_press_show   = self.show_list_bills,
             on_press_new    = self.show_form_bill_new
         )
         self.box_mainpage.add(self.mainpage_section_bills)
         
-        # Section: Beihilfe-Einreichungen
-        self.mainpage_section_allowance = SectionAllowance(
-            on_press_show   = self.show_list_beihilfe,
-            on_press_new    = self.show_form_beihilfe_new,
-        )
-        self.box_mainpage.add(self.mainpage_section_allowance)
+        if self.daten.beihilfe_aktiv():
+            # Section: Beihilfe-Einreichungen
+            self.mainpage_section_allowance = SectionAllowance(
+                self.daten.list_rechnungen,
+                on_press_show   = self.show_list_beihilfe,
+                on_press_new    = self.show_form_beihilfe_new,
+            )
+            self.box_mainpage.add(self.mainpage_section_allowance)
 
         # Section: PKV-Einreichungen
         self.mainpage_section_insurance = SectionInsurance(
+            self.daten.list_rechnungen,
             on_press_show   = self.show_list_pkv,
             on_press_new    = self.show_form_pkv_new,
         )
@@ -779,11 +773,6 @@ class Kontolupe(toga.App):
         self.add_background_task(self.check_open_bills)
         
         self.update_app(widget)
-
-        if not self.daten.beihilfe_aktiv():
-            self.mainpage_section_allowance.hide()
-        else:
-            self.mainpage_section_allowance.show()
 
         self.main_window.content = self.sc_mainpage
 
