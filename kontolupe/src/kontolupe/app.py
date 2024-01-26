@@ -160,26 +160,12 @@ class Kontolupe(toga.App):
         """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
 
         if self.daten.init.get('automatic_archive', False):
-            self.daten.archive()
             self.box_startseite_daten.remove(self.button_start_archiv)
             self.cmd_archivieren.enabled = False
+            self.daten.archive()
         else:
             self.box_startseite_daten.add(self.button_start_archiv)
-            # Anzeige und Button der archivierbaren Items aktualisieren
-            anzahl = self.daten.get_number_archivables()
-            match anzahl:
-                case 0:
-                    self.button_start_archiv.enabled = False
-                    self.cmd_archivieren.enabled = False
-                    self.button_start_archiv.text = 'Keine archivierbaren Buchungen'
-                case 1:
-                    self.button_start_archiv.enabled = True
-                    self.cmd_archivieren.enabled = True
-                    self.button_start_archiv.text = '1 Buchung archivieren'
-                case _:
-                    self.button_start_archiv.enabled = True
-                    self.cmd_archivieren.enabled = True
-                    self.button_start_archiv.text = '{} Buchungen archivieren'.format(anzahl)
+            self.cmd_archivieren.enabled = True
 
         # Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons.
         status = False
@@ -706,7 +692,8 @@ class Kontolupe(toga.App):
         # Weitere Funktionen
         self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
         self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_institutions)
-        self.button_start_archiv = toga.Button('Keine archivierbaren Buchungen', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
+        #self.button_start_archiv = toga.Button('Keine archivierbaren Buchungen', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
+        self.button_start_archiv = ArchiveButton(self.daten.list_archivables, self.archivieren_bestaetigen)
 
         self.box_startseite_daten = toga.Box(style=style_section_daten)
         self.box_startseite_daten.add(self.button_start_personen)
@@ -1936,10 +1923,9 @@ class Kontolupe(toga.App):
 
     async def archivieren_bestaetigen(self, widget):
         """Bestätigt das Archivieren von Buchungen."""
-        if self.daten.get_number_archivables() > 0:
-            if await self.main_window.question_dialog('Buchungen archivieren', 'Sollen alle archivierbaren Buchungen wirklich archiviert werden? Sie werden dann in der App nicht mehr angezeigt.'):
-                self.daten.archive()
-                self.show_mainpage(widget)
+        if await self.main_window.question_dialog('Buchungen archivieren', 'Sollen alle archivierbaren Buchungen wirklich archiviert werden? Sie werden dann in der App nicht mehr angezeigt.'):
+            self.daten.archive()
+            self.show_mainpage(widget)
             
 
     async def pay_receive(self, widget):

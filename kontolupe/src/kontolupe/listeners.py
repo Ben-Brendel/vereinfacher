@@ -45,13 +45,13 @@ class ButtonListener(Listener):
         self.button = button
 
     def change(self, item):
-        pass
+        self.button.update_status(item)
 
     def clear(self):
-        pass
+        self.button.update_status()
 
     def insert(self, index, item):  
-        pass
+        self.button.update_status(index, item)
 
     def remove(self, index, item):  
-        pass
+        self.button.update_status(index, item)

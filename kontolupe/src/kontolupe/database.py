@@ -965,6 +965,14 @@ class DatenInterface:
             ]
         )
 
+        self.list_archivables = ListSource(
+            accessors = [
+                'Rechnung',
+                'Beihilfe',
+                'PKV'
+            ]
+        )
+
 
         # Make initializations and create the list sources
         for rechnung in self.rechnungen:            
@@ -1087,6 +1095,10 @@ class DatenInterface:
         self.archivables['Beihilfe'].sort(reverse=True)
         self.archivables['PKV'].sort(reverse=True)
 
+        # self.list_archivables should now get the same content as self.archivables
+        self.list_archivables.clear()
+        self.list_archivables.append(self.archivables)
+
         print(f'### DatenInterface.__update_archivables: Archivables updated: {self.archivables}')
 
 
@@ -1103,12 +1115,6 @@ class DatenInterface:
             self.__deactivate_pkvpaket(i)
 
         self.__update_archivables()
-
-
-    def get_number_archivables(self):   
-        """Ermittelt die Anzahl der archivierbaren Elemente in self.archivables."""
-        count = sum(len(self.archivables[key]) for key in self.archivables)
-        return count
         
 
     def get_rechnung_by_dbid(self, db_id, objekt=False):

@@ -237,6 +237,49 @@ class SectionInsurance(Section):
                 self.button_new.enabled = True
 
 
+class ConnectedButton(toga.Button):
+    """Erzeugt einen Button, dessen Status von einer Datenquelle abhängt."""
+
+    def __init__(self, list_source, **kwargs):
+        super().__init__(kwargs.get('text', ''), style=kwargs.get('style', style_button), on_press=kwargs.get('on_press', None), enabled=kwargs.get('enabled', True))
+        self.list_source = list_source
+        self.listener = ButtonListener(self)
+        self.list_source.add_listener(self.listener)
+        self.update_status()
+
+    def update_status(self, *args):
+        pass
+
+
+class ArchiveButton(ConnectedButton):
+    """Erzeugt den Button für die Archivierung auf der Startseite."""
+
+    def __init__(self, list_source, on_press, **kwargs):
+
+        super().__init__(
+            list_source = list_source,
+            text = '',
+            style = style_button,
+            on_press = on_press,
+            enabled = False,
+            **kwargs
+        )
+
+    def update_status(self, *args):
+        count = sum(len(self.list_source[key]) for key in self.list_source)
+        match count:
+            case 0:
+                self.enabled = False
+                self.text = 'Keine archivierbaren Buchungen'
+            case 1:
+                self.enabled = True
+                self.text = '1 Buchung archivieren'
+            case _:
+                self.enabled = True
+                self.text = f'{count} Buchungen archivieren'
+
+        
+
 class TopBox:
     """Create a box with a label and a button at the top of a window."""
 
