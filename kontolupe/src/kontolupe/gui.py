@@ -58,7 +58,6 @@ class SectionOpenSum(toga.Box):
         self.info = toga.Label('Offener Betrag: ', style=style_start_summe)
         self.box.add(self.info)
         self.box.add(HelpButton(
-            parent      = self.box,
             window      = window,
             helptitle   = 'Offener Betrag',
             helptext    = (
@@ -302,16 +301,12 @@ class InfoLink:
 class HelpButton(toga.Button):
     """Create a button with a help text."""
 
-    def __init__(self, parent, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(
             '?', 
             on_press=lambda widget: kwargs.get('window', None).info_dialog(kwargs.get('helptitle', 'Hilfe'), kwargs.get('helptext', 'Keine Hilfe verfügbar.')), 
             style=style_button_help
         )
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self)
 
 
 class TableEntry(toga.Box):
@@ -537,7 +532,7 @@ class LabeledTextInput:
         self.box.add(self.input_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
-            HelpButton(self.label_box, **kwargs), 
+            self.label_box.add(HelpButton(**kwargs))
 
         self.__add_to_parent(parent)
 
@@ -738,7 +733,7 @@ class LabeledMultilineTextInput:
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
-            HelpButton(self.label_box, **kwargs)
+            self.label_box.add(HelpButton(**kwargs))
 
         self.__add_to_parent(parent)
 
@@ -786,7 +781,7 @@ class LabeledSelection:
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
-            HelpButton(self.label_box, **kwargs)
+            self.label_box.add(HelpButton(**kwargs))
         
         self.__add_to_parent(parent)
 
@@ -850,7 +845,7 @@ class LabeledDoubleSelection:
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
-            HelpButton(self.label_box, **kwargs)
+            self.label_box.add(HelpButton(**kwargs))
 
         self.__add_to_parent(parent)
 
@@ -898,7 +893,7 @@ class LabeledSwitch:
         self.box.add(self.switch_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
-            HelpButton(self.label_box, **kwargs)
+            self.label_box.add(HelpButton(**kwargs))
 
         self.__add_to_parent(parent)
 
