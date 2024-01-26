@@ -128,10 +128,13 @@ class SectionAllowance(Section):
         match count:
             case 0:
                 self.info.text = 'Keine offenen Rechnungen.'
+                self.button_new.enabled = False
             case 1:
                 self.info.text = '1 Rechnung noch nicht eingereicht.'
+                self.button_new.enabled = True
             case _:
                 self.info.text = f'{count} Rechnungen noch nicht eingereicht.'
+                self.button_new.enabled = True
 
 
 class SectionInsurance(Section):
@@ -157,10 +160,13 @@ class SectionInsurance(Section):
         match count:
             case 0:
                 self.info.text = 'Keine offenen Rechnungen.'
+                self.button_new.enabled = False
             case 1:
                 self.info.text = '1 Rechnung noch nicht eingereicht.'
+                self.button_new.enabled = True
             case _:
                 self.info.text = f'{count} Rechnungen noch nicht eingereicht.'
+                self.button_new.enabled = True
 
 
 class TopBox:

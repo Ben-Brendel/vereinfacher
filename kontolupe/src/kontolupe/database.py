@@ -1130,39 +1130,11 @@ class DatenInterface:
 
         result = round(sum, 2)
         return 0.00 if result == -0.00 else result
-    
-
-    def get_number_rechnungen_not_paid(self):
-        """Ermittelt die Anzahl der noch nicht bezahlten Rechnungen."""
-        count = 0
-        for rechnung in self.rechnungen:
-            if rechnung.bezahlt == False:
-                count += 1
-        return count
-    
-
-    def get_number_rechnungen_not_submitted_beihilfe(self):
-        """Ermittelt die Anzahl der noch nicht bei der Beihilfe eingereichten Rechnungen."""
-        count = 0
-        for rechnung in self.rechnungen:
-            if rechnung.beihilfe_id == None:
-                count += 1
-        return count
-    
-
-    def get_number_rechnungen_not_submitted_pkv(self):
-        """Ermittelt die Anzahl der noch nicht bei der PKV eingereichten Rechnungen."""
-        count = 0
-        for rechnung in self.rechnungen:
-            if rechnung.pkv_id == None:
-                count += 1
-        return count
 
 
     def get_number_archivables(self):   
         """Ermittelt die Anzahl der archivierbaren Elemente in self.archivables."""
         count = sum(len(self.archivables[key]) for key in self.archivables)
-        print(f'### DatenInterface.get_number_archivables: Number archivables: {count}')
         return count
         
 

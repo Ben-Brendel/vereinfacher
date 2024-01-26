@@ -162,45 +162,6 @@ class Kontolupe(toga.App):
         # Anzeige des offenen Betrags aktualisieren
         self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')    
 
-        # Anzeige und Buttons der offenen Beihilfe-Einreichungen aktualisieren
-        if self.daten.beihilfe_aktiv():
-            anzahl = self.daten.get_number_rechnungen_not_submitted_beihilfe()
-            match anzahl:
-                case 0:
-                    self.mainpage_section_allowance.set_enabled_new(False)
-                    self.list_allowance_buttons.set_enabled('new_allowance', False)
-                    self.cmd_beihilfepakete_neu.enabled = False
-                    self.mainpage_section_allowance.set_info('Keine offenen Rechnungen.')
-                case 1:
-                    self.mainpage_section_allowance.set_enabled_new(True)
-                    self.list_allowance_buttons.set_enabled('new_allowance', True)
-                    self.cmd_beihilfepakete_neu.enabled = True
-                    self.mainpage_section_allowance.set_info('1 Rechnung noch nicht eingereicht.')
-                case _:
-                    self.mainpage_section_allowance.set_enabled_new(True)
-                    self.list_allowance_buttons.set_enabled('new_allowance', True)
-                    self.cmd_beihilfepakete_neu.enabled = True
-                    self.mainpage_section_allowance.set_info('{} Rechnungen noch nicht eingereicht.'.format(anzahl))
-
-        # Anzeige und Buttons der offenen PKV-Einreichungen aktualisieren
-        anzahl = self.daten.get_number_rechnungen_not_submitted_pkv()
-        match anzahl:
-            case 0:
-                self.mainpage_section_insurance.set_enabled_new(False)
-                self.list_insurance_buttons.set_enabled('new_insurance', False)
-                self.cmd_pkvpakete_neu.enabled = False
-                self.mainpage_section_insurance.set_info('Keine offenen Rechnungen.')
-            case 1:
-                self.mainpage_section_insurance.set_enabled_new(True)
-                self.list_insurance_buttons.set_enabled('new_insurance', True)
-                self.cmd_pkvpakete_neu.enabled = True
-                self.mainpage_section_insurance.set_info('1 Rechnung noch nicht eingereicht.')
-            case _:
-                self.mainpage_section_insurance.set_enabled_new(True)
-                self.list_insurance_buttons.set_enabled('new_insurance', True)
-                self.cmd_pkvpakete_neu.enabled = True
-                self.mainpage_section_insurance.set_info('{} Rechnungen noch nicht eingereicht.'.format(anzahl))
-
         if self.daten.init.get('automatic_archive', False):
             self.daten.archive()
             self.box_startseite_daten.remove(self.button_start_archiv)
