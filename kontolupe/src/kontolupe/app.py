@@ -159,9 +159,6 @@ class Kontolupe(toga.App):
     def update_app(self, widget):
         """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
 
-        # Anzeige des offenen Betrags aktualisieren
-        self.mainpage_label_sum.text = 'Offener Betrag: {:.2f} €'.format(self.daten.get_open_sum()).replace('.', ',')    
-
         if self.daten.init.get('automatic_archive', False):
             self.daten.archive()
             self.box_startseite_daten.remove(self.button_start_archiv)
@@ -276,6 +273,8 @@ class Kontolupe(toga.App):
             titel = 'Rechnung'
             inhalt = 'Rechnungsdatum: {}\n'.format(element.rechnungsdatum)
             inhalt += 'Betrag: {:.2f} €\n'.format(element.betrag).replace('.', ',')
+            inhalt += 'Abzugsbetrag Beihilfe: {:.2f} €\n'.format(element.abzug_beihilfe).replace('.', ',') if element.abzug_beihilfe else ''
+            inhalt += 'Abzugsbetrag Private KV: {:.2f} €\n'.format(element.abzug_pkv).replace('.', ',') if element.abzug_pkv else ''
             inhalt += 'Person: {}\n'.format(element.person_name)
             inhalt += 'Beihilfe: {:.0f} %\n\n'.format(element.beihilfesatz)
             inhalt += 'Einrichtung: {}\n'.format(element.einrichtung_name)
@@ -654,25 +653,14 @@ class Kontolupe(toga.App):
         self.sc_mainpage = toga.ScrollContainer(content=self.box_mainpage, style=style_scroll_container)
         
         # Bereich, der die Summe der offenen Buchungen anzeigt
-        self.box_mainpage_sum = toga.Box(style=style_box_offene_buchungen)
-        box_mainpage_sum_content = toga.Box(style=style_box_row)
-        self.mainpage_label_sum = toga.Label('Offener Betrag: ', style=style_start_summe)
-        box_mainpage_sum_content.add(self.mainpage_label_sum)
-        box_mainpage_sum_content.add(HelpButton(
-            parent      = self.box_mainpage_sum,
-            window      = self.main_window,
-            helptitle   = 'Offener Betrag',
-            helptext    = (
-                'Dieser Wert zeigt Dir an, wie viel Geld Dir in Summe noch zusteht,'
-                ' oder Du noch bezahlen musst.\n\n'
-                'Er berechnet sich so:\n'
-                '- Nicht bezahlte Rechnungen werden abgezogen.\n'
-                '- Nicht eingereichte Rechnungen werden hinzugezählt.\n'
-                '- Nicht erstattete Einreichungen werden hinzugezählt.\n'
-            )
-        ))
-        self.box_mainpage_sum.add(box_mainpage_sum_content)
-        self.box_mainpage.add(self.box_mainpage_sum)
+        self.open_sum = SectionOpenSum(
+            self.main_window,
+            self.daten.beihilfe_aktiv(),
+            self.daten.list_rechnungen,
+            self.daten.list_beihilfepakete if self.daten.beihilfe_aktiv() else None,
+            self.daten.list_pkvpakete
+        )
+        self.box_mainpage.add(self.open_sum)
 
         # Tabelle der offenen Buchungen
         self.table_open_bookings = TableOpenBookings(

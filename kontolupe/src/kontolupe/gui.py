@@ -35,6 +35,75 @@ def add_newlines(input_string, max_line_length):
     return '\n'.join(result_lines)
 
 
+class SectionOpenSum(toga.Box):
+    """Erzeugt den Anzeigebereich für den offenen Betrag."""
+
+    def __init__(self, window, allowance=True, list_bills=None, list_allowance=None, list_insurance=None, **kwargs):
+        super().__init__(style=style_box_offene_buchungen)
+        self.list_bills = list_bills
+        self.list_allowance = list_allowance
+        self.list_insurance = list_insurance
+        self.allowance = allowance
+
+        self.listener = SectionListener(self)
+        if self.list_bills is not None:
+            self.list_bills.add_listener(self.listener)
+        if self.list_allowance is not None:
+            self.list_allowance.add_listener(self.listener)
+        if self.list_insurance is not None:
+            self.list_insurance.add_listener(self.listener)
+
+        self.box = toga.Box(style=style_box_row)
+        self.add(self.box)
+        self.info = toga.Label('Offener Betrag: ', style=style_start_summe)
+        self.box.add(self.info)
+        self.box.add(HelpButton(
+            parent      = self.box,
+            window      = window,
+            helptitle   = 'Offener Betrag',
+            helptext    = (
+                'Dieser Wert zeigt Dir an, wie viel Geld Dir in Summe noch zusteht,'
+                ' oder Du noch bezahlen musst.\n\n'
+                'Er berechnet sich so:\n'
+                '- Nicht bezahlte Rechnungen werden abgezogen.\n'
+                '- Nicht eingereichte Rechnungen werden hinzugezählt.\n'
+                '- Nicht erstattete Einreichungen werden hinzugezählt.\n'
+            )
+        ))
+
+        self.update_info()
+
+    def update_info(self, *args):
+        
+        sum = 0.00
+        
+        if self.list_bills is not None:
+            for bill in self.list_bills:
+                if bill.bezahlt == False:
+                    sum -= bill.betrag
+                if self.allowance and bill.beihilfe_id == None:
+                    sum += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
+                if bill.pkv_id == None:
+                    if self.allowance:
+                        sum += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
+                    else:
+                        sum += bill.betrag - bill.abzug_pkv
+        
+        if self.allowance and self.list_allowance is not None:
+            for submit in self.list_allowance:
+                if submit.erhalten == False:
+                    sum += submit.betrag
+
+        if self.list_insurance is not None:
+            for submit in self.list_insurance:
+                if submit.erhalten == False:
+                    sum += submit.betrag
+
+        result = round(sum, 2)
+        result = 0.00 if result == -0.00 else result
+
+        self.info.text = 'Offener Betrag: ' + format(result, '.2f').replace('.', ',') + ' €'
+
 class Section(toga.Box):
     """Create a section on the mainpage."""
 

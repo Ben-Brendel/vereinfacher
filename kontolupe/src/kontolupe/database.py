@@ -974,6 +974,12 @@ class DatenInterface:
                 rechnung.abzug_beihilfe = 0
             if rechnung.abzug_pkv == None:
                 rechnung.abzug_pkv = 0
+            if rechnung.beihilfe_id != None:
+                if self.get_beihilfepaket_by_dbid(rechnung.beihilfe_id, objekt=True) == None:
+                    rechnung.beihilfe_id = None
+            if rechnung.pkv_id != None:
+                if self.get_pkvpaket_by_dbid(rechnung.pkv_id, objekt=True) == None:
+                    rechnung.pkv_id = None
             self.__list_rechnungen_append(rechnung)
 
         for einrichtung in self.einrichtungen:            
@@ -1097,39 +1103,6 @@ class DatenInterface:
             self.__deactivate_pkvpaket(i)
 
         self.__update_archivables()
-
-
-    def get_open_sum(self, *args, **kwargs):
-        """Berechnet die Summe der offenen Buchungen."""
-        
-        sum = 0
-
-        if kwargs.get('rechnungen', True):
-            for rechnung in self.rechnungen:
-                if rechnung.bezahlt == False:
-                    sum -= rechnung.betrag
-                if rechnung.beihilfe_id == None and self.beihilfe_aktiv():
-                    sum += (rechnung.betrag - rechnung.abzug_beihilfe) * (rechnung.beihilfesatz / 100)
-                if rechnung.pkv_id == None:
-                    if self.beihilfe_aktiv():
-                        sum += (rechnung.betrag - rechnung.abzug_pkv) * (1 - (rechnung.beihilfesatz / 100))
-                    else:
-                        sum += rechnung.betrag - rechnung.abzug_pkv
-        
-        if kwargs.get('beihilfe', True) and self.beihilfe_aktiv():
-            for beihilfepaket in self.beihilfepakete:
-                if beihilfepaket.erhalten == False:
-                    sum += beihilfepaket.betrag
-
-        if kwargs.get('pkv', True):
-            for pkvpaket in self.pkvpakete:
-                if pkvpaket.erhalten == False:
-                    sum += pkvpaket.betrag
-
-        print(f'### DatenInterface.get_open_sum: Open sum: {sum} €')
-
-        result = round(sum, 2)
-        return 0.00 if result == -0.00 else result
 
 
     def get_number_archivables(self):   
