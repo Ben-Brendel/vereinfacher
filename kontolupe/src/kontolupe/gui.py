@@ -266,7 +266,9 @@ class ArchiveButton(ConnectedButton):
         )
 
     def update_status(self, *args):
-        count = sum(len(self.list_source[key]) for key in self.list_source)
+        count = 0
+        # TODO:
+        #count = sum(len(row) for row in self.list_source)
         match count:
             case 0:
                 self.enabled = False

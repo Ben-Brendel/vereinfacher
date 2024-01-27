@@ -4,9 +4,253 @@ import sqlite3 as sql
 import shutil
 from pathlib import Path
 from datetime import datetime
-from toga.sources import ListSource
+from toga.sources import ListSource, Row
 
 DATABASE_VERSION = 1
+
+BILLS_ATTRIBUTES = [
+    {
+        'name_db': 'id',
+        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'name_object': 'db_id',
+        'default_value': None,
+    },
+    {
+        'name_db': 'betrag',
+        'type_db': 'REAL',
+        'name_object': 'betrag',
+        'default_value': 0.0,
+    },
+    {
+        'name_db': 'abzug_beihilfe',
+        'type_db': 'REAL',
+        'name_object': 'abzug_beihilfe',
+        'default_value': 0.0,
+    },
+    {
+        'name_db': 'abzug_pkv',
+        'type_db': 'REAL',
+        'name_object': 'abzug_pkv',
+        'default_value': 0.0,
+    },
+    {
+        'name_db': 'rechnungsdatum',
+        'type_db': 'TEXT',
+        'name_object': 'rechnungsdatum',
+        'default_value': None,
+    },
+    {
+        'name_db': 'einrichtung_id',
+        'type_db': 'INTEGER',
+        'name_object': 'einrichtung_id',
+        'default_value': None,
+    },
+    {
+        'name_db': 'notiz',
+        'type_db': 'TEXT',
+        'name_object': 'notiz',
+        'default_value': None,
+    },
+    {
+        'name_db': 'person_id',
+        'type_db': 'INTEGER',
+        'name_object': 'person_id',
+        'default_value': None,
+    },
+    {
+        'name_db': 'beihilfesatz',
+        'type_db': 'INTEGER',
+        'name_object': 'beihilfesatz',
+        'default_value': None,
+    },
+    {
+        'name_db': 'buchungsdatum',
+        'type_db': 'TEXT',
+        'name_object': 'buchungsdatum',
+        'default_value': None,
+    },
+    {
+        'name_db': 'aktiv',
+        'type_db': 'INTEGER',
+        'name_object': 'aktiv',
+        'default_value': True,
+    },
+    {
+        'name_db': 'bezahlt',
+        'type_db': 'INTEGER',
+        'name_object': 'bezahlt',
+        'default_value': False,
+    },
+    {
+        'name_db': 'beihilfe_id',
+        'type_db': 'INTEGER',
+        'name_object': 'beihilfe_id',
+        'default_value': None,
+    },
+    {
+        'name_db': 'pkv_id',
+        'type_db': 'INTEGER',
+        'name_object': 'pkv_id',
+        'default_value': None,
+    },
+]
+
+ALLOWANCE_ATTRIBUTES = [
+    {
+        'name_db': 'id',
+        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'name_object': 'db_id',
+        'default_value': None,
+    },
+    {
+        'name_db': 'betrag',
+        'type_db': 'REAL',
+        'name_object': 'betrag',
+        'default_value': 0.0,
+    },
+    {
+        'name_db': 'datum',
+        'type_db': 'TEXT',
+        'name_object': 'datum',
+        'default_value': None,
+    },
+    {
+        'name_db': 'aktiv',
+        'type_db': 'INTEGER',
+        'name_object': 'aktiv',
+        'default_value': True,
+    },
+    {
+        'name_db': 'erhalten',
+        'type_db': 'INTEGER',
+        'name_object': 'erhalten',
+        'default_value': False,
+    },
+]
+
+INSURANCE_ATTRIBUTES = [
+    {
+        'name_db': 'id',
+        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'name_object': 'db_id',
+        'default_value': None,
+    },
+    {
+        'name_db': 'betrag',
+        'type_db': 'REAL',
+        'name_object': 'betrag',
+        'default_value': 0.0,
+    },
+    {
+        'name_db': 'datum',
+        'type_db': 'TEXT',
+        'name_object': 'datum',
+        'default_value': None,
+    },
+    {
+        'name_db': 'aktiv',
+        'type_db': 'INTEGER',
+        'name_object': 'aktiv',
+        'default_value': True,
+    },
+    {
+        'name_db': 'erhalten',
+        'type_db': 'INTEGER',
+        'name_object': 'erhalten',
+        'default_value': False,
+    },
+]
+
+INSTITUTION_ATTRIBUTES = [
+    {
+        'name_db': 'id',
+        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'name_object': 'db_id',
+        'default_value': None,
+    },
+    {
+        'name_db': 'name',
+        'type_db': 'TEXT',
+        'name_object': 'name',
+        'default_value': None,
+    },
+    {
+        'name_db': 'strasse',
+        'type_db': 'TEXT',
+        'name_object': 'strasse',
+        'default_value': None,
+    },
+    {
+        'name_db': 'plz',
+        'type_db': 'TEXT',
+        'name_object': 'plz',
+        'default_value': None,
+    },
+    {
+        'name_db': 'ort',
+        'type_db': 'TEXT',
+        'name_object': 'ort',
+        'default_value': None,
+    },
+    {
+        'name_db': 'telefon',
+        'type_db': 'TEXT',
+        'name_object': 'telefon',
+        'default_value': None,
+    },
+    {
+        'name_db': 'email',
+        'type_db': 'TEXT',
+        'name_object': 'email',
+        'default_value': None,
+    },
+    {
+        'name_db': 'webseite',
+        'type_db': 'TEXT',
+        'name_object': 'webseite',
+        'default_value': None,
+    },
+    {
+        'name_db': 'notiz',
+        'type_db': 'TEXT',
+        'name_object': 'notiz',
+        'default_value': None,
+    },
+    {
+        'name_db': 'aktiv',
+        'type_db': 'INTEGER',
+        'name_object': 'aktiv',
+        'default_value': True,
+    },
+]
+
+PERSON_ATTRIBUTES = [
+    {
+        'name_db': 'id',
+        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
+        'name_object': 'db_id',
+        'default_value': None,
+    },
+    {
+        'name_db': 'name',
+        'type_db': 'TEXT',
+        'name_object': 'name',
+        'default_value': None,
+    },
+    {
+        'name_db': 'beihilfesatz',
+        'type_db': 'INTEGER',
+        'name_object': 'beihilfesatz',
+        'default_value': None,
+    },
+    {
+        'name_db': 'aktiv',
+        'type_db': 'INTEGER',
+        'name_object': 'aktiv',
+        'default_value': True,
+    },
+]
+
 
 class Datenbank:
     """Klasse zur Verwaltung der Datenbank."""
@@ -25,56 +269,26 @@ class Datenbank:
         self.init_file = self.db_dir / 'init.txt'
 
         # Dictionary mit den Tabellen und Spalten der Datenbank erstellen
-        self.__tables = {
-            'rechnungen': [
-                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
-                ('betrag', 'REAL'),
-                ('abzug_beihilfe', 'REAL'),
-                ('abzug_pkv', 'REAL'),
-                ('einrichtung_id', 'INTEGER'),
-                ('rechnungsdatum', 'TEXT'),
-                ('notiz', 'TEXT'),
-                ('person_id', 'INTEGER'),
-                ('beihilfesatz', 'INTEGER'),
-                ('buchungsdatum', 'TEXT'),
-                ('aktiv', 'INTEGER'),
-                ('bezahlt', 'INTEGER'),
-                ('beihilfe_id', 'INTEGER'),
-                ('pkv_id', 'INTEGER')
-            ],
-            'beihilfepakete': [
-                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
-                ('betrag', 'REAL'),
-                ('datum', 'TEXT'),
-                ('aktiv', 'INTEGER'),
-                ('erhalten', 'INTEGER')
-            ],
-            'pkvpakete': [
-                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
-                ('betrag', 'REAL'),
-                ('datum', 'TEXT'),
-                ('aktiv', 'INTEGER'),
-                ('erhalten', 'INTEGER')
-            ],
-            'einrichtungen': [
-                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
-                ('name', 'TEXT'),
-                ('strasse', 'TEXT'),
-                ('plz', 'TEXT'),
-                ('ort', 'TEXT'),
-                ('telefon', 'TEXT'),
-                ('email', 'TEXT'),
-                ('webseite', 'TEXT'),
-                ('notiz', 'TEXT'),
-                ('aktiv', 'INTEGER')
-            ],
-            'personen': [
-                ('id', 'INTEGER PRIMARY KEY AUTOINCREMENT'),
-                ('name', 'TEXT'),
-                ('beihilfesatz', 'INTEGER'),
-                ('aktiv', 'INTEGER')
-            ],
-        }
+        self.__tables = {}
+        self.__tables['rechnungen'] = []
+        for attribute in BILLS_ATTRIBUTES:
+            self.__tables['rechnungen'].append((attribute['name_db'], attribute['type_db']))
+        
+        self.__tables['beihilfepakete'] = []
+        for attribute in ALLOWANCE_ATTRIBUTES:
+            self.__tables['beihilfepakete'].append((attribute['name_db'], attribute['type_db']))
+        
+        self.__tables['pkvpakete'] = []
+        for attribute in INSURANCE_ATTRIBUTES:
+            self.__tables['pkvpakete'].append((attribute['name_db'], attribute['type_db']))
+        
+        self.__tables['einrichtungen'] = []
+        for attribute in INSTITUTION_ATTRIBUTES:
+            self.__tables['einrichtungen'].append((attribute['name_db'], attribute['type_db']))
+        
+        self.__tables['personen'] = []
+        for attribute in PERSON_ATTRIBUTES:
+            self.__tables['personen'].append((attribute['name_db'], attribute['type_db']))
 
         # Dictionary, welches die umzubenennenden Spalten enthält.
         # Die Spalten werden von einer alten Tabellenversion auf die neueste Tabellenversion migriert.
@@ -103,6 +317,24 @@ class Datenbank:
 
         # Aktualisiere die init-Datei
         self.__update_init()
+
+    def get_attributes_list(self, table):
+        """Gibt die zur Tabelle gehörende Liste der Attribute zurück."""
+        attributes = []
+        match table:
+            case 'rechnungen':
+                attributes = BILLS_ATTRIBUTES
+            case 'beihilfepakete':
+                attributes = ALLOWANCE_ATTRIBUTES
+            case 'pkvpakete':
+                attributes = INSURANCE_ATTRIBUTES
+            case 'einrichtungen':
+                attributes = INSTITUTION_ATTRIBUTES
+            case 'personen':
+                attributes = PERSON_ATTRIBUTES
+            case _:
+                raise ValueError(f'### Database.__load_data: Table {table} not found')
+        return attributes
 
     def __update_init(self):
         """Überprüfe, ob die init-Datei aktualisiert werden muss."""
@@ -431,9 +663,15 @@ class Datenbank:
         column_names = [column[0] for column in self.__tables[table]]
         column_names.remove('id')
 
+        attributes = self.get_attributes_list(table)
+        attribute_names = []
+        for column in column_names:
+            attribute_names.append([attribute['name_object'] for attribute in attributes if attribute['name_db'] == column][0])
+
         # Build the SQL query and values tuple dynamically
         query = f"""INSERT INTO {table} ({', '.join(column_names)}) VALUES ({', '.join(['?' for _ in column_names])})"""
-        values = tuple(getattr(element, column_name) for column_name in column_names)
+        # get the values to insert
+        values = tuple(getattr(element, attribute) for attribute in attribute_names)
 
         # Daten einfügen
         cursor.execute(query, values)
@@ -456,9 +694,14 @@ class Datenbank:
         column_names = [column[0] for column in self.__tables[table]]
         column_names.remove('id')
 
+        attributes = self.get_attributes_list(table)
+        attribute_names = []
+        for column in column_names:
+            attribute_names.append([attribute['name_object'] for attribute in attributes if attribute['name_db'] == column][0])
+
         # Build the SQL query and values tuple dynamically
         query = f"""UPDATE {table} SET {', '.join([f'{column_name} = ?' for column_name in column_names])} WHERE id = ?"""
-        values = tuple(getattr(element, column_name) for column_name in column_names)
+        values = tuple(getattr(element, attribute) for attribute in attribute_names)
         values += (element.db_id,)
 
         # Daten ändern
@@ -502,205 +745,133 @@ class Datenbank:
         # Speichere die Daten in einem Dictionary
         ergebnis = [dict(zip([column[0] for column in cursor.description], row)) for row in db_result]
 
-        result = []
-        for row in ergebnis:
-            match table:
-                case 'rechnungen':
-                    element = Rechnung()
-                case 'beihilfepakete':
-                    element = BeihilfePaket()
-                case 'pkvpakete':
-                    element = PKVPaket()
-                case 'einrichtungen':
-                    element = Einrichtung()
-                case 'personen':
-                    element = Person()
-                case _:
-                    raise ValueError(f'### Database.__load_data: Table {table} not found')
-
-            # Setze die Attribute des Elements
-            for column in self.__tables[table]:
-                if column[0] in row:
-                    if column[0] == 'id':
-                        setattr(element, 'db_id', row[column[0]])
-                    else:
-                        setattr(element, column[0], row[column[0]])
-
-            result.append(element)
-
         # Datenbankverbindung schließen
         connection.close()
 
+        result = ListSource()
+        for row in ergebnis:
+            
+            attributes = self.get_attributes_list(table)
+
+            # Create the data dictionary for the list source
+            data = {}
+            for attribute in attributes:
+                data[attribute['name_object']] = row.get(attribute['name_db'], attribute['default_value'])       
+
+            match table:
+                case 'rechnungen':
+                    element = Bill(**data)
+                case 'beihilfepakete':
+                    element = Allowance(**data)
+                case 'pkvpakete':
+                    element = Insurance(**data)
+                case 'einrichtungen':
+                    element = Institution(**data)
+                case 'personen':
+                    element = Person(**data)
+
+            result.append(element)
+
         return result
 
-    def neue_rechnung(self, rechnung):
-        """Einfügen einer neuen Rechnung in die Datenbank."""
-        print(f'### Database: Inserting new Rechnung into database')
-        return self.__new_element('rechnungen', rechnung)
-    
-    def neues_beihilfepaket(self, beihilfepaket):
-        """Einfügen eines neuen Beihilfepakets in die Datenbank."""
-        print(f'### Database: Inserting new Beihilfepaket into database')
-        return self.__new_element('beihilfepakete', beihilfepaket)
-    
-    def neues_pkvpaket(self, pkvpaket):
-        """Einfügen eines neuen PKV-Pakets in die Datenbank."""
-        print(f'### Database: Inserting new PKVPaket into database')
-        return self.__new_element('pkvpakete', pkvpaket)
-    
-    def neue_einrichtung(self, einrichtung):
-        """Einfügen einer neuen Einrichtung in die Datenbank."""
-        print(f'### Database: Inserting new Einrichtung into database')
-        return self.__new_element('einrichtungen', einrichtung)
-    
-    def neue_person(self, person):
-        """Einfügen einer neuen Person in die Datenbank."""
-        print(f'### Database: Inserting new Person into database')
-        return self.__new_element('personen', person)
-    
-    def aendere_rechnung(self, rechnung):
-        """Ändern einer Rechnung in der Datenbank."""
-        print(f'### Database: Changing Rechnung with id {rechnung.db_id} in database')
-        self.__change_element('rechnungen', rechnung)
+    def new(self, element):
+        """Einfügen eines neuen Elements in die Datenbank."""
+        match isinstance(element):
+            case Bill():
+                return self.__new_element('rechnungen', element)
+            case Allowance():
+                return self.__new_element('beihilfepakete', element)
+            case Insurance():
+                return self.__new_element('pkvpakete', element)
+            case Institution():
+                return self.__new_element('einrichtungen', element)
+            case Person():
+                return self.__new_element('personen', element)
+            case _:
+                raise ValueError(f'### Database.new: Element {element} not found')
+            
+    def save(self, element):
+        """Ändern eines Elements in der Datenbank."""
+        match isinstance(element):
+            case Bill():
+                self.__change_element('rechnungen', element)
+            case Allowance():
+                self.__change_element('beihilfepakete', element)
+            case Insurance():
+                self.__change_element('pkvpakete', element)
+            case Institution():
+                self.__change_element('einrichtungen', element)
+            case Person():
+                self.__change_element('personen', element)
+            case _:
+                raise ValueError(f'### Database.change: Element {element} not found')
+            
+    def delete(self, element):
+        """Löschen eines Elements aus der Datenbank."""
+        match isinstance(element):
+            case Bill():
+                self.__delete_element('rechnungen', element)
+            case Allowance():
+                self.__delete_element('beihilfepakete', element)
+            case Insurance():
+                self.__delete_element('pkvpakete', element)
+            case Institution():
+                self.__delete_element('einrichtungen', element)
+            case Person():
+                self.__delete_element('personen', element)
+            case _:
+                raise ValueError(f'### Database.delete: Element {element} not found')
 
-    def aendere_beihilfepaket(self, beihilfepaket):
-        """Ändern eines Beihilfepakets in der Datenbank."""
-        print(f'### Database: Changing Beihilfepaket with id {beihilfepaket.db_id} in database')
-        self.__change_element('beihilfepakete', beihilfepaket)
-
-    def aendere_pkvpaket(self, pkvpaket):
-        """Ändern eines PKV-Pakets in der Datenbank."""
-        print(f'### Database: Changing PKVPaket with id {pkvpaket.db_id} in database')
-        self.__change_element('pkvpakete', pkvpaket)
-
-    def aendere_einrichtung(self, einrichtung):
-        """Ändern einer Einrichtung in der Datenbank."""
-        print(f'### Database: Changing Einrichtung with id {einrichtung.db_id} in database')
-        self.__change_element('einrichtungen', einrichtung)
-
-    def aendere_person(self, person):
-        """Ändern einer Person in der Datenbank."""
-        print(f'### Database: Changing Person with id {person.db_id} in database')
-        self.__change_element('personen', person)
-
-    def loesche_rechnung(self, rechnung):
-        """Löschen einer Rechnung aus der Datenbank."""
-        print(f'### Database: Deleting Rechnung with id {rechnung.db_id} from database')
-        self.__delete_element('rechnungen', rechnung)
-
-    def loesche_beihilfepaket(self, beihilfepaket):
-        """Löschen eines Beihilfepakets aus der Datenbank."""
-        print(f'### Database: Deleting Beihilfepaket with id {beihilfepaket.db_id} from database')
-        self.__delete_element('beihilfepakete', beihilfepaket)
-
-    def loesche_pkvpaket(self, pkvpaket):
-        """Löschen eines PKV-Pakets aus der Datenbank."""
-        print(f'### Database: Deleting PKVPaket with id {pkvpaket.db_id} from database')
-        self.__delete_element('pkvpakete', pkvpaket)
-
-    def loesche_einrichtung(self, einrichtung):
-        """Löschen einer Einrichtung aus der Datenbank."""
-        print(f'### Database: Deleting Einrichtung with id {einrichtung.db_id} from database')
-        self.__delete_element('einrichtungen', einrichtung)
-
-    def loesche_person(self, person):
-        """Löschen einer Person aus der Datenbank."""
-        print(f'### Database: Deleting Person with id {person.db_id} from database')
-        self.__delete_element('personen', person)
-
-    def lade_rechnungen(self, only_active=True):
+    def load_bills(self, only_active=True):
         """Laden der Rechnungen aus der Datenbank."""
         print(f'### Database: Loading Rechnungen from database')
         return self.__load_data('rechnungen', only_active)
     
-    def lade_beihilfepakete(self, only_active=True):
+    def load_allowances(self, only_active=True):
         """Laden der Beihilfepakete aus der Datenbank."""
         print(f'### Database: Loading Beihilfepakete from database')
         return self.__load_data('beihilfepakete', only_active)
     
-    def lade_pkvpakete(self, only_active=True):
+    def load_insurances(self, only_active=True):
         """Laden der PKV-Pakete aus der Datenbank."""
         print(f'### Database: Loading PKVPakete from database')
         return self.__load_data('pkvpakete', only_active)
     
-    def lade_einrichtungen(self, only_active=True):
+    def load_institutions(self, only_active=True):
         """Laden der Einrichtungen aus der Datenbank."""
         print(f'### Database: Loading Einrichtungen from database')
         return self.__load_data('einrichtungen', only_active)
     
-    def lade_personen(self, only_active=True):
+    def load_persons(self, only_active=True):
         """Laden der Personen aus der Datenbank."""
         print(f'### Database: Loading Personen from database')
         return self.__load_data('personen', only_active)
 
 
-class Rechnung:
-    """Klasse zur Erfassung einer Rechnung."""
+class Bill(Row):
+    """Klassen zur Darstellung einer Rechnung."""
     
-    def __init__(self):
+    def __init__(self, **data):
         """Initialisierung der Rechnung."""
-        self.db_id = None
-        self.betrag = 0
-        self.abzug_beihilfe = 0
-        self.abzug_pkv = 0
-        self.rechnungsdatum = None
-        self.einrichtung_id = None
-        self.notiz = None
-        self.person_id = None
-        self.beihilfesatz = None
-        self.buchungsdatum = None
-        self.bezahlt = False
-        self.beihilfe_id = None
-        self.pkv_id = None
-        self.aktiv = True
+        init_data = {}
+        for attribute in BILLS_ATTRIBUTES:
+            if attribute['name_object']:
+                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
 
-    def neu(self, db):
-        """Neue Rechnung erstellen."""
-        self.db_id = db.neue_rechnung(self)
-
-    def speichern(self, db):
-        """Speichern der Rechnung in der Datenbank."""
-        db.aendere_rechnung(self)
-
-    def loeschen(self, db):
-        """Löschen der Rechnung aus der Datenbank."""
-        db.loesche_rechnung(self)
-
-    def __str__(self):
-        """Ausgabe der Rechnung."""
-        ausgabe = 'ID: {}\n'.format(self.db_id)
-        ausgabe += 'Rechnung vom {}\n'.format(self.rechnungsdatum)
-        ausgabe += 'Betrag: {:.2f} €\n'.format(self.betrag).replace('.', ',')
-        ausgabe += 'Abzug Beihilfe: {:.2f} €\n'.format(self.abzug_beihilfe).replace('.', ',')
-        ausgabe += 'Abzug PKV: {:.2f} €\n'.format(self.abzug_pkv).replace('.', ',')
-        ausgabe += 'Person: {}\n'.format(self.person_id)
-        ausgabe += 'Beihilfesatz: {:.0f} %\n'.format(self.beihilfesatz)
-        ausgabe += 'Einrichtung: {}\n'.format(self.einrichtung_id)
-        ausgabe += 'Notiz: {}\n'.format(self.notiz)
-        if self.buchungsdatum is not None:
-            ausgabe += 'Buchungsdatum: {}\n'.format(self.buchungsdatum)
-        else:
-            ausgabe += 'Buchungsdatum: -\n'
-        if self.bezahlt:
-            ausgabe += 'Bezahlt: Ja'
-        else:
-            ausgabe += 'Bezahlt: Nein'
-
-        return ausgabe
+        super().__init__(**init_data)
     
 
-class BeihilfePaket:
+class Allowance(Row):
     """Klasse zur Darstellung einer Beihilfe-Einreichung."""
     
-    def __init__(self):
+    def __init__(self, **data):
         """Initialisierung der Beihilfe-Einreichung."""
+        init_data = {}
+        for attribute in ALLOWANCE_ATTRIBUTES:
+            if attribute['name_object']:
+                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
 
-        # Betrag der Beihilfe-Einreichung berechnen
-        self.db_id = None
-        self.betrag = 0        
-        self.datum = None
-        self.aktiv = True
-        self.erhalten = False
+        super().__init__(**init_data)
 
     def neu(self, db, rechnungen=None):
         """Neue Beihilfe-Einreichung erstellen."""
@@ -719,33 +890,19 @@ class BeihilfePaket:
             for rechnung in rechnungen:
                 rechnung.beihilfe_id = self.db_id
                 rechnung.speichern(db)
-
-    def speichern(self, db):
-        """Speichern der Beihilfe-Einreichung in der Datenbank."""
-        db.aendere_beihilfepaket(self)
-
-    def loeschen(self, db):
-        """Löschen der Beihilfe-Einreichung aus der Datenbank."""
-        db.loesche_beihilfepaket(self)
-
-    def __str__(self):
-        """Ausgabe der Beihilfe-Einreichung."""
-        return (f"Beihilfe-Einreichung: {self.db_id}\n"
-            f"Datum: {self.datum}\n"
-            f"Betrag: {self.betrag} €\n"
-            f"Erstattet: {self.erhalten}")
         
 
-class PKVPaket:
+class Insurance(Row):
     """Klasse zur Darstellung einer PKV-Einreichung."""
     
-    def __init__(self):
+    def __init__(self, **data):
         """Initialisierung der PKV-Einreichung."""
-        self.betrag = 0
-        self.datum = None
-        self.aktiv = True
-        self.erhalten = False
-        self.db_id = None
+        init_data = {}
+        for attribute in INSURANCE_ATTRIBUTES:
+            if attribute['name_object']:
+                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+        
+        super().__init__(**init_data)
 
     def neu(self, db, rechnungen=None):
         """Neue PKV-Einreichung erstellen."""
@@ -765,92 +922,35 @@ class PKVPaket:
                 rechnung.pkv_id = self.db_id
                 rechnung.speichern(db)
 
-    def speichern(self, db):
-        """Speichern der PKV-Einreichung in der Datenbank."""
-        db.aendere_pkvpaket(self)
 
-    def loeschen(self, db):
-        """Löschen der PKV-Einreichung aus der Datenbank."""
-        db.loesche_pkvpaket(self)
-
-    def __str__(self):
-        """Ausgabe der PKV-Einreichung."""
-        return (f"PKV-Einreichung: {self.db_id}\n"
-            f"Datum: {self.datum}\n"
-            f"Betrag: {self.betrag} €\n"
-            f"Erstattet: {self.erhalten}")
-
-
-class Einrichtung:
+class Institution(Row):
     """Klasse zur Verwaltung der Einrichtungen."""
     
-    def __init__(self):
+    def __init__(self, **data):
         """Initialisierung der Einrichtung."""
-        self.name = None
-        self.db_id = None
-        self.strasse = None
-        self.plz = None
-        self.ort = None
-        self.telefon = None
-        self.email = None
-        self.webseite = None
-        self.notiz = None
-        self.aktiv = True
 
-    def neu(self, db):
-        """Neue Einrichtung erstellen."""
-        self.db_id = db.neue_einrichtung(self)
-
-    def speichern(self, db):
-        """Speichern der Einrichtung in der Datenbank."""
-        db.aendere_einrichtung(self)
-
-    def loeschen(self, db):
-        """Löschen der Einrichtung aus der Datenbank."""
-        db.loesche_einrichtung(self)
-
-    def __str__(self):
-        """Ausgabe der Einrichtung."""
-        return (f'ID: {self.db_id}\n'
-            f'Einrichtung: {self.name}'
-            f'\nStraße: {self.strasse}'
-            f'\nPLZ, Ort: {self.plz, self.ort}'
-            f'\nTelefon: {self.telefon}'
-            f'\nE-Mail: {self.email}'
-            f'\nWebseite: {self.webseite}'
-            f'\nNotiz: {self.notiz}')
+        # create the dictionary init_data using the BILLS_ATTRIBUTES
+        init_data = {}
+        for attribute in INSTITUTION_ATTRIBUTES:
+            if attribute['name_object']:
+                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+        
+        super().__init__(**init_data)
     
 
-class Person:
+class Person(Row):
     """Klasse zur Verwaltung der Personen."""
     
-    def __init__(self):
+    def __init__(self, **data):
         """Initialisierung der Person."""
-        self.name = None
-        self.beihilfesatz = None
-        self.aktiv = True
-        self.db_id = None
-
-    def neu(self, db):
-        """Neue Person erstellen."""
-        self.db_id = db.neue_person(self)
-
-    def speichern(self, db):
-        """Speichern der Person in der Datenbank."""
-        db.aendere_person(self)
-
-    def loeschen(self, db):
-        """Löschen der Person aus der Datenbank."""
-        db.loesche_person(self)
-
-    def __str__(self):
-        """Ausgabe der Person."""
-        return (f'ID: {self.db_id}\n'
-            f'Name: {self.name}'
-            f'\nBeihilfe: {self.beihilfesatz} %')
+        init_data = {}
+        for attribute in PERSON_ATTRIBUTES:
+            if attribute['name_object']:
+                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+        super().__init__(**init_data)
     
 
-class DatenInterface:
+class DataInterface:
     """Daten-Interface für die GUI."""
 
     def __init__(self):
