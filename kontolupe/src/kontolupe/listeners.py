@@ -3,6 +3,24 @@
 from toga.sources import Listener
 
 
+class ListListener(Listener):
+
+    def __init__(self, interface, list_source):
+        self.interface = interface
+        self.list_source = list_source
+
+    def change(self, item):
+        self.interface.update(self.list_source)
+
+    def clear(self):
+        self.list_source.clear()
+
+    def insert(self, index, item):
+        self.interface.update(self.list_source)
+
+    def remove(self, index, item):  
+        self.interface.update(self.list_source)
+
 class TableListener(Listener):
 
     def __init__(self, table):
