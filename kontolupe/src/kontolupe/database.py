@@ -723,9 +723,9 @@ class Database:
         """Update the database structure."""
 
         for table_name, columns in self.__tables.items():
-            Datenbank.__create_table_if_not_exists(self, cursor, table_name, columns)
+            self.__create_table_if_not_exists(self, cursor, table_name, columns)
             for column in columns:
-                Datenbank.__add_column_if_not_exists(self, cursor, table_name, column[0], column[1])
+                self.__add_column_if_not_exists(self, cursor, table_name, column[0], column[1])
 
             # look for a predecessor table and update its structure if it exists
             old_table = self.__tables_predecessors.get(table_name)
@@ -735,7 +735,7 @@ class Database:
                 if cursor.fetchone():
                     # the old table exists, so update its structure
                     for column in self.__tables[table_name]:
-                        Datenbank.__add_column_if_not_exists(self, cursor, old_table, column[0], column[1])
+                        self.__add_column_if_not_exists(self, cursor, old_table, column[0], column[1])
                     print(f'### Database.__update_db_structure: Updated table {old_table} to the latest structure.')
             
 
@@ -744,15 +744,14 @@ class Database:
 
         for table_name, columns in self.__table_columns_rename.items():
             for column in columns:
-                Datenbank.__copy_column(self, cursor, table_name, column[0], column[1])
+                self.__copy_column(self, cursor, table_name, column[0], column[1])
 
     def __rename_tables(self, cursor):
         """Rename the tables."""
 
         for old_table, new_table in self.__tables_rename.items():
-            Datenbank.__copy_table_and_delete(self, cursor, old_table, new_table)
+            self.__copy_table_and_delete(self, cursor, old_table, new_table)
             print(f'### Database.__rename_tables: Migrated data from {old_table} to {new_table} and deleted {old_table}')
-
 
     def __new_element(self, table, element):
         """Einfügen eines neuen Elements in die Datenbank."""
@@ -877,51 +876,48 @@ class Database:
 
     def new(self, element):
         """Einfügen eines neuen Elements in die Datenbank."""
-        match isinstance(element):
-            case Bill():
-                return self.__new_element('rechnungen', element)
-            case Allowance():
-                return self.__new_element('beihilfepakete', element)
-            case Insurance():
-                return self.__new_element('pkvpakete', element)
-            case Institution():
-                return self.__new_element('einrichtungen', element)
-            case Person():
-                return self.__new_element('personen', element)
-            case _:
-                raise ValueError(f'### Database.new: Element {element} not found')
+        if isinstance(element, Bill):
+            return self.__new_element('rechnungen', element)
+        elif isinstance(element, Allowance):
+            return self.__new_element('beihilfepakete', element)
+        elif isinstance(element, Insurance):
+            return self.__new_element('pkvpakete', element)
+        elif isinstance(element, Institution):
+            return self.__new_element('einrichtungen', element)
+        elif isinstance(element, Person):
+            return self.__new_element('personen', element)
+        else:
+            raise ValueError(f'### Database.new: Element {element} not found')
             
     def save(self, element):
         """Ändern eines Elements in der Datenbank."""
-        match isinstance(element):
-            case Bill():
-                self.__change_element('rechnungen', element)
-            case Allowance():
-                self.__change_element('beihilfepakete', element)
-            case Insurance():
-                self.__change_element('pkvpakete', element)
-            case Institution():
-                self.__change_element('einrichtungen', element)
-            case Person():
-                self.__change_element('personen', element)
-            case _:
-                raise ValueError(f'### Database.change: Element {element} not found')
-            
+        if isinstance(element, Bill):
+            self.__change_element('rechnungen', element)
+        elif isinstance(element, Allowance):
+            self.__change_element('beihilfepakete', element)
+        elif isinstance(element, Insurance):
+            self.__change_element('pkvpakete', element)
+        elif isinstance(element, Institution):
+            self.__change_element('einrichtungen', element)
+        elif isinstance(element, Person):
+            self.__change_element('personen', element)
+        else:
+            raise ValueError(f'### Database.change: Element {element} not found')
+
     def delete(self, element):
         """Löschen eines Elements aus der Datenbank."""
-        match isinstance(element):
-            case Bill():
-                self.__delete_element('rechnungen', element)
-            case Allowance():
-                self.__delete_element('beihilfepakete', element)
-            case Insurance():
-                self.__delete_element('pkvpakete', element)
-            case Institution():
-                self.__delete_element('einrichtungen', element)
-            case Person():
-                self.__delete_element('personen', element)
-            case _:
-                raise ValueError(f'### Database.delete: Element {element} not found')
+        if isinstance(element, Bill):
+            self.__delete_element('rechnungen', element)
+        elif isinstance(element, Allowance):
+            self.__delete_element('beihilfepakete', element)
+        elif isinstance(element, Insurance):
+            self.__delete_element('pkvpakete', element)
+        elif isinstance(element, Institution):
+            self.__delete_element('einrichtungen', element)
+        elif isinstance(element, Person):
+            self.__delete_element('personen', element)
+        else:
+            raise ValueError(f'### Database.delete: Element {element} not found')
 
     def load_bills(self, only_active=True):
         """Laden der Rechnungen aus der Datenbank."""
@@ -994,25 +990,6 @@ class Allowance(Row):
                     case _:
                         init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
 
-        super().__init__(**init_data)
-
-    def neu(self, db, rechnungen=None):
-        """Neue Beihilfe-Einreichung erstellen."""
-        # Betrag der Beihilfe-Einreichung berechnen
-
-        if rechnungen is not None:
-            self.betrag = 0
-            for rechnung in rechnungen:
-                self.betrag += (rechnung.betrag - rechnung.abzug_beihilfe) * rechnung.beihilfesatz / 100
-
-        # Beihilfepaket speichern
-        self.db_id = db.neues_beihilfepaket(self)
-
-        if rechnungen is not None:
-            # Beihilfe-Einreichung mit Rechnungen verknüpfen
-            for rechnung in rechnungen:
-                rechnung.beihilfe_id = self.db_id
-                rechnung.speichern(db)
         
 
 class Insurance(Row):
@@ -1032,24 +1009,6 @@ class Insurance(Row):
                         init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
         
         super().__init__(**init_data)
-
-    def neu(self, db, rechnungen=None):
-        """Neue PKV-Einreichung erstellen."""
-
-        # Betrag der PKV-Einreichung berechnen
-        if rechnungen is not None:
-            self.betrag = 0
-            for rechnung in rechnungen:
-                self.betrag += (rechnung.betrag - rechnung.abzug_pkv) * (100 - rechnung.beihilfesatz) / 100
-
-        # PKV-Einreichung speichern
-        self.db_id = db.neues_pkvpaket(self)
-
-        if rechnungen is not None:
-            # PKV-Einreichung mit Rechnungen verknüpfen
-            for rechnung in rechnungen:
-                rechnung.pkv_id = self.db_id
-                rechnung.speichern(db)
 
 
 class Institution(Row):
@@ -1170,8 +1129,8 @@ class DataInterface:
         self.update_open_sum()
 
         # Listeners
-        # self.bills.add_listener(ListListener(self, self.allowances_bills))
-        # self.bills.add_listener(ListListener(self, self.insurances_bills))
+        self.bills.add_listener(ListListener(self, self.allowances_bills))
+        self.bills.add_listener(ListListener(self, self.insurances_bills))
         # self.bills.add_listener(ListListener(self, self.open_bookings))
         # self.bills.add_listener(ListListener(self, self.archivables))
         # self.allowances.add_listener(ListListener(self, self.open_bookings))
@@ -1216,74 +1175,10 @@ class DataInterface:
         """Speichert die Initialisierungsdatei."""
         self.db.save_init_file(**self.init)
 
+
     def load_init_file(self):
         """Lädt die Initialisierungsdatei und speichert sie in der Klassenvariable."""
         self.init = self.db.load_init_file()
-
-    def update_open_sum(self):
-        """Aktualisiert die Summe der offenen Buchungen."""
-        sum = 0.00
-        
-        if self.bills is not None:
-            for bill in self.bills:
-                if bill.bezahlt == False:
-                    sum -= bill.betrag
-                if self.allowance_active() and bill.beihilfe_id == None:
-                    sum += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
-                if bill.pkv_id == None:
-                    if self.allowance_active():
-                        sum += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
-                    else:
-                        sum += bill.betrag - bill.abzug_pkv
-        
-        if self.allowance_active() and self.allowances is not None:
-            for submit in self.allowances:
-                if submit.erhalten == False:
-                    sum += submit.betrag
-
-        if self.insurances is not None:
-            for submit in self.insurances:
-                if submit.erhalten == False:
-                    sum += submit.betrag
-
-        self.open_sum.value = sum
-
-    def update_archivables(self):
-        """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""
-
-        temp = {
-            'Rechnung' : [],
-            'Beihilfe' : set(),
-            'PKV' : set()
-        }
-
-        for i, bill in enumerate(self.bills):
-            if bill.bezahlt and (bill.beihilfe_id or not self.allowance_active()) and bill.pkv_id:
-                allowance = self.allowances.find({ 'db_id' : bill.beihilfe_id})
-                insurance = self.insurances.find({ 'db_id' : bill.pkv_id})
-                if ((allowance and allowance.erhalten) or not self.allowance_active()) and insurance and insurance.erhalten:
-                    # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
-                    other_bills = [ar for ar in self.bill if (self.allowance_active() and ar.beihilfe_id == allowance.db_id) or ar.pkv_id == insurance.db_id]
-                    if all(ar.bezahlt for ar in other_bills):
-                        temp['Rechnung'].append(i)
-                        if self.allowance_active():
-                            temp['Beihilfe'].add(self.beihilfepakete.index(allowance))
-                        temp['PKV'].add(self.pkvpakete.index(insurance))
-
-        # Convert sets back to lists
-        temp['Beihilfe'] = list(temp['Beihilfe'])
-        temp['PKV'] = list(temp['PKV'])
-
-        # sort the lists in reverse order
-        temp['Rechnung'].sort(reverse=True)
-        temp['Beihilfe'].sort(reverse=True)
-        temp['PKV'].sort(reverse=True)
-
-        # convert to listSource
-        self.archivables.clear()
-        self.archivables.append(self.archivables)
-
-        print(f'### DatenInterface.__update_archivables: Archivables updated: {self.archivables}')
 
 
     def archive(self):
@@ -1299,47 +1194,16 @@ class DataInterface:
             self.__deactivate_insurance(i)
 
         self.update_archivables()
-        
 
-    def get_bill_by_dbid(self, db_id):
-        """Gibt eine Rechnung anhand der ID zurück."""
+
+    def get_element_by_dbid(self, list_source, db_id):
+        """Gibt ein Element einer Liste anhand der ID zurück."""
         try:
-            return self.bills.find({'db_id': db_id})
+            return list_source.find({'db_id': db_id})
         except ValueError:
-            print(f'### DatenInterface.get_bill_by_dbid: No bill found with id {db_id}')
+            print(f'### DatenInterface.get_element_by_dbid: No element found with id {db_id}')
             return None
 
-    def get_allowance_by_dbid(self, db_id):
-        """Gibt ein Beihilfepaket anhand der ID zurück."""
-        try:
-            return self.allowances.find({'db_id': db_id})
-        except ValueError:
-            print(f'### DatenInterface.get_allowance_by_dbid: No allowance found with id {db_id}')
-            return None
-
-    def get_insurance_by_dbid(self, db_id):
-        """Gibt ein PKV-Paket anhand der ID zurück."""
-        try:
-            return self.insurances.find({'db_id': db_id})
-        except ValueError:
-            print(f'### DatenInterface.get_insurance_by_dbid: No insurance found with id {db_id}')
-            return None
-
-    def get_institution_by_dbid(self, db_id):
-        """Gibt eine Einrichtung anhand der ID zurück."""
-        try:
-            return self.institutions.find({'db_id': db_id})
-        except ValueError:
-            print(f'### DatenInterface.get_institution_by_dbid: No institution found with id {db_id}')
-            return None
-
-    def get_person_by_dbid(self, db_id):
-        """Gibt eine Person anhand der ID zurück."""
-        try:
-            return self.persons.find({'db_id': db_id})
-        except ValueError:
-            print(f'### DatenInterface.get_person_by_dbid: No person found with id {db_id}')
-            return None
 
     def get_allowance_by_name(self, name):
         """Gibt den Beihilfesatz einer Person anhand des Namens zurück."""
@@ -1351,327 +1215,316 @@ class DataInterface:
             return None
         
     
-    def __get_list_index_by_dbid(self, list_source, db_id):
+    def get_list_index_by_dbid(self, list_source, db_id):
         """Ermittelt den Index eines Elements einer Liste anhand der ID."""
         try:
             row = list_source.find({'db_id': db_id})
             return list_source.index(row)
         except ValueError:
-            print(f'### DatenInterface.__get_list_index_by_dbid: No element found with id {db_id}')
+            print(f'### DatenInterface.get_list_index_by_dbid: No element found with id {db_id}')
             return None
-    
+        
 
-    def get_bill_index_by_dbid(self, db_id):
-        """Gibt den Index einer Rechnung anhand der ID zurück."""
-        index = self.__get_list_index_by_dbid(self.bills, db_id)
-        if index is None:
-            print(f'### DatenInterface.get_bill_index_by_dbid: No rechnung found with db_id {db_id}')
-        return index
-    
+    def new(self, element, **kwargs):
+        """Erstellt ein neues Element."""
 
-    def get_institution_index_by_dbid(self, db_id):
-        """Gibt den Index einer Einrichtung anhand der ID zurück."""
-        index = self.__get_list_index_by_dbid(self.institutions, db_id)
-        if index is None:
-            print(f'### DatenInterface.get_institutions_index_by_dbid: No einrichtung found with id {db_id}')
-        return index
-    
-
-    def get_person_index_by_dbid(self, db_id):
-        """Gibt den Index einer Person anhand der ID zurück."""
-        index = self.__get_list_index_by_dbid(self.persons, db_id)
-        if index is None:
-            print(f'### DatenInterface.get_person_index_by_dbid: No person found with id {db_id}')
-        return index
-    
-
-    def new_rechnung(self, rechnung):
-        """Neue Rechnung erstellen."""
-        rechnung.db_id = self.db.new(rechnung)
-        self.rechnungen.append(rechnung)
-
-        if not rechnung.bezahlt:
-            self.open_bookings.append(rechnung)
-
-
-    def edit_rechnung(self, rechnung, rg_id):
-        """Rechnung ändern."""
-        self.rechnungen[rg_id] = rechnung
-        self.rechnungen[rg_id].speichern(self.db)
-        self.__update_list_rechnungen_id(rechnung, rg_id)
-        self.__update_list_open_bookings()
-        self.__update_list_rg_beihilfe()
-        self.__update_list_rg_pkv()
-        self.__update_archivables()
-
-
-    def delete_rechnung(self, rg_id):
-        """Rechnung löschen."""
-        self.rechnungen[rg_id].loeschen(self.db)
-        self.rechnungen.pop(rg_id)
-        del self.list_rechnungen[rg_id]
-        self.__update_list_open_bookings()
-        self.__update_list_rg_beihilfe()
-        self.__update_list_rg_pkv()
-        self.__update_archivables()
-
-
-    def __deactivate_bill(self, rg_id):
-        """Rechnung deaktivieren."""
-        self.rechnungen[rg_id].aktiv = False
-        self.rechnungen[rg_id].speichern(self.db)
-        self.rechnungen.pop(rg_id)
-        del self.list_rechnungen[rg_id]
-
-
-    def pay_rechnung(self, db_id, date=None):
-        """Rechnung bezahlen."""
-        index = self.__get_list_index_by_dbid(self.list_rechnungen, db_id)
-        self.rechnungen[index].bezahlt = True
-        if date is not None:
-            self.rechnungen[index].buchungsdatum = date
-        elif not self.rechnungen[index].buchungsdatum:
-            self.rechnungen[index].buchungsdatum = datetime.now().strftime('%d.%m.%Y')
+        if isinstance(element, Bill):
+            element.db_id = self.db.new(element)
+            self.bills.append(element)
             
-        self.rechnungen[index].speichern(self.db)
-        self.__update_list_rechnungen_id(self.rechnungen[index], index)
-        self.__update_list_open_bookings()
-        self.__update_archivables()
+            if element.bezahlt == False:
+                self.open_sum -= (element.abzug_beihilfe + element.abzug_pkv)
+                self.update_open_bookings()
+            else:
+                self.open_sum += (element.betrag - element.abzug_beihilfe - element.abzug_pkv)
+            
+            return element.db_id
 
+        elif isinstance(element, Allowance):
+            amount = 0
+            for bill_db_id in kwargs.get('bill_db_ids', []):
+                bill = self.bills.find({'db_id': bill_db_id})
+                amount += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
+            element.betrag = amount                    
+            
+            element.db_id = self.db.new(element)
+            self.allowances.append(element)
+            
+            if element.erhalten == False:
+                self.update_open_bookings()
+            else:
+                self.open_sum -= element.betrag
+                self.update_archivables()
+            
+            for bill_db_id in kwargs.get('bill_db_ids', []):
+                bill = self.bills.find({'db_id': bill_db_id})
+                bill.beihilfe_id = element.db_id
+                self.save(bill)
 
-    def receive_beihilfe(self, db_id):
-        """Beihilfe erhalten."""
-        index = self.__get_list_index_by_dbid(self.list_beihilfepakete, db_id)
-        self.beihilfepakete[index].erhalten = True
-        self.beihilfepakete[index].speichern(self.db)
-        self.__update_list_beihilfepakete_id(self.beihilfepakete[index], index)
-        self.__update_list_open_bookings()
-        self.__update_archivables()
+            return element.db_id
 
+        elif isinstance(element, Insurance):
+            amount = 0
+            for bill_db_id in kwargs.get('bill_db_ids', []):
+                bill = self.bills.find({'db_id': bill_db_id})
+                amount += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
+            element.betrag = amount
 
-    def receive_pkv(self, db_id):
-        """PKV erhalten."""
-        index = self.__get_list_index_by_dbid(self.list_pkvpakete, db_id)
-        self.pkvpakete[index].erhalten = True
-        self.pkvpakete[index].speichern(self.db)
-        self.__update_list_pkvpakete_id(self.pkvpakete[index], index)
-        self.__update_list_open_bookings()
-        self.__update_archivables()
+            element.db_id = self.db.new(element)
+            self.insurances.append(element)
+            
+            if element.erhalten == False:
+                self.update_open_bookings()
+            else:
+                self.open_sum -= element.betrag
+                self.update_archivables()
+            
+            for bill_db_id in kwargs.get('bill_db_ids', []):
+                bill = self.bills.find({'db_id': bill_db_id})
+                bill.pkv_id = element.db_id
+                self.save(bill)
 
+            return element.db_id
+        
+        elif isinstance(element, Institution):
+            element.db_id = self.db.new(element)
+            self.institutions.append(element)
+            return element.db_id
+        
+        elif isinstance(element, Person):
+            element.db_id = self.db.new(element)
+            self.persons.append(element)
+            return element.db_id
+        
+        else:
+            raise ValueError(f'### DataInterface.new_element: element type not known')
+            
 
-    def new_beihilfepaket(self, beihilfepaket, rechnungen_db_ids):
-        """Neues Beihilfepaket erstellen."""
-        beihilfepaket.neu(self.db)
-        self.beihilfepakete.append(beihilfepaket)
-        self.__list_beihilfepakete_append(beihilfepaket)
+    def save(self, element):
+        """Speichert ein Element."""
 
-        # Beihilfepaket mit Rechnungen verknüpfen
-        for rechnung_db_id in rechnungen_db_ids:
-            index = self.__get_list_index_by_dbid(self.list_rechnungen, rechnung_db_id)
-            self.rechnungen[index].beihilfe_id = beihilfepaket.db_id
-            self.rechnungen[index].speichern(self.db)
-            self.__update_list_rechnungen_id(self.rechnungen[index], index)
+        if isinstance(element, Bill):
+            self.db.save(element)
+            self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
 
-        self.__update_list_open_bookings()
-        self.__update_list_rg_beihilfe()
-        self.__update_list_rg_pkv()
-        self.__update_archivables()
+        elif isinstance(element, Allowance):
+            self.db.save(element)
+            self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
 
+        elif isinstance(element, Insurance):
+            self.db.save(element)
+            self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
+        
+        elif isinstance(element, Institution):
+            self.db.save(element)
+            self.update_bills()
+            self.update_open_bookings()
+        
+        elif isinstance(element, Person):
+            self.db.save(element)
+            self.update_bills()
+            self.update_open_bookings()
+        
+        else:
+            raise ValueError(f'### DataInterface.save_element: element type not known')
+            
 
-    def delete_beihilfepaket(self, beihilfepaket_id):
-        """Beihilfepaket löschen."""
-        self.beihilfepakete[beihilfepaket_id].loeschen(self.db)
-        self.beihilfepakete.pop(beihilfepaket_id)
-        del self.list_beihilfepakete[beihilfepaket_id]
-        self.__update_rechnungen()
-        self.__update_list_open_bookings()
-        self.__update_list_rg_beihilfe()
-        self.__update_list_rg_pkv()
-        self.__update_archivables()
+    def delete(self, element):
+        """Löscht ein Element und gibt zurück ob es erfolgreich war."""
 
+        if isinstance(element, Bill):
+            self.db.delete(element)
+            self.bills.remove(element)
+            if element.bezahlt == False:
+                self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
+            return True
 
-    def __deactivate_allowance(self, beihilfepaket_id):
-        """Beihilfepaket deaktivieren."""
-        self.beihilfepakete[beihilfepaket_id].aktiv = False
-        self.beihilfepakete[beihilfepaket_id].speichern(self.db)
-        self.beihilfepakete.pop(beihilfepaket_id)
-        del self.list_beihilfepakete[beihilfepaket_id]
+        elif isinstance(element, Allowance):
+            self.db.delete(element)
+            self.allowances.remove(element)
 
+            while self.bills.find({'beihilfe_id': element.db_id}):
+                bill = self.bills.find({'beihilfe_id': element.db_id})
+                bill.beihilfe_id = None
+                self.save(bill)
+            
+            if element.erhalten == False:
+                self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
+            return True
 
-    def new_pkvpaket(self, pkvpaket, rechnungen_db_ids):
-        """Neues PKV-Paket erstellen."""
-        pkvpaket.neu(self.db)
-        self.pkvpakete.append(pkvpaket)
-        self.__list_pkvpakete_append(pkvpaket)
-
-        # PKV-Paket mit Rechnungen verknüpfen
-        for rechnung_db_id in rechnungen_db_ids:
-            index = self.__get_list_index_by_dbid(self.list_rechnungen, rechnung_db_id)
-            self.rechnungen[index].pkv_id = pkvpaket.db_id
-            self.rechnungen[index].speichern(self.db)
-            self.__update_list_rechnungen_id(self.rechnungen[index], index)
-
-        self.__update_list_open_bookings()
-        self.__update_list_rg_beihilfe()
-        self.__update_list_rg_pkv()
-        self.__update_archivables()
-
-
-    def delete_pkvpaket(self, pkvpaket_id):
-        """PKV-Paket löschen."""
-        self.pkvpakete[pkvpaket_id].loeschen(self.db)
-        self.pkvpakete.pop(pkvpaket_id)
-        del self.list_pkvpakete[pkvpaket_id]
-        self.__update_rechnungen()
-        self.__update_list_open_bookings()
-        self.__update_list_rg_beihilfe()
-        self.__update_list_rg_pkv()
-        self.__update_archivables()
-
-
-    def __deactivate_insurance(self, pkvpaket_id):
-        """PKV-Paket deaktivieren."""
-        self.pkvpakete[pkvpaket_id].aktiv = False
-        self.pkvpakete[pkvpaket_id].speichern(self.db)
-        self.pkvpakete.pop(pkvpaket_id)
-        del self.list_pkvpakete[pkvpaket_id]
-
-
-    def new_einrichtung(self, einrichtung):
-        """Neue Einrichtung erstellen."""
-        einrichtung.neu(self.db)
-        self.einrichtungen.append(einrichtung)
-        self.__list_einrichtungen_append(einrichtung)
-
-
-    def edit_einrichtung(self, einrichtung, einrichtung_id):
-        """Einrichtung ändern."""
-        self.einrichtungen[einrichtung_id] = einrichtung
-        self.einrichtungen[einrichtung_id].speichern(self.db)
-        self.__update_list_einrichtungen_id(einrichtung, einrichtung_id)
-        self.__update_rechnungen()
-        self.__update_list_open_bookings()
-
-
-    def delete_einrichtung(self, einrichtung_id):
-        """Einrichtung löschen."""
-        if self.__check_institution_used(self.einrichtungen[einrichtung_id].db_id):
-            return False
-        self.einrichtungen[einrichtung_id].loeschen(self.db)
-        self.einrichtungen.pop(einrichtung_id)
-        del self.list_einrichtungen[einrichtung_id]
-        return True
-
-
-    def deactivate_einrichtung(self, einrichtung_id):
-        """Einrichtung deaktivieren."""
-        if self.__check_institution_used(self.einrichtungen[einrichtung_id].db_id):
-            return False
-        self.einrichtungen[einrichtung_id].aktiv = False
-        self.einrichtungen[einrichtung_id].speichern(self.db)
-        self.einrichtungen.pop(einrichtung_id)
-        del self.list_einrichtungen[einrichtung_id]
-        return True
-
-
-    def __check_institution_used(self, db_id):
-        """Prüft, ob eine Einrichtung verwendet wird."""
-        for bill in self.bills:
-            if bill.einrichtung_id == db_id:
-                print(f'### DatenInterface.__check_institution_used: Institution with id {db_id} is used in bill with id {bill.db_id}')
+        elif isinstance(element, Insurance):
+            self.db.delete(element)
+            self.insurances.remove(element)
+            
+            while self.bills.find({'pkv_id': element.db_id}): 
+                bill = self.bills.find({'pkv_id': element.db_id})
+                bill.pkv_id = None
+                self.save(bill)
+            
+            if element.erhalten == False:
+                self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
+            return True
+        
+        elif isinstance(element, Institution):
+            if not self.__check_institution_used(element):
+                self.db.delete(element)
+                self.institutions.remove(element)
                 return True
-        return False
+            else:
+                return False
+        
+        elif isinstance(element, Person):
+            if not self.__check_person_used(element):
+                self.db.delete(element)
+                self.persons.remove(element)
+                return True
+            else:
+                return False
+
+        else:
+            raise ValueError(f'### DataInterface.delete_element: element type not known')
+            
+    
+    def deactivate(self, element):
+        """Deaktiviert ein Element und gibt zurück, ob es erfolgreich war."""
+        
+        if isinstance(element, Bill):
+            element.aktiv = False
+            self.db.save(element)
+            self.bills.remove(element)
+            if element.bezahlt == False:
+                self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
+            return True
+
+        elif isinstance(element, Allowance):
+            element.aktiv = False
+            self.db.save(element)
+            self.allowances.remove(element)
+            if element.erhalten == False:
+                self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
+            return True
+
+        elif isinstance(element, Insurance):
+            element.aktiv = False
+            self.db.save(element)
+            self.insurances.remove(element)
+            if element.erhalten == False:
+                self.update_open_bookings()
+            self.update_archivables()
+            self.update_open_sum()
+            return True
+
+        elif isinstance(element, Institution):
+            if not self.__check_institution_used(element):
+                element.aktiv = False
+                self.db.save(element)
+                self.institutions.remove(element)
+                return True
+            else:
+                return False
+
+        elif isinstance(element, Person):
+            if not self.__check_person_used(element):
+                element.aktiv = False
+                self.db.save(element)
+                self.persons.remove(element)
+                return True
+            else:
+                return False
+
+        else:
+            raise ValueError(f'### DataInterface.deactivate_element: element type not known')
+            
+
+    def pay_receive(self, element, date=None):
+        """Rechnung bezahlen oder Beihilfe/PKV erhalten."""
+
+        if isinstance(element, Bill):
+            element.bezahlt = True
+            if date is not None:
+                element.buchungsdatum = date
+            elif not element.buchungsdatum:
+                element.buchungsdatum = datetime.now().strftime('%d.%m.%Y')
+            self.save(element)
+            self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'Rechnung'}))
+            self.open_sum += (element.betrag - element.abzug_beihilfe - element.abzug_pkv)
+
+        elif isinstance(element, Allowance):
+            element.erhalten = True
+            self.save(element)
+            self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'Beihilfe'}))
+            self.open_sum -= element.betrag
+
+        elif isinstance(element, Insurance):
+            element.erhalten = True
+            self.save(element)
+            self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'PKV'}))
+            self.open_sum -= element.betrag
+
+        self.update_archivables()
 
 
-    def new_person(self, person):
-        """Neue Person erstellen."""
-        person.neu(self.db)
-        self.personen.append(person)
-        self.__list_personen_append(person)
-
-
-    def edit_person(self, person, person_id):
-        """Person ändern."""
-        self.personen[person_id] = person
-        self.personen[person_id].speichern(self.db)
-        self.__update_list_personen_id(person, person_id)
-        self.__update_rechnungen()
-        self.__update_list_open_bookings()
-
-
-    def delete_person(self, person_id):
-        """Person löschen."""
-        if self.__check_person_used(self.personen[person_id].db_id):
-            return False
-        self.personen[person_id].loeschen(self.db)
-        self.personen.pop(person_id)
-        del self.list_personen[person_id]
-        return True
-
-
-    def deactivate_person(self, person_id):
-        """Person deaktivieren."""
-        if self.__check_person_used(self.personen[person_id].db_id):
-            return False
-        self.personen[person_id].aktiv = False
-        self.personen[person_id].speichern(self.db)
-        self.personen.pop(person_id)
-        del self.list_personen[person_id]
-        return True
-
-
-    def __check_person_used(self, db_id):
+    def __check_person_used(self, person):
         """Prüft, ob eine Person verwendet wird."""
-        for bill in self.bills:
-            if bill.person_id == db_id:
-                print(f'### DatenInterface.__check_person_used: Person with id {db_id} is used in rechnung with id {bill.db_id}')
-                return True
-        return False
+        try:
+            bill = self.bills.find({'person_id': person.db_id})
+            print(f'### DatenInterface.__check_person_used: Person with id {person.db_id} is used in bill with id {bill.db_id}')
+            return True
+        except ValueError:
+            return False
+        
+
+    def __check_institution_used(self, institution):
+        """Prüft, ob eine Einrichtung verwendet wird."""
+        try:
+            bill = self.bills.find({'einrichtung_id': institution.db_id})
+            print(f'### DatenInterface.__check_institution_used: Institution with id {institution.db_id} is used in bill with id {bill.db_id}')
+            return True
+        except ValueError:
+            return False
 
 
-    def update_allowance_amount(self, db_id):
+    def update_submit_amount(self, element):
         """Aktualisiert eine Beihilfe-Einreichung"""
-        print(f'### DatenInterface.update_allowance_amount: Update beihilfepaket with id {db_id}')
-        # Finde die Beihilfe-Einreichung
-        for allowance in self.allowances:
-            if allowance.db_id == db_id:
-                # Alle Rechnungen durchlaufen und den Betrag aktualisieren
-                allowance.betrag = 0
-                inhalt = False
-                for bill in self.bills:
-                    if bill.beihilfe_id == db_id:
-                        inhalt = True
-                        bill.betrag += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
-                # Die Beihilfe-Einreichung speichern
-                if inhalt:
-                    print(f'### DatenInterface.update_allowance_amount: Allowance with id {db_id} has content and is saved')
-                    self.db.save(allowance)
-                else:
-                    print(f'### DatenInterface.update_allowance_amount: Allowance with id {db_id} has no content and is deleted')
-                    self.delete_allowance(self.allowances.index(allowance))
-                break
-            
 
-    def update_insurance_amount(self, db_id):
-        """Aktualisiert eine PKV-Einreichung einer Rechnung."""
-        for insurance in self.insurances:
-            if insurance.db_id == db_id:
-                insurance.betrag = 0
-                inhalt = False
-                for bill in self.bills:
-                    if bill.pkv_id == db_id:
-                        inhalt = True
-                        if self.allowance_active():
-                            insurance.betrag += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
-                        else:
-                            insurance.betrag += bill.betrag - bill.abzug_pkv
-                if inhalt:
-                    print(f'### DatenInterface.update_insurance_amount: PKV-Paket with id {db_id} has content and is saved')
-                    self.db.save(insurance)
+        if not (isinstance(element, Allowance) or isinstance(element, Insurance)):
+            raise ValueError(f'### DatenInterface.update_submit_amount: Element {element} is not an allowance or insurance')
+
+        amount = 0
+        content = False
+        for bill in self.bills:
+            if isinstance(element, Allowance) and bill.beihilfe_id == element.db_id:
+                content = True
+                amount += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
+            
+            if isinstance(element, Insurance) and bill.pkv_id == element.db_id:
+                content = True
+                if self.allowance_active():
+                    amount += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
                 else:
-                    print(f'### DatenInterface.update_insurance_amount: PKV-Paket with id {db_id} has no content and is deleted')
-                    self.delete_insurance(self.insurances.index(insurance))
-                break         
+                    amount += bill.betrag - bill.abzug_pkv
+
+        if content:
+            element.betrag = amount
+            self.db.save(element)
+        else:
+            self.delete(element)
 
 
     def update_bills(self):
@@ -1702,7 +1555,6 @@ class DataInterface:
                     bill.einrichtung_name = ''
                 else:
                     bill.einrichtung_name = self.institutions.find({ 'db_id' : bill.einrichtung_id }).name
-                
 
             # Aktualisiere die Person
             if bill.person_id:
@@ -1774,3 +1626,69 @@ class DataInterface:
         for bill in self.bills:
             if not bill.pkv_id:
                 self.insurances_bills.append(Bill(**bill.__dict__))
+
+    
+    def update_open_sum(self):
+        """Aktualisiert die Summe der offenen Buchungen."""
+        sum = 0.00
+        
+        if self.bills is not None:
+            for bill in self.bills:
+                if bill.bezahlt == False:
+                    sum -= bill.betrag
+                if self.allowance_active() and bill.beihilfe_id == None:
+                    sum += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
+                if bill.pkv_id == None:
+                    if self.allowance_active():
+                        sum += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
+                    else:
+                        sum += bill.betrag - bill.abzug_pkv
+        
+        if self.allowance_active() and self.allowances is not None:
+            for submit in self.allowances:
+                if submit.erhalten == False:
+                    sum += submit.betrag
+
+        if self.insurances is not None:
+            for submit in self.insurances:
+                if submit.erhalten == False:
+                    sum += submit.betrag
+
+        self.open_sum.value = sum
+
+    def update_archivables(self):
+        """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""
+
+        temp = {
+            'Rechnung' : [],
+            'Beihilfe' : set(),
+            'PKV' : set()
+        }
+
+        for i, bill in enumerate(self.bills):
+            if bill.bezahlt and (bill.beihilfe_id or not self.allowance_active()) and bill.pkv_id:
+                allowance = self.allowances.find({ 'db_id' : bill.beihilfe_id})
+                insurance = self.insurances.find({ 'db_id' : bill.pkv_id})
+                if ((allowance and allowance.erhalten) or not self.allowance_active()) and insurance and insurance.erhalten:
+                    # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
+                    other_bills = [ar for ar in self.bill if (self.allowance_active() and ar.beihilfe_id == allowance.db_id) or ar.pkv_id == insurance.db_id]
+                    if all(ar.bezahlt for ar in other_bills):
+                        temp['Rechnung'].append(i)
+                        if self.allowance_active():
+                            temp['Beihilfe'].add(self.beihilfepakete.index(allowance))
+                        temp['PKV'].add(self.pkvpakete.index(insurance))
+
+        # Convert sets back to lists
+        temp['Beihilfe'] = list(temp['Beihilfe'])
+        temp['PKV'] = list(temp['PKV'])
+
+        # sort the lists in reverse order
+        temp['Rechnung'].sort(reverse=True)
+        temp['Beihilfe'].sort(reverse=True)
+        temp['PKV'].sort(reverse=True)
+
+        # convert to listSource
+        self.archivables.clear()
+        self.archivables.append(self.archivables)
+
+        print(f'### DatenInterface.__update_archivables: Archivables updated: {self.archivables}')
