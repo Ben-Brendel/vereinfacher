@@ -4,7 +4,7 @@ import sqlite3 as sql
 import shutil
 from pathlib import Path
 from datetime import datetime
-from toga.sources import ListSource, Row
+from toga.sources import ListSource, ValueSource, Row
 from kontolupe.listeners import *
 
 DATABASE_VERSION = 1
@@ -23,16 +23,34 @@ BILLS_ATTRIBUTES = [
         'default_value': 0.0,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'betrag_euro',
+        'default_value': '0,00 €',
+    },
+    {
         'name_db': 'abzug_beihilfe',
         'type_db': 'REAL',
         'name_object': 'abzug_beihilfe',
         'default_value': 0.0,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'abzug_beihilfe_euro',
+        'default_value': '0,00 €',
+    },
+    {
         'name_db': 'abzug_pkv',
         'type_db': 'REAL',
         'name_object': 'abzug_pkv',
         'default_value': 0.0,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'abzug_pkv_euro',
+        'default_value': '0,00 €',
     },
     {
         'name_db': 'rechnungsdatum',
@@ -47,10 +65,22 @@ BILLS_ATTRIBUTES = [
         'default_value': None,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'einrichtung_name',
+        'default_value': '',
+    },
+    {
         'name_db': 'notiz',
         'type_db': 'TEXT',
         'name_object': 'notiz',
         'default_value': None,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'info',
+        'default_value': '',
     },
     {
         'name_db': 'person_id',
@@ -59,10 +89,22 @@ BILLS_ATTRIBUTES = [
         'default_value': None,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'person_name',
+        'default_value': '',
+    },
+    {
         'name_db': 'beihilfesatz',
         'type_db': 'INTEGER',
         'name_object': 'beihilfesatz',
         'default_value': None,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'beihilfesatz_prozent',
+        'default_value': '0 %',
     },
     {
         'name_db': 'buchungsdatum',
@@ -83,16 +125,34 @@ BILLS_ATTRIBUTES = [
         'default_value': False,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'bezahlt_text',
+        'default_value': 'Nein',
+    },
+    {
         'name_db': 'beihilfe_id',
         'type_db': 'INTEGER',
         'name_object': 'beihilfe_id',
         'default_value': None,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'beihilfe_eingereicht',
+        'default_value': 'Nein',
+    },
+    {
         'name_db': 'pkv_id',
         'type_db': 'INTEGER',
         'name_object': 'pkv_id',
         'default_value': None,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'pkv_eingereicht',
+        'default_value': 'Nein',
     },
 ]
 
@@ -110,6 +170,12 @@ ALLOWANCE_ATTRIBUTES = [
         'default_value': 0.0,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'betrag_euro',
+        'default_value': '0,00 €',
+    },
+    {
         'name_db': 'datum',
         'type_db': 'TEXT',
         'name_object': 'datum',
@@ -126,6 +192,12 @@ ALLOWANCE_ATTRIBUTES = [
         'type_db': 'INTEGER',
         'name_object': 'erhalten',
         'default_value': False,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'erhalten_text',
+        'default_value': 'Nein',
     },
 ]
 
@@ -143,6 +215,12 @@ INSURANCE_ATTRIBUTES = [
         'default_value': 0.0,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'betrag_euro',
+        'default_value': '0,00 €',
+    },
+    {
         'name_db': 'datum',
         'type_db': 'TEXT',
         'name_object': 'datum',
@@ -159,6 +237,12 @@ INSURANCE_ATTRIBUTES = [
         'type_db': 'INTEGER',
         'name_object': 'erhalten',
         'default_value': False,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'erhalten_text',
+        'default_value': 'Nein',
     },
 ]
 
@@ -192,6 +276,12 @@ INSTITUTION_ATTRIBUTES = [
         'type_db': 'TEXT',
         'name_object': 'ort',
         'default_value': None,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'plz_ort',
+        'default_value': '',
     },
     {
         'name_db': 'telefon',
@@ -245,6 +335,12 @@ PERSON_ATTRIBUTES = [
         'default_value': None,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'beihilfesatz_prozent',
+        'default_value': '0 %',
+    },
+    {
         'name_db': 'aktiv',
         'type_db': 'INTEGER',
         'name_object': 'aktiv',
@@ -272,23 +368,28 @@ class Database:
         self.__tables = {}
         self.__tables['rechnungen'] = []
         for attribute in BILLS_ATTRIBUTES:
-            self.__tables['rechnungen'].append((attribute['name_db'], attribute['type_db']))
+            if attribute['name_db'] is not None:
+                self.__tables['rechnungen'].append((attribute['name_db'], attribute['type_db']))
         
         self.__tables['beihilfepakete'] = []
         for attribute in ALLOWANCE_ATTRIBUTES:
-            self.__tables['beihilfepakete'].append((attribute['name_db'], attribute['type_db']))
+            if attribute['name_db'] is not None:
+                self.__tables['beihilfepakete'].append((attribute['name_db'], attribute['type_db']))
         
         self.__tables['pkvpakete'] = []
         for attribute in INSURANCE_ATTRIBUTES:
-            self.__tables['pkvpakete'].append((attribute['name_db'], attribute['type_db']))
+            if attribute['name_db'] is not None:
+                self.__tables['pkvpakete'].append((attribute['name_db'], attribute['type_db']))
         
         self.__tables['einrichtungen'] = []
         for attribute in INSTITUTION_ATTRIBUTES:
-            self.__tables['einrichtungen'].append((attribute['name_db'], attribute['type_db']))
+            if attribute['name_db'] is not None:
+                self.__tables['einrichtungen'].append((attribute['name_db'], attribute['type_db']))
         
         self.__tables['personen'] = []
         for attribute in PERSON_ATTRIBUTES:
-            self.__tables['personen'].append((attribute['name_db'], attribute['type_db']))
+            if attribute['name_db'] is not None:
+                self.__tables['personen'].append((attribute['name_db'], attribute['type_db']))
 
         # Dictionary, welches die umzubenennenden Spalten enthält.
         # Die Spalten werden von einer alten Tabellenversion auf die neueste Tabellenversion migriert.
@@ -856,7 +957,23 @@ class Bill(Row):
         init_data = {}
         for attribute in BILLS_ATTRIBUTES:
             if attribute['name_object']:
-                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+                match attribute['name_object']:
+                    case 'betrag_euro':
+                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag', 0)).replace('.', ',') 
+                    case 'abzug_beihilfe_euro':
+                        init_data['abzug_beihilfe_euro'] = '{:.2f} €'.format(data.get('abzug_beihilfe', 0)).replace('.', ',')
+                    case 'abzug_pkv_euro':
+                        init_data['abzug_pkv_euro'] = '{:.2f} €'.format(data.get('abzug_pkv', 0)).replace('.', ',')
+                    case 'beihilfesatz_prozent':
+                        init_data['beihilfesatz_prozent'] = '{:.0f} %'.format(data.get('beihilfesatz', 0))
+                    case 'bezahlt_text':
+                        init_data['bezahlt_text'] = 'Ja' if data.get('bezahlt', False) else 'Nein'
+                    case 'beihilfe_eingereicht':
+                        init_data['beihilfe_eingereicht'] = 'Ja' if data.get('beihilfe_id', None) else 'Nein'
+                    case 'pkv_eingereicht':
+                        init_data['pkv_eingereicht'] = 'Ja' if data.get('pkv_id', None) else 'Nein'
+                    case _:
+                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
 
         super().__init__(**init_data)
     
@@ -869,7 +986,13 @@ class Allowance(Row):
         init_data = {}
         for attribute in ALLOWANCE_ATTRIBUTES:
             if attribute['name_object']:
-                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+                match attribute['name_object']:
+                    case 'betrag_euro':
+                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag', 0)).replace('.', ',') 
+                    case 'erhalten_text':
+                        init_data['erhalten_text'] = 'Ja' if data.get('erhalten', False) else 'Nein'
+                    case _:
+                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
 
         super().__init__(**init_data)
 
@@ -900,7 +1023,13 @@ class Insurance(Row):
         init_data = {}
         for attribute in INSURANCE_ATTRIBUTES:
             if attribute['name_object']:
-                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+                match attribute['name_object']:
+                    case 'betrag_euro':
+                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag', 0)).replace('.', ',') 
+                    case 'erhalten_text':
+                        init_data['erhalten_text'] = 'Ja' if data.get('erhalten', False) else 'Nein'
+                    case _:
+                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
         
         super().__init__(**init_data)
 
@@ -933,7 +1062,11 @@ class Institution(Row):
         init_data = {}
         for attribute in INSTITUTION_ATTRIBUTES:
             if attribute['name_object']:
-                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+                match attribute['name_object']:
+                    case 'plz_ort':
+                        init_data['plz_ort'] = (data.get('plz', '') or '') + (' ' if data.get('plz', '') else '') + (data.get('ort', '') or '')
+                    case _:
+                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
         
         super().__init__(**init_data)
     
@@ -946,7 +1079,12 @@ class Person(Row):
         init_data = {}
         for attribute in PERSON_ATTRIBUTES:
             if attribute['name_object']:
-                init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+                match attribute['name_object']:
+                    case 'beihilfesatz_prozent':
+                        init_data['beihilfesatz_prozent'] = '{:.0f} %'.format(data.get('beihilfesatz', 0))
+                    case _:
+                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
+
         super().__init__(**init_data)
     
 
@@ -962,73 +1100,33 @@ class DataInterface:
         # Init-Dictionary laden
         self.init = self.db.load_init_file()
 
-        # ListSources für die GUI erstellen
-        # Diese enthalten alle Felder der Datenbank und zusätzliche Felder für die GUI
-        accessors_bills = [
-                'db_id', 
-                'betrag', 
-                'abzug_beihilfe',
-                'abzug_pkv',
-                'betrag_euro',
-                'abzug_beihilfe_euro',
-                'abzug_pkv_euro',
-                'rechnungsdatum', 
-                'einrichtung_id', 
-                'notiz', 
-                'einrichtung_name', 
-                'info', 
-                'person_id',
-                'person_name',
-                'beihilfesatz', 
-                'beihilfesatz_prozent',
-                'buchungsdatum', 
-                'bezahlt', 
-                'bezahlt_text',
-                'beihilfe_id', 
-                'beihilfe_eingereicht',
-                'pkv_id'
-                'pkv_eingereicht'
-            ]
+        # Accessors generieren
+        self.accessors_bills = []
+        for attribute in BILLS_ATTRIBUTES:
+            if attribute['name_object']:
+                self.accessors_bills.append(attribute['name_object'])
         
-        accessors_allowances = [
-                'db_id',
-                'betrag',
-                'betrag_euro',
-                'datum',
-                'erhalten',
-                'erhalten_text'
-            ]
+        self.accessors_allowances = []
+        for attribute in ALLOWANCE_ATTRIBUTES:
+            if attribute['name_object']:
+                self.accessors_allowances.append(attribute['name_object'])
+
+        self.accessors_insurances = []
+        for attribute in INSURANCE_ATTRIBUTES:
+            if attribute['name_object']:
+                self.accessors_insurances.append(attribute['name_object'])
+
+        self.accessors_institutions = []
+        for attribute in INSTITUTION_ATTRIBUTES:
+            if attribute['name_object']:
+                self.accessors_institutions.append(attribute['name_object'])
+
+        self.accessors_persons = []
+        for attribute in PERSON_ATTRIBUTES:
+            if attribute['name_object']:
+                self.accessors_persons.append(attribute['name_object'])
         
-        accessors_institutions = [
-                'db_id',
-                'name',
-                'strasse',
-                'plz',
-                'ort',
-                'plz_ort',
-                'telefon',
-                'email',
-                'webseite',
-                'notiz'
-            ]
-        
-        accessors_persons = [
-                'db_id',
-                'name',
-                'beihilfesatz',
-                'beihilfesatz_prozent',
-            ]
-        
-        accessors_insurances = [
-                'db_id',
-                'betrag',
-                'betrag_euro',
-                'datum',
-                'erhalten',
-                'erhalten_text'
-            ]
-        
-        accessors_open_bookings = [
+        self.accessors_open_bookings = [
                 'db_id',                        # Datenbank-Id des jeweiligen Elements
                 'typ',                          # Typ des Elements (Rechnung, Beihilfe, PKV)
                 'betrag_euro',                  # Betrag der Buchung in Euro
@@ -1037,79 +1135,49 @@ class DataInterface:
                 'info'                          # Info-Text der Buchung
             ]
         
-        accessors_archivables = [
+        self.accessors_archivables = [
                 'Rechnung',
                 'Beihilfe',
                 'PKV'
             ]
 
-        self.bills = ListSource(accessors = accessors_bills)
-        self.institutions = ListSource(accessors = accessors_institutions)
-        self.persons = ListSource(accessors = accessors_persons)
-        self.allowances = ListSource(accessors = accessors_allowances)
-        self.insurances = ListSource(accessors = accessors_insurances)
+        self.bills = ListSource(accessors = self.accessors_bills)
+        self.institutions = ListSource(accessors = self.accessors_institutions)
+        self.persons = ListSource(accessors = self.accessors_persons)
+        self.allowances = ListSource(accessors = self.accessors_allowances)
+        self.insurances = ListSource(accessors = self.accessors_insurances)
         
-        self.allowances_bills = ListSource(accessors = accessors_bills)
-        self.insurances_bills = ListSource(accessors = accessors_bills)
-        self.open_bookings = ListSource(accessors = accessors_open_bookings)
-        self.archivables = ListSource(accessors = accessors_archivables)
+        self.allowances_bills = ListSource(accessors = self.accessors_bills)
+        self.insurances_bills = ListSource(accessors = self.accessors_bills)
+        self.open_bookings = ListSource(accessors = self.accessors_open_bookings)
+        self.archivables = ListSource(accessors = self.accessors_archivables)
+
+        self.open_sum = ValueSource()
 
         # Aktive Einträge aus der Datenbank laden
         self.bills = self.db.load_bills()
         self.allowances = self.db.load_allowances()
         self.insurances = self.db.load_insurances()
         self.institutions = self.db.load_institutions()
-        self.persons = self.db.load_persons()
+        self.persons = self.db.load_persons()        
 
-        # Make initializations and correct the data
-        for bill in self.bills:            
-            if bill.betrag == None:
-                bill.betrag = 0
-            if bill.abzug_beihilfe == None:
-                bill.abzug_beihilfe = 0
-            if bill.abzug_pkv == None:
-                bill.abzug_pkv = 0
-            if bill.beihilfe_id != None:
-                if self.get_allowance_by_dbid(bill.beihilfe_id) == None:
-                    bill.beihilfe_id = None
-            if bill.pkv_id != None:
-                if self.get_insurance_by_dbid(bill.pkv_id) == None:
-                    bill.pkv_id = None
-            self.extend(bill)
-
-        for institution in self.institutions:            
-            self.extend(institution)
-
-        for person in self.persons:            
-            if person.beihilfesatz == None:
-                person.beihilfesatz = 0
-            self.extend(person)
-
-        for allowance in self.allowances:      
-            if allowance.betrag == None:
-                allowance.betrag = 0      
-            self.extend(allowance)
-
-        for insurance in self.insurances: 
-            if insurance.betrag == None:
-                insurance.betrag = 0           
-            self.extend(insurance)
-
-        # Sekundäre Listen initialisieren
+        # Listen initialisieren
+        self.update_bills()
         self.update_allowances_bills()
         self.update_insurances_bills()
         self.update_open_bookings()
         self.update_archivables()
+        self.update_open_sum()
 
         # Listeners
-        self.bills.add_listener(ListListener(self, self.allowances_bills))
-        self.bills.add_listener(ListListener(self, self.insurances_bills))
-        self.bills.add_listener(ListListener(self, self.open_bookings))
-        self.bills.add_listener(ListListener(self, self.archivables))
-        self.allowances.add_listener(ListListener(self, self.open_bookings))
-        self.allowances.add_listener(ListListener(self, self.archivables))
-        self.insurances.add_listener(ListListener(self, self.open_bookings))
-        self.insurances.add_listener(ListListener(self, self.archivables))
+        # self.bills.add_listener(ListListener(self, self.allowances_bills))
+        # self.bills.add_listener(ListListener(self, self.insurances_bills))
+        # self.bills.add_listener(ListListener(self, self.open_bookings))
+        # self.bills.add_listener(ListListener(self, self.archivables))
+        # self.allowances.add_listener(ListListener(self, self.open_bookings))
+        # self.allowances.add_listener(ListListener(self, self.archivables))
+        # self.insurances.add_listener(ListListener(self, self.open_bookings))
+        # self.insurances.add_listener(ListListener(self, self.archivables))
 
     def initialized(self):
         """Prüft, ob die Anwendung initialisiert wurde. Default ist False."""
@@ -1152,44 +1220,68 @@ class DataInterface:
         """Lädt die Initialisierungsdatei und speichert sie in der Klassenvariable."""
         self.init = self.db.load_init_file()
 
-    def __update_archivables(self):
+    def update_open_sum(self):
+        """Aktualisiert die Summe der offenen Buchungen."""
+        sum = 0.00
+        
+        if self.bills is not None:
+            for bill in self.bills:
+                if bill.bezahlt == False:
+                    sum -= bill.betrag
+                if self.allowance_active() and bill.beihilfe_id == None:
+                    sum += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
+                if bill.pkv_id == None:
+                    if self.allowance_active():
+                        sum += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
+                    else:
+                        sum += bill.betrag - bill.abzug_pkv
+        
+        if self.allowance_active() and self.allowances is not None:
+            for submit in self.allowances:
+                if submit.erhalten == False:
+                    sum += submit.betrag
+
+        if self.insurances is not None:
+            for submit in self.insurances:
+                if submit.erhalten == False:
+                    sum += submit.betrag
+
+        self.open_sum.value = sum
+
+    def update_archivables(self):
         """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""
 
-        self.archivables = {
+        temp = {
             'Rechnung' : [],
             'Beihilfe' : set(),
             'PKV' : set()
         }
 
-        # Create dictionaries for quick lookup of beihilfepakete and pkvpakete by db_id
-        beihilfepakete_dict = {paket.db_id: paket for paket in self.beihilfepakete}
-        pkvpakete_dict = {paket.db_id: paket for paket in self.pkvpakete}
-
-        for i, rechnung in enumerate(self.rechnungen):
-            if rechnung.bezahlt and (rechnung.beihilfe_id or not self.beihilfe_aktiv()) and rechnung.pkv_id:
-                beihilfepaket = beihilfepakete_dict.get(rechnung.beihilfe_id)
-                pkvpaket = pkvpakete_dict.get(rechnung.pkv_id)
-                if ((beihilfepaket and beihilfepaket.erhalten) or not self.beihilfe_aktiv()) and pkvpaket and pkvpaket.erhalten:
+        for i, bill in enumerate(self.bills):
+            if bill.bezahlt and (bill.beihilfe_id or not self.allowance_active()) and bill.pkv_id:
+                allowance = self.allowances.find({ 'db_id' : bill.beihilfe_id})
+                insurance = self.insurances.find({ 'db_id' : bill.pkv_id})
+                if ((allowance and allowance.erhalten) or not self.allowance_active()) and insurance and insurance.erhalten:
                     # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
-                    other_rechnungen = [ar for ar in self.rechnungen if (self.beihilfe_aktiv() and ar.beihilfe_id == beihilfepaket.db_id) or ar.pkv_id == pkvpaket.db_id]
-                    if all(ar.bezahlt for ar in other_rechnungen):
-                        self.archivables['Rechnung'].append(i)
-                        if self.beihilfe_aktiv():
-                            self.archivables['Beihilfe'].add(self.beihilfepakete.index(beihilfepaket))
-                        self.archivables['PKV'].add(self.pkvpakete.index(pkvpaket))
+                    other_bills = [ar for ar in self.bill if (self.allowance_active() and ar.beihilfe_id == allowance.db_id) or ar.pkv_id == insurance.db_id]
+                    if all(ar.bezahlt for ar in other_bills):
+                        temp['Rechnung'].append(i)
+                        if self.allowance_active():
+                            temp['Beihilfe'].add(self.beihilfepakete.index(allowance))
+                        temp['PKV'].add(self.pkvpakete.index(insurance))
 
         # Convert sets back to lists
-        self.archivables['Beihilfe'] = list(self.archivables['Beihilfe'])
-        self.archivables['PKV'] = list(self.archivables['PKV'])
+        temp['Beihilfe'] = list(temp['Beihilfe'])
+        temp['PKV'] = list(temp['PKV'])
 
         # sort the lists in reverse order
-        self.archivables['Rechnung'].sort(reverse=True)
-        self.archivables['Beihilfe'].sort(reverse=True)
-        self.archivables['PKV'].sort(reverse=True)
+        temp['Rechnung'].sort(reverse=True)
+        temp['Beihilfe'].sort(reverse=True)
+        temp['PKV'].sort(reverse=True)
 
-        # self.list_archivables should now get the same content as self.archivables
-        self.list_archivables.clear()
-        self.list_archivables.append(self.archivables)
+        # convert to listSource
+        self.archivables.clear()
+        self.archivables.append(self.archivables)
 
         print(f'### DatenInterface.__update_archivables: Archivables updated: {self.archivables}')
 
@@ -1206,61 +1298,67 @@ class DataInterface:
         for i in self.archivables['PKV']:
             self.__deactivate_insurance(i)
 
-        self.__update_archivables()
+        self.update_archivables()
         
 
     def get_bill_by_dbid(self, db_id):
         """Gibt eine Rechnung anhand der ID zurück."""
-        for bill in self.bills:
-            if bill.db_id == db_id:
-                return bill
-        print(f'### DatenInterface.get_bill_by_dbid: No bill found with id {db_id}')
-        return None
-    
+        try:
+            return self.bills.find({'db_id': db_id})
+        except ValueError:
+            print(f'### DatenInterface.get_bill_by_dbid: No bill found with id {db_id}')
+            return None
 
-    def get_beihilfepaket_by_dbid(self, db_id):
+    def get_allowance_by_dbid(self, db_id):
         """Gibt ein Beihilfepaket anhand der ID zurück."""
-        for allowance in self.allowances:
-            if allowance.db_id == db_id:
-                return allowance
-        print(f'### DatenInterface.get_allowance_by_dbid: No allowance found with id {db_id}')
-        return None
-    
+        try:
+            return self.allowances.find({'db_id': db_id})
+        except ValueError:
+            print(f'### DatenInterface.get_allowance_by_dbid: No allowance found with id {db_id}')
+            return None
 
-    def get_pkvpaket_by_dbid(self, db_id):
+    def get_insurance_by_dbid(self, db_id):
         """Gibt ein PKV-Paket anhand der ID zurück."""
-        for insurance in self.insurances:
-            if insurance.db_id == db_id:
-                return insurance
-        print(f'### DatenInterface.get_insurance_by_dbid: No insurance found with id {db_id}')
-        return None
-    
+        try:
+            return self.insurances.find({'db_id': db_id})
+        except ValueError:
+            print(f'### DatenInterface.get_insurance_by_dbid: No insurance found with id {db_id}')
+            return None
 
     def get_institution_by_dbid(self, db_id):
         """Gibt eine Einrichtung anhand der ID zurück."""
-        for institution in self.institutions:
-            if institution.db_id == db_id:
-                return institution
-        print(f'### DatenInterface.get_institution_by_dbid: No institution found with id {db_id}')
-        return None
-    
+        try:
+            return self.institutions.find({'db_id': db_id})
+        except ValueError:
+            print(f'### DatenInterface.get_institution_by_dbid: No institution found with id {db_id}')
+            return None
 
     def get_person_by_dbid(self, db_id):
         """Gibt eine Person anhand der ID zurück."""
-        for person in self.persons:
-            if person.db_id == db_id:
-                return person
-        print(f'### DatenInterface.get_person_by_dbid: No person found with id {db_id}')
-        return None
-    
+        try:
+            return self.persons.find({'db_id': db_id})
+        except ValueError:
+            print(f'### DatenInterface.get_person_by_dbid: No person found with id {db_id}')
+            return None
 
     def get_allowance_by_name(self, name):
         """Gibt den Beihilfesatz einer Person anhand des Namens zurück."""
-        for person in self.persons:
-            if person.name == name:
-                print(f'### DatenInterface.get_allowance_by_name: Found allowance percentage for person {name}')
-                return person.beihilfesatz
-        return None
+        try:
+            person = self.persons.find({'name': name})
+            print(f'### DatenInterface.get_allowance_by_name: Found allowance percentage for person {name}')
+            return person.beihilfesatz
+        except ValueError:
+            return None
+        
+    
+    def __get_list_index_by_dbid(self, list_source, db_id):
+        """Ermittelt den Index eines Elements einer Liste anhand der ID."""
+        try:
+            row = list_source.find({'db_id': db_id})
+            return list_source.index(row)
+        except ValueError:
+            print(f'### DatenInterface.__get_list_index_by_dbid: No element found with id {db_id}')
+            return None
     
 
     def get_bill_index_by_dbid(self, db_id):
@@ -1271,7 +1369,7 @@ class DataInterface:
         return index
     
 
-    def get_institutions_index_by_dbid(self, db_id):
+    def get_institution_index_by_dbid(self, db_id):
         """Gibt den Index einer Einrichtung anhand der ID zurück."""
         index = self.__get_list_index_by_dbid(self.institutions, db_id)
         if index is None:
@@ -1289,13 +1387,11 @@ class DataInterface:
 
     def new_rechnung(self, rechnung):
         """Neue Rechnung erstellen."""
-        rechnung.neu(self.db)
+        rechnung.db_id = self.db.new(rechnung)
         self.rechnungen.append(rechnung)
-        self.__list_rechnungen_append(rechnung)
-        self.__update_list_open_bookings()
-        self.__update_list_rg_beihilfe()
-        self.__update_list_rg_pkv()
-        self.__update_archivables()
+
+        if not rechnung.bezahlt:
+            self.open_bookings.append(rechnung)
 
 
     def edit_rechnung(self, rechnung, rg_id):
@@ -1575,61 +1671,8 @@ class DataInterface:
                 else:
                     print(f'### DatenInterface.update_insurance_amount: PKV-Paket with id {db_id} has no content and is deleted')
                     self.delete_insurance(self.insurances.index(insurance))
-                break
-    
+                break         
 
-    def __get_list_index_by_dbid(self, list_source, db_id):
-        """Ermittelt den Index eines Elements einer Liste anhand der ID."""
-        for i, element in enumerate(list_source):
-            if element.db_id == db_id:
-                return i
-        else:
-            print(f'### DatenInterface.__get_list_index_by_dbid: No element found with id {db_id}')
-            return None
-
-
-    def __person_name(self, person_id):
-        """Gibt den Namen einer Person zurück."""
-        for person in self.personen:
-            if person.db_id == person_id:
-                return person.name
-        print(f'### DatenInterface.__person_name: No person found with id {person_id}')
-        return ''
-    
-
-    def __institution_name(self, einrichtung_id):
-        """Gibt den Namen einer Einrichtung zurück."""
-        for einrichtung in self.einrichtungen:
-            if einrichtung.db_id == einrichtung_id:
-                return einrichtung.name
-        print(f'### DatenInterface.__einrichtung_name: No einrichtung found with id {einrichtung_id}')
-        return ''
-    
-
-    def extend(self, element):
-        """Erweitert ein Element um die referenzierten Werte."""
-        match isinstance(element):
-            case Bill():
-                element.betrag_euro = '{:.2f} €'.format(element.betrag).replace('.', ',') if element.betrag else '0,00 €'
-                element.abzug_beihilfe_euro = '{:.2f} €'.format(element.abzug_beihilfe).replace('.', ',') if element.abzug_beihilfe else '0,00 €'
-                element.abzug_pkv_euro = '{:.2f} €'.format(element.abzug_pkv).replace('.', ',') if element.abzug_pkv else '0,00 €'
-                element.person_name = self.__person_name(element.person_id)
-                element.institution_name = self.__institution_name(element.institution_id)
-                element.info = (element.person_name + ', ' if element.person_name else '') + element.institution_name
-                element.beihilfesatz_prozent = '{:.0f} %'.format(element.beihilfesatz) if element.beihilfesatz else '0 %'
-                element.bezahlt_text = 'Ja' if element.bezahlt else 'Nein'
-                element.beihilfe_eingereicht = 'Ja' if element.beihilfe_id else 'Nein'
-                element.pkv_eingereicht = 'Ja' if element.pkv_id else 'Nein'
-            case Allowance(): 
-                element.betrag_euro = '{:.2f} €'.format(element.betrag).replace('.', ',') if element.betrag else '0,00 €'
-                element.erhalten_text = 'Ja' if element.erhalten else 'Nein'
-            case Insurance():
-                element.betrag_euro = '{:.2f} €'.format(element.betrag).replace('.', ',') if element.betrag else '0,00 €'
-                element.erhalten_text = 'Ja' if element.erhalten else 'Nein'
-            case Institution():
-                element.plz_ort = (element.plz or '') + (' ' if element.plz else '') + (element.ort or '')
-            case Person():
-                element.beihilfesatz_prozent = '{:.0f} %'.format(element.beihilfesatz) if element.beihilfesatz else '0 %'
 
     def update_bills(self):
         """Aktualisiert die referenzierten Werte in den Rechnungen und speichert sie in der Datenbank."""
@@ -1638,31 +1681,38 @@ class DataInterface:
 
             # Aktualisiere die Beihilfe
             if bill.beihilfe_id:
-                # If the allowance does not exist, reset the allowance
+                # If the allowance does not exist, reset the allowance id
                 if not any(allowance.db_id == bill.beihilfe_id for allowance in self.allowances):
                     print(f'### DatenInterface.__update_rechnungen: Beihilfepaket with id {bill.beihilfe_id} not found, reset beihilfe in rechnung with id {bill.db_id}')
                     bill.beihilfe_id = None
 
             # Aktualisiere die PKV
             if bill.pkv_id:
-                # If the insurance does not exist, reset the insurance
+                # If the insurance does not exist, reset the insurance id
                 if not any(insurance.db_id == bill.pkv_id for insurance in self.insurances):
                     print(f'### DatenInterface.__update_rechnungen: PKV-Paket with id {bill.pkv_id} not found, reset pkv in rechnung with id {bill.db_id}')
                     bill.pkv_id = None
 
             # Aktualisiere die Einrichtung
             if bill.einrichtung_id:
-                # If the institution does not exist, reset the institution
+                # If the institution does not exist, reset the institution id
                 if not any(institution.db_id == bill.einrichtung_id for institution in self.institutions):
                     print(f'### DatenInterface.__update_rechnungen: Institution with id {bill.einrichtung_id} not found, reset einrichtung in rechnung with id {bill.db_id}')
                     bill.einrichtung_id = None
+                    bill.einrichtung_name = ''
+                else:
+                    bill.einrichtung_name = self.institutions.find({ 'db_id' : bill.einrichtung_id }).name
+                
 
             # Aktualisiere die Person
             if bill.person_id:
-                # If the person does not exist, reset the person
+                # If the person does not exist, reset the person id
                 if not any(person.db_id == bill.person_id for person in self.persons):
                     print(f'### DatenInterface.__update_rechnungen: Person with id {bill.person_id} not found, reset person in rechnung with id {bill.db_id}')
                     bill.person_id = None
+                    bill.person_name = ''
+                else:
+                    bill.person_name = self.persons.find({ 'db_id' : bill.person_id }).name
             
             # Aktualisierte Rechnung speichern
             self.db.save(bill)
@@ -1670,12 +1720,11 @@ class DataInterface:
 
     def update_open_bookings(self):
         """Aktualisiert die Liste der offenen Buchungen."""
-
-        self.open_bookings.clear()
-
+        new_list = ListSource(accessors = self.accessors_open_bookings)
+        
         for bill in self.bills:
             if not bill.bezahlt:
-                self.open_bookings.append({
+                new_list.append({
                     'db_id': bill.db_id,
                     'typ': 'Rechnung',
                     'betrag_euro': '-{:.2f} €'.format(bill.betrag).replace('.', ',') if bill.betrag else '0,00 €',
@@ -1687,7 +1736,7 @@ class DataInterface:
         if self.allowance_active():
             for allowance in self.allowances:
                 if not allowance.erhalten:
-                    self.open_bookings.append({
+                    new_list.append({
                         'db_id': allowance.db_id,
                         'typ': 'Beihilfe',
                         'betrag_euro': '+{:.2f} €'.format(allowance.betrag).replace('.', ',') if allowance.betrag else '0,00 €',
@@ -1698,7 +1747,7 @@ class DataInterface:
 
         for insurance in self.insurances:
             if not insurance.erhalten:
-                self.open_bookings.append({
+                new_list.append({
                     'db_id': insurance.db_id,
                     'typ': 'PKV',
                     'betrag_euro': '+{:.2f} €'.format(insurance.betrag).replace('.', ',') if insurance.betrag else '0,00 €',
@@ -1707,28 +1756,21 @@ class DataInterface:
                     'info': 'PKV-Einreichung'
                 })
 
+        self.open_bookings.clear()
+        self.open_bookings.append(new_list)
+
 
     def update_allowances_bills(self):
         """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die Beihilfe."""
-
         self.allowances_bills.clear()
-
         for bill in self.bills:
             if not bill.beihilfe_id:
-                # A copy of the bill should be appended to the list
-                # self.bills is a ListSource of Row objects, so we need to create a new Row object
-                # with the same data as the bill
                 self.allowances_bills.append(Bill(**bill.__dict__))
 
 
     def update_insurances_bills(self):
         """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die PKV."""
-
         self.insurances_bills.clear()
-
         for bill in self.bills:
             if not bill.pkv_id:
-                # A copy of the bill should be appended to the list
-                # self.bills is a ListSource of Row objects, so we need to create a new Row object
-                # with the same data as the bill
                 self.insurances_bills.append(Bill(**bill.__dict__))

@@ -38,20 +38,12 @@ def add_newlines(input_string, max_line_length):
 class SectionOpenSum(toga.Box):
     """Erzeugt den Anzeigebereich für den offenen Betrag."""
 
-    def __init__(self, window, allowance=True, list_bills=None, list_allowance=None, list_insurance=None, **kwargs):
+    def __init__(self, window, value_source=True, **kwargs):
         super().__init__(style=style_box_offene_buchungen)
-        self.list_bills = list_bills
-        self.list_allowance = list_allowance
-        self.list_insurance = list_insurance
-        self.allowance = allowance
+        self.value_source = value_source
 
         self.listener = SectionListener(self)
-        if self.list_bills is not None:
-            self.list_bills.add_listener(self.listener)
-        if self.list_allowance is not None:
-            self.list_allowance.add_listener(self.listener)
-        if self.list_insurance is not None:
-            self.list_insurance.add_listener(self.listener)
+        self.value_source.add_listener(self.listener)
 
         self.box = toga.Box(style=style_box_row)
         self.add(self.box)
@@ -73,34 +65,8 @@ class SectionOpenSum(toga.Box):
         self.update_info()
 
     def update_info(self, *args):
-        
-        sum = 0.00
-        
-        if self.list_bills is not None:
-            for bill in self.list_bills:
-                if bill.bezahlt == False:
-                    sum -= bill.betrag
-                if self.allowance and bill.beihilfe_id == None:
-                    sum += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
-                if bill.pkv_id == None:
-                    if self.allowance:
-                        sum += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
-                    else:
-                        sum += bill.betrag - bill.abzug_pkv
-        
-        if self.allowance and self.list_allowance is not None:
-            for submit in self.list_allowance:
-                if submit.erhalten == False:
-                    sum += submit.betrag
-
-        if self.list_insurance is not None:
-            for submit in self.list_insurance:
-                if submit.erhalten == False:
-                    sum += submit.betrag
-
-        result = round(sum, 2)
+        result = round(self.value_source.value, 2)
         result = 0.00 if result == -0.00 else result
-
         self.info.text = 'Offener Betrag: ' + format(result, '.2f').replace('.', ',') + ' €'
 
 class Section(toga.Box):
