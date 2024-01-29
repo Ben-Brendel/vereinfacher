@@ -3,23 +3,43 @@
 from toga.sources import Listener
 
 
-class ListListener(Listener):
+class SubmitsListener(Listener):
 
-    def __init__(self, interface, list_source):
-        self.interface = interface
-        self.list_source = list_source
+    def __init__(self, list_allowances=None, list_insurances=None):
+        self.list_allowances = list_allowances
+        self.list_insurances = list_insurances
 
     def change(self, item):
-        self.interface.update(self.list_source)
+        if self.list_allowances:
+            if item in self.list_allowances and item.beihilfe_id is not None:
+                self.list_allowances.remove(item)
+            elif item.beihilfe_id is None:
+                self.list_allowances.append(item)
+
+        if self.list_insurances:
+            if item in self.list_insurances and item.pkv_id is not None:
+                self.list_insurances.remove(item)
+            elif item.pkv_id is None:
+                self.list_insurances.append(item)
 
     def clear(self):
-        self.list_source.clear()
+        if self.list_allowances:
+            self.list_allowances.clear()
+        if self.list_insurances:
+            self.list_insurances.clear()
 
     def insert(self, index, item):
-        self.interface.update(self.list_source)
+        if self.list_allowances and item.beihilfe_id == None:
+            self.list_allowances.append(item)
+        if self.list_insurances and item.pkv_id == None:
+            self.list_insurances.append(item)
 
     def remove(self, index, item):  
-        self.interface.update(self.list_source)
+        if self.list_allowances and item.beihilfe_id == None:
+            self.list_allowances.remove(item)
+        if self.list_insurances and item.pkv_id == None:
+            self.list_insurances.remove(item)
+        
 
 class TableListener(Listener):
 

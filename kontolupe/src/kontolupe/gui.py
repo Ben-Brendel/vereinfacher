@@ -8,17 +8,9 @@ from datetime import datetime
 
 def table_index_selection(widget):
     """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
-    if type(widget) == toga.Table and widget.selection is not None:
-        zeile = widget.selection
-        for i, z in enumerate(widget.data):
-            if str(z) == str(zeile):
-                return i
-        else:
-            print("+++ Kontolupe: Ausgewählte Zeile konnte nicht gefunden werden.")
-            return None
-    else:
-        print("+++ Kontolupe: Keine Zeile ausgewählt.")
-        return None
+    if isinstance(widget, toga.Table) and widget.selection is not None:
+        return widget.data.index(widget.selection) 
+    return None
     
 
 def add_newlines(input_string, max_line_length):
@@ -39,11 +31,10 @@ class SectionOpenSum(toga.Box):
     """Erzeugt den Anzeigebereich für den offenen Betrag."""
 
     def __init__(self, window, value_source=True, **kwargs):
-        super().__init__(style=style_box_offene_buchungen)
         self.value_source = value_source
-
         self.listener = SectionListener(self)
         self.value_source.add_listener(self.listener)
+        super().__init__(style=style_box_offene_buchungen)
 
         self.box = toga.Box(style=style_box_row)
         self.add(self.box)

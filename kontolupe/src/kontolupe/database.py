@@ -348,6 +348,12 @@ PERSON_ATTRIBUTES = [
     },
 ]
 
+TABLE_BILLS = 'rechnungen'
+TABLE_ALLOWANCES = 'beihilfepakete'
+TABLE_INSURANCES = 'pkvpakete'
+TABLE_INSTITUTIONS = 'einrichtungen'
+TABLE_PERSONS = 'personen'
+
 class Database:
     """Klasse zur Verwaltung der Datenbank."""
 
@@ -723,9 +729,9 @@ class Database:
         """Update the database structure."""
 
         for table_name, columns in self.__tables.items():
-            self.__create_table_if_not_exists(self, cursor, table_name, columns)
+            self.__create_table_if_not_exists(cursor, table_name, columns)
             for column in columns:
-                self.__add_column_if_not_exists(self, cursor, table_name, column[0], column[1])
+                self.__add_column_if_not_exists(cursor, table_name, column[0], column[1])
 
             # look for a predecessor table and update its structure if it exists
             old_table = self.__tables_predecessors.get(table_name)
@@ -735,7 +741,7 @@ class Database:
                 if cursor.fetchone():
                     # the old table exists, so update its structure
                     for column in self.__tables[table_name]:
-                        self.__add_column_if_not_exists(self, cursor, old_table, column[0], column[1])
+                        self.__add_column_if_not_exists(cursor, old_table, column[0], column[1])
                     print(f'### Database.__update_db_structure: Updated table {old_table} to the latest structure.')
             
 
@@ -744,13 +750,13 @@ class Database:
 
         for table_name, columns in self.__table_columns_rename.items():
             for column in columns:
-                self.__copy_column(self, cursor, table_name, column[0], column[1])
+                self.__copy_column(cursor, table_name, column[0], column[1])
 
     def __rename_tables(self, cursor):
         """Rename the tables."""
 
         for old_table, new_table in self.__tables_rename.items():
-            self.__copy_table_and_delete(self, cursor, old_table, new_table)
+            self.__copy_table_and_delete(cursor, old_table, new_table)
             print(f'### Database.__rename_tables: Migrated data from {old_table} to {new_table} and deleted {old_table}')
 
     def __new_element(self, table, element):
@@ -848,15 +854,18 @@ class Database:
         # Datenbankverbindung schließen
         connection.close()
 
-        result = ListSource()
-        for row in ergebnis:
-            
-            attributes = self.get_attributes_list(table)
+        accessors = []
+        attributes = self.get_attributes_list(table)
+        for attribute in attributes:
+            if attribute['name_object']:
+                accessors.append(attribute['name_object'])
 
+        result = ListSource(accessors=accessors)
+        for row in ergebnis:
             # Create the data dictionary for the list source
             data = {}
             for attribute in attributes:
-                data[attribute['name_object']] = row.get(attribute['name_db'], attribute['default_value'])       
+                data[attribute['name_object']] = row.get(attribute['name_db'], attribute['default_value'])  
 
             match table:
                 case 'rechnungen':
@@ -955,13 +964,13 @@ class Bill(Row):
             if attribute['name_object']:
                 match attribute['name_object']:
                     case 'betrag_euro':
-                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag', 0)).replace('.', ',') 
+                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag') or 0).replace('.', ',') 
                     case 'abzug_beihilfe_euro':
-                        init_data['abzug_beihilfe_euro'] = '{:.2f} €'.format(data.get('abzug_beihilfe', 0)).replace('.', ',')
+                        init_data['abzug_beihilfe_euro'] = '{:.2f} €'.format(data.get('abzug_beihilfe') or 0).replace('.', ',')
                     case 'abzug_pkv_euro':
-                        init_data['abzug_pkv_euro'] = '{:.2f} €'.format(data.get('abzug_pkv', 0)).replace('.', ',')
+                        init_data['abzug_pkv_euro'] = '{:.2f} €'.format(data.get('abzug_pkv') or 0).replace('.', ',')
                     case 'beihilfesatz_prozent':
-                        init_data['beihilfesatz_prozent'] = '{:.0f} %'.format(data.get('beihilfesatz', 0))
+                        init_data['beihilfesatz_prozent'] = '{:.0f} %'.format(data.get('beihilfesatz') or 0)
                     case 'bezahlt_text':
                         init_data['bezahlt_text'] = 'Ja' if data.get('bezahlt', False) else 'Nein'
                     case 'beihilfe_eingereicht':
@@ -984,7 +993,7 @@ class Allowance(Row):
             if attribute['name_object']:
                 match attribute['name_object']:
                     case 'betrag_euro':
-                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag', 0)).replace('.', ',') 
+                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag') or 0).replace('.', ',') 
                     case 'erhalten_text':
                         init_data['erhalten_text'] = 'Ja' if data.get('erhalten', False) else 'Nein'
                     case _:
@@ -1002,7 +1011,7 @@ class Insurance(Row):
             if attribute['name_object']:
                 match attribute['name_object']:
                     case 'betrag_euro':
-                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag', 0)).replace('.', ',') 
+                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag') or 0).replace('.', ',') 
                     case 'erhalten_text':
                         init_data['erhalten_text'] = 'Ja' if data.get('erhalten', False) else 'Nein'
                     case _:
@@ -1040,7 +1049,7 @@ class Person(Row):
             if attribute['name_object']:
                 match attribute['name_object']:
                     case 'beihilfesatz_prozent':
-                        init_data['beihilfesatz_prozent'] = '{:.0f} %'.format(data.get('beihilfesatz', 0))
+                        init_data['beihilfesatz_prozent'] = '{:.0f} %'.format(data.get('beihilfesatz') or 0)
                     case _:
                         init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
 
@@ -1114,6 +1123,7 @@ class DataInterface:
         self.open_sum = ValueSource()
 
         # Aktive Einträge aus der Datenbank laden
+        # TODO: the data is only mapped onto the first accessor!
         self.bills = self.db.load_bills()
         self.allowances = self.db.load_allowances()
         self.insurances = self.db.load_insurances()
@@ -1129,8 +1139,7 @@ class DataInterface:
         self.update_open_sum()
 
         # Listeners
-        self.bills.add_listener(ListListener(self, self.allowances_bills))
-        self.bills.add_listener(ListListener(self, self.insurances_bills))
+        self.bills.add_listener(SubmitsListener(self.allowances_bills, self.insurances_bills))
         # self.bills.add_listener(ListListener(self, self.open_bookings))
         # self.bills.add_listener(ListListener(self, self.archivables))
         # self.allowances.add_listener(ListListener(self, self.open_bookings))
@@ -1167,9 +1176,11 @@ class DataInterface:
         # initialize object again
         self.__init__()
 
+
     def is_first_start(self):
         """Prüft, ob das Programm zum ersten Mal gestartet wird."""
         return self.db.is_first_start()
+
 
     def save_init_file(self):
         """Speichert die Initialisierungsdatei."""
@@ -1215,13 +1226,13 @@ class DataInterface:
             return None
         
     
-    def get_list_index_by_dbid(self, list_source, db_id):
+    def get_element_index_by_dbid(self, list_source, db_id):
         """Ermittelt den Index eines Elements einer Liste anhand der ID."""
         try:
             row = list_source.find({'db_id': db_id})
             return list_source.index(row)
         except ValueError:
-            print(f'### DatenInterface.get_list_index_by_dbid: No element found with id {db_id}')
+            print(f'### DatenInterface.get_list_element_by_dbid: No element found with id {db_id}')
             return None
         
 
@@ -1531,6 +1542,7 @@ class DataInterface:
         """Aktualisiert die referenzierten Werte in den Rechnungen und speichert sie in der Datenbank."""
 
         for bill in self.bills:
+            print(bill)
 
             # Aktualisiere die Beihilfe
             if bill.beihilfe_id:
