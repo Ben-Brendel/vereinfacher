@@ -9,6 +9,40 @@ from kontolupe.listeners import *
 
 DATABASE_VERSION = 1
 
+BILL_TYPES = ('bill', 'bills', 'rechnung', 'rechnungen')
+ALLOWANCE_TYPES = ('allowance', 'allowances', 'beihilfe', 'beihilfepakete')
+INSURANCE_TYPES = ('insurance', 'insurances', 'pkv', 'pkvpakete')
+INSTITUTION_TYPES = ('institution', 'institutions', 'einrichtung', 'einrichtungen')
+PERSON_TYPES = ('person', 'persons', 'personen')
+
+OBJECT_TYPE_TO_DB_TABLE = {
+        'bill': 'rechnungen',
+        'bills': 'rechnungen',
+        'rechnung': 'rechnungen',
+        'rechnungen': 'rechnungen',
+        'allowance': 'beihilfepakete',
+        'allowances': 'beihilfepakete',
+        'beihilfe': 'beihilfepakete',
+        'beihilfepakete': 'beihilfepakete',
+        'insurance': 'pkvpakete',
+        'insurances': 'pkvpakete',
+        'pkv': 'pkvpakete',
+        'pkvpakete': 'pkvpakete',
+        'institution': 'einrichtungen',
+        'institutions': 'einrichtungen',
+        'einrichtung': 'einrichtungen',
+        'einrichtungen': 'einrichtungen',
+        'person': 'personen',
+        'persons': 'personen',
+        'personen': 'personen'
+    }
+
+TABLE_BILLS = 'rechnungen'
+TABLE_ALLOWANCES = 'beihilfepakete'
+TABLE_INSURANCES = 'pkvpakete'
+TABLE_INSTITUTIONS = 'einrichtungen'
+TABLE_PERSONS = 'personen'
+
 BILLS_ATTRIBUTES = [
     {
         'name_db': 'id',
@@ -348,11 +382,59 @@ PERSON_ATTRIBUTES = [
     },
 ]
 
-TABLE_BILLS = 'rechnungen'
-TABLE_ALLOWANCES = 'beihilfepakete'
-TABLE_INSURANCES = 'pkvpakete'
-TABLE_INSTITUTIONS = 'einrichtungen'
-TABLE_PERSONS = 'personen'
+def get_attributes(object_type):
+    """Gibt die zur Tabelle gehörende Liste der Attribute zurück."""
+    attributes = []
+    if object_type in BILL_TYPES:
+        attributes = BILLS_ATTRIBUTES
+    elif object_type in ALLOWANCE_TYPES:
+        attributes = ALLOWANCE_ATTRIBUTES
+    elif object_type in INSURANCE_TYPES:
+        attributes = INSURANCE_ATTRIBUTES
+    elif object_type in INSTITUTION_TYPES:
+        attributes = INSTITUTION_ATTRIBUTES
+    elif object_type in PERSON_TYPES:
+        attributes = PERSON_ATTRIBUTES
+    return attributes
+
+def get_accessors(object_type):
+    """Extract 'name_object' from attributes based on object_type."""
+    attributes = get_attributes(object_type)
+    return [attribute['name_object'] for attribute in attributes if attribute['name_object']]
+    
+def update_object(object_type, row=None, **data):
+    """Update an object."""
+
+    def format_euro(value):
+        return '{:.2f} €'.format(value).replace('.', ',')
+
+    def format_percent(value):
+        return '{:.0f} %'.format(value)
+
+    def get_value(name, default):
+        return data.get(name) or (getattr(row, name) if isinstance(row, Row) else 0) or default
+
+    init_data = {}
+    for attribute in get_attributes(object_type):
+        if attribute['name_object']:
+            value = get_value(attribute['name_object'], attribute['default_value'])
+            match attribute['name_object']:
+                case 'betrag_euro' | 'abzug_beihilfe_euro' | 'abzug_pkv_euro':
+                    value = format_euro(value)
+                case 'beihilfesatz_prozent':
+                    value = format_percent(value)
+                case 'bezahlt_text' | 'beihilfe_eingereicht' | 'pkv_eingereicht' | 'erhalten_text':
+                    value = 'Ja' if value else 'Nein'
+                case 'plz_ort':
+                    value = (data.get('plz', '') or '') + (' ' if data.get('plz', '') else '') + (data.get('ort', '') or '')
+            if isinstance(row, Row):
+                row[attribute['name_object']] = value
+            else:
+                init_data[attribute['name_object']] = value
+
+    if not isinstance(row, Row):
+        return init_data
+
 
 class Database:
     """Klasse zur Verwaltung der Datenbank."""
@@ -424,24 +506,6 @@ class Database:
 
         # Aktualisiere die init-Datei
         self.__update_init()
-
-    def get_attributes_list(self, table):
-        """Gibt die zur Tabelle gehörende Liste der Attribute zurück."""
-        attributes = []
-        match table:
-            case 'rechnungen':
-                attributes = BILLS_ATTRIBUTES
-            case 'beihilfepakete':
-                attributes = ALLOWANCE_ATTRIBUTES
-            case 'pkvpakete':
-                attributes = INSURANCE_ATTRIBUTES
-            case 'einrichtungen':
-                attributes = INSTITUTION_ATTRIBUTES
-            case 'personen':
-                attributes = PERSON_ATTRIBUTES
-            case _:
-                raise ValueError(f'### Database.__load_data: Table {table} not found')
-        return attributes
 
     def __update_init(self):
         """Überprüfe, ob die init-Datei aktualisiert werden muss."""
@@ -744,7 +808,6 @@ class Database:
                         self.__add_column_if_not_exists(cursor, old_table, column[0], column[1])
                     print(f'### Database.__update_db_structure: Updated table {old_table} to the latest structure.')
             
-
     def __migrate_data(self, cursor):
         """Migrate the data to the new database structure."""
 
@@ -769,7 +832,7 @@ class Database:
         column_names = [column[0] for column in self.__tables[table]]
         column_names.remove('id')
 
-        attributes = self.get_attributes_list(table)
+        attributes = get_attributes(table)
         attribute_names = []
         for column in column_names:
             attribute_names.append([attribute['name_object'] for attribute in attributes if attribute['name_db'] == column][0])
@@ -800,7 +863,7 @@ class Database:
         column_names = [column[0] for column in self.__tables[table]]
         column_names.remove('id')
 
-        attributes = self.get_attributes_list(table)
+        attributes = get_attributes(table)
         attribute_names = []
         for column in column_names:
             attribute_names.append([attribute['name_object'] for attribute in attributes if attribute['name_db'] == column][0])
@@ -854,206 +917,50 @@ class Database:
         # Datenbankverbindung schließen
         connection.close()
 
-        accessors = []
-        attributes = self.get_attributes_list(table)
-        for attribute in attributes:
-            if attribute['name_object']:
-                accessors.append(attribute['name_object'])
-
+        accessors = get_accessors(table)
         result = ListSource(accessors=accessors)
         for row in ergebnis:
             # Create the data dictionary for the list source
             data = {}
-            for attribute in attributes:
+            for attribute in get_attributes(table):
                 data[attribute['name_object']] = row.get(attribute['name_db'], attribute['default_value'])  
-
-            match table:
-                case 'rechnungen':
-                    element = Bill(**data)
-                case 'beihilfepakete':
-                    element = Allowance(**data)
-                case 'pkvpakete':
-                    element = Insurance(**data)
-                case 'einrichtungen':
-                    element = Institution(**data)
-                case 'personen':
-                    element = Person(**data)
-
+            element = update_object(table, **data)
             result.append(element)
 
-        return result
+        return result 
 
-    def new(self, element):
+    def new(self, object_type, element):
         """Einfügen eines neuen Elements in die Datenbank."""
-        if isinstance(element, Bill):
-            return self.__new_element('rechnungen', element)
-        elif isinstance(element, Allowance):
-            return self.__new_element('beihilfepakete', element)
-        elif isinstance(element, Insurance):
-            return self.__new_element('pkvpakete', element)
-        elif isinstance(element, Institution):
-            return self.__new_element('einrichtungen', element)
-        elif isinstance(element, Person):
-            return self.__new_element('personen', element)
+        db_table = OBJECT_TYPE_TO_DB_TABLE.get(object_type)
+        if db_table:
+            return self.__new_element(db_table, element)
         else:
             raise ValueError(f'### Database.new: Element {element} not found')
-            
-    def save(self, element):
-        """Ändern eines Elements in der Datenbank."""
-        if isinstance(element, Bill):
-            self.__change_element('rechnungen', element)
-        elif isinstance(element, Allowance):
-            self.__change_element('beihilfepakete', element)
-        elif isinstance(element, Insurance):
-            self.__change_element('pkvpakete', element)
-        elif isinstance(element, Institution):
-            self.__change_element('einrichtungen', element)
-        elif isinstance(element, Person):
-            self.__change_element('personen', element)
-        else:
-            raise ValueError(f'### Database.change: Element {element} not found')
 
-    def delete(self, element):
+    def save(self, object_type, element):
+        """Ändern eines Elements in der Datenbank."""
+        db_table = OBJECT_TYPE_TO_DB_TABLE.get(object_type)
+        if db_table:
+            self.__change_element(db_table, element)
+        else:
+            raise ValueError(f'### Database.save: Element {element} not found')
+
+    def delete(self, object_type, element):
         """Löschen eines Elements aus der Datenbank."""
-        if isinstance(element, Bill):
-            self.__delete_element('rechnungen', element)
-        elif isinstance(element, Allowance):
-            self.__delete_element('beihilfepakete', element)
-        elif isinstance(element, Insurance):
-            self.__delete_element('pkvpakete', element)
-        elif isinstance(element, Institution):
-            self.__delete_element('einrichtungen', element)
-        elif isinstance(element, Person):
-            self.__delete_element('personen', element)
+        db_table = OBJECT_TYPE_TO_DB_TABLE.get(object_type)
+        if db_table:
+            self.__delete_element(db_table, element)
         else:
             raise ValueError(f'### Database.delete: Element {element} not found')
 
-    def load_bills(self, only_active=True):
-        """Laden der Rechnungen aus der Datenbank."""
-        print(f'### Database: Loading Rechnungen from database')
-        return self.__load_data('rechnungen', only_active)
-    
-    def load_allowances(self, only_active=True):
-        """Laden der Beihilfepakete aus der Datenbank."""
-        print(f'### Database: Loading Beihilfepakete from database')
-        return self.__load_data('beihilfepakete', only_active)
-    
-    def load_insurances(self, only_active=True):
-        """Laden der PKV-Pakete aus der Datenbank."""
-        print(f'### Database: Loading PKVPakete from database')
-        return self.__load_data('pkvpakete', only_active)
-    
-    def load_institutions(self, only_active=True):
-        """Laden der Einrichtungen aus der Datenbank."""
-        print(f'### Database: Loading Einrichtungen from database')
-        return self.__load_data('einrichtungen', only_active)
-    
-    def load_persons(self, only_active=True):
-        """Laden der Personen aus der Datenbank."""
-        print(f'### Database: Loading Personen from database')
-        return self.__load_data('personen', only_active)
-
-
-class Bill(Row):
-    """Klassen zur Darstellung einer Rechnung."""
-    
-    def __init__(self, **data):
-        """Initialisierung der Rechnung."""
-        init_data = {}
-        for attribute in BILLS_ATTRIBUTES:
-            if attribute['name_object']:
-                match attribute['name_object']:
-                    case 'betrag_euro':
-                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag') or 0).replace('.', ',') 
-                    case 'abzug_beihilfe_euro':
-                        init_data['abzug_beihilfe_euro'] = '{:.2f} €'.format(data.get('abzug_beihilfe') or 0).replace('.', ',')
-                    case 'abzug_pkv_euro':
-                        init_data['abzug_pkv_euro'] = '{:.2f} €'.format(data.get('abzug_pkv') or 0).replace('.', ',')
-                    case 'beihilfesatz_prozent':
-                        init_data['beihilfesatz_prozent'] = '{:.0f} %'.format(data.get('beihilfesatz') or 0)
-                    case 'bezahlt_text':
-                        init_data['bezahlt_text'] = 'Ja' if data.get('bezahlt', False) else 'Nein'
-                    case 'beihilfe_eingereicht':
-                        init_data['beihilfe_eingereicht'] = 'Ja' if data.get('beihilfe_id', None) else 'Nein'
-                    case 'pkv_eingereicht':
-                        init_data['pkv_eingereicht'] = 'Ja' if data.get('pkv_id', None) else 'Nein'
-                    case _:
-                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
-
-        super().__init__(**init_data)
-    
-
-class Allowance(Row):
-    """Klasse zur Darstellung einer Beihilfe-Einreichung."""
-    
-    def __init__(self, **data):
-        """Initialisierung der Beihilfe-Einreichung."""
-        init_data = {}
-        for attribute in ALLOWANCE_ATTRIBUTES:
-            if attribute['name_object']:
-                match attribute['name_object']:
-                    case 'betrag_euro':
-                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag') or 0).replace('.', ',') 
-                    case 'erhalten_text':
-                        init_data['erhalten_text'] = 'Ja' if data.get('erhalten', False) else 'Nein'
-                    case _:
-                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
-
-        
-
-class Insurance(Row):
-    """Klasse zur Darstellung einer PKV-Einreichung."""
-    
-    def __init__(self, **data):
-        """Initialisierung der PKV-Einreichung."""
-        init_data = {}
-        for attribute in INSURANCE_ATTRIBUTES:
-            if attribute['name_object']:
-                match attribute['name_object']:
-                    case 'betrag_euro':
-                        init_data['betrag_euro'] = '{:.2f} €'.format(data.get('betrag') or 0).replace('.', ',') 
-                    case 'erhalten_text':
-                        init_data['erhalten_text'] = 'Ja' if data.get('erhalten', False) else 'Nein'
-                    case _:
-                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
-        
-        super().__init__(**init_data)
-
-
-class Institution(Row):
-    """Klasse zur Verwaltung der Einrichtungen."""
-    
-    def __init__(self, **data):
-        """Initialisierung der Einrichtung."""
-
-        # create the dictionary init_data using the BILLS_ATTRIBUTES
-        init_data = {}
-        for attribute in INSTITUTION_ATTRIBUTES:
-            if attribute['name_object']:
-                match attribute['name_object']:
-                    case 'plz_ort':
-                        init_data['plz_ort'] = (data.get('plz', '') or '') + (' ' if data.get('plz', '') else '') + (data.get('ort', '') or '')
-                    case _:
-                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
-        
-        super().__init__(**init_data)
-    
-
-class Person(Row):
-    """Klasse zur Verwaltung der Personen."""
-    
-    def __init__(self, **data):
-        """Initialisierung der Person."""
-        init_data = {}
-        for attribute in PERSON_ATTRIBUTES:
-            if attribute['name_object']:
-                match attribute['name_object']:
-                    case 'beihilfesatz_prozent':
-                        init_data['beihilfesatz_prozent'] = '{:.0f} %'.format(data.get('beihilfesatz') or 0)
-                    case _:
-                        init_data[attribute['name_object']] = data.get(attribute['name_object'], attribute['default_value'])
-
-        super().__init__(**init_data)
+    def load(self, object_type, only_active=True):
+        """Load the elements of a certain type from the database."""
+        db_table = OBJECT_TYPE_TO_DB_TABLE.get(object_type)
+        if db_table:
+            print(f'### Database: Loading {db_table} from database')
+            return self.__load_data(db_table, only_active)
+        else:
+            raise ValueError(f'### Database.load: Invalid object type {object_type}')
     
 
 class DataInterface:
@@ -1067,34 +974,8 @@ class DataInterface:
 
         # Init-Dictionary laden
         self.init = self.db.load_init_file()
-
-        # Accessors generieren
-        self.accessors_bills = []
-        for attribute in BILLS_ATTRIBUTES:
-            if attribute['name_object']:
-                self.accessors_bills.append(attribute['name_object'])
         
-        self.accessors_allowances = []
-        for attribute in ALLOWANCE_ATTRIBUTES:
-            if attribute['name_object']:
-                self.accessors_allowances.append(attribute['name_object'])
-
-        self.accessors_insurances = []
-        for attribute in INSURANCE_ATTRIBUTES:
-            if attribute['name_object']:
-                self.accessors_insurances.append(attribute['name_object'])
-
-        self.accessors_institutions = []
-        for attribute in INSTITUTION_ATTRIBUTES:
-            if attribute['name_object']:
-                self.accessors_institutions.append(attribute['name_object'])
-
-        self.accessors_persons = []
-        for attribute in PERSON_ATTRIBUTES:
-            if attribute['name_object']:
-                self.accessors_persons.append(attribute['name_object'])
-        
-        self.accessors_open_bookings = [
+        accessors_open_bookings = [
                 'db_id',                        # Datenbank-Id des jeweiligen Elements
                 'typ',                          # Typ des Elements (Rechnung, Beihilfe, PKV)
                 'betrag_euro',                  # Betrag der Buchung in Euro
@@ -1103,32 +984,28 @@ class DataInterface:
                 'info'                          # Info-Text der Buchung
             ]
         
-        self.accessors_archivables = [
+        accessors_archivables = [
                 'Rechnung',
                 'Beihilfe',
                 'PKV'
             ]
-
-        self.bills = ListSource(accessors = self.accessors_bills)
-        self.institutions = ListSource(accessors = self.accessors_institutions)
-        self.persons = ListSource(accessors = self.accessors_persons)
-        self.allowances = ListSource(accessors = self.accessors_allowances)
-        self.insurances = ListSource(accessors = self.accessors_insurances)
         
-        self.allowances_bills = ListSource(accessors = self.accessors_bills)
-        self.insurances_bills = ListSource(accessors = self.accessors_bills)
-        self.open_bookings = ListSource(accessors = self.accessors_open_bookings)
-        self.archivables = ListSource(accessors = self.accessors_archivables)
+        self.allowances_bills = ListSource(accessors = get_accessors('bill'))
+        self.insurances_bills = ListSource(accessors = get_accessors('bill'))
+        self.open_bookings = ListSource(accessors = accessors_open_bookings)
+        self.archivables = ListSource(accessors = accessors_archivables)
 
         self.open_sum = ValueSource()
 
         # Aktive Einträge aus der Datenbank laden
         # TODO: the data is only mapped onto the first accessor!
-        self.bills = self.db.load_bills()
-        self.allowances = self.db.load_allowances()
-        self.insurances = self.db.load_insurances()
-        self.institutions = self.db.load_institutions()
-        self.persons = self.db.load_persons()        
+        self.bills = self.db.load_bills('bills')
+        for bill in self.bills:
+            print(bill)
+        self.allowances = self.db.load('allowances')
+        self.insurances = self.db.load_insurances('insurances')
+        self.institutions = self.db.load_institutions('institutions')
+        self.persons = self.db.load_persons('persons')
 
         # Listen initialisieren
         self.update_bills()
@@ -1176,21 +1053,17 @@ class DataInterface:
         # initialize object again
         self.__init__()
 
-
     def is_first_start(self):
         """Prüft, ob das Programm zum ersten Mal gestartet wird."""
         return self.db.is_first_start()
-
 
     def save_init_file(self):
         """Speichert die Initialisierungsdatei."""
         self.db.save_init_file(**self.init)
 
-
     def load_init_file(self):
         """Lädt die Initialisierungsdatei und speichert sie in der Klassenvariable."""
         self.init = self.db.load_init_file()
-
 
     def archive(self):
         """Archiviert alle archivierbaren Buchungen."""
@@ -1206,7 +1079,6 @@ class DataInterface:
 
         self.update_archivables()
 
-
     def get_element_by_dbid(self, list_source, db_id):
         """Gibt ein Element einer Liste anhand der ID zurück."""
         try:
@@ -1214,7 +1086,6 @@ class DataInterface:
         except ValueError:
             print(f'### DatenInterface.get_element_by_dbid: No element found with id {db_id}')
             return None
-
 
     def get_allowance_by_name(self, name):
         """Gibt den Beihilfesatz einer Person anhand des Namens zurück."""
@@ -1225,7 +1096,6 @@ class DataInterface:
         except ValueError:
             return None
         
-    
     def get_element_index_by_dbid(self, list_source, db_id):
         """Ermittelt den Index eines Elements einer Liste anhand der ID."""
         try:
@@ -1235,110 +1105,109 @@ class DataInterface:
             print(f'### DatenInterface.get_list_element_by_dbid: No element found with id {db_id}')
             return None
         
-
-    def new(self, element, **kwargs):
+    def new(self, object_type, data, **kwargs):
         """Erstellt ein neues Element."""
 
-        if isinstance(element, Bill):
-            element.db_id = self.db.new(element)
-            self.bills.append(element)
+        if object_type in BILL_TYPES:
+            # update the bill data and add it to the list source to create the row object
+            self.bills.append(update_object(object_type, **data))
+
+            # save the new bill to the database
+            bill = self.bills[-1]
+            bill.db_id = self.db.new(bill)            
             
-            if element.bezahlt == False:
-                self.open_sum -= (element.abzug_beihilfe + element.abzug_pkv)
+            # update connected values
+            if bill.bezahlt == False:
+                self.open_sum -= (bill.abzug_beihilfe + bill.abzug_pkv)
                 self.update_open_bookings()
             else:
-                self.open_sum += (element.betrag - element.abzug_beihilfe - element.abzug_pkv)
+                self.open_sum += (bill.betrag - bill.abzug_beihilfe - bill.abzug_pkv)
             
-            return element.db_id
+            return bill.db_id
 
-        elif isinstance(element, Allowance):
+        elif object_type in ALLOWANCE_TYPES:
+            # get the amount of the allowance
             amount = 0
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = self.bills.find({'db_id': bill_db_id})
                 amount += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
-            element.betrag = amount                    
+            data['betrag'] = amount                    
             
-            element.db_id = self.db.new(element)
-            self.allowances.append(element)
+            # update the allowance data and add it to the list source to create the row object
+            self.allowances.append(update_object(object_type, **data))
+
+            # save the new allowance to the database
+            allowance = self.allowances[-1]
+            allowance.db_id = self.db.new(allowance)            
             
-            if element.erhalten == False:
+            # update connected values
+            if allowance.erhalten == False:
                 self.update_open_bookings()
             else:
-                self.open_sum -= element.betrag
+                self.open_sum -= allowance.betrag
                 self.update_archivables()
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = self.bills.find({'db_id': bill_db_id})
-                bill.beihilfe_id = element.db_id
+                bill.beihilfe_id = allowance.db_id
                 self.save(bill)
 
-            return element.db_id
+            return allowance.db_id
 
-        elif isinstance(element, Insurance):
+        elif object_type in INSURANCE_TYPES:
+            # get the amount of the insurance
             amount = 0
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = self.bills.find({'db_id': bill_db_id})
                 amount += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
-            element.betrag = amount
+            data['betrag'] = amount
 
-            element.db_id = self.db.new(element)
-            self.insurances.append(element)
+            # update the insurance data and add it to the list source to create the row object
+            self.insurances.append(update_object(object_type, **data))
+
+            # save the new insurance to the database
+            insurance = self.insurances[-1]
+            insurance.db_id = self.db.new(insurance)
             
-            if element.erhalten == False:
+            # update connected values
+            if insurance.erhalten == False:
                 self.update_open_bookings()
             else:
-                self.open_sum -= element.betrag
+                self.open_sum -= insurance.betrag
                 self.update_archivables()
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = self.bills.find({'db_id': bill_db_id})
-                bill.pkv_id = element.db_id
+                bill.pkv_id = insurance.db_id
                 self.save(bill)
 
-            return element.db_id
+            return insurance.db_id
         
-        elif isinstance(element, Institution):
-            element.db_id = self.db.new(element)
-            self.institutions.append(element)
-            return element.db_id
+        elif object_type in INSTITUTION_TYPES:
+            self.institutions.append(update_object(object_type, **data))
+            institution = self.institutions[-1]
+            institution.db_id = self.db.new(institution)
+            return institution.db_id
         
-        elif isinstance(element, Person):
-            element.db_id = self.db.new(element)
-            self.persons.append(element)
-            return element.db_id
+        elif object_type in PERSON_TYPES:
+            self.persons.append(update_object(object_type, **data))
+            person = self.persons[-1]
+            person.db_id = self.db.new(person)
+            return person.db_id
         
         else:
             raise ValueError(f'### DataInterface.new_element: element type not known')
             
 
-    def save(self, element):
+    def save(self, object_type, element):
         """Speichert ein Element."""
 
-        if isinstance(element, Bill):
-            self.db.save(element)
+        self.db.save(object_type, element)
+        if object_type in BILL_TYPES or object_type in ALLOWANCE_TYPES or object_type in INSURANCE_TYPES:
             self.update_open_bookings()
             self.update_archivables()
             self.update_open_sum()
-
-        elif isinstance(element, Allowance):
-            self.db.save(element)
-            self.update_open_bookings()
-            self.update_archivables()
-            self.update_open_sum()
-
-        elif isinstance(element, Insurance):
-            self.db.save(element)
-            self.update_open_bookings()
-            self.update_archivables()
-            self.update_open_sum()
-        
-        elif isinstance(element, Institution):
-            self.db.save(element)
-            self.update_bills()
-            self.update_open_bookings()
-        
-        elif isinstance(element, Person):
-            self.db.save(element)
+        elif object_type in INSTITUTION_TYPES or object_type in PERSON_TYPES:
             self.update_bills()
             self.update_open_bookings()
         
