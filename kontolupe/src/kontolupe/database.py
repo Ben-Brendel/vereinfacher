@@ -9,6 +9,12 @@ from kontolupe.listeners import *
 
 DATABASE_VERSION = 1
 
+BILL_OBJECT = 'bill'
+ALLOWANCE_OBJECT = 'allowance'
+INSURANCE_OBJECT = 'insurance'
+INSTITUTION_OBJECT = 'institution'
+PERSON_OBJECT = 'person'
+
 BILL_TYPES = ('bill', 'bills', 'rechnung', 'rechnungen')
 ALLOWANCE_TYPES = ('allowance', 'allowances', 'beihilfe', 'beihilfepakete')
 INSURANCE_TYPES = ('insurance', 'insurances', 'pkv', 'pkvpakete')
@@ -16,32 +22,12 @@ INSTITUTION_TYPES = ('institution', 'institutions', 'einrichtung', 'einrichtunge
 PERSON_TYPES = ('person', 'persons', 'personen')
 
 OBJECT_TYPE_TO_DB_TABLE = {
-        'bill': 'rechnungen',
-        'bills': 'rechnungen',
-        'rechnung': 'rechnungen',
-        'rechnungen': 'rechnungen',
-        'allowance': 'beihilfepakete',
-        'allowances': 'beihilfepakete',
-        'beihilfe': 'beihilfepakete',
-        'beihilfepakete': 'beihilfepakete',
-        'insurance': 'pkvpakete',
-        'insurances': 'pkvpakete',
-        'pkv': 'pkvpakete',
-        'pkvpakete': 'pkvpakete',
-        'institution': 'einrichtungen',
-        'institutions': 'einrichtungen',
-        'einrichtung': 'einrichtungen',
-        'einrichtungen': 'einrichtungen',
-        'person': 'personen',
-        'persons': 'personen',
-        'personen': 'personen'
-    }
-
-TABLE_BILLS = 'rechnungen'
-TABLE_ALLOWANCES = 'beihilfepakete'
-TABLE_INSURANCES = 'pkvpakete'
-TABLE_INSTITUTIONS = 'einrichtungen'
-TABLE_PERSONS = 'personen'
+    **dict.fromkeys(BILL_TYPES, 'rechnungen'),
+    **dict.fromkeys(ALLOWANCE_TYPES, 'beihilfepakete'),
+    **dict.fromkeys(INSURANCE_TYPES, 'pkvpakete'),
+    **dict.fromkeys(INSTITUTION_TYPES, 'einrichtungen'),
+    **dict.fromkeys(PERSON_TYPES, 'personen')
+}
 
 BILLS_ATTRIBUTES = [
     {
@@ -420,11 +406,13 @@ def update_object(object_type, row=None, **data):
             value = get_value(attribute['name_object'], attribute['default_value'])
             match attribute['name_object']:
                 case 'betrag_euro' | 'abzug_beihilfe_euro' | 'abzug_pkv_euro':
-                    value = format_euro(value)
+                    value = format_euro(get_value(attribute['name_object'].replace('_euro', ''), 0))
                 case 'beihilfesatz_prozent':
-                    value = format_percent(value)
-                case 'bezahlt_text' | 'beihilfe_eingereicht' | 'pkv_eingereicht' | 'erhalten_text':
-                    value = 'Ja' if value else 'Nein'
+                    value = format_percent(get_value('beihilfesatz', 0))
+                case 'bezahlt_text' | 'erhalten_text':
+                    value = 'Ja' if get_value(attribute['name_object'].replace('_text', ''), False) else 'Nein'
+                case 'beihilfe_eingereicht' | 'pkv_eingereicht':
+                    value = 'Ja' if get_value(attribute['name_object'].replace('_eingereicht', '_id'), None) else 'Nein'
                 case 'plz_ort':
                     value = (data.get('plz', '') or '') + (' ' if data.get('plz', '') else '') + (data.get('ort', '') or '')
             if isinstance(row, Row):
@@ -975,7 +963,7 @@ class DataInterface:
         # Init-Dictionary laden
         self.init = self.db.load_init_file()
         
-        accessors_open_bookings = [
+        self.accessors_open_bookings = [
                 'db_id',                        # Datenbank-Id des jeweiligen Elements
                 'typ',                          # Typ des Elements (Rechnung, Beihilfe, PKV)
                 'betrag_euro',                  # Betrag der Buchung in Euro
@@ -984,7 +972,7 @@ class DataInterface:
                 'info'                          # Info-Text der Buchung
             ]
         
-        accessors_archivables = [
+        self.accessors_archivables = [
                 'Rechnung',
                 'Beihilfe',
                 'PKV'
@@ -992,20 +980,18 @@ class DataInterface:
         
         self.allowances_bills = ListSource(accessors = get_accessors('bill'))
         self.insurances_bills = ListSource(accessors = get_accessors('bill'))
-        self.open_bookings = ListSource(accessors = accessors_open_bookings)
-        self.archivables = ListSource(accessors = accessors_archivables)
+        self.open_bookings = ListSource(accessors = self.accessors_open_bookings)
+        self.archivables = ListSource(accessors = self.accessors_archivables)
 
         self.open_sum = ValueSource()
 
         # Aktive Einträge aus der Datenbank laden
         # TODO: the data is only mapped onto the first accessor!
-        self.bills = self.db.load_bills('bills')
-        for bill in self.bills:
-            print(bill)
-        self.allowances = self.db.load('allowances')
-        self.insurances = self.db.load_insurances('insurances')
-        self.institutions = self.db.load_institutions('institutions')
-        self.persons = self.db.load_persons('persons')
+        self.bills = self.db.load(BILL_OBJECT)
+        self.allowances = self.db.load(ALLOWANCE_OBJECT)
+        self.insurances = self.db.load(INSURANCE_OBJECT)
+        self.institutions = self.db.load(INSTITUTION_OBJECT)
+        self.persons = self.db.load(PERSON_OBJECT)
 
         # Listen initialisieren
         self.update_bills()
@@ -1068,16 +1054,16 @@ class DataInterface:
     def archive(self):
         """Archiviert alle archivierbaren Buchungen."""
 
-        for i in self.archivables['Rechnung']:
-            self.__deactivate_bill(i)
+        for index in self.archivables['Rechnung']:
+            self.deactivate(BILL_OBJECT, self.bills[index])
 
-        for i in self.archivables['Beihilfe']:
-            self.__deactivate_allowance(i)
+        for index in self.archivables['Beihilfe']:
+            self.deactivate(ALLOWANCE_OBJECT, self.allowances[index])
             
-        for i in self.archivables['PKV']:
-            self.__deactivate_insurance(i)
+        for index in self.archivables['PKV']:
+            self.deactivate(INSURANCE_OBJECT, self.insurances[index])
 
-        self.update_archivables()
+        self.archivables.clear()
 
     def get_element_by_dbid(self, list_source, db_id):
         """Gibt ein Element einer Liste anhand der ID zurück."""
@@ -1114,7 +1100,7 @@ class DataInterface:
 
             # save the new bill to the database
             bill = self.bills[-1]
-            bill.db_id = self.db.new(bill)            
+            bill.db_id = self.db.new(object_type, bill)            
             
             # update connected values
             if bill.bezahlt == False:
@@ -1138,7 +1124,7 @@ class DataInterface:
 
             # save the new allowance to the database
             allowance = self.allowances[-1]
-            allowance.db_id = self.db.new(allowance)            
+            allowance.db_id = self.db.new(object_type, allowance)            
             
             # update connected values
             if allowance.erhalten == False:
@@ -1150,7 +1136,7 @@ class DataInterface:
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = self.bills.find({'db_id': bill_db_id})
                 bill.beihilfe_id = allowance.db_id
-                self.save(bill)
+                self.save(object_type, bill)
 
             return allowance.db_id
 
@@ -1167,7 +1153,7 @@ class DataInterface:
 
             # save the new insurance to the database
             insurance = self.insurances[-1]
-            insurance.db_id = self.db.new(insurance)
+            insurance.db_id = self.db.new(object_type, insurance)
             
             # update connected values
             if insurance.erhalten == False:
@@ -1179,25 +1165,24 @@ class DataInterface:
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = self.bills.find({'db_id': bill_db_id})
                 bill.pkv_id = insurance.db_id
-                self.save(bill)
+                self.save(object_type, bill)
 
             return insurance.db_id
         
         elif object_type in INSTITUTION_TYPES:
             self.institutions.append(update_object(object_type, **data))
             institution = self.institutions[-1]
-            institution.db_id = self.db.new(institution)
+            institution.db_id = self.db.new(object_type, institution)
             return institution.db_id
         
         elif object_type in PERSON_TYPES:
             self.persons.append(update_object(object_type, **data))
             person = self.persons[-1]
-            person.db_id = self.db.new(person)
+            person.db_id = self.db.new(object_type, person)
             return person.db_id
         
         else:
-            raise ValueError(f'### DataInterface.new_element: element type not known')
-            
+            raise ValueError(f'### DataInterface.new_element: element type not known')     
 
     def save(self, object_type, element):
         """Speichert ein Element."""
@@ -1214,21 +1199,21 @@ class DataInterface:
         else:
             raise ValueError(f'### DataInterface.save_element: element type not known')
             
-
-    def delete(self, element):
+    def delete(self, object_type, element):
         """Löscht ein Element und gibt zurück ob es erfolgreich war."""
 
-        if isinstance(element, Bill):
-            self.db.delete(element)
+        if object_type in BILL_TYPES:
+            self.db.delete(object_type, element)
             self.bills.remove(element)
             if element.bezahlt == False:
                 self.update_open_bookings()
-            self.update_archivables()
+            elif element.db_id in self.archivables['Rechnung']:
+                self.update_archivables()
             self.update_open_sum()
             return True
 
-        elif isinstance(element, Allowance):
-            self.db.delete(element)
+        elif object_type in ALLOWANCE_TYPES:
+            self.db.delete(object_type, element)
             self.allowances.remove(element)
 
             while self.bills.find({'beihilfe_id': element.db_id}):
@@ -1238,12 +1223,13 @@ class DataInterface:
             
             if element.erhalten == False:
                 self.update_open_bookings()
-            self.update_archivables()
+            elif element.db_id in self.archivables['Beihilfe']:
+                self.update_archivables()
             self.update_open_sum()
             return True
 
-        elif isinstance(element, Insurance):
-            self.db.delete(element)
+        elif object_type in INSURANCE_TYPES:
+            self.db.delete(object_type, element)
             self.insurances.remove(element)
             
             while self.bills.find({'pkv_id': element.db_id}): 
@@ -1253,11 +1239,12 @@ class DataInterface:
             
             if element.erhalten == False:
                 self.update_open_bookings()
-            self.update_archivables()
+            elif element.db_id in self.archivables['PKV']:
+                self.update_archivables()
             self.update_open_sum()
             return True
         
-        elif isinstance(element, Institution):
+        elif object_type in INSTITUTION_TYPES:
             if not self.__check_institution_used(element):
                 self.db.delete(element)
                 self.institutions.remove(element)
@@ -1265,7 +1252,7 @@ class DataInterface:
             else:
                 return False
         
-        elif isinstance(element, Person):
+        elif object_type in PERSON_TYPES:
             if not self.__check_person_used(element):
                 self.db.delete(element)
                 self.persons.remove(element)
@@ -1276,53 +1263,57 @@ class DataInterface:
         else:
             raise ValueError(f'### DataInterface.delete_element: element type not known')
             
-    
-    def deactivate(self, element):
+    def deactivate(self, object_type, element):
         """Deaktiviert ein Element und gibt zurück, ob es erfolgreich war."""
         
-        if isinstance(element, Bill):
+        if object_type in BILL_TYPES:
             element.aktiv = False
-            self.db.save(element)
+            self.db.save(object_type, element)
             self.bills.remove(element)
             if element.bezahlt == False:
                 self.update_open_bookings()
-            self.update_archivables()
+            elif element.db_id in self.archivables['Rechnung']:
+                self.update_archivables()
             self.update_open_sum()
             return True
 
-        elif isinstance(element, Allowance):
+        elif object_type in ALLOWANCE_TYPES:
             element.aktiv = False
-            self.db.save(element)
+            self.db.save(object_type, element)
             self.allowances.remove(element)
+
             if element.erhalten == False:
                 self.update_open_bookings()
-            self.update_archivables()
+            elif element.db_id in self.archivables['Beihilfe']:
+                self.update_archivables()
             self.update_open_sum()
             return True
 
-        elif isinstance(element, Insurance):
+        elif object_type in INSURANCE_TYPES:
             element.aktiv = False
-            self.db.save(element)
+            self.db.save(object_type, element)
             self.insurances.remove(element)
+
             if element.erhalten == False:
                 self.update_open_bookings()
-            self.update_archivables()
+            elif element.db_id in self.archivables['PKV']:
+                self.update_archivables()
             self.update_open_sum()
             return True
 
-        elif isinstance(element, Institution):
+        elif object_type in INSTITUTION_TYPES:
             if not self.__check_institution_used(element):
                 element.aktiv = False
-                self.db.save(element)
+                self.db.save(object_type, element)
                 self.institutions.remove(element)
                 return True
             else:
                 return False
 
-        elif isinstance(element, Person):
+        elif object_type in PERSON_TYPES:
             if not self.__check_person_used(element):
                 element.aktiv = False
-                self.db.save(element)
+                self.db.save(object_type, element)
                 self.persons.remove(element)
                 return True
             else:
@@ -1331,34 +1322,32 @@ class DataInterface:
         else:
             raise ValueError(f'### DataInterface.deactivate_element: element type not known')
             
-
-    def pay_receive(self, element, date=None):
+    def pay_receive(self, object_type, element, date=None):
         """Rechnung bezahlen oder Beihilfe/PKV erhalten."""
 
-        if isinstance(element, Bill):
+        if object_type in BILL_TYPES:
             element.bezahlt = True
             if date is not None:
                 element.buchungsdatum = date
             elif not element.buchungsdatum:
                 element.buchungsdatum = datetime.now().strftime('%d.%m.%Y')
-            self.save(element)
+            self.save(object_type, element)
             self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'Rechnung'}))
             self.open_sum += (element.betrag - element.abzug_beihilfe - element.abzug_pkv)
 
-        elif isinstance(element, Allowance):
+        elif object_type in ALLOWANCE_TYPES:
             element.erhalten = True
-            self.save(element)
+            self.save(object_type, element)
             self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'Beihilfe'}))
             self.open_sum -= element.betrag
 
-        elif isinstance(element, Insurance):
+        elif object_type in INSURANCE_TYPES:
             element.erhalten = True
-            self.save(element)
+            self.save(object_type, element)
             self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'PKV'}))
             self.open_sum -= element.betrag
 
         self.update_archivables()
-
 
     def __check_person_used(self, person):
         """Prüft, ob eine Person verwendet wird."""
@@ -1369,7 +1358,6 @@ class DataInterface:
         except ValueError:
             return False
         
-
     def __check_institution_used(self, institution):
         """Prüft, ob eine Einrichtung verwendet wird."""
         try:
@@ -1379,21 +1367,20 @@ class DataInterface:
         except ValueError:
             return False
 
-
-    def update_submit_amount(self, element):
+    def update_submit_amount(self, object_type, element):
         """Aktualisiert eine Beihilfe-Einreichung"""
 
-        if not (isinstance(element, Allowance) or isinstance(element, Insurance)):
-            raise ValueError(f'### DatenInterface.update_submit_amount: Element {element} is not an allowance or insurance')
+        if not (object_type in ALLOWANCE_TYPES or object_type in INSURANCE_TYPES):
+            raise ValueError(f'### DatenInterface.update_submit_amount: Object type {object_type} is not an allowance or insurance')
 
         amount = 0
         content = False
         for bill in self.bills:
-            if isinstance(element, Allowance) and bill.beihilfe_id == element.db_id:
+            if object_type in ALLOWANCE_TYPES and bill.beihilfe_id == element.db_id:
                 content = True
                 amount += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
             
-            if isinstance(element, Insurance) and bill.pkv_id == element.db_id:
+            if object_type in INSURANCE_TYPES and bill.pkv_id == element.db_id:
                 content = True
                 if self.allowance_active():
                     amount += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
@@ -1402,16 +1389,16 @@ class DataInterface:
 
         if content:
             element.betrag = amount
-            self.db.save(element)
+            self.db.save(object_type, element)
         else:
-            self.delete(element)
-
+            self.delete(object_type, element)
 
     def update_bills(self):
         """Aktualisiert die referenzierten Werte in den Rechnungen und speichert sie in der Datenbank."""
 
         for bill in self.bills:
-            print(bill)
+
+            changed = False
 
             # Aktualisiere die Beihilfe
             if bill.beihilfe_id:
@@ -1419,6 +1406,7 @@ class DataInterface:
                 if not any(allowance.db_id == bill.beihilfe_id for allowance in self.allowances):
                     print(f'### DatenInterface.__update_rechnungen: Beihilfepaket with id {bill.beihilfe_id} not found, reset beihilfe in rechnung with id {bill.db_id}')
                     bill.beihilfe_id = None
+                    changed = True
 
             # Aktualisiere die PKV
             if bill.pkv_id:
@@ -1426,6 +1414,7 @@ class DataInterface:
                 if not any(insurance.db_id == bill.pkv_id for insurance in self.insurances):
                     print(f'### DatenInterface.__update_rechnungen: PKV-Paket with id {bill.pkv_id} not found, reset pkv in rechnung with id {bill.db_id}')
                     bill.pkv_id = None
+                    changed = True
 
             # Aktualisiere die Einrichtung
             if bill.einrichtung_id:
@@ -1434,6 +1423,7 @@ class DataInterface:
                     print(f'### DatenInterface.__update_rechnungen: Institution with id {bill.einrichtung_id} not found, reset einrichtung in rechnung with id {bill.db_id}')
                     bill.einrichtung_id = None
                     bill.einrichtung_name = ''
+                    changed = True
                 else:
                     bill.einrichtung_name = self.institutions.find({ 'db_id' : bill.einrichtung_id }).name
 
@@ -1444,13 +1434,14 @@ class DataInterface:
                     print(f'### DatenInterface.__update_rechnungen: Person with id {bill.person_id} not found, reset person in rechnung with id {bill.db_id}')
                     bill.person_id = None
                     bill.person_name = ''
+                    changed = True
                 else:
                     bill.person_name = self.persons.find({ 'db_id' : bill.person_id }).name
             
             # Aktualisierte Rechnung speichern
-            self.db.save(bill)
+            if changed:
+                self.db.save(BILL_OBJECT, bill)
         
-
     def update_open_bookings(self):
         """Aktualisiert die Liste der offenen Buchungen."""
         new_list = ListSource(accessors = self.accessors_open_bookings)
@@ -1492,22 +1483,19 @@ class DataInterface:
         self.open_bookings.clear()
         self.open_bookings.append(new_list)
 
-
     def update_allowances_bills(self):
         """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die Beihilfe."""
         self.allowances_bills.clear()
         for bill in self.bills:
             if not bill.beihilfe_id:
-                self.allowances_bills.append(Bill(**bill.__dict__))
-
+                self.allowances_bills.append(bill)
 
     def update_insurances_bills(self):
         """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die PKV."""
         self.insurances_bills.clear()
         for bill in self.bills:
             if not bill.pkv_id:
-                self.insurances_bills.append(Bill(**bill.__dict__))
-
+                self.insurances_bills.append(bill)
     
     def update_open_sum(self):
         """Aktualisiert die Summe der offenen Buchungen."""
@@ -1570,6 +1558,6 @@ class DataInterface:
 
         # convert to listSource
         self.archivables.clear()
-        self.archivables.append(self.archivables)
+        self.archivables.append(temp)
 
         print(f'### DatenInterface.__update_archivables: Archivables updated: {self.archivables}')

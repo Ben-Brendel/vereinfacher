@@ -938,22 +938,22 @@ class Kontolupe(toga.App):
         # Beginn der Speicherroutine
         if not self.flag_edit_bill:
         # Erstelle eine neue Rechnung
-            bill = Bill()
-            bill.rechnungsdatum = self.form_bill_rechnungsdatum.get_value()
+            bill = {}
+            bill['rechnungsdatum']      = self.form_bill_rechnungsdatum.get_value()
             if len(self.daten.persons) > 0:
-                bill.person_id = self.form_bill_person.get_value().db_id
-            bill.beihilfesatz = self.daten.get_allownce_by_name(self.form_bill_person.get_value().name)
+                bill['person_id']       = self.form_bill_person.get_value().db_id
+            bill['beihilfesatz']        = self.daten.get_allownce_by_name(self.form_bill_person.get_value().name)
             if len(self.daten.institutions) > 0:
-                bill.einrichtung_id = self.form_bill_einrichtung.get_value().db_id
-            bill.notiz = self.form_bill_notiz.get_value()
-            bill.betrag = self.form_bill_betrag.get_value()
-            bill.buchungsdatum = self.form_bill_buchungsdatum.get_value()
-            bill.bezahlt = self.form_bill_bezahlt.get_value()
-            bill.abzug_beihilfe = self.form_bill_abzug_beihilfe.get_value()
-            bill.abzug_pkv = self.form_bill_abzug_pkv.get_value()
+                bill['einrichtung_id']  = self.form_bill_einrichtung.get_value().db_id
+            bill['notiz']               = self.form_bill_notiz.get_value()
+            bill['betrag']              = self.form_bill_betrag.get_value()
+            bill['buchungsdatum']       = self.form_bill_buchungsdatum.get_value()
+            bill['bezahlt']             = self.form_bill_bezahlt.get_value()
+            bill['abzug_beihilfe']      = self.form_bill_abzug_beihilfe.get_value()
+            bill['abzug_pkv']           = self.form_bill_abzug_pkv.get_value()
 
             # Übergebe die Rechnung dem Daten-Interface
-            self.daten.new(bill)
+            self.daten.new(BILL_OBJECT, bill)
         else:
             # flag ob verknüpfte Einreichungen aktualisiert werden können
             # True, wenn betrag oder beihilfesatz geändert wurde
@@ -997,7 +997,7 @@ class Kontolupe(toga.App):
                 bill.bezahlt = self.form_bill_bezahlt.get_value()
 
             # Übergabe die geänderte Rechnung an das Daten-Interface
-            self.daten.save(bill)
+            self.daten.save(BILL_OBJECT, bill)
 
             # Flag zurücksetzen
             self.flag_edit_bill = False
@@ -1041,7 +1041,7 @@ class Kontolupe(toga.App):
                         self.daten.update_submit_amount(self.daten.get_element_by_dbid(self.daten.insurances, pkv_id))
 
                 # Rechnung löschen
-                self.daten.delete(self.daten.bills[self.edit_bill_id])
+                self.daten.delete(BILL_OBJECT, self.daten.bills[self.edit_bill_id])
 
 
     def create_list_institutions(self):
@@ -1210,18 +1210,18 @@ class Kontolupe(toga.App):
         # Beginn der Speicherroutine
         if widget in self.form_institution_buttons.buttons and not self.flag_edit_institution:
         # Erstelle eine neue Einrichtung
-            institution = Institution()
-            institution.name = self.form_institution_name.get_value()
-            institution.strasse = self.form_institution_strasse.get_value()
-            institution.plz = self.form_institution_plz.get_value()
-            institution.ort = self.form_institution_ort.get_value()
-            institution.telefon = self.form_institution_telefon.get_value()
-            institution.email = self.form_institution_email.get_value()
-            institution.webseite = self.form_institution_webseite.get_value()
-            institution.notiz = self.form_institution_notiz.get_value()
+            institution = {}
+            institution['name'] = self.form_institution_name.get_value()
+            institution['strasse'] = self.form_institution_strasse.get_value()
+            institution['plz'] = self.form_institution_plz.get_value()
+            institution['ort'] = self.form_institution_ort.get_value()
+            institution['telefon'] = self.form_institution_telefon.get_value()
+            institution['email'] = self.form_institution_email.get_value()
+            institution['webseite'] = self.form_institution_webseite.get_value()
+            institution['notiz'] = self.form_institution_notiz.get_value()
 
             # Speichere die Einrichtung in der Datenbank
-            self.daten.new(institution)
+            self.daten.new(INSTITUTION_OBJECT, institution)
 
             # Zeige die Liste der Einrichtungen
             self.show_list_institutions(widget)
@@ -1256,7 +1256,7 @@ class Kontolupe(toga.App):
                 institution.notiz = self.form_institution_notiz.get_value()
 
             # Übergabe der geänderten Einrichtung an das Daten-Interface
-            self.daten.save(institution)
+            self.daten.save(INSTITUTION_OBJECT, institution)
 
             # Flag zurücksetzen
             self.flag_edit_institution = False
@@ -1266,12 +1266,12 @@ class Kontolupe(toga.App):
 
         elif widget in self.init_institutions_buttons.buttons:
             print('+++ Einrichtung initialisieren')
-            institution = Institution()
-            institution.name = self.init_institutions_name.get_value()
-            institution.ort = self.init_institutions_city.get_value()
+            institution = {}
+            institution['name'] = self.init_institutions_name.get_value()
+            institution['ort'] = self.init_institutions_city.get_value()
 
             # Speichere die Einrichtung in der Datenbank
-            self.daten.new(institution)
+            self.daten.new(INSTITUTION_OBJECT, institution)
 
             # Show Success Message
             await self.main_window.info_dialog('Einrichtung gespeichert', institution.name + ' wurde erfolgreich gespeichert.')
@@ -1351,7 +1351,7 @@ class Kontolupe(toga.App):
         """Bestätigt das Löschen einer Einrichtung."""
         if self.table_institutions.selection:
             if await self.main_window.question_dialog('Einrichtung löschen', 'Soll die ausgewählte Einrichtung wirklich gelöscht werden?'):
-                if not self.daten.deactivate(self.table_institutions.selection):
+                if not self.daten.deactivate(INSTITUTION_OBJECT, self.table_institutions.selection):
                     self.main_window.error_dialog(
                         'Fehler beim Löschen',
                         'Die Einrichtung wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
@@ -1512,62 +1512,62 @@ class Kontolupe(toga.App):
         
         # Beginn der Speicherroutine
         if widget in self.form_person_buttons.buttons and not self.flag_edit_person:
-            # Erstelle eine neue Person
-            person = Person()
-            person.name = self.form_person_name.get_value()
+            # Create a new person
+            person = {}
+            person['name'] = self.form_person_name.get_value()
             
             if self.daten.allowance_active():
-                person.beihilfesatz = self.form_person_beihilfe.get_value()
+                person['beihilfesatz'] = self.form_person_beihilfe.get_value()
             else:
-                person.beihilfesatz = 0
+                person['beihilfesatz'] = 0
 
-            # Speichere die Person 
-            self.daten.new(person)
+            # Save the person 
+            self.daten.new(PERSON_OBJECT, person)
 
-            # Zeige die Liste der Personen
+            # Show the list of persons
             self.show_list_persons(widget)
 
         elif widget in self.form_person_buttons.buttons and  self.flag_edit_person:
-            # Bearbeite eine Person
+            # Edit a person
             person = self.daten.persons[self.edit_person_id]
 
-            # Bearbeite die Person
-            if person.name != self.form_person_name.get_value():
-                person.name = self.form_person_name.get_value()
+            # Edit the person
+            if person['name'] != self.form_person_name.get_value():
+                person['name'] = self.form_person_name.get_value()
             
-            if self.daten.allowance_active() and person.beihilfesatz != self.form_person_beihilfe.get_value:
-                person.beihilfesatz = self.form_person_beihilfe.get_value()
+            if self.daten.allowance_active() and person['beihilfesatz'] != self.form_person_beihilfe.get_value():
+                person['beihilfesatz'] = self.form_person_beihilfe.get_value()
 
-            # Speichere die Person in der Datenbank
-            self.daten.save(person)
+            # Save the person in the database
+            self.daten.save(PERSON_OBJECT, person)
 
-            # Flag zurücksetzen
+            # Reset flag
             self.flag_edit_person = False
 
-            # Zeige die Liste der Personen
+            # Show the list of persons
             self.show_list_persons(widget)
 
         elif widget in self.init_persons_buttons.buttons:
-            # Erstelle eine neue Person
-            person = Person()
-            person.name = self.init_persons_name.get_value()
+            # Create a new person
+            person = {}
+            person['name'] = self.init_persons_name.get_value()
             
             if self.daten.allowance_active():
-                person.beihilfesatz = self.init_persons_beihilfe.get_value()
+                person['beihilfesatz'] = self.init_persons_beihilfe.get_value()
             else:
-                person.beihilfesatz = 0
+                person['beihilfesatz'] = 0
 
-            # Speichere die Person 
-            self.daten.new(person)
+            # Save the person 
+            self.daten.new(PERSON_OBJECT, person)
 
             # Show Success Message
-            await self.main_window.info_dialog('Person gespeichert', person.name + ' wurde erfolgreich gespeichert.')
+            await self.main_window.info_dialog('Person saved', person['name'] + ' was successfully saved.')
 
-            # Leere Eingabefelder
+            # Clear input fields
             self.init_persons_name.set_value('')
             self.init_persons_beihilfe.set_value('')
 
-            # Aktualisiere die Initialisierungsseite
+            # Update the initialization page
             self.update_init_page(widget)
 
 
@@ -1575,7 +1575,7 @@ class Kontolupe(toga.App):
         """Bestätigt das Löschen einer Person."""
         if self.table_persons.selection:
             if await self.main_window.question_dialog('Person löschen', 'Soll die ausgewählte Person wirklich gelöscht werden?'):
-                if not self.daten.deactivate(self.table_persons.selection):
+                if not self.daten.deactivate(PERSON_OBJECT, self.table_persons.selection):
                     self.main_window.error_dialog(
                         'Fehler beim Löschen',
                         'Die Person wird noch in einer aktiven Rechnung verwendet und kann daher nicht gelöscht werden.'
@@ -1835,10 +1835,10 @@ class Kontolupe(toga.App):
         # Beginn der Speicherroutine
         if not self.flag_edit_beihilfe:
             # Erstelle ein neues Beihilfepaket
-            allowance = Allowance()
-            allowance.datum = self.form_beihilfe_datum.get_value()
-            allowance.betrag = self.form_beihilfe_betrag.get_value()
-            allowance.erhalten = self.form_beihilfe_erhalten.get_value()
+            allowance = {}
+            allowance['datum'] = self.form_beihilfe_datum.get_value()
+            allowance['betrag'] = self.form_beihilfe_betrag.get_value()
+            allowance['erhalten'] = self.form_beihilfe_erhalten.get_value()
 
             # IDs der Rechnungen in Liste speichern
             bill_db_ids = []
@@ -1846,7 +1846,7 @@ class Kontolupe(toga.App):
                 bill_db_ids.append(sel.db_id)
 
             # Speichere das Beihilfepaket in der Datenbank
-            self.daten.new(allowance, bill_db_ids=bill_db_ids)
+            self.daten.new(ALLOWANCE_OBJECT, allowance, bill_db_ids=bill_db_ids)
 
         # Wechsel zur Startseite
         self.show_mainpage(widget)
@@ -1873,10 +1873,10 @@ class Kontolupe(toga.App):
         # Beginn der Speicherroutine
         if not self.flag_edit_pkv:
             # Erstelle ein neues PKV-Paket
-            insurance = Insurance()
-            insurance.datum = self.form_pkv_datum.get_value()
-            insurance.betrag = self.form_pkv_betrag.get_value()
-            insurance.erhalten = self.form_pkv_erhalten.get_value()
+            insurance = {}
+            insurance['datum'] = self.form_pkv_datum.get_value()
+            insurance['betrag'] = self.form_pkv_betrag.get_value()
+            insurance['erhalten'] = self.form_pkv_erhalten.get_value()
 
             # IDs der Rechnungen in Liste speichern
             bill_db_ids = []
@@ -1884,7 +1884,7 @@ class Kontolupe(toga.App):
                 bill_db_ids.append(sel.db_id)
 
             # Speichere das PKV-Paket in der Datenbank
-            self.daten.new(insurance, bill_db_ids=bill_db_ids)
+            self.daten.new(INSURANCE_OBJECT, insurance, bill_db_ids=bill_db_ids)
 
         # Wechsel zur Startseite
         self.show_mainpage(widget)
@@ -1894,7 +1894,7 @@ class Kontolupe(toga.App):
         """Löscht eine Beihilfe-Einreichung."""
         if self.table_allowance.selection:
             if await self.main_window.question_dialog('Beihilfe-Einreichung zurücksetzen', 'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.'):
-                self.daten.delete(self.table_allowance.selection)
+                self.daten.delete(ALLOWANCE_OBJECT, self.table_allowance.selection)
                 self.update_app(widget)
 
 
@@ -1902,7 +1902,7 @@ class Kontolupe(toga.App):
         """Löscht eine PKV-Einreichung."""
         if self.table_insurance.selection:
             if await self.main_window.question_dialog('PKV-Einreichung zurücksetzen', 'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.'):
-                self.daten.delete(self.table_insurance.selection)
+                self.daten.delete(INSURANCE_OBJECT, self.table_insurance.selection)
                 self.update_app(widget)
             
 
