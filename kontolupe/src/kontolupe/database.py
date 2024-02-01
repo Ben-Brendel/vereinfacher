@@ -5,393 +5,9 @@ import shutil
 from pathlib import Path
 from datetime import datetime
 from toga.sources import ListSource, ValueSource, Row
-from toga.sources import Listener
 from kontolupe.listeners import *
+from kontolupe.handlers import *
 
-DATABASE_VERSION = 1
-
-BILL_OBJECT = 'bill'
-ALLOWANCE_OBJECT = 'allowance'
-INSURANCE_OBJECT = 'insurance'
-INSTITUTION_OBJECT = 'institution'
-PERSON_OBJECT = 'person'
-
-BILL_TYPES = ('bill', 'bills', 'rechnung', 'rechnungen', 'Rechnung', 'Rechnungen')
-ALLOWANCE_TYPES = ('allowance', 'allowances', 'beihilfe', 'beihilfepakete', 'Beihilfe', 'Beihilfepakete')
-INSURANCE_TYPES = ('insurance', 'insurances', 'pkv', 'pkvpakete', 'PKV', 'PKVpakete')
-INSTITUTION_TYPES = ('institution', 'institutions', 'einrichtung', 'einrichtungen', 'Einrichtung', 'Einrichtungen')
-PERSON_TYPES = ('person', 'persons', 'personen', 'Person', 'Personen')
-
-OBJECT_TYPE_TO_DB_TABLE = {
-    **dict.fromkeys(BILL_TYPES, 'rechnungen'),
-    **dict.fromkeys(ALLOWANCE_TYPES, 'beihilfepakete'),
-    **dict.fromkeys(INSURANCE_TYPES, 'pkvpakete'),
-    **dict.fromkeys(INSTITUTION_TYPES, 'einrichtungen'),
-    **dict.fromkeys(PERSON_TYPES, 'personen')
-}
-
-BILLS_ATTRIBUTES = [
-    {
-        'name_db': 'id',
-        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-        'name_object': 'db_id',
-        'default_value': None,
-    },
-    {
-        'name_db': 'betrag',
-        'type_db': 'REAL',
-        'name_object': 'betrag',
-        'default_value': 0.0,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'betrag_euro',
-        'default_value': '0,00 €',
-    },
-    {
-        'name_db': 'abzug_beihilfe',
-        'type_db': 'REAL',
-        'name_object': 'abzug_beihilfe',
-        'default_value': 0.0,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'abzug_beihilfe_euro',
-        'default_value': '0,00 €',
-    },
-    {
-        'name_db': 'abzug_pkv',
-        'type_db': 'REAL',
-        'name_object': 'abzug_pkv',
-        'default_value': 0.0,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'abzug_pkv_euro',
-        'default_value': '0,00 €',
-    },
-    {
-        'name_db': 'rechnungsdatum',
-        'type_db': 'TEXT',
-        'name_object': 'rechnungsdatum',
-        'default_value': None,
-    },
-    {
-        'name_db': 'einrichtung_id',
-        'type_db': 'INTEGER',
-        'name_object': 'einrichtung_id',
-        'default_value': None,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'einrichtung_name',
-        'default_value': '',
-    },
-    {
-        'name_db': 'notiz',
-        'type_db': 'TEXT',
-        'name_object': 'notiz',
-        'default_value': None,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'info',
-        'default_value': '',
-    },
-    {
-        'name_db': 'person_id',
-        'type_db': 'INTEGER',
-        'name_object': 'person_id',
-        'default_value': None,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'person_name',
-        'default_value': '',
-    },
-    {
-        'name_db': 'beihilfesatz',
-        'type_db': 'INTEGER',
-        'name_object': 'beihilfesatz',
-        'default_value': None,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'beihilfesatz_prozent',
-        'default_value': '0 %',
-    },
-    {
-        'name_db': 'buchungsdatum',
-        'type_db': 'TEXT',
-        'name_object': 'buchungsdatum',
-        'default_value': None,
-    },
-    {
-        'name_db': 'aktiv',
-        'type_db': 'INTEGER',
-        'name_object': 'aktiv',
-        'default_value': True,
-    },
-    {
-        'name_db': 'bezahlt',
-        'type_db': 'INTEGER',
-        'name_object': 'bezahlt',
-        'default_value': False,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'bezahlt_text',
-        'default_value': 'Nein',
-    },
-    {
-        'name_db': 'beihilfe_id',
-        'type_db': 'INTEGER',
-        'name_object': 'beihilfe_id',
-        'default_value': None,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'beihilfe_eingereicht',
-        'default_value': 'Nein',
-    },
-    {
-        'name_db': 'pkv_id',
-        'type_db': 'INTEGER',
-        'name_object': 'pkv_id',
-        'default_value': None,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'pkv_eingereicht',
-        'default_value': 'Nein',
-    },
-]
-
-ALLOWANCE_ATTRIBUTES = [
-    {
-        'name_db': 'id',
-        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-        'name_object': 'db_id',
-        'default_value': None,
-    },
-    {
-        'name_db': 'betrag',
-        'type_db': 'REAL',
-        'name_object': 'betrag',
-        'default_value': 0.0,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'betrag_euro',
-        'default_value': '0,00 €',
-    },
-    {
-        'name_db': 'datum',
-        'type_db': 'TEXT',
-        'name_object': 'datum',
-        'default_value': None,
-    },
-    {
-        'name_db': 'aktiv',
-        'type_db': 'INTEGER',
-        'name_object': 'aktiv',
-        'default_value': True,
-    },
-    {
-        'name_db': 'erhalten',
-        'type_db': 'INTEGER',
-        'name_object': 'erhalten',
-        'default_value': False,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'erhalten_text',
-        'default_value': 'Nein',
-    },
-]
-
-INSURANCE_ATTRIBUTES = [
-    {
-        'name_db': 'id',
-        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-        'name_object': 'db_id',
-        'default_value': None,
-    },
-    {
-        'name_db': 'betrag',
-        'type_db': 'REAL',
-        'name_object': 'betrag',
-        'default_value': 0.0,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'betrag_euro',
-        'default_value': '0,00 €',
-    },
-    {
-        'name_db': 'datum',
-        'type_db': 'TEXT',
-        'name_object': 'datum',
-        'default_value': None,
-    },
-    {
-        'name_db': 'aktiv',
-        'type_db': 'INTEGER',
-        'name_object': 'aktiv',
-        'default_value': True,
-    },
-    {
-        'name_db': 'erhalten',
-        'type_db': 'INTEGER',
-        'name_object': 'erhalten',
-        'default_value': False,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'erhalten_text',
-        'default_value': 'Nein',
-    },
-]
-
-INSTITUTION_ATTRIBUTES = [
-    {
-        'name_db': 'id',
-        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-        'name_object': 'db_id',
-        'default_value': None,
-    },
-    {
-        'name_db': 'name',
-        'type_db': 'TEXT',
-        'name_object': 'name',
-        'default_value': None,
-    },
-    {
-        'name_db': 'strasse',
-        'type_db': 'TEXT',
-        'name_object': 'strasse',
-        'default_value': None,
-    },
-    {
-        'name_db': 'plz',
-        'type_db': 'TEXT',
-        'name_object': 'plz',
-        'default_value': None,
-    },
-    {
-        'name_db': 'ort',
-        'type_db': 'TEXT',
-        'name_object': 'ort',
-        'default_value': None,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'plz_ort',
-        'default_value': '',
-    },
-    {
-        'name_db': 'telefon',
-        'type_db': 'TEXT',
-        'name_object': 'telefon',
-        'default_value': None,
-    },
-    {
-        'name_db': 'email',
-        'type_db': 'TEXT',
-        'name_object': 'email',
-        'default_value': None,
-    },
-    {
-        'name_db': 'webseite',
-        'type_db': 'TEXT',
-        'name_object': 'webseite',
-        'default_value': None,
-    },
-    {
-        'name_db': 'notiz',
-        'type_db': 'TEXT',
-        'name_object': 'notiz',
-        'default_value': None,
-    },
-    {
-        'name_db': 'aktiv',
-        'type_db': 'INTEGER',
-        'name_object': 'aktiv',
-        'default_value': True,
-    },
-]
-
-PERSON_ATTRIBUTES = [
-    {
-        'name_db': 'id',
-        'type_db': 'INTEGER PRIMARY KEY AUTOINCREMENT',
-        'name_object': 'db_id',
-        'default_value': None,
-    },
-    {
-        'name_db': 'name',
-        'type_db': 'TEXT',
-        'name_object': 'name',
-        'default_value': None,
-    },
-    {
-        'name_db': 'beihilfesatz',
-        'type_db': 'INTEGER',
-        'name_object': 'beihilfesatz',
-        'default_value': None,
-    },
-    {
-        'name_db': None,
-        'type_db': None,
-        'name_object': 'beihilfesatz_prozent',
-        'default_value': '0 %',
-    },
-    {
-        'name_db': 'aktiv',
-        'type_db': 'INTEGER',
-        'name_object': 'aktiv',
-        'default_value': True,
-    },
-]
-
-def get_attributes(object_type):
-    """Gibt die zur Tabelle gehörende Liste der Attribute zurück."""
-    attributes = []
-    if object_type in BILL_TYPES:
-        attributes = BILLS_ATTRIBUTES
-    elif object_type in ALLOWANCE_TYPES:
-        attributes = ALLOWANCE_ATTRIBUTES
-    elif object_type in INSURANCE_TYPES:
-        attributes = INSURANCE_ATTRIBUTES
-    elif object_type in INSTITUTION_TYPES:
-        attributes = INSTITUTION_ATTRIBUTES
-    elif object_type in PERSON_TYPES:
-        attributes = PERSON_ATTRIBUTES
-    return attributes
-
-def get_accessors(object_type):
-    """Extract 'name_object' from attributes based on object_type."""
-    attributes = get_attributes(object_type)
-    return [attribute['name_object'] for attribute in attributes if attribute['name_object']]
-
-def dict_from_row(object_type, row):
-        """Convert a Row object to a dictionary."""
-        return {attribute['name_object']: getattr(row, attribute['name_object']) for attribute in get_attributes(object_type)}
 
 class Database:
     """Klasse zur Verwaltung der Datenbank."""
@@ -797,7 +413,10 @@ class Database:
         # Build the SQL query and values tuple dynamically
         query = f"""INSERT INTO {table} ({', '.join(column_names)}) VALUES ({', '.join(['?' for _ in column_names])})"""
         # get the values to insert
-        values = tuple(getattr(element, attribute) for attribute in attribute_names)
+        if isinstance(element, dict):
+            values = tuple(element[attribute] for attribute in attribute_names)
+        else:
+            values = tuple(getattr(element, attribute) for attribute in attribute_names)
 
         # Daten einfügen
         cursor.execute(query, values)
@@ -806,7 +425,6 @@ class Database:
         # Datenbankverbindung schließen
         connection.commit()
         connection.close()
-        print(f'### Database.__new_element: Inserted element with id {db_id} into table {table}')
 
         return db_id
     
@@ -827,8 +445,12 @@ class Database:
 
         # Build the SQL query and values tuple dynamically
         query = f"""UPDATE {table} SET {', '.join([f'{column_name} = ?' for column_name in column_names])} WHERE id = ?"""
-        values = tuple(getattr(element, attribute) for attribute in attribute_names)
-        values += (element.db_id,)
+        if isinstance(element, dict):
+            values = tuple(element[attribute] for attribute in attribute_names)
+            values += (element['db_id'],)
+        else:
+            values = tuple(getattr(element, attribute) for attribute in attribute_names)
+            values += (element.db_id,)
 
         # Daten ändern
         cursor.execute(query, values)
@@ -836,7 +458,6 @@ class Database:
         # Datenbankverbindung schließen
         connection.commit()
         connection.close()
-        print(f'### Database.__change_element: Changed element with id {element.db_id} in table {table}')
 
     def __delete_element(self, table, element):
         """Löschen eines Elements aus der Datenbank."""
@@ -845,12 +466,15 @@ class Database:
         cursor = connection.cursor()
 
         # Daten löschen
-        cursor.execute(f"""DELETE FROM {table} WHERE id = ?""", (element.db_id,))
+        if isinstance(element, dict):
+            db_id = element['db_id']
+        else:
+            db_id = element.db_id
+        cursor.execute(f"""DELETE FROM {table} WHERE id = ?""", (db_id,))
 
         # Datenbankverbindung schließen
         connection.commit()
         connection.close()
-        print(f'### Database.__delete_element: Deleted element with id {element.db_id} from table {table}')
 
     def __load_data(self, table, only_active=False):
         """Laden der Elemente einer Tabelle aus der Datenbank."""
@@ -1101,90 +725,72 @@ class DataInterface:
 
         if object_type in BILL_TYPES:
             # update the bill data and add it to the list source to create the row object
-            self.bills.append(self.update_object(object_type, **data))
-
-            # save the new bill to the database
-            bill = self.bills[-1]
-            bill.db_id = self.db.new(object_type, bill)            
+            bill = self.update_object(object_type, **data)
+            bill['db_id'] = self.db.new(object_type, bill)
+            self.bills.append(bill)
             
             # update connected values
-            if bill.bezahlt == False:
-                self.open_sum -= (bill.abzug_beihilfe + bill.abzug_pkv)
+            if bill['bezahlt'] == False:
+                self.open_sum -= (bill['abzug_beihilfe'] + bill['abzug_pkv'])
                 self.update_open_bookings()
             else:
-                self.open_sum += (bill.betrag - bill.abzug_beihilfe - bill.abzug_pkv)
+                self.open_sum += (bill['betrag'] - bill['abzug_beihilfe'] - bill['abzug_pkv'])
             
-            return bill.db_id
+            return bill['db_id']
 
         elif object_type in ALLOWANCE_TYPES:
-            # get the amount of the allowance
-            amount = 0
-            for bill_db_id in kwargs.get('bill_db_ids', []):
-                bill = self.bills.find({'db_id': bill_db_id})
-                amount += (bill.betrag - bill.abzug_beihilfe) * (bill.beihilfesatz / 100)
-            data['betrag'] = amount                    
             
             # update the allowance data and add it to the list source to create the row object
-            self.allowances.append(self.update_object(object_type, **data))
-
-            # save the new allowance to the database
-            allowance = self.allowances[-1]
-            allowance.db_id = self.db.new(object_type, allowance)            
+            allowance = self.update_object(object_type, **data)
+            allowance['db_id'] = self.db.new(object_type, allowance)
+            self.allowances.append(allowance)
             
             # update connected values
-            if allowance.erhalten == False:
+            if allowance['erhalten'] == False:
                 self.update_open_bookings()
             else:
-                self.open_sum -= allowance.betrag
+                self.open_sum -= allowance['betrag']
                 self.update_archivables()
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = self.bills.find({'db_id': bill_db_id})
-                bill.beihilfe_id = allowance.db_id
+                bill.beihilfe_id = allowance['db_id']
                 self.save(BILL_OBJECT, bill)
 
-            return allowance.db_id
+            return allowance['db_id']
 
         elif object_type in INSURANCE_TYPES:
-            # get the amount of the insurance
-            amount = 0
-            for bill_db_id in kwargs.get('bill_db_ids', []):
-                bill = self.bills.find({'db_id': bill_db_id})
-                amount += (bill.betrag - bill.abzug_pkv) * (1 - (bill.beihilfesatz / 100))
-            data['betrag'] = amount
 
             # update the insurance data and add it to the list source to create the row object
-            self.insurances.append(self.update_object(object_type, **data))
-
-            # save the new insurance to the database
-            insurance = self.insurances[-1]
-            insurance.db_id = self.db.new(object_type, insurance)
+            insurance = self.update_object(object_type, **data)
+            insurance['db_id'] = self.db.new(object_type, insurance)
+            self.insurances.append(insurance)
             
             # update connected values
-            if insurance.erhalten == False:
+            if insurance['erhalten'] == False:
                 self.update_open_bookings()
             else:
-                self.open_sum -= insurance.betrag
+                self.open_sum -= insurance['betrag']
                 self.update_archivables()
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = self.bills.find({'db_id': bill_db_id})
-                bill.pkv_id = insurance.db_id
+                bill.pkv_id = insurance['db_id']
                 self.save(BILL_OBJECT, bill)
 
-            return insurance.db_id
+            return insurance['db_id']
         
         elif object_type in INSTITUTION_TYPES:
-            self.institutions.append(self.update_object(object_type, **data))
-            institution = self.institutions[-1]
-            institution.db_id = self.db.new(object_type, institution)
-            return institution.db_id
+            institution = self.update_object(object_type, **data)
+            institution['db_id'] = self.db.new(object_type, institution)
+            self.institutions.append(institution)
+            return institution['db_id']
         
         elif object_type in PERSON_TYPES:
-            self.persons.append(self.update_object(object_type, **data))
-            person = self.persons[-1]
-            person.db_id = self.db.new(object_type, person)
-            return person.db_id
+            person = self.update_object(object_type, **data)
+            person['db_id'] = self.db.new(object_type, person)
+            self.persons.append(person)
+            return person['db_id']
         
         else:
             raise ValueError(f'### DataInterface.new_element: element type not known')     
@@ -1245,6 +851,7 @@ class DataInterface:
             while self.bills.find({'beihilfe_id': element.db_id}):
                 bill = self.bills.find({'beihilfe_id': element.db_id})
                 bill.beihilfe_id = None
+                print(f'### DatenInterface.delete_element: Deleting beihilfe from bill with dbid {bill.db_id}')
                 self.save(BILL_OBJECT, bill)
             
             if element.erhalten == False:
@@ -1584,111 +1191,3 @@ class DataInterface:
         self.archivables.append(temp)
 
         print(f'### DatenInterface.__update_archivables: Archivables updated: {self.archivables}')
-
-
-class SubmitsListener(Listener):
-
-    def __init__(self, list_allowances=None, list_insurances=None):
-        self.list_allowances = list_allowances
-        self.list_insurances = list_insurances
-
-    def change(self, item):
-        if self.list_allowances:
-            try:
-                list_item = self.list_allowances.find({'db_id': item.db_id})
-                if item.beihilfe_id is not None:
-                    self.list_allowances.remove(list_item)
-            except ValueError:    
-                if item.beihilfe_id is None:
-                    self.list_allowances.append(dict_from_row(BILL_OBJECT, item))
-
-        if self.list_insurances:
-            try:
-                list_item = self.list_insurances.find({'db_id': item.db_id})
-                if item.pkv_id is not None:
-                    self.list_insurances.remove(list_item)
-            except ValueError:
-                if item.pkv_id is None:
-                    self.list_insurances.append(dict_from_row(BILL_OBJECT, item))
-
-    def clear(self):
-        if self.list_allowances:
-            self.list_allowances.clear()
-        if self.list_insurances:
-            self.list_insurances.clear()
-
-    def insert(self, index, item):
-        if self.list_allowances and item.beihilfe_id == None:
-            self.list_allowances.append(dict_from_row(BILL_OBJECT, item))
-        if self.list_insurances and item.pkv_id == None:
-            self.list_insurances.append(dict_from_row(BILL_OBJECT, item))
-
-    def remove(self, index, item):  
-        if self.list_allowances and item.beihilfe_id == None:
-            try:
-                self.list_allowances.remove(self.list_allowances.find({'db_id': item.db_id}))
-            except ValueError:
-                pass
-
-        if self.list_insurances and item.pkv_id == None:
-            try:
-                self.list_insurances.remove(self.list_insurances.find({'db_id': item.db_id}))
-            except ValueError:
-                pass
-        
-
-class TableListener(Listener):
-
-    def __init__(self, table):
-        self.table = table
-
-    def change(self, item):
-        #self.table.change_row(item)
-        self.table.update()
-
-    def clear(self):
-        self.table.clear()
-
-    def insert(self, index, item):
-        #self.table.insert_row(index, item)
-        self.table.update()
-
-    def remove(self, index, item):  
-        #self.table.remove_row(index, item)
-        self.table.update()
-
-
-class SectionListener(Listener):
-
-    def __init__(self, section):
-        self.section = section
-
-    def change(self, item):
-        self.section.update_info(item)
-
-    def clear(self):
-        self.section.update_info()
-
-    def insert(self, index, item):
-        self.section.update_info(index, item)
-
-    def remove(self, index, item):  
-        self.section.update_info(index, item)
-
-
-class ButtonListener(Listener):
-
-    def __init__(self, button):
-        self.button = button
-
-    def change(self, item):
-        self.button.update_status(item)
-
-    def clear(self):
-        self.button.update_status()
-
-    def insert(self, index, item):  
-        self.button.update_status(index, item)
-
-    def remove(self, index, item):  
-        self.button.update_status(index, item)
