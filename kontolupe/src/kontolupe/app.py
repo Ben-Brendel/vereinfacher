@@ -147,7 +147,7 @@ class Kontolupe(toga.App):
                         )
                     
                     if result:
-                        self.daten.pay_receive(self.daten.get_element_by_dbid(self.daten.bills, booking.db_id))
+                        self.daten.pay_receive(booking.typ, self.daten.get_element_by_dbid(self.daten.bills, booking.db_id))
                         print('+++ Kontolupe.check_open_bills: Rechnung {} bezahlt.'.format(booking.db_id))
 
 
@@ -258,7 +258,7 @@ class Kontolupe(toga.App):
             
             # Liste alle Rechnungen auf, die zu diesem Paket gehören
             inhalt += 'Eingereichte Rechnungen:'
-            for rechnung in self.daten.list_rechnungen:
+            for rechnung in self.daten.bills:
                 if (typ == 'Beihilfe' and rechnung.beihilfe_id == element.db_id) or (typ == 'PKV' and rechnung.pkv_id == element.db_id):
                     inhalt += '\n- {}'.format(rechnung.info)
                     #inhalt += ', {}'.format(rechnung.rechnungsdatum)
@@ -653,7 +653,7 @@ class Kontolupe(toga.App):
         )
         self.box_mainpage.add(self.mainpage_section_bills)
         
-        if self.daten.beihilfe_aktiv():
+        if self.daten.allowance_active():
             # Section: Beihilfe-Einreichungen
             self.mainpage_section_allowance = SectionAllowance(
                 self.daten.bills,
@@ -1561,7 +1561,7 @@ class Kontolupe(toga.App):
             self.daten.new(PERSON_OBJECT, person)
 
             # Show Success Message
-            await self.main_window.info_dialog('Person saved', person['name'] + ' was successfully saved.')
+            await self.main_window.info_dialog('Person gespeichert', person['name'] + ' wurde erfolgreich gespeichert.')
 
             # Clear input fields
             self.init_persons_name.set_value('')
@@ -1931,23 +1931,15 @@ class Kontolupe(toga.App):
             case 'Rechnung':
                 booking = self.daten.get_element_by_dbid(self.daten.bills, db_id)
                 if await self.main_window.question_dialog('Rechnung bezahlt?', 'Soll die ausgewählte Rechnung wirklich als bezahlt markiert werden?'):
-                    self.daten.pay_receive(booking)
+                    self.daten.pay_receive(BILL_OBJECT, booking)
             case 'Beihilfe':
                 booking = self.daten.get_element_by_dbid(self.daten.allowances, db_id)
                 if await self.main_window.question_dialog('Beihilfe-Einreichung erstattet?', 'Soll die ausgewählte Beihilfe wirklich als erstattet markiert werden?'):
-                    self.daten.pay_receive(booking)
+                    self.daten.pay_receive(ALLOWANCE_OBJECT, booking)
             case 'PKV':
                 booking = self.daten.get_element_by_dbid(self.daten.insurances, db_id)
                 if await self.main_window.question_dialog('PKV-Einreichung erstattet?', 'Soll die ausgewählte PKV-Einreichung wirklich als erstattet markiert werden?'):                        
-                    self.daten.pay_receive(booking)
-
-
-    def edit_open_booking(self, widget):
-        """Öffnet die Seite zum Bearbeiten einer offenen Buchung."""
-        if self.table_open_bookings.selection:
-            match self.table_open_bookings.selection.typ:
-                case 'Rechnung':
-                    self.show_form_bill_edit(widget)
+                    self.daten.pay_receive(INSURANCE_OBJECT, booking)
 
 
     def create_commands(self):
@@ -2112,7 +2104,7 @@ class Kontolupe(toga.App):
         # Erstelle die Menüleiste
         self.commands.add(self.cmd_rechnungen_anzeigen)
         self.commands.add(self.cmd_rechnungen_neu)
-        if self.daten.beihilfe_aktiv():
+        if self.daten.allowance_active():
             self.commands.add(self.cmd_beihilfepakete_anzeigen)
             self.commands.add(self.cmd_beihilfepakete_neu)
         self.commands.add(self.cmd_pkvpakete_anzeigen)

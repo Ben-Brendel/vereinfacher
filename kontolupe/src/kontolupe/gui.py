@@ -461,6 +461,9 @@ class Table(toga.Box):
             )
         )
 
+    def remove_row(self, index, item):
+        self.remove(self.children[index])
+
     def update(self):
         self.clear()
         self.create()

@@ -47,16 +47,19 @@ class TableListener(Listener):
         self.table = table
 
     def change(self, item):
-        self.table.change_row(item)
+        #self.table.change_row(item)
+        self.table.update()
 
     def clear(self):
         self.table.clear()
 
     def insert(self, index, item):
-        self.table.insert_row(index, item)
+        #self.table.insert_row(index, item)
+        self.table.update()
 
     def remove(self, index, item):  
-        self.table.remove(index, item)
+        #self.table.remove_row(index, item)
+        self.table.update()
 
 
 class SectionListener(Listener):
