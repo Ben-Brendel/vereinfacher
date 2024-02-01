@@ -973,6 +973,10 @@ class DataInterface:
         # self.insurances.add_listener(ListListener(self, self.open_bookings))
         # self.insurances.add_listener(ListListener(self, self.archivables))
 
+    def dict_from_row(self, object_type, row):
+        """Convert a Row object to a dictionary."""
+        return {attribute['name_object']: getattr(row, attribute['name_object']) for attribute in get_attributes(object_type)}
+
     def update_object(self, object_type, row=None, **data):
         """Update an object."""
 
@@ -1006,13 +1010,9 @@ class DataInterface:
                         value = self.persons.find({'db_id': get_value('person_id', None)}).name or ''
                     case 'info':
                         value = (self.persons.find({'db_id': get_value('person_id', None)}).name + ', ' or '') + (self.institutions.find({'db_id': get_value('einrichtung_id', None)}).name or '')
-                if isinstance(row, Row):
-                    setattr(row, attribute['name_object'], value)
-                else:
-                    init_data[attribute['name_object']] = value
+                init_data[attribute['name_object']] = value
 
-        if not isinstance(row, Row):
-            return init_data
+        return init_data
 
     def initialized(self):
         """Prüft, ob die Anwendung initialisiert wurde. Default ist False."""
@@ -1191,10 +1191,28 @@ class DataInterface:
     def save(self, object_type, element):
         """Speichert ein Element."""
 
+        dict = self.dict_from_row(object_type, element)
+        updated_dict = self.update_object(object_type, **dict)
+
+        if object_type in BILL_TYPES:
+            index = self.bills.index(element)
+            self.bills[index] = updated_dict
+        elif object_type in ALLOWANCE_TYPES:
+            index = self.allowances.index(element)
+            self.allowances[index] = updated_dict
+        elif object_type in INSURANCE_TYPES:
+            index = self.insurances.index(element)
+            self.insurances[index] = updated_dict
+        elif object_type in INSTITUTION_TYPES:
+            index = self.institutions.index(element)
+            self.institutions[index] = updated_dict
+        elif object_type in PERSON_TYPES:
+            index = self.persons.index(element)
+            self.persons[index] = updated_dict
+
         self.db.save(object_type, element)
+
         if object_type in BILL_TYPES or object_type in ALLOWANCE_TYPES or object_type in INSURANCE_TYPES:
-            if object_type in BILL_TYPES:
-                self.update_object(BILL_OBJECT, element)
             self.update_open_bookings()
             self.update_archivables()
             self.update_open_sum()
@@ -1402,7 +1420,9 @@ class DataInterface:
     def update_bills(self):
         """Aktualisiert die referenzierten Werte in den Rechnungen und speichert sie in der Datenbank."""
 
-        for bill in self.bills:
+        for index, bill in enumerate(self.bills):
+
+            dict = self.dict_from_row(BILL_OBJECT, bill)
 
             changed = False
 
@@ -1411,7 +1431,8 @@ class DataInterface:
                 # If the allowance does not exist, reset the allowance id
                 if not any(allowance.db_id == bill.beihilfe_id for allowance in self.allowances):
                     print(f'### DatenInterface.__update_rechnungen: Beihilfepaket with id {bill.beihilfe_id} not found, reset beihilfe in rechnung with id {bill.db_id}')
-                    bill.beihilfe_id = None
+                    dict['beihilfe_id'] = None
+                    dict['beihilfe_eingereicht'] = 'Nein'
                     changed = True
 
             # Aktualisiere die PKV
@@ -1419,7 +1440,8 @@ class DataInterface:
                 # If the insurance does not exist, reset the insurance id
                 if not any(insurance.db_id == bill.pkv_id for insurance in self.insurances):
                     print(f'### DatenInterface.__update_rechnungen: PKV-Paket with id {bill.pkv_id} not found, reset pkv in rechnung with id {bill.db_id}')
-                    bill.pkv_id = None
+                    dict['pkv_id'] = None
+                    dict['pkv_eingereicht'] = 'Nein'
                     changed = True
 
             # Aktualisiere die Einrichtung
@@ -1427,36 +1449,36 @@ class DataInterface:
                 # If the institution does not exist, reset the institution id
                 if not any(institution.db_id == bill.einrichtung_id for institution in self.institutions):
                     print(f'### DatenInterface.__update_rechnungen: Institution with id {bill.einrichtung_id} not found, reset einrichtung in rechnung with id {bill.db_id}')
-                    bill.einrichtung_id = None
-                    bill.einrichtung_name = ''
+                    dict['einrichtung_id'] = None
+                    dict['einrichtung_name'] = ''
                     changed = True
                 else:
-                    bill.einrichtung_name = self.institutions.find({ 'db_id' : bill.einrichtung_id }).name
+                    dict['einrichtung_name'] = self.institutions.find({ 'db_id' : bill.einrichtung_id }).name
 
             # Aktualisiere die Person
             if bill.person_id:
                 # If the person does not exist, reset the person id
                 if not any(person.db_id == bill.person_id for person in self.persons):
                     print(f'### DatenInterface.__update_rechnungen: Person with id {bill.person_id} not found, reset person in rechnung with id {bill.db_id}')
-                    bill.person_id = None
-                    bill.person_name = ''
+                    dict['person_id'] = None
+                    dict['person_name'] = ''
                     changed = True
                 else:
-                    bill.person_name = self.persons.find({ 'db_id' : bill.person_id }).name
-            
-            # Info-Texte aktualisieren
-            self.update_object(BILL_OBJECT, bill)           
+                    dict['person_name'] = self.persons.find({ 'db_id' : bill.person_id }).name
+
             # Aktualisierte Rechnung speichern
             if changed:
-                self.db.save(BILL_OBJECT, bill)
+                self.bills[index] = dict
+                self.db.save(BILL_OBJECT, self.bills[index])
         
     def update_open_bookings(self):
         """Aktualisiert die Liste der offenen Buchungen."""
-        new_list = ListSource(accessors = self.accessors_open_bookings)
+
+        self.open_bookings.clear()
         
         for bill in self.bills:
             if not bill.bezahlt:
-                new_list.append({
+                self.open_bookings.append({
                     'db_id': bill.db_id,
                     'typ': 'Rechnung',
                     'betrag_euro': '-{:.2f} €'.format(bill.betrag).replace('.', ',') if bill.betrag else '0,00 €',
@@ -1468,7 +1490,7 @@ class DataInterface:
         if self.allowance_active():
             for allowance in self.allowances:
                 if not allowance.erhalten:
-                    new_list.append({
+                    self.open_bookings.append({
                         'db_id': allowance.db_id,
                         'typ': 'Beihilfe',
                         'betrag_euro': '+{:.2f} €'.format(allowance.betrag).replace('.', ',') if allowance.betrag else '0,00 €',
@@ -1479,7 +1501,7 @@ class DataInterface:
 
         for insurance in self.insurances:
             if not insurance.erhalten:
-                new_list.append({
+                self.open_bookings.append({
                     'db_id': insurance.db_id,
                     'typ': 'PKV',
                     'betrag_euro': '+{:.2f} €'.format(insurance.betrag).replace('.', ',') if insurance.betrag else '0,00 €',
@@ -1487,8 +1509,6 @@ class DataInterface:
                     'buchungsdatum': '',
                     'info': 'PKV-Einreichung'
                 })
-
-        self.open_bookings = new_list
 
     def update_allowances_bills(self):
         """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die Beihilfe."""
