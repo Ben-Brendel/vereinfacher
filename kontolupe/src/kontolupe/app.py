@@ -942,7 +942,7 @@ class Kontolupe(toga.App):
             bill['rechnungsdatum']      = self.form_bill_rechnungsdatum.get_value()
             if len(self.daten.persons) > 0:
                 bill['person_id']       = self.form_bill_person.get_value().db_id
-            bill['beihilfesatz']        = self.daten.get_allownce_by_name(self.form_bill_person.get_value().name)
+            bill['beihilfesatz']        = self.daten.get_allowance_by_name(self.form_bill_person.get_value().name)
             if len(self.daten.institutions) > 0:
                 bill['einrichtung_id']  = self.form_bill_einrichtung.get_value().db_id
             bill['notiz']               = self.form_bill_notiz.get_value()
@@ -1034,11 +1034,11 @@ class Kontolupe(toga.App):
                 # Überprüfe, ob Einreichungen existieren
                 if self.daten.allowance_active() and beihilfe_id is not None:
                     if await self.main_window.question_dialog('Zugehörige Beihilfe-Einreichung aktualisieren', 'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?'):
-                        self.daten.update_submit_amount(self.daten.get_element_by_dbid(self.daten.allowances, beihilfe_id))
+                        self.daten.update_submit_amount(ALLOWANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.allowances, beihilfe_id))
 
                 if pkv_id is not None:
                     if await self.main_window.question_dialog('Zugehörige PKV-Einreichung aktualisieren', 'Soll die zugehörige PKV-Einreichung aktualisiert werden?'):
-                        self.daten.update_submit_amount(self.daten.get_element_by_dbid(self.daten.insurances, pkv_id))
+                        self.daten.update_submit_amount(INSURANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.insurances, pkv_id))
 
                 # Rechnung löschen
                 self.daten.delete(BILL_OBJECT, self.daten.bills[self.edit_bill_id])

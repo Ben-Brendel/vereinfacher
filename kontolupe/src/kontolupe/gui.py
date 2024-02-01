@@ -3,7 +3,7 @@
 import toga
 from kontolupe.layout import *
 from kontolupe.validator import *
-from kontolupe.listeners import *
+from kontolupe.database import *
 from datetime import datetime
 
 def table_index_selection(widget):
