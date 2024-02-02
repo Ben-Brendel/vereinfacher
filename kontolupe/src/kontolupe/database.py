@@ -498,8 +498,7 @@ class Database:
         # Datenbankverbindung schließen
         connection.close()
 
-        accessors = get_accessors(table)
-        result = ListSource(accessors=accessors)
+        result = []
         for row in ergebnis:
             # Create the data dictionary for the list source
             data = {}
@@ -570,20 +569,33 @@ class DataInterface:
                 'PKV'
             ]
         
-        self.allowances_bills = ListSource(accessors = get_accessors('bill'))
-        self.insurances_bills = ListSource(accessors = get_accessors('bill'))
+        self.bills = ListSource(accessors = get_accessors(BILL_OBJECT))
+        self.allowances = ListSource(accessors = get_accessors(ALLOWANCE_OBJECT))
+        self.insurances = ListSource(accessors = get_accessors(INSURANCE_OBJECT))
+        self.institutions = ListSource(accessors = get_accessors(INSTITUTION_OBJECT))
+        self.persons = ListSource(accessors = get_accessors(PERSON_OBJECT))
+
+        self.allowances_bills = ListSource(accessors = get_accessors(BILL_OBJECT))
+        self.insurances_bills = ListSource(accessors = get_accessors(BILL_OBJECT))
         self.open_bookings = ListSource(accessors = self.accessors_open_bookings)
         self.archivables = ListSource(accessors = self.accessors_archivables)
 
         self.open_sum = ValueSource()
 
         # Aktive Einträge aus der Datenbank laden
-        # TODO: the data is only mapped onto the first accessor!
-        self.bills = self.db.load(BILL_OBJECT)
-        self.allowances = self.db.load(ALLOWANCE_OBJECT)
-        self.insurances = self.db.load(INSURANCE_OBJECT)
-        self.institutions = self.db.load(INSTITUTION_OBJECT)
-        self.persons = self.db.load(PERSON_OBJECT)
+        object_types = [
+            (PERSON_OBJECT, self.persons),
+            (INSTITUTION_OBJECT, self.institutions),
+            (ALLOWANCE_OBJECT, self.allowances),
+            (INSURANCE_OBJECT, self.insurances),
+            (BILL_OBJECT, self.bills)
+        ]
+
+        for object_type, object_list in object_types:
+            list_objects = self.db.load(object_type)
+            print(f'### DataInterface.__init__: Loading {object_type} from database')
+            for row in list_objects:
+                object_list.append(self.update_object(object_type, **row))
 
         # Listen initialisieren
         self.update_bills()
@@ -753,8 +765,10 @@ class DataInterface:
                 self.update_archivables()
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
-                bill = self.bills.find({'db_id': bill_db_id})
-                bill.beihilfe_id = allowance['db_id']
+                bill = dict_from_row(BILL_OBJECT, self.bills.find({'db_id': bill_db_id}))
+                print(f'### DatenInterface.new_element: Adding beihilfe to bill with dbid {bill_db_id}')
+                bill['beihilfe_id'] = allowance['db_id']
+                print(f'### DatenInterface.new_element: Saving bill with beihilfe_id {bill_db_id}')
                 self.save(BILL_OBJECT, bill)
 
             return allowance['db_id']
@@ -774,8 +788,8 @@ class DataInterface:
                 self.update_archivables()
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
-                bill = self.bills.find({'db_id': bill_db_id})
-                bill.pkv_id = insurance['db_id']
+                bill = dict_from_row(BILL_OBJECT, self.bills.find({'db_id': bill_db_id}))
+                bill['pkv_id'] = insurance['db_id']
                 self.save(BILL_OBJECT, bill)
 
             return insurance['db_id']
@@ -798,24 +812,29 @@ class DataInterface:
     def save(self, object_type, element):
         """Speichert ein Element."""
 
-        dict = dict_from_row(object_type, element)
-        updated_dict = self.update_object(object_type, **dict)
 
-        if dict != updated_dict:
+        if isinstance(element, dict):
+            old_dict = element
+            updated_dict = self.update_object(object_type, **element)
+        else:
+            old_dict = dict_from_row(object_type, element)
+            updated_dict = self.update_object(object_type, **old_dict)
+
+        if old_dict != updated_dict:
             if object_type in BILL_TYPES:
-                index = self.bills.index(element)
+                index = self.bills.index(self.bills.find({'db_id': old_dict['db_id']}))
                 self.bills[index] = updated_dict
             elif object_type in ALLOWANCE_TYPES:
-                index = self.allowances.index(element)
+                index = self.allowances.index(self.allowances.find({'db_id': old_dict['db_id']}))
                 self.allowances[index] = updated_dict
             elif object_type in INSURANCE_TYPES:
-                index = self.insurances.index(element)
+                index = self.insurances.index(self.insurances.find({'db_id': old_dict['db_id']}))
                 self.insurances[index] = updated_dict
             elif object_type in INSTITUTION_TYPES:
-                index = self.institutions.index(element)
+                index = self.institutions.index(self.institutions.find({'db_id': old_dict['db_id']}))
                 self.institutions[index] = updated_dict
             elif object_type in PERSON_TYPES:
-                index = self.persons.index(element)
+                index = self.persons.index(self.persons.find({'db_id': old_dict['db_id']}))
                 self.persons[index] = updated_dict
 
         self.db.save(object_type, element)
@@ -1170,12 +1189,12 @@ class DataInterface:
                 insurance = self.insurances.find({ 'db_id' : bill.pkv_id})
                 if ((allowance and allowance.erhalten) or not self.allowance_active()) and insurance and insurance.erhalten:
                     # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
-                    other_bills = [ar for ar in self.bill if (self.allowance_active() and ar.beihilfe_id == allowance.db_id) or ar.pkv_id == insurance.db_id]
+                    other_bills = [ar for ar in self.bills if (self.allowance_active() and ar.beihilfe_id == allowance.db_id) or ar.pkv_id == insurance.db_id]
                     if all(ar.bezahlt for ar in other_bills):
                         temp['Rechnung'].append(i)
                         if self.allowance_active():
-                            temp['Beihilfe'].add(self.beihilfepakete.index(allowance))
-                        temp['PKV'].add(self.pkvpakete.index(insurance))
+                            temp['Beihilfe'].add(self.allowances.index(allowance))
+                        temp['PKV'].add(self.insurances.index(insurance))
 
         # Convert sets back to lists
         temp['Beihilfe'] = list(temp['Beihilfe'])

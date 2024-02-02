@@ -1006,13 +1006,13 @@ class Kontolupe(toga.App):
             # und wenn ja, frage, ob diese aktualisiert werden soll
             if self.daten.allowance_active() and update_einreichung and bill.beihilfe_id is not None:
                 if await self.main_window.question_dialog('Zugehörige Beihilfe-Einreichung aktualisieren', 'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?'):
-                    self.daten.update_submit_amount(self.daten.get_element_by_dbid(self.daten.allowances, bill.beihilfe_id))
+                    self.daten.update_submit_amount(ALLOWANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.allowances, bill.beihilfe_id))
 
             # Überprüfe ob eine verknüpfte PKV-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
             if update_einreichung and bill.pkv_id is not None:
                 if await self.main_window.question_dialog('Zugehörige PKV-Einreichung aktualisieren', 'Soll die zugehörige PKV-Einreichung aktualisiert werden?'):
-                    self.daten.update_submit_amount(self.daten.get_element_by_dbid(self.daten.insurances, bill.pkv_id))
+                    self.daten.update_submit_amount(INSURANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.insurances, bill.pkv_id))
 
         # Zeigt die Liste der Rechnungen an.
         self.show_list_bills(widget)     
@@ -1895,7 +1895,6 @@ class Kontolupe(toga.App):
         if self.table_allowance.selection:
             if await self.main_window.question_dialog('Beihilfe-Einreichung zurücksetzen', 'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.'):
                 self.daten.delete(ALLOWANCE_OBJECT, self.table_allowance.selection)
-                self.update_app(widget)
 
 
     async def delete_pkv(self, widget):
@@ -1903,7 +1902,6 @@ class Kontolupe(toga.App):
         if self.table_insurance.selection:
             if await self.main_window.question_dialog('PKV-Einreichung zurücksetzen', 'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.'):
                 self.daten.delete(INSURANCE_OBJECT, self.table_insurance.selection)
-                self.update_app(widget)
             
 
     async def archivieren_bestaetigen(self, widget):
