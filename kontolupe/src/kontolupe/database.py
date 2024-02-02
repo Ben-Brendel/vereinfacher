@@ -564,9 +564,9 @@ class DataInterface:
             ]
         
         self.accessors_archivables = [
-                'Rechnung',
-                'Beihilfe',
-                'PKV'
+                'rechnung',
+                'beihilfe',
+                'pkv'
             ]
         
         self.bills = ListSource(accessors = get_accessors(BILL_OBJECT))
@@ -1166,9 +1166,9 @@ class DataInterface:
         """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""
 
         temp = {
-            'Rechnung' : [],
-            'Beihilfe' : set(),
-            'PKV' : set()
+            'rechnung' : [],
+            'beihilfe' : set(),
+            'pkv' : set()
         }
 
         for i, bill in enumerate(self.bills):
@@ -1187,19 +1187,19 @@ class DataInterface:
                     # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
                     other_bills = [ar for ar in self.bills if (self.allowance_active() and ar.beihilfe_id == allowance.db_id) or ar.pkv_id == insurance.db_id]
                     if all(ar.bezahlt for ar in other_bills):
-                        temp['Rechnung'].append(i)
+                        temp['rechnung'].append(i)
                         if self.allowance_active():
-                            temp['Beihilfe'].add(self.allowances.index(allowance))
-                        temp['PKV'].add(self.insurances.index(insurance))
+                            temp['beihilfe'].add(self.allowances.index(allowance))
+                        temp['pkv'].add(self.insurances.index(insurance))
 
         # Convert sets back to lists
-        temp['Beihilfe'] = list(temp['Beihilfe'])
-        temp['PKV'] = list(temp['PKV'])
+        temp['beihilfe'] = list(temp['beihilfe'])
+        temp['pkv'] = list(temp['pkv'])
 
         # sort the lists in reverse order
-        temp['Rechnung'].sort(reverse=True)
-        temp['Beihilfe'].sort(reverse=True)
-        temp['PKV'].sort(reverse=True)
+        temp['rechnung'].sort(reverse=True)
+        temp['beihilfe'].sort(reverse=True)
+        temp['pkv'].sort(reverse=True)
 
         # convert to listSource
         self.archivables.clear()

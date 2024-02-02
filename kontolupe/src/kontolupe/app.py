@@ -674,7 +674,6 @@ class Kontolupe(toga.App):
         # Weitere Funktionen
         self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
         self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_institutions)
-        #self.button_start_archiv = toga.Button('Keine archivierbaren Buchungen', style=style_button, on_press=self.archivieren_bestaetigen, enabled=False)
         self.button_start_archiv = ArchiveButton(self.daten.archivables, self.archivieren_bestaetigen)
 
         self.box_startseite_daten = toga.Box(style=style_section_daten)
