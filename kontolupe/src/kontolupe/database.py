@@ -743,10 +743,10 @@ class DataInterface:
             
             # update connected values
             if bill['bezahlt'] == False:
-                self.open_sum -= (bill['abzug_beihilfe'] + bill['abzug_pkv'])
+                self.open_sum.value -= (bill['abzug_beihilfe'] + bill['abzug_pkv'])
                 self.update_open_bookings()
             else:
-                self.open_sum += (bill['betrag'] - bill['abzug_beihilfe'] - bill['abzug_pkv'])
+                self.open_sum.value += (bill['betrag'] - bill['abzug_beihilfe'] - bill['abzug_pkv'])
             
             return bill['db_id']
 
@@ -761,7 +761,7 @@ class DataInterface:
             if allowance['erhalten'] == False:
                 self.update_open_bookings()
             else:
-                self.open_sum -= allowance['betrag']
+                self.open_sum.value -= allowance['betrag']
                 self.update_archivables()
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
@@ -784,7 +784,7 @@ class DataInterface:
             if insurance['erhalten'] == False:
                 self.update_open_bookings()
             else:
-                self.open_sum -= insurance['betrag']
+                self.open_sum.value -= insurance['betrag']
                 self.update_archivables()
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
