@@ -13,6 +13,7 @@ from kontolupe.database import *
 from kontolupe.validator import *
 from kontolupe.layout import *
 from kontolupe.gui import *
+from kontolupe.handlers import *
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""
@@ -959,42 +960,42 @@ class Kontolupe(toga.App):
             # True, wenn betrag oder beihilfesatz geändert wurde
             update_einreichung = False
 
-            bill = self.daten.bills[self.edit_bill_id]
-            
-            if bill.betrag != self.form_bill_betrag.get_value():
-                update_einreichung = True
-                bill.betrag = self.form_bill_betrag.get_value()
+            bill = dict_from_row(BILL_OBJECT, self.daten.bills[self.edit_bill_id])
 
-            if self.daten.allowance_active() and bill.beihilfesatz != self.daten.get_allowance_by_name(self.form_bill_person.get_value().name):
+            if bill['betrag'] != self.form_bill_betrag.get_value():
                 update_einreichung = True
-                bill.beihilfesatz = self.daten.get_allowance_by_name(self.form_bill_person.get_value().name)
+                bill['betrag'] = self.form_bill_betrag.get_value()
 
-            if self.daten.allowance_active() and bill.abzug_beihilfe != self.form_bill_abzug_beihilfe.get_value():
+            if self.daten.allowance_active() and bill['beihilfesatz'] != self.daten.get_allowance_by_name(self.form_bill_person.get_value().name):
                 update_einreichung = True
-                bill.abzug_beihilfe = self.form_bill_abzug_beihilfe.get_value()
-            
-            if bill.abzug_pkv != self.form_bill_abzug_pkv.get_value():
+                bill['beihilfesatz'] = self.daten.get_allowance_by_name(self.form_bill_person.get_value().name)
+
+            if self.daten.allowance_active() and bill['abzug_beihilfe'] != self.form_bill_abzug_beihilfe.get_value():
                 update_einreichung = True
-                bill.abzug_pkv = self.form_bill_abzug_pkv.get_value()
+                bill['abzug_beihilfe'] = self.form_bill_abzug_beihilfe.get_value()
+
+            if bill['abzug_pkv'] != self.form_bill_abzug_pkv.get_value():
+                update_einreichung = True
+                bill['abzug_pkv'] = self.form_bill_abzug_pkv.get_value()
 
             # Bearbeite die Rechnung
-            if bill.rechnungsdatum != self.form_bill_rechnungsdatum.get_value():
-                bill.rechnungsdatum = self.form_bill_rechnungsdatum.get_value()
+            if bill['rechnungsdatum'] != self.form_bill_rechnungsdatum.get_value():
+                bill['rechnungsdatum'] = self.form_bill_rechnungsdatum.get_value()
 
-            if len(self.daten.persons) > 0 and bill.person_id != self.form_bill_person.get_value().db_id:
-                bill.person_id = self.form_bill_person.get_value().db_id
-            
-            if len(self.daten.institutions) > 0 and bill.einrichtung_id != self.form_bill_einrichtung.get_value().db_id:
-                bill.einrichtung_id = self.form_bill_einrichtung.get_value().db_id
+            if len(self.daten.persons) > 0 and bill['person_id'] != self.form_bill_person.get_value().db_id:
+                bill['person_id'] = self.form_bill_person.get_value().db_id
 
-            if bill.notiz != self.form_bill_notiz.get_value():
-                bill.notiz = self.form_bill_notiz.get_value()
-            
-            if bill.buchungsdatum != self.form_bill_buchungsdatum.get_value():
-                bill.buchungsdatum = self.form_bill_buchungsdatum.get_value()
+            if len(self.daten.institutions) > 0 and bill['einrichtung_id'] != self.form_bill_einrichtung.get_value().db_id:
+                bill['einrichtung_id'] = self.form_bill_einrichtung.get_value().db_id
 
-            if bill.bezahlt != self.form_bill_bezahlt.get_value():
-                bill.bezahlt = self.form_bill_bezahlt.get_value()
+            if bill['notiz'] != self.form_bill_notiz.get_value():
+                bill['notiz'] = self.form_bill_notiz.get_value()
+
+            if bill['buchungsdatum'] != self.form_bill_buchungsdatum.get_value():
+                bill['buchungsdatum'] = self.form_bill_buchungsdatum.get_value()
+
+            if bill['bezahlt'] != self.form_bill_bezahlt.get_value():
+                bill['bezahlt'] = self.form_bill_bezahlt.get_value()
 
             # Übergabe die geänderte Rechnung an das Daten-Interface
             self.daten.save(BILL_OBJECT, bill)
@@ -1004,15 +1005,15 @@ class Kontolupe(toga.App):
 
             # Überprüfe ob eine verknüpfte Beihilfe-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
-            if self.daten.allowance_active() and update_einreichung and bill.beihilfe_id is not None:
+            if self.daten.allowance_active() and update_einreichung and bill['beihilfe_id'] is not None:
                 if await self.main_window.question_dialog('Zugehörige Beihilfe-Einreichung aktualisieren', 'Soll die zugehörige Beihilfe-Einreichung aktualisiert werden?'):
-                    self.daten.update_submit_amount(ALLOWANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.allowances, bill.beihilfe_id))
+                    self.daten.update_submit_amount(ALLOWANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.allowances, bill['beihilfe_id']))
 
             # Überprüfe ob eine verknüpfte PKV-Einreichung existiert
             # und wenn ja, frage, ob diese aktualisiert werden soll
-            if update_einreichung and bill.pkv_id is not None:
+            if update_einreichung and bill['pkv_id'] is not None:
                 if await self.main_window.question_dialog('Zugehörige PKV-Einreichung aktualisieren', 'Soll die zugehörige PKV-Einreichung aktualisiert werden?'):
-                    self.daten.update_submit_amount(INSURANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.insurances, bill.pkv_id))
+                    self.daten.update_submit_amount(INSURANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.insurances, bill['pkv_id']))
 
         # Zeigt die Liste der Rechnungen an.
         self.show_list_bills(widget)     
@@ -1781,7 +1782,8 @@ class Kontolupe(toga.App):
     def show_form_beihilfe_new(self, widget):
         """Zeigt die Seite zum Erstellen eines Beihilfepakets."""
         # Setze die Eingabefelder zurück
-        self.form_beihilfe_betrag.set_value(0)
+        self.on_select_beihilfe_bills(self.form_beihilfe_bills)
+
         self.form_beihilfe_datum.set_value(datetime.now())
         self.form_beihilfe_erhalten.set_value(False)
 
@@ -1796,7 +1798,7 @@ class Kontolupe(toga.App):
     def show_form_pkv_new(self, widget):
         """Zeigt die Seite zum Erstellen einer PKV-Einreichung."""
         # Setze die Eingabefelder zurück
-        self.form_pkv_betrag.set_value(0)
+        self.on_select_pkv_bills(self.form_pkv_bills)
         self.form_pkv_datum.set_value(datetime.now())
         self.form_pkv_erhalten.set_value(False)
 

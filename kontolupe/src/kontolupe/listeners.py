@@ -11,18 +11,16 @@ class SubmitsListener(Listener):
 
     def change(self, item):
         print(f'### SubmitsListener.change')
-        if self.list_allowances:
+        if self.list_allowances != None:
             try:
                 list_item = self.list_allowances.find({'db_id': item.db_id})
                 if item.beihilfe_id is not None:
                     self.list_allowances.remove(list_item)
-                    print(f'### SubmitsListener.change: removed item with dbid {item.db_id} and beihilfe_id {item.beihilfe_id} from list_allowances')
             except ValueError:    
                 if item.beihilfe_id is None:
                     self.list_allowances.append(dict_from_row(BILL_OBJECT, item))
-                    print(f'### SubmitsListener.change: appended item with dbid {item.db_id} and beihilfe_id {item.beihilfe_id} to list_allowances')
 
-        if self.list_insurances:
+        if self.list_insurances != None:
             try:
                 list_item = self.list_insurances.find({'db_id': item.db_id})
                 if item.pkv_id is not None:
@@ -42,7 +40,7 @@ class SubmitsListener(Listener):
 
     def insert(self, index, item):
         print(f'### SubmitsListener.insert')
-        if self.list_allowances:
+        if self.list_allowances != None:
             if item.beihilfe_id == None:
                 try:
                     self.list_allowances.find({'db_id': item.db_id})
@@ -56,7 +54,7 @@ class SubmitsListener(Listener):
                 except ValueError:
                     pass
 
-        if self.list_insurances:
+        if self.list_insurances != None:
             if item.pkv_id == None:
                 try:
                     self.list_insurances.find({'db_id': item.db_id})

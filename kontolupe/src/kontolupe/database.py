@@ -809,7 +809,7 @@ class DataInterface:
         else:
             raise ValueError(f'### DataInterface.new_element: element type not known')     
 
-    def save(self, object_type, element):
+    def save(self, object_type, element, **kwargs):
         """Speichert ein Element."""
 
 
@@ -867,11 +867,11 @@ class DataInterface:
             self.db.delete(object_type, element)
             self.allowances.remove(element)
 
-            while self.bills.find({'beihilfe_id': element.db_id}):
-                bill = self.bills.find({'beihilfe_id': element.db_id})
-                bill.beihilfe_id = None
-                print(f'### DatenInterface.delete_element: Deleting beihilfe from bill with dbid {bill.db_id}')
-                self.save(BILL_OBJECT, bill)
+            for bill in self.bills:
+                if bill.beihilfe_id == element.db_id:
+                    bill.beihilfe_id = None
+                    print(f'### DatenInterface.delete_element: Deleting beihilfe from bill with dbid {bill.db_id}')
+                    self.save(BILL_OBJECT, bill)
             
             if element.erhalten == False:
                 self.update_open_bookings()
@@ -883,11 +883,11 @@ class DataInterface:
         elif object_type in INSURANCE_TYPES:
             self.db.delete(object_type, element)
             self.insurances.remove(element)
-            
-            while self.bills.find({'pkv_id': element.db_id}): 
-                bill = self.bills.find({'pkv_id': element.db_id})
-                bill.pkv_id = None
-                self.save(BILL_OBJECT, bill)
+
+            for bill in self.bills:
+                if bill.pkv_id == element.db_id:
+                    bill.pkv_id = None
+                    self.save(BILL_OBJECT, bill)
             
             if element.erhalten == False:
                 self.update_open_bookings()
@@ -984,22 +984,10 @@ class DataInterface:
             elif not element.buchungsdatum:
                 element.buchungsdatum = datetime.now().strftime('%d.%m.%Y')
             self.save(object_type, element)
-            self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'Rechnung'}))
-            self.open_sum += (element.betrag - element.abzug_beihilfe - element.abzug_pkv)
 
-        elif object_type in ALLOWANCE_TYPES:
+        elif object_type in ALLOWANCE_TYPES or object_type in INSURANCE_TYPES:
             element.erhalten = True
             self.save(object_type, element)
-            self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'Beihilfe'}))
-            self.open_sum -= element.betrag
-
-        elif object_type in INSURANCE_TYPES:
-            element.erhalten = True
-            self.save(object_type, element)
-            self.open_bookings.remove(self.open_bookings.find({'db_id': element.db_id, 'typ': 'PKV'}))
-            self.open_sum -= element.betrag
-
-        self.update_archivables()
 
     def __check_person_used(self, person):
         """Prüft, ob eine Person verwendet wird."""
@@ -1185,8 +1173,16 @@ class DataInterface:
 
         for i, bill in enumerate(self.bills):
             if bill.bezahlt and (bill.beihilfe_id or not self.allowance_active()) and bill.pkv_id:
-                allowance = self.allowances.find({ 'db_id' : bill.beihilfe_id})
-                insurance = self.insurances.find({ 'db_id' : bill.pkv_id})
+                try:
+                    allowance = self.allowances.find({ 'db_id' : bill.beihilfe_id})
+                except ValueError:
+                    allowance = None
+                
+                try:
+                    insurance = self.insurances.find({ 'db_id' : bill.pkv_id})
+                except ValueError:
+                    insurance = None
+
                 if ((allowance and allowance.erhalten) or not self.allowance_active()) and insurance and insurance.erhalten:
                     # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
                     other_bills = [ar for ar in self.bills if (self.allowance_active() and ar.beihilfe_id == allowance.db_id) or ar.pkv_id == insurance.db_id]
