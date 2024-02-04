@@ -6,7 +6,7 @@ from pathlib import Path
 from datetime import datetime
 from toga.sources import ListSource, ValueSource, Row
 from kontolupe.listeners import *
-from kontolupe.handlers import *
+from kontolupe.general import *
 
 
 class Database:

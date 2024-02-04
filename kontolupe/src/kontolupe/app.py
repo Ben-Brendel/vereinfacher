@@ -13,7 +13,7 @@ from kontolupe.database import *
 from kontolupe.validator import *
 from kontolupe.layout import *
 from kontolupe.gui import *
-from kontolupe.handlers import *
+from kontolupe.general import *
 
 class Kontolupe(toga.App):
     """Die Hauptklasse der Anwendung."""

@@ -4,6 +4,7 @@ import toga
 from kontolupe.layout import *
 from kontolupe.validator import *
 from kontolupe.database import *
+from kontolupe.general import *
 from datetime import datetime
 
 def table_index_selection(widget):

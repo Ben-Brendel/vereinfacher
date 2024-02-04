@@ -1,7 +1,7 @@
 """Listener-Objekte für die GUI-Elemente."""
 
 from toga.sources import Listener
-from kontolupe.handlers import *
+from kontolupe.general import *
 
 class SubmitsListener(Listener):
 
