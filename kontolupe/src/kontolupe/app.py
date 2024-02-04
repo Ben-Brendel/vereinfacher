@@ -1658,13 +1658,13 @@ class Kontolupe(toga.App):
 
     def show_list_beihilfe(self, widget):
         """Zeigt die Seite mit der Liste der Beihilfepakete."""
-        
+        self.update_buttons(self.table_allowance)
         self.main_window.content = self.box_list_allowance
 
     
     def show_list_pkv(self, widget):
         """Zeigt die Seite mit der Liste der PKV-Einreichungen."""
-        
+        self.update_buttons(self.table_insurance)
         self.main_window.content = self.box_list_insurance
 
     
