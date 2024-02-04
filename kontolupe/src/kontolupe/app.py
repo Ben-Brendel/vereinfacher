@@ -152,16 +152,8 @@ class Kontolupe(toga.App):
                         print('+++ Kontolupe.check_open_bills: Rechnung {} bezahlt.'.format(booking.db_id))
 
 
-    def update_app(self, widget):
+    def update_buttons(self, widget):
         """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
-
-        if self.daten.init.get('automatic_archive', False):
-            self.box_startseite_daten.remove(self.button_start_archiv)
-            self.cmd_archivieren.enabled = False
-            self.daten.archive()
-        else:
-            self.box_startseite_daten.add(self.button_start_archiv)
-            self.cmd_archivieren.enabled = True
 
         # Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons.
         status = False
@@ -686,6 +678,15 @@ class Kontolupe(toga.App):
     def show_mainpage(self, widget):
         """Zurück zur Startseite."""
 
+        # Archivieren-Button
+        if self.daten.init.get('automatic_archive', False):
+            self.box_startseite_daten.remove(self.button_start_archiv)
+            self.cmd_archivieren.enabled = False
+            self.daten.archive()
+        else:
+            self.box_startseite_daten.add(self.button_start_archiv)
+            self.cmd_archivieren.enabled = True
+
         # Bezahlstatus der offenen Rechnungen abfragen
         self.add_background_task(self.check_open_bills)
         self.main_window.content = self.sc_mainpage
@@ -711,7 +712,7 @@ class Kontolupe(toga.App):
             accessors   = ['info', 'betrag_euro', 'bezahlt_text'],
             data        = self.daten.bills,
             style       = style_table,
-            on_select   = self.update_app,
+            on_select   = self.update_buttons,
             on_activate = self.info_dialog_booking
         )
         self.box_list_bills.add(self.table_bills)
@@ -1065,7 +1066,7 @@ class Kontolupe(toga.App):
             accessors   = ['name', 'ort', 'telefon'],
             data        = self.daten.institutions,
             style       = style_table,
-            on_select   = self.update_app,
+            on_select   = self.update_buttons,
             on_activate = self.show_info_institution
         )
         self.box_list_institutions.add(self.table_institutions)
@@ -1379,7 +1380,7 @@ class Kontolupe(toga.App):
             accessors   = ['name', 'beihilfesatz_prozent'],
             data        = self.daten.persons,
             style       = style_table,
-            on_select   = self.update_app
+            on_select   = self.update_buttons
         )
         self.box_list_persons.add(self.table_persons)
 
@@ -1603,18 +1604,19 @@ class Kontolupe(toga.App):
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.daten.allowances,
             style       = style_table,
-            on_select   = self.update_app,
+            on_select   = self.update_buttons,
             on_activate = self.info_dialog_booking
         )
         self.box_list_allowance.add(self.table_allowance)
 
         # Buttons
         self.list_allowance_buttons = ButtonBox(
-            parent  = self.box_list_allowance,
-            labels  = ['Reset', 'Erstattet', 'Neu'],
-            targets = [self.delete_beihilfe, self.pay_receive, self.show_form_beihilfe_new],
-            ids     = ['reset_allowance', 'receive_allowance', 'new_allowance'],
-            enabled = [False, False, True]
+            parent      = self.box_list_allowance,
+            labels      = ['Reset', 'Erstattet', 'Neu'],
+            targets     = [self.delete_beihilfe, self.pay_receive, self.show_form_beihilfe_new],
+            ids         = ['reset_allowance', 'receive_allowance', 'new_allowance'],
+            connections = [None, None, self.daten.allowances_bills],
+            enabled     = [False, False, True]
         )
 
 
@@ -1638,32 +1640,31 @@ class Kontolupe(toga.App):
             accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
             data        = self.daten.insurances,
             style       = style_table,
-            on_select   = self.update_app,
+            on_select   = self.update_buttons,
             on_activate = self.info_dialog_booking
         )
         self.box_list_insurance.add(self.table_insurance)
 
         # Buttons
         self.list_insurance_buttons = ButtonBox(
-            parent  = self.box_list_insurance,
-            labels  = ['Reset', 'Erstattet', 'Neu'],
-            targets = [self.delete_pkv, self.pay_receive, self.show_form_pkv_new],
-            ids     = ['reset_insurance', 'receive_insurance', 'new_insurance'],
-            enabled = [False, False, True]
+            parent      = self.box_list_insurance,
+            labels      = ['Reset', 'Erstattet', 'Neu'],
+            targets     = [self.delete_pkv, self.pay_receive, self.show_form_pkv_new],
+            ids         = ['reset_insurance', 'receive_insurance', 'new_insurance'],
+            connections = [None, None, self.daten.insurances_bills],
+            enabled     = [False, False, True]
         )
 
 
     def show_list_beihilfe(self, widget):
         """Zeigt die Seite mit der Liste der Beihilfepakete."""
-        # Zum Setzen des Button Status
-        self.update_app(widget)
+        
         self.main_window.content = self.box_list_allowance
 
     
     def show_list_pkv(self, widget):
         """Zeigt die Seite mit der Liste der PKV-Einreichungen."""
-        # Zum Setzen des Button Status
-        self.update_app(widget)
+        
         self.main_window.content = self.box_list_insurance
 
     

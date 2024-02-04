@@ -7,26 +7,6 @@ from kontolupe.database import *
 from kontolupe.general import *
 from datetime import datetime
 
-def table_index_selection(widget):
-    """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
-    if isinstance(widget, toga.Table) and widget.selection is not None:
-        return widget.data.index(widget.selection) 
-    return None
-    
-
-def add_newlines(input_string, max_line_length):
-    lines = input_string.split(' ')
-    result_lines = []
-    current_line = ''
-    for line in lines:
-        if len(current_line) + len(line) + 1 > max_line_length:  # +1 for the comma
-            result_lines.append(current_line.rstrip(' '))
-            current_line = line + ' '
-        else:
-            current_line += line + ' '
-    result_lines.append(current_line.rstrip(' '))
-    return '\n'.join(result_lines)
-
 
 class SectionOpenSum(toga.Box):
     """Erzeugt den Anzeigebereich für den offenen Betrag."""
@@ -206,7 +186,10 @@ class ConnectedButton(toga.Button):
         self.update_status()
 
     def update_status(self, *args):
-        pass
+        if self.list_source:
+            self.enabled = True
+        else:
+            self.enabled = False
 
 
 class ArchiveButton(ConnectedButton):
@@ -935,7 +918,7 @@ class LabeledSwitch:
 class ButtonBox:
     """Create a box with up to four buttons."""
 
-    def __init__(self, parent, labels, targets, ids=None, enabled=True):
+    def __init__(self, parent, labels, targets, ids=None, enabled=True, connections=None, **kwargs):
         """Create a box with up to four buttons at the bottom of a window."""
         if not len(labels) == len(targets):
             raise ValueError('Labels and targets must have the same length.')
@@ -945,6 +928,13 @@ class ButtonBox:
         
         if ids is None:
             ids = [None] * len(labels)
+
+        if connections is  None:
+            connections = [None] * len(labels)
+        else:
+            if len(connections) != len(labels):
+                raise ValueError('The length of connections must be the same as labels (None allowed).')
+            
 
         # enabled should be a list of booleans of the same length than labels and targets
         # if enabled is a boolean, it will be converted to a list of the same length than labels and targets
@@ -956,8 +946,19 @@ class ButtonBox:
                 enabled.extend([True] * (len(labels) - len(enabled)))
 
         self.buttons = []
-        for label, target, button_id, status in zip(labels, targets, ids, enabled):
-            self.buttons.append(toga.Button(label, on_press=target, id=button_id, style=style_button, enabled=status))
+        for label, target, button_id, status, connection in zip(labels, targets, ids, enabled, connections):
+            if isinstance(connection, ListSource):
+                print("+++ Kontolupe: Button mit ID " + str(button_id) + " hat eine Verbindung.")
+                self.buttons.append(ConnectedButton(
+                    connection, 
+                    text=label, 
+                    on_press=target, 
+                    id=button_id, 
+                    style=style_button, 
+                    enabled=status
+                ))
+            else:
+                self.buttons.append(toga.Button(label, on_press=target, id=button_id, style=style_button, enabled=status))
             
 
         if len(self.buttons) < 4:

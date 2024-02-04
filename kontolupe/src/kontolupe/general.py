@@ -1,4 +1,6 @@
-"""Konstanten für die Anwendung."""
+"""Konstanten und allgemeine Funktionen für die Anwendung."""
+
+import toga
 
 DATABASE_VERSION = 1
 
@@ -384,3 +386,22 @@ def get_accessors(object_type):
 def dict_from_row(object_type, row):
         """Convert a Row object to a dictionary."""
         return {attribute['name_object']: getattr(row, attribute['name_object']) for attribute in get_attributes(object_type)}
+
+def table_index_selection(widget):
+    """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
+    if isinstance(widget, toga.Table) and widget.selection is not None:
+        return widget.data.index(widget.selection) 
+    return None
+    
+def add_newlines(input_string, max_line_length):
+    lines = input_string.split(' ')
+    result_lines = []
+    current_line = ''
+    for line in lines:
+        if len(current_line) + len(line) + 1 > max_line_length:  # +1 for the comma
+            result_lines.append(current_line.rstrip(' '))
+            current_line = line + ' '
+        else:
+            current_line += line + ' '
+    result_lines.append(current_line.rstrip(' '))
+    return '\n'.join(result_lines)
