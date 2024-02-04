@@ -87,10 +87,10 @@ class Section(toga.Box):
 class SectionBills(Section):
     """Create the section for the bills."""
 
-    def __init__(self, list_source, on_press_show=None, on_press_new=None):
+    def __init__(self, list_source, on_press_show=None, on_press_new=None, **kwargs):
         super().__init__(
             list_source = list_source,
-            style = style_section_rechnungen, 
+            style = kwargs.get('style', style_section_rechnungen),
             title = 'Rechnungen', 
             on_press_show = on_press_show, 
             on_press_new = on_press_new,
@@ -98,10 +98,7 @@ class SectionBills(Section):
         )
     
     def update_info(self, *args):
-        count = 0
-        for row in self.list_source:
-            if row.bezahlt == False:
-                count += 1
+        count = len([item for item in self.list_source if not item.bezahlt])
         
         match count:
             case 0:
@@ -115,7 +112,7 @@ class SectionBills(Section):
 class SectionAllowance(Section):
     """Create the section for the allowance."""
 
-    def __init__(self, list_source, on_press_show=None, on_press_new=None):
+    def __init__(self, list_source, on_press_show=None, on_press_new=None, **kwargs):
         super().__init__(
             list_source = list_source,
             style = style_section_beihilfe, 
@@ -126,10 +123,7 @@ class SectionAllowance(Section):
         )
 
     def update_info(self, *args):
-        count = 0
-        for row in self.list_source:
-            if row.beihilfe_id == None:
-                count += 1
+        count = len(self.list_source)
         
         match count:
             case 0:
@@ -146,7 +140,7 @@ class SectionAllowance(Section):
 class SectionInsurance(Section):
     """Create the section for the insurance."""
 
-    def __init__(self, list_source, on_press_show=None, on_press_new=None):
+    def __init__(self, list_source, on_press_show=None, on_press_new=None, **kwargs):
         super().__init__(
             list_source = list_source,
             style = style_section_pkv, 
@@ -158,10 +152,7 @@ class SectionInsurance(Section):
 
     def update_info(self, *args):
         # Anzeige und Buttons der offenen Rechnungen aktualisieren
-        count = 0
-        for row in self.list_source:
-            if row.pkv_id == None:
-                count += 1
+        count = len(self.list_source)
         
         match count:
             case 0:
@@ -948,7 +939,6 @@ class ButtonBox:
         self.buttons = []
         for label, target, button_id, status, connection in zip(labels, targets, ids, enabled, connections):
             if isinstance(connection, ListSource):
-                print("+++ Kontolupe: Button mit ID " + str(button_id) + " hat eine Verbindung.")
                 self.buttons.append(ConnectedButton(
                     connection, 
                     text=label, 

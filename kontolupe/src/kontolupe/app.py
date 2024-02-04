@@ -168,13 +168,13 @@ class Kontolupe(toga.App):
                 self.list_bills_buttons.set_enabled('edit_bill', status)
             case self.table_allowance:
                 self.list_allowance_buttons.set_enabled('reset_allowance', status)
-                if widget.selection.erhalten:
+                if widget.selection and widget.selection.erhalten:
                     self.list_allowance_buttons.set_enabled('receive_allowance', False)
                 else:
                     self.list_allowance_buttons.set_enabled('receive_allowance', status)
             case self.table_insurance:
                 self.list_insurance_buttons.set_enabled('reset_insurance', status)
-                if widget.selection.erhalten:
+                if widget.selection and widget.selection.erhalten:
                     self.list_insurance_buttons.set_enabled('receive_insurance', False)
                 else:
                     self.list_insurance_buttons.set_enabled('receive_insurance', status)
@@ -649,7 +649,7 @@ class Kontolupe(toga.App):
         if self.daten.allowance_active():
             # Section: Beihilfe-Einreichungen
             self.mainpage_section_allowance = SectionAllowance(
-                self.daten.bills,
+                self.daten.allowances_bills,
                 on_press_show   = self.show_list_beihilfe,
                 on_press_new    = self.show_form_beihilfe_new,
             )
@@ -657,7 +657,7 @@ class Kontolupe(toga.App):
 
         # Section: PKV-Einreichungen
         self.mainpage_section_insurance = SectionInsurance(
-            self.daten.bills,
+            self.daten.insurances_bills,
             on_press_show   = self.show_list_pkv,
             on_press_new    = self.show_form_pkv_new,
         )

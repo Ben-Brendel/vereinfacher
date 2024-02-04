@@ -609,10 +609,6 @@ class DataInterface:
         self.bills.add_listener(SubmitsListener(self.allowances_bills, self.insurances_bills))
         # self.bills.add_listener(ListListener(self, self.open_bookings))
         # self.bills.add_listener(ListListener(self, self.archivables))
-        # self.allowances.add_listener(ListListener(self, self.open_bookings))
-        # self.allowances.add_listener(ListListener(self, self.archivables))
-        # self.insurances.add_listener(ListListener(self, self.open_bookings))
-        # self.insurances.add_listener(ListListener(self, self.archivables))
 
     def update_object(self, object_type, row=None, **data):
         """Update an object."""
@@ -695,13 +691,13 @@ class DataInterface:
     def archive(self):
         """Archiviert alle archivierbaren Buchungen."""
 
-        for index in self.archivables['Rechnung']:
+        for index in self.archivables[0].rechnung:
             self.deactivate(BILL_OBJECT, self.bills[index])
 
-        for index in self.archivables['Beihilfe']:
+        for index in self.archivables[0].beihilfe:
             self.deactivate(ALLOWANCE_OBJECT, self.allowances[index])
             
-        for index in self.archivables['PKV']:
+        for index in self.archivables[0].pkv:
             self.deactivate(INSURANCE_OBJECT, self.insurances[index])
 
         self.archivables.clear()
@@ -769,7 +765,7 @@ class DataInterface:
                 print(f'### DatenInterface.new_element: Adding beihilfe to bill with dbid {bill_db_id}')
                 bill['beihilfe_id'] = allowance['db_id']
                 print(f'### DatenInterface.new_element: Saving bill with beihilfe_id {bill_db_id}')
-                self.save(BILL_OBJECT, bill)
+                self.save(BILL_OBJECT, bill, update=False)
 
             return allowance['db_id']
 
@@ -790,7 +786,7 @@ class DataInterface:
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = dict_from_row(BILL_OBJECT, self.bills.find({'db_id': bill_db_id}))
                 bill['pkv_id'] = insurance['db_id']
-                self.save(BILL_OBJECT, bill)
+                self.save(BILL_OBJECT, bill, update=False)
 
             return insurance['db_id']
         
@@ -809,7 +805,7 @@ class DataInterface:
         else:
             raise ValueError(f'### DataInterface.new_element: element type not known')     
 
-    def save(self, object_type, element, **kwargs):
+    def save(self, object_type, element, update=True, **kwargs):
         """Speichert ein Element."""
 
 
@@ -839,15 +835,14 @@ class DataInterface:
 
         self.db.save(object_type, element)
 
-        if object_type in BILL_TYPES or object_type in ALLOWANCE_TYPES or object_type in INSURANCE_TYPES:
+        if update and object_type in BILL_TYPES or object_type in ALLOWANCE_TYPES or object_type in INSURANCE_TYPES:
             self.update_open_bookings()
             self.update_archivables()
             self.update_open_sum()
-        elif object_type in INSTITUTION_TYPES or object_type in PERSON_TYPES:
+        elif update and object_type in INSTITUTION_TYPES or object_type in PERSON_TYPES:
             self.update_bills()
             self.update_open_bookings()
-        
-        else:
+        elif update:
             raise ValueError(f'### DataInterface.save_element: element type not known')
             
     def delete(self, object_type, element):
@@ -858,7 +853,7 @@ class DataInterface:
             self.bills.remove(element)
             if element.bezahlt == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables['Rechnung']:
+            elif element.db_id in self.archivables[0].rechnung:
                 self.update_archivables()
             self.update_open_sum()
             return True
@@ -871,11 +866,11 @@ class DataInterface:
                 if bill.beihilfe_id == element.db_id:
                     bill.beihilfe_id = None
                     print(f'### DatenInterface.delete_element: Deleting beihilfe from bill with dbid {bill.db_id}')
-                    self.save(BILL_OBJECT, bill)
+                    self.save(BILL_OBJECT, bill, update=False)
             
             if element.erhalten == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables['Beihilfe']:
+            elif element.db_id in self.archivables[0].beihilfe:
                 self.update_archivables()
             self.update_open_sum()
             return True
@@ -887,11 +882,11 @@ class DataInterface:
             for bill in self.bills:
                 if bill.pkv_id == element.db_id:
                     bill.pkv_id = None
-                    self.save(BILL_OBJECT, bill)
+                    self.save(BILL_OBJECT, bill, update=False)
             
             if element.erhalten == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables['PKV']:
+            elif element.db_id in self.archivables[0].pkv:
                 self.update_archivables()
             self.update_open_sum()
             return True
@@ -924,7 +919,7 @@ class DataInterface:
             self.bills.remove(element)
             if element.bezahlt == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables['Rechnung']:
+            elif element.db_id in self.archivables[0].rechnung:
                 self.update_archivables()
             self.update_open_sum()
             return True
@@ -936,7 +931,7 @@ class DataInterface:
 
             if element.erhalten == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables['Beihilfe']:
+            elif element.db_id in self.archivables[0].beihilfe:
                 self.update_archivables()
             self.update_open_sum()
             return True
@@ -948,7 +943,7 @@ class DataInterface:
 
             if element.erhalten == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables['PKV']:
+            elif element.db_id in self.archivables[0].pkv:
                 self.update_archivables()
             self.update_open_sum()
             return True
