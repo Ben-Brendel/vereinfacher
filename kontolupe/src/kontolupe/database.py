@@ -753,19 +753,19 @@ class DataInterface:
             allowance['db_id'] = self.db.new(object_type, allowance)
             self.allowances.append(allowance)
             
-            # update connected values
-            if allowance['erhalten'] == False:
-                self.update_open_bookings()
-            else:
-                self.open_sum.value -= allowance['betrag']
-                self.update_archivables()
-            
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = dict_from_row(BILL_OBJECT, self.bills.find({'db_id': bill_db_id}))
                 print(f'### DatenInterface.new_element: Adding beihilfe to bill with dbid {bill_db_id}')
                 bill['beihilfe_id'] = allowance['db_id']
                 print(f'### DatenInterface.new_element: Saving bill with beihilfe_id {bill_db_id}')
                 self.save(BILL_OBJECT, bill, update=False)
+
+            # update connected values
+            if allowance['erhalten'] == False:
+                self.update_open_bookings()
+            else:
+                self.open_sum.value -= allowance['betrag']
+                self.update_archivables()
 
             return allowance['db_id']
 
@@ -776,17 +776,17 @@ class DataInterface:
             insurance['db_id'] = self.db.new(object_type, insurance)
             self.insurances.append(insurance)
             
+            for bill_db_id in kwargs.get('bill_db_ids', []):
+                bill = dict_from_row(BILL_OBJECT, self.bills.find({'db_id': bill_db_id}))
+                bill['pkv_id'] = insurance['db_id']
+                self.save(BILL_OBJECT, bill, update=False)
+
             # update connected values
             if insurance['erhalten'] == False:
                 self.update_open_bookings()
             else:
                 self.open_sum.value -= insurance['betrag']
                 self.update_archivables()
-            
-            for bill_db_id in kwargs.get('bill_db_ids', []):
-                bill = dict_from_row(BILL_OBJECT, self.bills.find({'db_id': bill_db_id}))
-                bill['pkv_id'] = insurance['db_id']
-                self.save(BILL_OBJECT, bill, update=False)
 
             return insurance['db_id']
         
@@ -849,33 +849,46 @@ class DataInterface:
         """Löscht ein Element und gibt zurück ob es erfolgreich war."""
 
         if object_type in BILL_TYPES:
+            if isinstance(element, dict):
+                element = self.bills.find({'db_id': element['db_id']})
+
+            index = self.bills.index(element)
             self.db.delete(object_type, element)
             self.bills.remove(element)
             if element.bezahlt == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables[0].rechnung:
+            elif index in self.archivables[0].rechnung:
                 self.update_archivables()
             self.update_open_sum()
             return True
 
         elif object_type in ALLOWANCE_TYPES:
+            if isinstance(element, dict):
+                element = self.allowances.find({'db_id': element['db_id']})
+
+            index = self.allowances.index(element)
             self.db.delete(object_type, element)
             self.allowances.remove(element)
 
             for bill in self.bills:
                 if bill.beihilfe_id == element.db_id:
-                    bill.beihilfe_id = None
+                    bill_dict = dict_from_row(BILL_OBJECT, bill)
+                    bill_dict['beihilfe_id'] = None
                     print(f'### DatenInterface.delete_element: Deleting beihilfe from bill with dbid {bill.db_id}')
-                    self.save(BILL_OBJECT, bill, update=False)
-            
+                    self.save(BILL_OBJECT, bill_dict, update=False)
+
             if element.erhalten == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables[0].beihilfe:
+            elif index in self.archivables[0].beihilfe:
                 self.update_archivables()
             self.update_open_sum()
             return True
 
         elif object_type in INSURANCE_TYPES:
+            if isinstance(element, dict):
+                element = self.insurances.find({'db_id': element['db_id']})
+
+            index = self.insurances.index(element)
             self.db.delete(object_type, element)
             self.insurances.remove(element)
 
@@ -886,12 +899,15 @@ class DataInterface:
             
             if element.erhalten == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables[0].pkv:
+            elif index in self.archivables[0].pkv:
                 self.update_archivables()
             self.update_open_sum()
             return True
         
         elif object_type in INSTITUTION_TYPES:
+            if isinstance(element, dict):
+                element = self.institutions.find({'db_id': element['db_id']})
+
             if not self.__check_institution_used(element):
                 self.db.delete(object_type, element)
                 self.institutions.remove(element)
@@ -900,6 +916,9 @@ class DataInterface:
                 return False
         
         elif object_type in PERSON_TYPES:
+            if isinstance(element, dict):
+                element = self.persons.find({'db_id': element['db_id']})
+
             if not self.__check_person_used(element):
                 self.db.delete(object_type, element)
                 self.persons.remove(element)
@@ -914,41 +933,59 @@ class DataInterface:
         """Deaktiviert ein Element und gibt zurück, ob es erfolgreich war."""
         
         if object_type in BILL_TYPES:
+            if isinstance(element, dict):
+                element = self.bills.find({'db_id': element['db_id']})
+
+            index = self.bills.index(element)
+
             element.aktiv = False
             self.db.save(object_type, element)
             self.bills.remove(element)
             if element.bezahlt == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables[0].rechnung:
+            elif index in self.archivables[0].rechnung:
                 self.update_archivables()
             self.update_open_sum()
             return True
 
         elif object_type in ALLOWANCE_TYPES:
+            if isinstance(element, dict):
+                element = self.allowances.find({'db_id': element['db_id']})
+
+            index = self.allowances.index(element)
+
             element.aktiv = False
             self.db.save(object_type, element)
             self.allowances.remove(element)
 
             if element.erhalten == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables[0].beihilfe:
+            elif index in self.archivables[0].beihilfe:
                 self.update_archivables()
             self.update_open_sum()
             return True
 
         elif object_type in INSURANCE_TYPES:
+            if isinstance(element, dict):
+                element = self.insurances.find({'db_id': element['db_id']})
+
+            index = self.insurances.index(element)
+
             element.aktiv = False
             self.db.save(object_type, element)
             self.insurances.remove(element)
 
             if element.erhalten == False:
                 self.update_open_bookings()
-            elif element.db_id in self.archivables[0].pkv:
+            elif index in self.archivables[0].pkv:
                 self.update_archivables()
             self.update_open_sum()
             return True
 
         elif object_type in INSTITUTION_TYPES:
+            if isinstance(element, dict):
+                element = self.institutions.find({'db_id': element['db_id']})
+
             if not self.__check_institution_used(element):
                 element.aktiv = False
                 self.db.save(object_type, element)
@@ -958,6 +995,9 @@ class DataInterface:
                 return False
 
         elif object_type in PERSON_TYPES:
+            if isinstance(element, dict):
+                element = self.persons.find({'db_id': element['db_id']})
+
             if not self.__check_person_used(element):
                 element.aktiv = False
                 self.db.save(object_type, element)
