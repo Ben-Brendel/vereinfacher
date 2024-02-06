@@ -3,6 +3,32 @@
 from toga.sources import Listener
 from kontolupe.general import *
 
+
+class ArchiveCommandListener(Listener):
+
+    def __init__(self, command, list_archivables):
+        self.command = command
+        self.list_archivables = list_archivables
+
+    def change(self, item):
+        self.update(item)
+
+    def clear(self):
+        self.command.enabled = False
+
+    def insert(self, index, item):
+        self.update(index, item)
+
+    def remove(self, index, item):
+        self.update(index, item)
+
+    def update(self, *args, **kwargs):
+        if self.list_archivables and len(self.list_archivables[0].rechnung) + len(self.list_archivables[0].beihilfe) + len(self.list_archivables[0].pkv) > 0:
+            print(f'### ArchiveCommandListener.update: enabled')
+            self.command.enabled = True
+        else:
+            self.command.enabled = False
+
 class SubmitsListener(Listener):
 
     def __init__(self, list_allowances=None, list_insurances=None):

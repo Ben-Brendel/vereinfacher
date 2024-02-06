@@ -681,11 +681,11 @@ class Kontolupe(toga.App):
         # Archivieren-Button
         if self.daten.init.get('automatic_archive', False):
             self.box_startseite_daten.remove(self.button_start_archiv)
-            self.cmd_archivieren.enabled = False
+            self.commands.remove(self.cmd_archivieren)
             self.daten.archive()
         else:
             self.box_startseite_daten.add(self.button_start_archiv)
-            self.cmd_archivieren.enabled = True
+            self.commands.add(self.cmd_archivieren)
 
         # Bezahlstatus der offenen Rechnungen abfragen
         self.add_background_task(self.check_open_bills)
@@ -2100,6 +2100,9 @@ class Kontolupe(toga.App):
             order = 8,
             enabled=True
         )
+
+        # Add listeners to the commands
+        self.daten.archivables.add_listener(ArchiveCommandListener(self.cmd_archivieren, self.daten.archivables))
 
         # Erstelle die Menüleiste
         self.commands.add(self.cmd_rechnungen_anzeigen)
