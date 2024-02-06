@@ -153,7 +153,7 @@ class Kontolupe(toga.App):
 
 
     def update_buttons(self, widget):
-        """Aktualisiert die Anzeigen und Aktivierungszustand von Buttons und Commands."""
+        """Aktualisiert die Anzeigen und Aktivierungszustand der Buttons von Tabellen."""
 
         # Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons.
         status = False
@@ -314,6 +314,7 @@ class Kontolupe(toga.App):
 
     def show_webview(self, widget):
         """Zeigt die WebView zur Anzeige von Webseiten."""
+
         match widget:
             case self.info_institution_website.button:
                 self.webview.url = 'https://' + self.daten.list_einrichtungen[self.edit_institution_id].webseite
@@ -487,8 +488,8 @@ class Kontolupe(toga.App):
             text_institutions = text_institutions.rstrip(', ')
 
         # Setze die Anzeigen
-        self.init_persons_label.text = add_newlines(text_persons, 50)
-        self.init_institutions_label.text = add_newlines(text_institutions, 50)
+        self.init_persons_label.text = add_newlines(text_persons, 40)
+        self.init_institutions_label.text = add_newlines(text_institutions, 40)
 
         # Aktiviere den Button, wenn alle Eingaben korrekt sind
         if self.init_button not in self.box_init_page_button.children and status_persons and status_institutions:
@@ -1342,7 +1343,7 @@ class Kontolupe(toga.App):
                 self.info_institution_website.show_button()
                 self.info_institution_website.set_text(institution.webseite)
                 
-            self.info_institution_note.set_value(add_newlines(institution.notiz, 50))
+            self.info_institution_note.set_value(add_newlines(institution.notiz, 40))
 
             # Zeige die Info-Seite
             self.main_window.content = self.sc_info_institution
@@ -2158,6 +2159,7 @@ class Kontolupe(toga.App):
         else:
             self.create_commands()
             self.show_mainpage(None)
+        
         self.main_window.show()
 
 

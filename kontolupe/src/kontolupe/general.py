@@ -394,6 +394,8 @@ def table_index_selection(widget):
     return None
     
 def add_newlines(input_string, max_line_length):
+    if input_string is None:
+        return ''
     lines = input_string.split(' ')
     result_lines = []
     current_line = ''
