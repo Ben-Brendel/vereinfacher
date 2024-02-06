@@ -2103,6 +2103,8 @@ class Kontolupe(toga.App):
 
         # Add listeners to the commands
         self.daten.archivables.add_listener(ArchiveCommandListener(self.cmd_archivieren, self.daten.archivables))
+        self.daten.allowances_bills.add_listener(CommandListener(self.cmd_beihilfepakete_neu, self.daten.allowances_bills))
+        self.daten.insurances_bills.add_listener(CommandListener(self.cmd_pkvpakete_neu, self.daten.insurances_bills))
 
         # Erstelle die Menüleiste
         self.commands.add(self.cmd_rechnungen_anzeigen)
