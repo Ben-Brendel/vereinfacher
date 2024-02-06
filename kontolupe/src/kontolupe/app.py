@@ -2040,7 +2040,7 @@ class Kontolupe(toga.App):
             group = gruppe_einrichtungen,
             section = 0,
             order = 10,
-            enabled=True
+            enabled = True
         )
 
         self.cmd_einrichtungen_neu = toga.Command(
@@ -2050,7 +2050,7 @@ class Kontolupe(toga.App):
             group = gruppe_einrichtungen,
             section = 0,
             order = 20,
-            enabled=True
+            enabled = True
         )
 
         gruppe_tools = toga.Group('Tools', order = 6)
@@ -2062,7 +2062,7 @@ class Kontolupe(toga.App):
             group = gruppe_tools,
             order = 5,
             section = 1,
-            enabled=False
+            enabled = False
         )
 
         self.cmd_datenschutz = toga.Command(
@@ -2072,7 +2072,7 @@ class Kontolupe(toga.App):
             group = gruppe_tools,
             order = 15,
             section = 2,
-            enabled=True
+            enabled = True
         )
 
         self.cmd_reset = toga.Command(

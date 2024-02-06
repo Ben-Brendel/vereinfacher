@@ -99,7 +99,7 @@ class SectionBills(Section):
     
     def update_info(self, *args):
         count = len([item for item in self.list_source if not item.bezahlt])
-        
+
         match count:
             case 0:
                 self.info.text = 'Keine offenen Rechnungen.'
