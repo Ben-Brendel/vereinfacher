@@ -1206,6 +1206,38 @@ class DataInterface:
             'pkv' : set()
         }
 
+        def all_bills_paid_and_submitted(bill, checked_bills=None):
+            """Recursively check if all bills associated with the given bill's allowance and insurance are paid and submitted."""
+            if checked_bills is None:
+                checked_bills = set()
+
+            if bill in checked_bills:
+                return True
+
+            checked_bills.add(bill)
+
+            associated_bills = [ar for ar in self.bills if (self.allowance_active() and ar.beihilfe_id == bill.beihilfe_id) or ar.pkv_id == bill.pkv_id]
+            for associated_bill in associated_bills:
+                if not associated_bill.bezahlt:
+                    return False
+
+                try:
+                    allowance = self.allowances.find({ 'db_id' : associated_bill.beihilfe_id})
+                except ValueError:
+                    allowance = None
+                
+                try:
+                    insurance = self.insurances.find({ 'db_id' : associated_bill.pkv_id})
+                except ValueError:
+                    insurance = None
+
+                if ((allowance and allowance.erhalten) or not self.allowance_active()) and insurance and insurance.erhalten:
+                    if not all_bills_paid_and_submitted(associated_bill, checked_bills):
+                        return False
+                else:
+                    return False
+            return True
+
         for i, bill in enumerate(self.bills):
             if bill.bezahlt and (bill.beihilfe_id or not self.allowance_active()) and bill.pkv_id:
                 try:
@@ -1219,9 +1251,8 @@ class DataInterface:
                     insurance = None
 
                 if ((allowance and allowance.erhalten) or not self.allowance_active()) and insurance and insurance.erhalten:
-                    # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid
-                    other_bills = [ar for ar in self.bills if (self.allowance_active() and ar.beihilfe_id == allowance.db_id) or ar.pkv_id == insurance.db_id]
-                    if all(ar.bezahlt for ar in other_bills):
+                    # Check if all other rechnungen associated with the beihilfepaket and pkvpaket are paid and submitted
+                    if all_bills_paid_and_submitted(bill):
                         temp['rechnung'].append(i)
                         if self.allowance_active():
                             temp['beihilfe'].add(self.allowances.index(allowance))
@@ -1240,4 +1271,4 @@ class DataInterface:
         self.archivables.clear()
         self.archivables.append(temp)
 
-        print(f'### DatenInterface.__update_archivables: Archivables updated: {self.archivables}')
+        print(f'### DatenInterface.__update_archivables: Archivables updated: {temp}')
