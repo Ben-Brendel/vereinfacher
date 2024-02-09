@@ -720,10 +720,10 @@ class LabeledMultilineTextInput(toga.Box):
         return self.text_input.value
 
 
-class LabeledSelection:
+class LabeledSelection(toga.Box):
     """Create a box with a label and a selection."""
 
-    def __init__(self, parent, label_text, data, accessor=None, **kwargs):
+    def __init__(self, label_text, data, accessor=None, **kwargs):
         
         self.label = toga.Label(label_text, style=style_label_input)
 
@@ -736,24 +736,19 @@ class LabeledSelection:
         
         self.label_box = toga.Box(style=style_flex_box, children=[self.label])
         self.selection_box = toga.Box(style=style_flex_box, children=[self.selection])
-        self.box = toga.Box(style=style_box_row, children=[self.label_box, self.selection_box])
+        super().__init__(style=style_box_row, children=[self.label_box, self.selection_box])
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
             self.label_box.add(HelpButton(**kwargs))
-        
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
 
     def show(self):
-        self.box.add(self.label_box)
-        self.box.add(self.selection_box)
+        self.add(self.label_box)
+        self.add(self.selection_box)
 
     def hide(self):
-        self.box.remove(self.label_box)
-        self.box.remove(self.selection_box)
+        self.remove(self.label_box)
+        self.remove(self.selection_box)
 
     def set_label(self, label_text):
         self.label.text = label_text
@@ -774,10 +769,10 @@ class LabeledSelection:
         self.selection.on_change = on_change
 
 
-class LabeledDoubleSelection:
+class LabeledDoubleSelection(toga.Box):
     """Create a box with a label and two selection fields."""
 
-    def __init__(self, parent, label_text, data, accessors=[None, None], **kwargs):
+    def __init__(self, label_text, data, accessors=[None, None], **kwargs):
 
         self.label = toga.Label(label_text, style=style_label_input)
 
@@ -800,16 +795,11 @@ class LabeledDoubleSelection:
         # Boxes
         self.label_box = toga.Box(style=style_flex_box, children=[self.label])
         self.selection_box = toga.Box(style=style_flex_box2, children=self.selections)
-        self.box = toga.Box(style=style_box_row, children=[self.label_box, self.selection_box])
+        super().__init__(style=style_box_row, children=[self.label_box, self.selection_box])
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
             self.label_box.add(HelpButton(**kwargs))
-
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
 
     def set_label(self, label_text):
         self.label.text = label_text

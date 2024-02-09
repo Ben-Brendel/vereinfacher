@@ -367,27 +367,27 @@ class Kontolupe(toga.App):
 
         # Selektion des Typs der Buchung
         self.statistics_type = LabeledSelection(
-            self.box_statistics, 
             'Typ(en):', 
             ['Alle', 'Rechnungen', 'Beihilfe', 'Private KV'], 
             on_change=self.statistics_changed
         )
+        self.box_statistics.add(self.statistics_type)
 
         # Selektion der Person
         self.statistics_person = LabeledSelection(
-            self.box_statistics, 
             'Person(en):', 
             ['Alle'], 
             on_change=self.statistics_changed
         )
+        self.box_statistics.add(self.statistics_person)
 
         # Selektion der Einrichtung
         self.statistics_institution = LabeledSelection(
-            self.box_statistics, 
             'Einrichtung(en):', 
             ['Alle'], 
             on_change=self.statistics_changed
         )
+        self.box_statistics.add(self.statistics_institution)
 
         self.box_statistics.add(SubtextDivider('Auswertungszeitraum'))
 
@@ -396,26 +396,26 @@ class Kontolupe(toga.App):
         years = [str(year) for year in range(2020, datetime.today().year + 1)]
 
         # Selektion des Zeitraums
-        self.statistics_from = LabeledDoubleSelection(
-            self.box_statistics, 
+        self.statistics_from = LabeledDoubleSelection( 
             'Von:', 
             data = [months, years], 
             on_change=[self.statistics_changed, self.statistics_changed]
         )
+        self.box_statistics.add(self.statistics_from)
 
         self.statistics_to = LabeledDoubleSelection(
-            self.box_statistics, 
             'Bis:', 
             data = [months, years], 
             on_change=[self.statistics_changed, self.statistics_changed]
         )
+        self.box_statistics.add(self.statistics_to)
 
         self.statistics_step = LabeledSelection(
-            self.box_statistics, 
             'Auswertungsschritt:', 
             ['Monat', 'Quartal', 'Jahr'], 
             on_change=self.statistics_changed
         )
+        self.box_statistics.add(self.statistics_step)
 
         # ButtonBox
         self.statistics_buttons = ButtonBox(
@@ -754,11 +754,11 @@ class Kontolupe(toga.App):
 
         # Selection zur Auswahl der Person
         self.form_bill_person = LabeledSelection(
-            parent=self.box_form_bill,
             label_text='Person:',
             data=self.daten.persons,
             accessor='name'
         )
+        self.box_form_bill.add(self.form_bill_person)
 
         self.form_bill_rechnungsdatum = LabeledDateInput('Rechnungsdatum:')
         self.box_form_bill.add(self.form_bill_rechnungsdatum)
@@ -767,11 +767,11 @@ class Kontolupe(toga.App):
 
         # Bereich zur Auswahl der Einrichtung
         self.form_bill_einrichtung = LabeledSelection(
-            parent=self.box_form_bill,
             label_text='Einrichtung:',
             data=self.daten.institutions,
             accessor='name'
         )
+        self.box_form_bill.add(self.form_bill_einrichtung)
 
         self.box_form_bill.add(SubtextDivider('Optionale Felder'))
 
