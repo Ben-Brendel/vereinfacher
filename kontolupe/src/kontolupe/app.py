@@ -803,7 +803,8 @@ class Kontolupe(toga.App):
         )
         self.box_form_bill.add(self.form_bill_buchungsdatum)
 
-        self.form_bill_notiz = LabeledMultilineTextInput(self.box_form_bill, 'Notiz:')
+        self.form_bill_notiz = LabeledMultilineTextInput('Notiz:')
+        self.box_form_bill.add(self.form_bill_notiz)
 
         # Bereich der Buttons
         self.form_bill_buttons = ButtonBox(
@@ -1117,13 +1118,14 @@ class Kontolupe(toga.App):
         self.form_institution_telefon = LabeledPhoneInput('Telefon:')
         self.form_institution_email = LabeledEmailInput('E-Mail:')
         self.form_institution_webseite = LabeledWebsiteInput('Webseite:')
-        self.form_institution_notiz = LabeledMultilineTextInput(self.box_form_institution, 'Notiz:')
+        self.form_institution_notiz = LabeledMultilineTextInput('Notiz:')
         self.box_form_institution.add(self.form_institution_strasse)
         self.box_form_institution.add(self.form_institution_plz)
         self.box_form_institution.add(self.form_institution_ort)
         self.box_form_institution.add(self.form_institution_telefon)
         self.box_form_institution.add(self.form_institution_email)
         self.box_form_institution.add(self.form_institution_webseite)
+        self.box_form_institution.add(self.form_institution_notiz)
 
         # ButtonBox
         self.form_institution_buttons = ButtonBox(

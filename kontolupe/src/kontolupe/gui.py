@@ -684,33 +684,28 @@ class LabeledWebsiteInput(LabeledTextInput):
         super().__init__(label_text, placeholder='www.', validator='website', **kwargs)
 
 
-class LabeledMultilineTextInput:
+class LabeledMultilineTextInput(toga.Box):
     """Create a box with a label and a multiline text input."""
 
-    def __init__(self, parent, label_text, **kwargs):
+    def __init__(self, label_text, **kwargs):
         self.label = toga.Label(label_text, style=style_label_input)
         self.text_input = toga.MultilineTextInput(style=style_input, readonly=kwargs.get('readonly', False))
         
         self.label_box = toga.Box(style=style_flex_box, children=[self.label])
         self.input_box = toga.Box(style=style_flex_box, children=[self.text_input])
-        self.box = toga.Box(style=style_box_row, children=[self.label_box, self.input_box])
+        super().__init__(style=style_box_row, children=[self.label_box, self.input_box])
 
         # Help Button
         if 'helptext' in kwargs and 'window' in kwargs:
             self.label_box.add(HelpButton(**kwargs))
 
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
-
     def show(self):
-        self.box.add(self.label_box)
-        self.box.add(self.input_box)
+        self.add(self.label_box)
+        self.add(self.input_box)
 
     def hide(self):
-        self.box.remove(self.label_box)
-        self.box.remove(self.input_box)
+        self.remove(self.label_box)
+        self.remove(self.input_box)
 
     def set_label(self, label_text):
         self.label.text = label_text
