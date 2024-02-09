@@ -1300,12 +1300,18 @@ class Kontolupe(toga.App):
         self.box_info_institution.add(self.info_institution_topbox)
 
         # Anzeige der Details
-        self.info_institution_street = InfoLabel(self.box_info_institution, 'Straße, Hausnr.:')
-        self.info_institution_city = InfoLabel(self.box_info_institution, 'PLZ, Ort:')
-        self.info_institution_phone = InfoLabel(self.box_info_institution, 'Telefon:')
-        self.info_institution_email = InfoLabel(self.box_info_institution, 'E-Mail:')
-        self.info_institution_website = InfoLink(self.box_info_institution, '', self.show_webview)
-        self.info_institution_note = InfoLabel(self.box_info_institution, 'Notiz:')
+        self.info_institution_street = InfoLabel('Straße, Hausnr.:')
+        self.info_institution_city = InfoLabel('PLZ, Ort:')
+        self.info_institution_phone = InfoLabel('Telefon:')
+        self.info_institution_email = InfoLabel('E-Mail:')
+        self.info_institution_website = InfoLink('', self.show_webview)
+        self.info_institution_note = InfoLabel('Notiz:')
+        self.box_info_institution.add(self.info_institution_street)
+        self.box_info_institution.add(self.info_institution_city)
+        self.box_info_institution.add(self.info_institution_phone)
+        self.box_info_institution.add(self.info_institution_email)
+        self.box_info_institution.add(self.info_institution_website)
+        self.box_info_institution.add(self.info_institution_note)
 
         # ButtonBox
         self.info_institution_buttons = ButtonBox(

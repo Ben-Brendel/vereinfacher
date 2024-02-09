@@ -233,41 +233,33 @@ class TopBox(toga.Box):
         self.button.on_press = target_back
 
 
-class InfoLabel:
+class InfoLabel(toga.Box):
     """Create two labels in a row with a title and a value."""
 
-    def __init__(self, parent, title, value=''):
-        self.box = toga.Box(style=style_box_row)
+    def __init__(self, title, value=''):
+        super().__init__(style=style_box_row)
         self.label_title = toga.Label(title, style=style_label_info)
         self.label_value = toga.Label(value, style=style_label_detail)
-        self.box.add(self.label_title)
-        self.box.add(self.label_value)
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
+        self.add(self.label_title)
+        self.add(self.label_value)
 
     def set_value(self, value):
         self.label_value.text = value
 
 
-class InfoLink:
+class InfoLink(toga.Box):
     """"Create a button with a hyperlink."""
 
-    def __init__(self, parent, text, on_press=None):
-        self.box = toga.Box(style=style_box_row)
+    def __init__(self, text, on_press=None):
+        super().__init__(style=style_box_row)
         self.button = toga.Button(text, on_press=on_press, style=style_button_link)
-        self.box.add(self.button)
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
+        self.add(self.button)
 
     def hide_button(self):
-        self.box.remove(self.button)
+        self.remove(self.button)
 
     def show_button(self):
-        self.box.add(self.button)
+        self.add(self.button)
 
     def set_text(self, text):
         self.button.text = text
