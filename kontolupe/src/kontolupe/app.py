@@ -74,11 +74,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button Zurück
         self.settings_topbox = TopBox(
-            parent      = self.box_settings,
             label_text  = 'Einstellungen', 
             style_box   = style_box_column_dunkel,
             target_back = self.show_mainpage
         )
+        self.box_settings.add(self.settings_topbox)
 
         self.settings_automatic_booking = LabeledSwitch(
             self.box_settings, 
@@ -357,11 +357,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button Zurück
         self.statistics_topbox = TopBox(
-            parent      = self.box_statistics,
             label_text  = 'Statistiken', 
             style_box   = style_box_column_dunkel,
             target_back = self.show_mainpage
         )
+        self.box_statistics.add(self.statistics_topbox)
 
         self.box_statistics.add(SubtextDivider('Datenauswahl'))
 
@@ -698,11 +698,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button zurück
         self.list_bills_topbox = TopBox(
-            parent=self.box_list_bills,
             label_text='Rechnungen', 
             style_box=style_box_column_rechnungen,
             target_back=self.show_mainpage
         )
+        self.box_list_bills.add(self.list_bills_topbox)
 
         # Tabelle mit den Rechnungen
         self.table_bills = toga.Table(
@@ -740,11 +740,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button zurück
         self.form_bill_topbox = TopBox(
-            parent=self.box_form_bill,
             label_text='Neue Rechnung', 
             style_box=style_box_column_rechnungen,
             target_back=self.show_list_bills
         )
+        self.box_form_bill.add(self.form_bill_topbox)
 
         self.box_form_bill.add(SubtextDivider('Pflichtfelder'))
 
@@ -1051,11 +1051,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button zurück
         self.list_institutions_topbox = TopBox(
-            parent=self.box_list_institutions,
             label_text='Einrichtungen', 
             style_box=style_box_column_dunkel,
             target_back=self.show_mainpage
         )
+        self.box_list_institutions.add(self.list_institutions_topbox)
 
         # Tabelle mit den Einrichtungen
 
@@ -1092,11 +1092,11 @@ class Kontolupe(toga.App):
 
         # TopBox
         self.form_institution_topbox = TopBox(
-            parent=self.box_form_institution,
             label_text='Neue Einrichtung',
             style_box=style_box_column_dunkel,
             target_back=self.show_list_institutions
         )
+        self.box_form_institution.add(self.form_institution_topbox)
 
         # Bereich der Pflichteingaben
         self.box_form_institution.add(SubtextDivider('Pflichtfelder'))
@@ -1293,11 +1293,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button zurück
         self.info_institution_topbox = TopBox(
-            parent=self.box_info_institution,
             label_text='Einrichtung',
             style_box=style_box_column_dunkel,
             target_back=self.show_list_institutions
         )
+        self.box_info_institution.add(self.info_institution_topbox)
 
         # Anzeige der Details
         self.info_institution_street = InfoLabel(self.box_info_institution, 'Straße, Hausnr.:')
@@ -1366,11 +1366,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button zurück
         self.list_persons_topbox = TopBox(
-            parent=self.box_list_persons,
             label_text='Personen', 
             style_box=style_box_column_dunkel,
             target_back=self.show_mainpage
         )
+        self.box_list_persons.add(self.list_persons_topbox)
 
         # Tabelle mit den Personen
         self.table_persons = toga.Table(
@@ -1413,11 +1413,11 @@ class Kontolupe(toga.App):
 
         # TopBox
         self.form_person_topbox = TopBox(
-            parent=self.box_form_person,
             label_text='Neue Person',
             style_box=style_box_column_dunkel,
             target_back=self.show_list_persons
         )
+        self.box_form_person.add(self.form_person_topbox)
 
         self.box_form_person.add(SubtextDivider('Pflichtfelder'))
         self.form_person_name = LabeledTextInput(self.box_form_person, 'Name:')
@@ -1590,11 +1590,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button zurück
         self.list_allowance_topbox = TopBox(
-            parent=self.box_list_allowance,
             label_text='Beihilfe-Einreichungen',
             style_box=style_box_column_beihilfe,
             target_back=self.show_mainpage
         )
+        self.box_list_allowance.add(self.list_allowance_topbox)
 
         # Tabelle mit den Beihilfepaketen
         self.table_allowance = toga.Table(
@@ -1626,11 +1626,11 @@ class Kontolupe(toga.App):
 
         # Überschrift und Button zurück
         self.list_insurance_topbox = TopBox(
-            parent=self.box_list_insurance,
             label_text='PKV-Einreichungen',
             style_box=style_box_column_pkv,
             target_back=self.show_mainpage
         )
+        self.box_list_insurance.add(self.list_insurance_topbox)
 
         # Tabelle mit den PKV-Einreichungen
         self.table_insurance = toga.Table(
@@ -1676,11 +1676,11 @@ class Kontolupe(toga.App):
 
         # TopBox
         self.form_beihilfe_topbox = TopBox(
-            parent=self.box_form_beihilfe,
             label_text='Neue Beihilfe-Einreichung',
             style_box=style_box_column_beihilfe,
             target_back=self.show_list_beihilfe
         )
+        self.box_form_beihilfe.add(self.form_beihilfe_topbox)
 
         self.box_form_beihilfe.add(SubtextDivider('Pflichtfelder'))
 
@@ -1721,11 +1721,11 @@ class Kontolupe(toga.App):
 
         # TopBox
         self.form_pkv_topbox = TopBox(
-            parent=self.box_form_pkv,
             label_text='Neue PKV-Einreichung',
             style_box=style_box_column_pkv,
             target_back=self.show_list_pkv
         )
+        self.box_form_pkv.add(self.form_pkv_topbox)
 
         self.box_form_pkv.add(SubtextDivider('Pflichtfelder'))
 

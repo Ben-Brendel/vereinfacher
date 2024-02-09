@@ -216,19 +216,15 @@ class ArchiveButton(ConnectedButton):
 
         
 
-class TopBox:
+class TopBox(toga.Box):
     """Create a box with a label and a button at the top of a window."""
 
-    def __init__(self, parent, label_text, style_box, target_back):
-        self.box = toga.Box(style=style_box)
+    def __init__(self, label_text, style_box, target_back):
+        super().__init__(style=style_box)
         self.button = toga.Button('Zurück', on_press=target_back, style=style_button)
         self.label = toga.Label(label_text, style=style_label_h1_hell)
-        self.box.add(self.button)
-        self.box.add(self.label)
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
+        self.add(self.button)
+        self.add(self.label)
 
     def set_label(self, label_text):
         self.label.text = label_text
