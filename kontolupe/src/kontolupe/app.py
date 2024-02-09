@@ -363,7 +363,7 @@ class Kontolupe(toga.App):
             target_back = self.show_mainpage
         )
 
-        SubtextDivider(self.box_statistics, 'Datenauswahl')
+        self.box_statistics.add(SubtextDivider('Datenauswahl'))
 
         # Selektion des Typs der Buchung
         self.statistics_type = LabeledSelection(
@@ -389,7 +389,7 @@ class Kontolupe(toga.App):
             on_change=self.statistics_changed
         )
 
-        SubtextDivider(self.box_statistics, 'Auswertungszeitraum')
+        self.box_statistics.add(SubtextDivider('Auswertungszeitraum'))
 
         # Daten für die Selektion des Zeitraums
         months = ['{:02d}'.format(month) for month in range(1, 13)]
@@ -410,6 +410,13 @@ class Kontolupe(toga.App):
             on_change=[self.statistics_changed, self.statistics_changed]
         )
 
+        self.statistics_step = LabeledSelection(
+            self.box_statistics, 
+            'Auswertungsschritt:', 
+            ['Monat', 'Quartal', 'Jahr'], 
+            on_change=self.statistics_changed
+        )
+
         # ButtonBox
         self.statistics_buttons = ButtonBox(
             parent  = self.box_statistics,
@@ -418,16 +425,6 @@ class Kontolupe(toga.App):
             ids     = ['show_statistic', 'export_statistic'],
             enabled = [True, False]
         )  
-
-        # Auswertungsschritt angeben, monatlich, quartalsweise, jährlich
-        #SubtextDivider(self.box_statistics, 'Auswertungsschritt')
-
-        self.statistics_step = LabeledSelection(
-            self.box_statistics, 
-            'Auswertungsschritt:', 
-            ['Monat', 'Quartal', 'Jahr'], 
-            on_change=self.statistics_changed
-        )
 
         self.box_statistics.add(toga.Divider(style=style_divider))
 
@@ -749,7 +746,7 @@ class Kontolupe(toga.App):
             target_back=self.show_list_bills
         )
 
-        SubtextDivider(self.box_form_bill, 'Pflichtfelder')
+        self.box_form_bill.add(SubtextDivider('Pflichtfelder'))
 
         # Selection zur Auswahl der Person
         self.form_bill_person = LabeledSelection(
@@ -770,7 +767,7 @@ class Kontolupe(toga.App):
             accessor='name'
         )
 
-        SubtextDivider(self.box_form_bill, 'Optionale Felder')
+        self.box_form_bill.add(SubtextDivider('Optionale Felder'))
 
         self.form_bill_abzug_beihilfe = LabeledFloatInput(
             self.box_form_bill, 
@@ -1102,11 +1099,11 @@ class Kontolupe(toga.App):
         )
 
         # Bereich der Pflichteingaben
-        SubtextDivider(self.box_form_institution, 'Pflichtfelder')
+        self.box_form_institution.add(SubtextDivider('Pflichtfelder'))
         self.form_institution_name = LabeledTextInput(self.box_form_institution, 'Name:')
 
         # Bereich der optionalen Eingabe
-        SubtextDivider(self.box_form_institution, 'Optionale Felder')
+        self.box_form_institution.add(SubtextDivider('Optionale Felder'))
         self.form_institution_strasse = LabeledTextInput(self.box_form_institution, 'Straße, Hausnr.:')
         self.form_institution_plz = LabeledPostalInput(self.box_form_institution, 'PLZ:')
         self.form_institution_ort = LabeledTextInput(self.box_form_institution, 'Ort:')
@@ -1422,7 +1419,7 @@ class Kontolupe(toga.App):
             target_back=self.show_list_persons
         )
 
-        SubtextDivider(self.box_form_person, 'Pflichtfelder')
+        self.box_form_person.add(SubtextDivider('Pflichtfelder'))
         self.form_person_name = LabeledTextInput(self.box_form_person, 'Name:')
         self.form_person_beihilfe = LabeledPercentInput(self.box_form_person, 'Beihilfe in %:')
 
@@ -1685,7 +1682,7 @@ class Kontolupe(toga.App):
             target_back=self.show_list_beihilfe
         )
 
-        SubtextDivider(self.box_form_beihilfe, 'Pflichtfelder')
+        self.box_form_beihilfe.add(SubtextDivider('Pflichtfelder'))
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_beihilfe_bills = toga.Table(
@@ -1701,7 +1698,7 @@ class Kontolupe(toga.App):
 
         self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
 
-        SubtextDivider(self.box_form_beihilfe, 'Optionale Felder')
+        self.box_form_beihilfe.add(SubtextDivider('Optionale Felder'))
 
         self.form_beihilfe_betrag = LabeledFloatInput(self.box_form_beihilfe, 'Betrag :', suffix='€', readonly=True)
         self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
@@ -1730,7 +1727,7 @@ class Kontolupe(toga.App):
             target_back=self.show_list_pkv
         )
 
-        SubtextDivider(self.box_form_pkv, 'Pflichtfelder')
+        self.box_form_pkv.add(SubtextDivider('Pflichtfelder'))
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_pkv_bills = toga.Table(
@@ -1746,7 +1743,7 @@ class Kontolupe(toga.App):
 
         self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
 
-        SubtextDivider(self.box_form_pkv, 'Optionale Felder')
+        self.box_form_pkv.add(SubtextDivider('Optionale Felder'))
 
         self.form_pkv_betrag = LabeledFloatInput(self.box_form_pkv, 'Betrag:',  suffix='€', readonly=True)
         self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')

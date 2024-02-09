@@ -982,16 +982,13 @@ class ButtonBox:
             print("+++ Kontolupe: Button mit ID " + str(button_id) + " nicht gefunden.")
 
 
-class SubtextDivider:
-    def __init__(self, parent, text):
+class SubtextDivider(toga.Box):
+    """Create a divider with a subtext."""
+
+    def __init__(self, text):
         """Create a divider with a subtext."""
-        self.box = toga.Box(style=style_box_column)
+        super().__init__(style=style_box_column)
         self.divider = toga.Divider(style=style_divider_subtext)
         self.label = toga.Label(text, style=style_label_subtext)
-        self.box.add(self.divider)
-        self.box.add(self.label)
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        """Add the box to the parent."""
-        parent.add(self.box)
+        self.add(self.divider)
+        self.add(self.label)
