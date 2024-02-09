@@ -81,7 +81,6 @@ class Kontolupe(toga.App):
         self.box_settings.add(self.settings_topbox)
 
         self.settings_automatic_booking = LabeledSwitch(
-            self.box_settings, 
             'Automatische Buchungen:',
             helptitle   = 'Automatische Buchungen',
             helptext    = (
@@ -91,9 +90,9 @@ class Kontolupe(toga.App):
             window      = self.main_window,
             on_change   = self.on_change_setting
         )
+        self.box_settings.add(self.settings_automatic_booking)
 
         self.settings_automatic_archive = LabeledSwitch(
-            self.box_settings, 
             'Automatische Archivierung:',
             helptitle   = 'Automatische Archivierung',
             helptext    = (
@@ -104,6 +103,7 @@ class Kontolupe(toga.App):
             window      = self.main_window,
             on_change   = self.on_change_setting
         )
+        self.box_settings.add(self.settings_automatic_archive)
 
 
     async def check_open_bills(self, widget):
@@ -793,7 +793,8 @@ class Kontolupe(toga.App):
         )
         self.box_form_bill.add(self.form_bill_abzug_pkv)
 
-        self.form_bill_bezahlt = LabeledSwitch(self.box_form_bill, 'Bezahlt:')
+        self.form_bill_bezahlt = LabeledSwitch('Bezahlt:')
+        self.box_form_bill.add(self.form_bill_bezahlt)
         
         self.form_bill_buchungsdatum = LabeledDateInput(
             'Bezahldatum:',
@@ -1727,7 +1728,8 @@ class Kontolupe(toga.App):
 
         self.form_beihilfe_betrag = LabeledFloatInput('Betrag :', suffix='€', readonly=True)
         self.box_form_beihilfe.add(self.form_beihilfe_betrag)
-        self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
+        self.form_beihilfe_erhalten = LabeledSwitch('Erstattet:')
+        self.box_form_beihilfe.add(self.form_beihilfe_erhalten)
 
         # ButtonBox
         self.form_beihilfe_buttons = ButtonBox(
@@ -1774,7 +1776,8 @@ class Kontolupe(toga.App):
 
         self.form_pkv_betrag = LabeledFloatInput('Betrag:',  suffix='€', readonly=True)
         self.box_form_pkv.add(self.form_pkv_betrag)
-        self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')
+        self.form_pkv_erhalten = LabeledSwitch('Erstattet:')
+        self.box_form_pkv.add(self.form_pkv_erhalten)
 
         # ButtonBox
         self.form_pkv_buttons = ButtonBox(

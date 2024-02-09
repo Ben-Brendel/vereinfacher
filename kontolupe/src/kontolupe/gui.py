@@ -820,11 +820,11 @@ class LabeledDoubleSelection(toga.Box):
         self.selections[index].on_change = on_change
 
 
-class LabeledSwitch:
+class LabeledSwitch(toga.Box):
     """Create a box with a label and a switch."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        self.box = toga.Box(style=style_box_row)
+    def __init__(self, label_text, **kwargs):
+        super().__init__(style=style_box_row)
         self.label_box = toga.Box(style=style_flex_box)
         self.switch_box = toga.Box(style=style_noflex_box)
         self.label = toga.Label(label_text, style=style_label_input_noflex)
@@ -838,16 +838,11 @@ class LabeledSwitch:
 
         self.label_box.add(self.label)
         self.switch_box.add(self.switch)
-        self.box.add(self.label_box)
-        self.box.add(self.switch_box)
+        self.add(self.label_box)
+        self.add(self.switch_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
             self.label_box.add(HelpButton(**kwargs))
-
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
 
     def set_label(self, label_text):
         self.label.text = label_text
@@ -856,12 +851,12 @@ class LabeledSwitch:
         return self.label.text
     
     def hide(self):
-        self.box.remove(self.label_box)
-        self.box.remove(self.switch_box)
+        self.remove(self.label_box)
+        self.remove(self.switch_box)
 
     def show(self):
-        self.box.add(self.label_box)
-        self.box.add(self.switch_box)
+        self.add(self.label_box)
+        self.add(self.switch_box)
 
     def set_value(self, value):
         self.switch.value = value
