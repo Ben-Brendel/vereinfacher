@@ -541,9 +541,11 @@ class Kontolupe(toga.App):
         self.init_persons_label = toga.Label('Bitte füge mindestens eine Person hinzu.', style=style_description)
         box_init_persons.add(self.init_persons_label)
         
-        self.init_persons_name = LabeledTextInput(box_init_persons, 'Name:')
-        self.init_persons_beihilfe = LabeledPercentInput(box_init_persons, 'Beihilfe in %:')
+        self.init_persons_name = LabeledTextInput('Name:')
+        self.init_persons_beihilfe = LabeledPercentInput('Beihilfe in %:')
         self.init_persons_beihilfe.set_value('')
+        box_init_persons.add(self.init_persons_name)
+        box_init_persons.add(self.init_persons_beihilfe)
 
         self.init_persons_buttons = ButtonBox(
             parent=box_init_persons,
@@ -558,8 +560,10 @@ class Kontolupe(toga.App):
         self.init_institutions_label = toga.Label('Bitte füge mindestens eine Einrichtung hinzu.', style=style_description)
         box_init_institutions.add(self.init_institutions_label)
 
-        self.init_institutions_name = LabeledTextInput(box_init_institutions, 'Einrichtung:')
-        self.init_institutions_city = LabeledTextInput(box_init_institutions, 'Ort:')
+        self.init_institutions_name = LabeledTextInput('Einrichtung:')
+        self.init_institutions_city = LabeledTextInput('Ort:')
+        box_init_institutions.add(self.init_institutions_name)
+        box_init_institutions.add(self.init_institutions_city)
 
         self.init_institutions_buttons = ButtonBox(
             parent=box_init_institutions,
@@ -756,8 +760,10 @@ class Kontolupe(toga.App):
             accessor='name'
         )
 
-        self.form_bill_rechnungsdatum = LabeledDateInput(self.box_form_bill, 'Rechnungsdatum:')
-        self.form_bill_betrag = LabeledFloatInput(self.box_form_bill, 'Betrag:', suffix='€')
+        self.form_bill_rechnungsdatum = LabeledDateInput('Rechnungsdatum:')
+        self.box_form_bill.add(self.form_bill_rechnungsdatum)
+        self.form_bill_betrag = LabeledFloatInput('Betrag:', suffix='€')
+        self.box_form_bill.add(self.form_bill_betrag)
 
         # Bereich zur Auswahl der Einrichtung
         self.form_bill_einrichtung = LabeledSelection(
@@ -770,32 +776,32 @@ class Kontolupe(toga.App):
         self.box_form_bill.add(SubtextDivider('Optionale Felder'))
 
         self.form_bill_abzug_beihilfe = LabeledFloatInput(
-            self.box_form_bill, 
             'Abzug Beihilfe:',
             suffix      = '€',
             helptitle   = 'Abzug Beihilfe',
             helptext    = 'Gib den vollen Betrag der Rechnungspositionen an, die nicht beihilfefähig sind. ',
             window      = self.main_window,
         )
+        self.box_form_bill.add(self.form_bill_abzug_beihilfe)
 
         self.form_bill_abzug_pkv = LabeledFloatInput(
-            self.box_form_bill, 
             'Abzug PKV:',
             suffix      = '€',
             helptitle   = 'Abzug Private KV',
             helptext    = 'Gib den vollen Betrag der Rechnungspositionen an, die nicht von Deiner privaten KV übernommen werden. ',
             window      = self.main_window,
         )
+        self.box_form_bill.add(self.form_bill_abzug_pkv)
 
         self.form_bill_bezahlt = LabeledSwitch(self.box_form_bill, 'Bezahlt:')
         
         self.form_bill_buchungsdatum = LabeledDateInput(
-            self.box_form_bill, 
             'Bezahldatum:',
             helptitle   = 'Bezahldatum',
             helptext    = 'Gib das Datum der bereits durchgeführten oder der geplanten Überweisung an.',
             window      = self.main_window,
         )
+        self.box_form_bill.add(self.form_bill_buchungsdatum)
 
         self.form_bill_notiz = LabeledMultilineTextInput(self.box_form_bill, 'Notiz:')
 
@@ -1100,17 +1106,24 @@ class Kontolupe(toga.App):
 
         # Bereich der Pflichteingaben
         self.box_form_institution.add(SubtextDivider('Pflichtfelder'))
-        self.form_institution_name = LabeledTextInput(self.box_form_institution, 'Name:')
+        self.form_institution_name = LabeledTextInput('Name:')
+        self.box_form_institution.add(self.form_institution_name)
 
         # Bereich der optionalen Eingabe
         self.box_form_institution.add(SubtextDivider('Optionale Felder'))
-        self.form_institution_strasse = LabeledTextInput(self.box_form_institution, 'Straße, Hausnr.:')
-        self.form_institution_plz = LabeledPostalInput(self.box_form_institution, 'PLZ:')
-        self.form_institution_ort = LabeledTextInput(self.box_form_institution, 'Ort:')
-        self.form_institution_telefon = LabeledPhoneInput(self.box_form_institution, 'Telefon:')
-        self.form_institution_email = LabeledEmailInput(self.box_form_institution, 'E-Mail:')
-        self.form_institution_webseite = LabeledWebsiteInput(self.box_form_institution, 'Webseite:')
+        self.form_institution_strasse = LabeledTextInput('Straße, Hausnr.:')
+        self.form_institution_plz = LabeledPostalInput('PLZ:')
+        self.form_institution_ort = LabeledTextInput('Ort:')
+        self.form_institution_telefon = LabeledPhoneInput('Telefon:')
+        self.form_institution_email = LabeledEmailInput('E-Mail:')
+        self.form_institution_webseite = LabeledWebsiteInput('Webseite:')
         self.form_institution_notiz = LabeledMultilineTextInput(self.box_form_institution, 'Notiz:')
+        self.box_form_institution.add(self.form_institution_strasse)
+        self.box_form_institution.add(self.form_institution_plz)
+        self.box_form_institution.add(self.form_institution_ort)
+        self.box_form_institution.add(self.form_institution_telefon)
+        self.box_form_institution.add(self.form_institution_email)
+        self.box_form_institution.add(self.form_institution_webseite)
 
         # ButtonBox
         self.form_institution_buttons = ButtonBox(
@@ -1426,8 +1439,11 @@ class Kontolupe(toga.App):
         self.box_form_person.add(self.form_person_topbox)
 
         self.box_form_person.add(SubtextDivider('Pflichtfelder'))
-        self.form_person_name = LabeledTextInput(self.box_form_person, 'Name:')
-        self.form_person_beihilfe = LabeledPercentInput(self.box_form_person, 'Beihilfe in %:')
+
+        self.form_person_name = LabeledTextInput('Name:')
+        self.form_person_beihilfe = LabeledPercentInput('Beihilfe in %:')
+        self.box_form_person.add(self.form_person_name)
+        self.box_form_person.add(self.form_person_beihilfe)
 
         # ButtonBox
         self.form_person_buttons = ButtonBox(
@@ -1702,11 +1718,13 @@ class Kontolupe(toga.App):
         )
         self.box_form_beihilfe.add(self.form_beihilfe_bills)
 
-        self.form_beihilfe_datum = LabeledDateInput(self.box_form_beihilfe, 'Datum:')
+        self.form_beihilfe_datum = LabeledDateInput('Datum:')
+        self.box_form_beihilfe.add(self.form_beihilfe_datum)
 
         self.box_form_beihilfe.add(SubtextDivider('Optionale Felder'))
 
-        self.form_beihilfe_betrag = LabeledFloatInput(self.box_form_beihilfe, 'Betrag :', suffix='€', readonly=True)
+        self.form_beihilfe_betrag = LabeledFloatInput('Betrag :', suffix='€', readonly=True)
+        self.box_form_beihilfe.add(self.form_beihilfe_betrag)
         self.form_beihilfe_erhalten = LabeledSwitch(self.box_form_beihilfe, 'Erstattet:')
 
         # ButtonBox
@@ -1747,11 +1765,13 @@ class Kontolupe(toga.App):
         )
         self.box_form_pkv.add(self.form_pkv_bills)
 
-        self.form_pkv_datum = LabeledDateInput(self.box_form_pkv, 'Datum:')
+        self.form_pkv_datum = LabeledDateInput('Datum:')
+        self.box_form_pkv.add(self.form_pkv_datum)
 
         self.box_form_pkv.add(SubtextDivider('Optionale Felder'))
 
-        self.form_pkv_betrag = LabeledFloatInput(self.box_form_pkv, 'Betrag:',  suffix='€', readonly=True)
+        self.form_pkv_betrag = LabeledFloatInput('Betrag:',  suffix='€', readonly=True)
+        self.box_form_pkv.add(self.form_pkv_betrag)
         self.form_pkv_erhalten = LabeledSwitch(self.box_form_pkv, 'Erstattet:')
 
         # ButtonBox

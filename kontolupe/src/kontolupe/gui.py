@@ -475,12 +475,12 @@ class TableOpenBookings(Table):
         return [texts, button]
 
 
-class LabeledTextInput:
+class LabeledTextInput(toga.Box):
     """Create a box with a label and a text input."""
 
-    def __init__(self, parent, label_text, **kwargs):
+    def __init__(self, label_text, **kwargs):
+        super().__init__(style=style_box_row)
         self.validator = Validator(kwargs.get('validator', None))
-        self.box = toga.Box(style=style_box_row)
         self.label_box = toga.Box(style=style_flex_box)
         self.input_box = toga.Box(style=style_flex_box)
         self.label = toga.Label(label_text, style=style_label_input_noflex)
@@ -498,16 +498,11 @@ class LabeledTextInput:
         if kwargs.get('suffix', None):
             self.input_box.add(toga.Label(kwargs.get('suffix'), style=style_label_input_suffix))
 
-        self.box.add(self.label_box)
-        self.box.add(self.input_box)
+        self.add(self.label_box)
+        self.add(self.input_box)
 
         if 'helptext' in kwargs and 'window' in kwargs:
             self.label_box.add(HelpButton(**kwargs))
-
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        parent.add(self.box)
 
     def _set_label(self, label_text):
         self.label.text = label_text
@@ -516,12 +511,12 @@ class LabeledTextInput:
         return self.label.text
     
     def hide(self):
-        self.box.remove(self.label_box)
-        self.box.remove(self.input_box)
+        self.remove(self.label_box)
+        self.remove(self.input_box)
 
     def show(self):
-        self.box.add(self.label_box)
-        self.box.add(self.input_box)
+        self.add(self.label_box)
+        self.add(self.input_box)
 
     def set_value(self, value):
         self.text_input.value = value
@@ -544,9 +539,8 @@ class LabeledTextInput:
 class LabeledDateInput(LabeledTextInput):
     """Create a box with a label and a text input for dates."""
 
-    def __init__(self, parent, label_text, **kwargs):
+    def __init__(self, label_text, **kwargs):
         super().__init__(
-            parent, 
             label_text, 
             placeholder = 'TT.MM.JJJJ', 
             validator   = 'date', 
@@ -588,8 +582,8 @@ class LabeledDateInput(LabeledTextInput):
 class LabeledFloatInput(LabeledTextInput):
     """Create a box with a label and a text input for floats."""
 
-    def __init__(self, parent, label_text, suffix=None, **kwargs):
-        super().__init__(parent, label_text, suffix=suffix, validator='float', **kwargs)
+    def __init__(self, label_text, suffix=None, **kwargs):
+        super().__init__(label_text, suffix=suffix, validator='float', **kwargs)
 
     def get_value(self):
         self.validator.rectify(self.text_input)
@@ -615,8 +609,8 @@ class LabeledFloatInput(LabeledTextInput):
 class LabeledIntInput(LabeledTextInput):
     """Create a box with a label and a text input for integers."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, validator='int', **kwargs)
+    def __init__(self, label_text, **kwargs):
+        super().__init__(label_text, validator='int', **kwargs)
 
     def get_value(self):
         self.validator.rectify(self.text_input)
@@ -640,8 +634,8 @@ class LabeledIntInput(LabeledTextInput):
 class LabeledPercentInput(LabeledTextInput):
     """Create a box with a label and a text input for percentages."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, validator='percent', **kwargs)
+    def __init__(self, label_text, **kwargs):
+        super().__init__(label_text, validator='percent', **kwargs)
 
     def get_value(self):
         self.validator.rectify(self.text_input)
@@ -665,29 +659,29 @@ class LabeledPercentInput(LabeledTextInput):
 class LabeledPostalInput(LabeledTextInput):
     """Create a box with a label and a text input for postal codes."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, validator='postal', **kwargs)
+    def __init__(self, label_text, **kwargs):
+        super().__init__(label_text, validator='postal', **kwargs)
 
 
 class LabeledPhoneInput(LabeledTextInput):
     """Create a box with a label and a text input for phone numbers."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, validator='phone', **kwargs)
+    def __init__(self, label_text, **kwargs):
+        super().__init__(label_text, validator='phone', **kwargs)
 
 
 class LabeledEmailInput(LabeledTextInput):
     """Create a box with a label and a text input for email addresses."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, validator='email', **kwargs)
+    def __init__(self, label_text, **kwargs):
+        super().__init__(label_text, validator='email', **kwargs)
 
 
 class LabeledWebsiteInput(LabeledTextInput):
     """Create a box with a label and a text input for website addresses."""
 
-    def __init__(self, parent, label_text, **kwargs):
-        super().__init__(parent, label_text, placeholder='www.', validator='website', **kwargs)
+    def __init__(self, label_text, **kwargs):
+        super().__init__(label_text, placeholder='www.', validator='website', **kwargs)
 
 
 class LabeledMultilineTextInput:
