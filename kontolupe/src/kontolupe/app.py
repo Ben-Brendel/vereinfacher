@@ -419,12 +419,12 @@ class Kontolupe(toga.App):
 
         # ButtonBox
         self.statistics_buttons = ButtonBox(
-            parent  = self.box_statistics,
             labels  = ['Anzeigen', 'Exportieren'],
             targets = [None, None],
             ids     = ['show_statistic', 'export_statistic'],
             enabled = [True, False]
         )  
+        self.box_statistics.add(self.statistics_buttons)
 
         self.box_statistics.add(toga.Divider(style=style_divider))
 
@@ -548,10 +548,10 @@ class Kontolupe(toga.App):
         box_init_persons.add(self.init_persons_beihilfe)
 
         self.init_persons_buttons = ButtonBox(
-            parent=box_init_persons,
             labels=['Speichern und neu'],
             targets=[self.save_person]
         )
+        box_init_persons.add(self.init_persons_buttons)
 
         # Eingabebereich der Einrichtungen
         box_init_institutions = toga.Box(style=style_box_part)
@@ -566,10 +566,10 @@ class Kontolupe(toga.App):
         box_init_institutions.add(self.init_institutions_city)
 
         self.init_institutions_buttons = ButtonBox(
-            parent=box_init_institutions,
             labels=['Speichern und neu'],
             targets=[self.save_institution]
         )
+        box_init_institutions.add(self.init_institutions_buttons)
 
         # Button zum Abschluss der Initialisierung
         self.box_init_page_button = toga.Box(style=style_box_part_button)
@@ -634,11 +634,11 @@ class Kontolupe(toga.App):
 
         # Buttons zur Tabelle der offenen Buchungen
         self.mainpage_table_buttons = ButtonBox(
-            parent  = self.box_mainpage,
             labels  = ['Aktualisieren'],
             targets = [self.check_open_bills],
             ids     = ['refresh']
         )
+        self.box_mainpage.add(self.mainpage_table_buttons)
 
         # Section: Rechnungen
         self.mainpage_section_bills = SectionBills(
@@ -721,12 +721,12 @@ class Kontolupe(toga.App):
 
         # ButtonBox mit den Buttons
         self.list_bills_buttons = ButtonBox(
-            parent  = self.box_list_bills,
             labels  = ['Löschen', 'Bearbeiten', 'Neu'],
             targets = [self.delete_bill, self.show_form_bill_edit, self.show_form_bill_new],
             ids     = ['delete_bill', 'edit_bill', 'new_bill'],
             enabled = [False, False, True]
         )  
+        self.box_list_bills.add(self.list_bills_buttons)
 
 
     def show_list_bills(self, widget):
@@ -809,10 +809,10 @@ class Kontolupe(toga.App):
 
         # Bereich der Buttons
         self.form_bill_buttons = ButtonBox(
-            parent=self.box_form_bill,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_bills, self.save_bill],
         )
+        self.box_form_bill.add(self.form_bill_buttons)
 
 
     def show_form_bill_new(self, widget):
@@ -1079,12 +1079,12 @@ class Kontolupe(toga.App):
 
         # ButtonBox mit den Buttons
         self.list_institutions_buttons = ButtonBox(
-            parent  = self.box_list_institutions,
             labels  = ['Bearbeiten', 'Neu', 'Löschen', 'Info'],
             targets = [self.show_form_institution_edit, self.show_form_institution_new, self.delete_institution, self.show_info_institution],
             ids     = ['edit_institution', 'new_institution', 'delete_institution', 'info_institution'],
             enabled = [False, True, False, False]
         )
+        self.box_list_institutions.add(self.list_institutions_buttons)
 
 
     def show_list_institutions(self, widget):
@@ -1130,10 +1130,10 @@ class Kontolupe(toga.App):
 
         # ButtonBox
         self.form_institution_buttons = ButtonBox(
-            parent=self.box_form_institution,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_institutions, self.save_institution]
         )
+        self.box_form_institution.add(self.form_institution_buttons)
 
 
     def show_form_institution_new(self, widget):
@@ -1331,10 +1331,10 @@ class Kontolupe(toga.App):
 
         # ButtonBox
         self.info_institution_buttons = ButtonBox(
-            parent=self.box_info_institution,
             labels=['Bearbeiten', 'Löschen'],
             targets=[self.show_form_institution_edit, self.delete_institution]
         )
+        self.box_info_institution.add(self.info_institution_buttons)
 
 
     def show_info_institution(self, widget, row=None):
@@ -1406,12 +1406,12 @@ class Kontolupe(toga.App):
 
         # ButtonBox mit den Buttons
         self.list_persons_buttons = ButtonBox(
-            parent  = self.box_list_persons,
             labels  = ['Löschen', 'Bearbeiten', 'Neu'],
             targets = [self.delete_person, self.show_form_persons_edit, self.show_form_persons_new],
             ids     = ['delete_person', 'edit_person', 'new_person'],
             enabled = [False, False, True]
         )
+        self.box_list_persons.add(self.list_persons_buttons)
 
 
     def show_list_persons(self, widget):
@@ -1450,10 +1450,10 @@ class Kontolupe(toga.App):
 
         # ButtonBox
         self.form_person_buttons = ButtonBox(
-            parent=self.box_form_person,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_persons, self.save_person]
         )
+        self.box_form_person.add(self.form_person_buttons)
 
 
     def show_form_persons_new(self, widget):
@@ -1634,13 +1634,13 @@ class Kontolupe(toga.App):
 
         # Buttons
         self.list_allowance_buttons = ButtonBox(
-            parent      = self.box_list_allowance,
             labels      = ['Reset', 'Erstattet', 'Neu'],
             targets     = [self.delete_beihilfe, self.pay_receive, self.show_form_beihilfe_new],
             ids         = ['reset_allowance', 'receive_allowance', 'new_allowance'],
             connections = [None, None, self.daten.allowances_bills],
             enabled     = [False, False, True]
         )
+        self.box_list_allowance.add(self.list_allowance_buttons)
 
 
     def create_list_pkv(self):
@@ -1670,13 +1670,13 @@ class Kontolupe(toga.App):
 
         # Buttons
         self.list_insurance_buttons = ButtonBox(
-            parent      = self.box_list_insurance,
             labels      = ['Reset', 'Erstattet', 'Neu'],
             targets     = [self.delete_pkv, self.pay_receive, self.show_form_pkv_new],
             ids         = ['reset_insurance', 'receive_insurance', 'new_insurance'],
             connections = [None, None, self.daten.insurances_bills],
             enabled     = [False, False, True]
         )
+        self.box_list_insurance.add(self.list_insurance_buttons)
 
 
     def show_list_beihilfe(self, widget):
@@ -1733,10 +1733,10 @@ class Kontolupe(toga.App):
 
         # ButtonBox
         self.form_beihilfe_buttons = ButtonBox(
-            parent=self.box_form_beihilfe,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_beihilfe, self.save_beihilfe]
         )
+        self.box_form_beihilfe.add(self.form_beihilfe_buttons)
 
 
     def create_form_pkv(self):
@@ -1781,10 +1781,10 @@ class Kontolupe(toga.App):
 
         # ButtonBox
         self.form_pkv_buttons = ButtonBox(
-            parent=self.box_form_pkv,
             labels=['Abbrechen', 'Speichern'],
             targets=[self.show_list_pkv, self.save_pkv]
         )
+        self.box_form_pkv.add(self.form_pkv_buttons)
 
 
     def on_select_beihilfe_bills(self, widget):

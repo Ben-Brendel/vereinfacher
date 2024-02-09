@@ -868,10 +868,10 @@ class LabeledSwitch(toga.Box):
         self.switch.on_change = on_change
 
 
-class ButtonBox:
+class ButtonBox(toga.Box):
     """Create a box with up to four buttons."""
 
-    def __init__(self, parent, labels, targets, ids=None, enabled=True, connections=None, **kwargs):
+    def __init__(self, labels, targets, ids=None, enabled=True, connections=None, **kwargs):
         """Create a box with up to four buttons at the bottom of a window."""
         if not len(labels) == len(targets):
             raise ValueError('Labels and targets must have the same length.')
@@ -914,25 +914,19 @@ class ButtonBox:
             
 
         if len(self.buttons) < 4:
-            self.box = toga.Box(style=style_box_row)
+            super().__init__(style=style_box_row)
             for button in self.buttons:
-                self.box.add(button)
+                self.add(button)
         elif len(self.buttons) == 4:
-            self.box = toga.Box(style=style_box_column)
+            super().__init__(style=style_box_column)
             self.box1 = toga.Box(style=style_box_row)
             self.box2 = toga.Box(style=style_box_row)
             for button in self.buttons[:2]:
                 self.box1.add(button)
             for button in self.buttons[2:]:
                 self.box2.add(button)
-            self.box.add(self.box1)
-            self.box.add(self.box2)
-
-        self.__add_to_parent(parent)
-
-    def __add_to_parent(self, parent):
-        """Add the box to the parent."""
-        parent.add(self.box)
+            self.add(self.box1)
+            self.add(self.box2)
 
     def set_enabled(self, button_id, status):
         """Enable or disable a button by its ID."""
