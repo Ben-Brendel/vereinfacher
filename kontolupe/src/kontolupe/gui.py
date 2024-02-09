@@ -807,17 +807,32 @@ class LabeledDoubleSelection(toga.Box):
     def get_label(self):
         return self.label.text
 
-    def set_value(self, index, value):
-        self.selections[index].value = value
+    def set_value(self, value, index=None):
+        if index is None:
+            self.selections[0].value = value[0]
+            self.selections[1].value = value[1]
+        else:
+            self.selections[index].value = value
 
-    def get_value(self, index):
-        return self.selections[index].value
+    def get_value(self, index=None):
+        if index is None:
+            return [self.selections[0].value, self.selections[1].value]
+        else:
+            return self.selections[index].value
     
-    def set_items(self, index, items):
-        self.selections[index].items = items
+    def set_items(self, items, index=None):
+        if index is None:
+            self.selections[0].items = items[0]
+            self.selections[1].items = items[1]
+        else:
+            self.selections[index].items = items
     
-    def set_on_change(self, index, on_change):
-        self.selections[index].on_change = on_change
+    def set_on_change(self, on_change, index=None):
+        if index is None:
+            self.selections[0].on_change = on_change[0]
+            self.selections[1].on_change = on_change[1]
+        else:
+            self.selections[index].on_change = on_change
 
 
 class LabeledSwitch(toga.Box):
