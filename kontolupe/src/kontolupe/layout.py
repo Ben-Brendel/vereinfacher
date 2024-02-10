@@ -101,3 +101,6 @@ style_table_label_box           = Pack(flex=1, direction=ROW, alignment=LEFT, pa
 style_table_button_box          = Pack(direction=ROW, alignment=RIGHT, padding_right=10)
 style_table_box_odd             = Pack(direction=ROW, alignment=CENTER, background_color=FARBE_HELLGRAU)
 style_table_box_even            = Pack(direction=ROW, alignment=CENTER, background_color=FARBE_HELL)
+
+# Statistik
+style_canvas                    = Pack()

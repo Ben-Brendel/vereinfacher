@@ -452,13 +452,26 @@ class Kontolupe(toga.App):
         # ButtonBox
         self.statistics_buttons = ButtonBox(
             labels  = ['Anzeigen', 'Exportieren'],
-            targets = [None, None],
-            ids     = ['show_statistic', 'export_statistic'],
+            targets = [self.draw_statistic, self.export_statistic],
+            ids     = ['draw_statistic', 'export_statistic'],
             enabled = [True, False]
         )  
         self.box_statistics.add(self.statistics_buttons)
 
         self.box_statistics.add(toga.Divider(style=style_divider))
+
+        self.statistics_graph = StatisticsGraph()
+        self.box_statistics.add(self.statistics_graph)
+
+
+    def draw_statistic(self, widget):
+        """Zeichnet die Statistik."""
+        pass
+
+
+    def export_statistic(self, widget):
+        """Exportiert die Statistik."""
+        pass
 
 
     def show_init_page(self, widget):

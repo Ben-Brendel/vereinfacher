@@ -8,6 +8,18 @@ from kontolupe.general import *
 from datetime import datetime
 
 
+class StatisticsGraph(toga.Canvas):
+    """Erzeugt einen Canvas für die Statistik."""
+
+    def __init__(self, **kwargs):
+        super().__init__(style=style_canvas)
+
+    def draw(self):
+        pass
+
+    def clear(self):
+        self.context.clear()
+
 class SectionOpenSum(toga.Box):
     """Erzeugt den Anzeigebereich für den offenen Betrag."""
 
