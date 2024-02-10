@@ -329,19 +329,42 @@ class Kontolupe(toga.App):
     def show_statistics(self, widget):
         """Zeigt die Seite mit der Statistik."""
         # Update the items of the type selection
+        temp = self.statistics_type.get_value()
         if self.daten.allowance_active():
             self.statistics_type.set_items(['Alle', 'Rechnungen', 'Beihilfe', 'Private KV'])
         else:
             self.statistics_type.set_items(['Alle', 'Rechnungen', 'Private KV'])
+        if temp in self.statistics_type.get_items():
+            self.statistics_type.set_value(temp)
 
         # Update the items of the person and einrichtung selections
+        temp = self.statistics_person.get_value()
         self.statistics_person.set_items(
             (['Alle'] if len(self.daten.persons) > 1 else []) + [person.name for person in self.daten.persons]
         )
+        if temp in self.statistics_person.get_items():
+            self.statistics_person.set_value(temp)
+
+        temp = self.statistics_institution.get_value()
         self.statistics_institution.set_items(
             (['Alle'] if len(self.daten.institutions) > 1 else []) + [institution.name for institution in self.daten.institutions]
         )
+        if temp in self.statistics_institution.get_items():
+            self.statistics_institution.set_value(temp)
 
+        # Check if the current year has changed and add it to the items of the from and to selections
+        current_year = datetime.today().year
+        try:
+            self.statistics_from.get_items(1).find(str(current_year))
+            print('+++ Kontolupe.show_statistics: current year already in the list.')
+            
+        except ValueError:
+            print('+++ Kontolupe.show_statistics: current year not in the list, adding it.')
+            temp = self.statistics_from.get_value()
+            self.statistics_from.add_item(str(current_year), 1)
+            self.statistics_to.add_item(str(current_year), 1)
+            self.statistics_from.set_value(temp)
+        
         self.main_window.content = self.sc_statistics
 
 
@@ -394,11 +417,18 @@ class Kontolupe(toga.App):
         # Daten für die Selektion des Zeitraums
         months = ['{:02d}'.format(month) for month in range(1, 13)]
         years = [str(year) for year in range(2020, datetime.today().year + 1)]
+        # reverse the years list
+        years = years[::-1]
+
+        # Ermittle den aktuellen Monat und das aktuelle Jahr
+        current_month = datetime.today().month
+        current_year = datetime.today().year
 
         # Selektion des Zeitraums
         self.statistics_from = LabeledDoubleSelection( 
             'Von:', 
             data = [months, years], 
+            values = ['{:02d}'.format(current_month), str(current_year-1)],
             on_change=[self.statistics_changed, self.statistics_changed]
         )
         self.box_statistics.add(self.statistics_from)
@@ -406,6 +436,7 @@ class Kontolupe(toga.App):
         self.statistics_to = LabeledDoubleSelection(
             'Bis:', 
             data = [months, years], 
+            values = ['{:02d}'.format(current_month), str(current_year)],
             on_change=[self.statistics_changed, self.statistics_changed]
         )
         self.box_statistics.add(self.statistics_to)
@@ -413,7 +444,8 @@ class Kontolupe(toga.App):
         self.statistics_step = LabeledSelection(
             'Auswertungsschritt:', 
             ['Monat', 'Quartal', 'Jahr'], 
-            on_change=self.statistics_changed
+            on_change = self.statistics_changed,
+            value = 'Quartal'
         )
         self.box_statistics.add(self.statistics_step)
 

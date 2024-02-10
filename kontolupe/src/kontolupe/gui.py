@@ -723,7 +723,7 @@ class LabeledMultilineTextInput(toga.Box):
 class LabeledSelection(toga.Box):
     """Create a box with a label and a selection."""
 
-    def __init__(self, label_text, data, accessor=None, **kwargs):
+    def __init__(self, label_text, data, accessor=None, value=None, **kwargs):
         
         self.label = toga.Label(label_text, style=style_label_input)
 
@@ -731,6 +731,7 @@ class LabeledSelection(toga.Box):
             style=style_selection,
             items=data,
             accessor=accessor,
+            value=value,
             on_change=kwargs.get('on_change', None)
         )
         
@@ -764,6 +765,9 @@ class LabeledSelection(toga.Box):
     
     def set_items(self, items):
         self.selection.items = items
+
+    def get_items(self):
+        return self.selection.items
     
     def set_on_change(self, on_change):
         self.selection.on_change = on_change
@@ -772,7 +776,7 @@ class LabeledSelection(toga.Box):
 class LabeledDoubleSelection(toga.Box):
     """Create a box with a label and two selection fields."""
 
-    def __init__(self, label_text, data, accessors=[None, None], **kwargs):
+    def __init__(self, label_text, data, accessors=[None, None], values=[None, None], **kwargs):
 
         self.label = toga.Label(label_text, style=style_label_input)
 
@@ -782,6 +786,7 @@ class LabeledDoubleSelection(toga.Box):
             style=style_selection,
             items=data[0],
             accessor=accessors[0],
+            value=values[0],
             on_change=kwargs.get('on_change', [None, None])[0]
         ))
 
@@ -789,6 +794,7 @@ class LabeledDoubleSelection(toga.Box):
             style=style_selection_flex2,
             items=data[1],
             accessor=accessors[1],
+            value=values[1],
             on_change=kwargs.get('on_change', [None, None])[1]
         ))
 
@@ -826,6 +832,19 @@ class LabeledDoubleSelection(toga.Box):
             self.selections[1].items = items[1]
         else:
             self.selections[index].items = items
+
+    def get_items(self, index=None):
+        if index is None:
+            return [self.selections[0].items, self.selections[1].items]
+        else:
+            return self.selections[index].items
+        
+    def add_item(self, item, index=None):
+        if index is None:
+            self.selections[0].items.insert(0, item[0])
+            self.selections[1].items.insert(0, item[1])
+        else:
+            self.selections[index].items.insert(0, item)
     
     def set_on_change(self, on_change, index=None):
         if index is None:
