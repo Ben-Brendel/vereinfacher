@@ -1334,7 +1334,7 @@ class Kontolupe(toga.App):
             self.daten.new(INSTITUTION_OBJECT, institution)
 
             # Show Success Message
-            await self.main_window.info_dialog('Einrichtung gespeichert', institution.name + ' wurde erfolgreich gespeichert.')
+            await self.main_window.info_dialog('Einrichtung gespeichert', institution['name'] + ' wurde erfolgreich gespeichert.')
 
             # Leere Eingabefelder
             self.init_institutions_name.set_value('')

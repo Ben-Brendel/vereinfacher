@@ -5,11 +5,13 @@ from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 FARBE_DUNKEL                    = '#222222'
 FARBE_HELL                      = '#FFFFFF'
 FARBE_BLAU                      = '#368ba8'
+FARBE_AKZENTBLAU                = '#18799E'
 FARBE_LILA                      = '#7758a8'
 FARBE_GRUEN                     = '#4c9c60'
 FARBE_GRAU                      = '#444444'
 FARBE_MITTEL                    = '#666666' 
 FARBE_HELLGRAU                  = '#EEEEEE'
+FARBE_ROT                       = '#CB3040'
 
 # Allgemeine Styles
 style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
