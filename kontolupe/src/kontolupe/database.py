@@ -15,8 +15,9 @@ class Database:
     def __init__(self, data_path=None):
         """Initialisierung der Datenbank."""
         
-        # if it is an android device use the android path
-        # otherwise use the windows path
+        # use the provided data path that should be the toga specific path to the data directory
+        # if data-path is None and it is an android device use the provided android path
+        # otherwise use the provided windows path
         if data_path:
             data_path.mkdir(parents=True, exist_ok=True)
             self.db_dir = data_path
