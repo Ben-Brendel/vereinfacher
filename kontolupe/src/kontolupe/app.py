@@ -530,8 +530,8 @@ class Kontolupe(toga.App):
             text_institutions = text_institutions.rstrip(', ')
 
         # Setze die Anzeigen
-        self.init_persons_label.text = add_newlines(text_persons, 40)
-        self.init_institutions_label.text = add_newlines(text_institutions, 40)
+        self.init_persons_label.text = add_newlines(text_persons, 50)
+        self.init_institutions_label.text = add_newlines(text_institutions, 50)
 
         # Aktiviere den Button, wenn alle Eingaben korrekt sind
         if self.init_button not in self.box_init_page_button.children and status_persons and status_institutions:
@@ -728,11 +728,9 @@ class Kontolupe(toga.App):
         # Archivieren-Button
         if self.daten.init.get('automatic_archive', False):
             self.box_startseite_daten.remove(self.button_start_archiv)
-            self.commands.remove(self.cmd_archivieren)
             self.daten.archive()
         else:
             self.box_startseite_daten.add(self.button_start_archiv)
-            self.commands.add(self.cmd_archivieren)
 
         # Bezahlstatus der offenen Rechnungen abfragen
         self.add_background_task(self.check_open_bills)
@@ -1407,7 +1405,7 @@ class Kontolupe(toga.App):
                 self.info_institution_website.show_button()
                 self.info_institution_website.set_text(institution.webseite)
                 
-            self.info_institution_note.set_value(add_newlines(institution.notiz, 40))
+            self.info_institution_note.set_value(add_newlines(institution.notiz, 50))
 
             # Zeige die Info-Seite
             self.main_window.content = self.sc_info_institution
@@ -2206,7 +2204,7 @@ class Kontolupe(toga.App):
         self.main_window = toga.MainWindow(title=self.formal_name)
 
         # Daten-Interface initialisieren
-        self.daten = DataInterface()
+        self.daten = DataInterface(self.paths.data)
 
         # Erzeuge alle GUI-Elemente
         self.create_init_page()

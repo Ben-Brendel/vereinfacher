@@ -12,17 +12,21 @@ from kontolupe.general import *
 class Database:
     """Klasse zur Verwaltung der Datenbank."""
 
-    def __init__(self):
+    def __init__(self, data_path=None):
         """Initialisierung der Datenbank."""
+        
         # if it is an android device use the android path
         # otherwise use the windows path
-        if Path('/data/data/net.biberwerk.kontolupe').exists():
+        if data_path:
+            data_path.mkdir(parents=True, exist_ok=True)
+            self.db_dir = data_path
+            print(f'### Database: Using data path {self.db_dir} from toga.app')
+        elif Path('/data/data/net.biberwerk.kontolupe').exists():
             self.db_dir = Path('/data/data/net.biberwerk.kontolupe')
         elif Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe').exists():
             self.db_dir = Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe')
         
         self.db_path = self.db_dir / 'kontolupe.db'
-
         self.init_file = self.db_dir / 'init.txt'
 
         # Dictionary mit den Tabellen und Spalten der Datenbank erstellen
@@ -73,6 +77,9 @@ class Database:
         }
 
         self.__tables_predecessors = {new: old for old, new in self.__tables_rename.items()}
+
+        # Speicherorte überprüfen und aktualisieren
+        self.__check_paths()
 
         # Datenbank-Datei initialisieren und ggf. aktualisieren
         self.__create_db()
@@ -204,6 +211,29 @@ class Database:
         if self.init_file.exists():
             self.init_file.unlink()
             print(f'### Database: Deleted init file {self.init_file}')
+
+    def __check_paths(self):
+        """Überprüfen, ob die Daten am richtigen Ort gespeichert sind."""
+
+        if not self.db_path.exists():
+            if Path('/data/data/net.biberwerk.kontolupe/kontolupe.db').exists():
+                # move the database to the correct location
+                shutil.move(Path('/data/data/net.biberwerk.kontolupe/kontolupe.db'), self.db_path)
+                print(f'### Database.__check_paths: Moved database to {self.db_path}')
+            elif Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe/kontolupe.db').exists():
+                # move the database to the correct location
+                shutil.move(Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe/kontolupe.db'), self.db_path)
+                print(f'### Database.__check_paths: Moved database to {self.db_path}')
+
+        if not self.init_file.exists():
+            if Path('/data/data/net.biberwerk.kontolupe/init.txt').exists():
+                # move the init file to the correct location
+                shutil.move(Path('/data/data/net.biberwerk.kontolupe/init.txt'), self.init_file)
+                print(f'### Database.__check_paths: Moved init file to {self.init_file}')
+            elif Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe/init.txt').exists():
+                # move the init file to the correct location
+                shutil.move(Path('C:/Users/Ben/code/vereinfacher/kontolupe/src/kontolupe/init.txt'), self.init_file)
+                print(f'### Database.__check_paths: Moved init file to {self.init_file}')
 
     def __get_column_type(self, table_name, column_name):
         """Lade den Typ der Spalte aus dem self.__tables Dictionary."""
@@ -545,11 +575,11 @@ class Database:
 class DataInterface:
     """Daten-Interface für die GUI."""
 
-    def __init__(self):
+    def __init__(self, data_path=None):
         """Initialisierung des Daten-Interfaces."""
         
         # Datenbank initialisieren
-        self.db = Database()
+        self.db = Database(data_path)
 
         # Init-Dictionary laden
         self.init = self.db.load_init_file()
@@ -706,6 +736,10 @@ class DataInterface:
 
     def archive(self):
         """Archiviert alle archivierbaren Buchungen."""
+
+        if not self.archivables:
+            print(f'### DatenInterface.archive: No archivables found')
+            return
 
         for index in self.archivables[0].rechnung:
             self.deactivate(BILL_OBJECT, self.bills[index])
