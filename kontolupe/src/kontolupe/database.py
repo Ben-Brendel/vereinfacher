@@ -88,11 +88,11 @@ class Database:
             # check if database exists and has any data
             if self.db_path.exists():
                 # load the data
-                rechnungen = self.lade_rechnungen(only_active=False)
-                beihilfepakete = self.lade_beihilfepakete(only_active=False)
-                pkvpakete = self.lade_pkvpakete(only_active=False)
-                einrichtungen = self.lade_einrichtungen(only_active=False)
-                personen = self.lade_personen(only_active=False)
+                rechnungen = self.load(BILL_OBJECT, only_active=False)
+                beihilfepakete = self.load(ALLOWANCE_OBJECT, only_active=False)
+                pkvpakete = self.load(INSURANCE_OBJECT, only_active=False)
+                einrichtungen = self.load(INSTITUTION_OBJECT, only_active=False)
+                personen = self.load(PERSON_OBJECT, only_active=False)
 
                 # update from the version before the init file was introduced
                 if rechnungen or beihilfepakete or pkvpakete or einrichtungen or personen:

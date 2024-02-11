@@ -3,7 +3,7 @@
 project_name = "Vereinfacher"
 bundle = "net.biberwerk"
 version = "0.3.3"
-build = 2
+build = 3
 url = "https://biberwerk.net/kontolupe"
 license = "MIT license"
 author = "Biberwerk"
@@ -26,7 +26,9 @@ test_sources = [
 ]
 
 splash_background_color = "#368ba8"
+primary_color = "#4c9c60"
 primary_color_dark = "#444444"
+accent_color = "#7758a8"
 
 requires = [
     
