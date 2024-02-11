@@ -256,7 +256,7 @@ class Database:
         if self.db_path.exists():
             if backup_path.exists():
                 backup_path.unlink()
-            shutil.copy2(self.db_path, backup_path)
+            shutil.copy(self.db_path, backup_path)
             print(f'### Database.__create_backup: Created backup {backup_path}')
         else:
             print(f'### Database.__create_backup: Database {self.db_path} does not exist. No backup created.')
@@ -580,6 +580,7 @@ class DataInterface:
         """Initialisierung des Daten-Interfaces."""
         
         # Datenbank initialisieren
+        self.data_path = data_path
         self.db = Database(data_path)
 
         # Init-Dictionary laden
@@ -716,12 +717,14 @@ class DataInterface:
         del self.insurances
         del self.open_bookings
         del self.archivables
+        del self.open_sum
+        del self.init
 
         # reset database
         self.db.reset()
 
         # initialize object again
-        self.__init__()
+        self.__init__(self.data_path)
 
     def is_first_start(self):
         """Prüft, ob das Programm zum ersten Mal gestartet wird."""
@@ -730,6 +733,7 @@ class DataInterface:
     def save_init_file(self):
         """Speichert die Initialisierungsdatei."""
         self.db.save_init_file(**self.init)
+        print(self.init)
 
     def load_init_file(self):
         """Lädt die Initialisierungsdatei und speichert sie in der Klassenvariable."""

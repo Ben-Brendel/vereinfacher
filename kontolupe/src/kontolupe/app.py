@@ -58,11 +58,10 @@ class Kontolupe(toga.App):
 
     def on_change_setting(self, widget):
         """Reagiert auf die Änderung einer Einstellung."""
-        self.daten.init['automatic_booking'] = self.settings_automatic_booking.get_value()
-        self.daten.init['automatic_archive'] = self.settings_automatic_archive.get_value()
-        self.daten.save_init_file()
-        
-        print(self.daten.init)
+        if self.daten.initialized():
+            self.daten.init['automatic_booking'] = self.settings_automatic_booking.get_value()
+            self.daten.init['automatic_archive'] = self.settings_automatic_archive.get_value()
+            self.daten.save_init_file()
 
 
     def create_settings(self):
@@ -631,17 +630,11 @@ class Kontolupe(toga.App):
 
     def finish_init(self, widget):
         """Speichert die Daten und beendet die Initialisierung."""
-        
-        # Speichere die Daten
-        self.daten.init['beihilfe'] = self.init_beihilfe.value
-        self.daten.init['initialized'] = True
-        self.daten.save_init_file()
 
         # Erstelle die Menüs
         self.create_commands()
 
         # Verknüpfe die ListSources mit den Tabellen
-        self.table_open_bookings.data = self.daten.open_bookings
         self.table_bills.data = self.daten.bills
         self.table_allowance.data = self.daten.allowances
         self.table_insurance.data = self.daten.insurances
@@ -650,6 +643,24 @@ class Kontolupe(toga.App):
         self.form_beihilfe_bills.data = self.daten.allowances_bills
         self.form_pkv_bills.data = self.daten.insurances_bills
 
+        # Aktualisiere die weiteren Verknüpfungen
+        self.open_sum.set_value_source(self.daten.open_sum)
+        self.table_open_bookings.set_list_source(self.daten.open_bookings)
+        self.mainpage_section_bills.set_list_source(self.daten.bills)
+        self.mainpage_section_allowance.set_list_source(self.daten.allowances_bills)
+        self.mainpage_section_insurance.set_list_source(self.daten.insurances_bills)
+        self.button_start_archiv.set_list_source(self.daten.archivables)
+        self.form_bill_person.set_items(self.daten.persons)
+        self.form_bill_einrichtung.set_items(self.daten.institutions)
+
+        # Einstellungen-Seite anpassen
+        self.settings_automatic_booking.set_value(False)
+        self.settings_automatic_archive.set_value(False)
+
+        # Speichere die Daten
+        self.daten.init['beihilfe'] = self.init_beihilfe.value
+        self.daten.init['initialized'] = True
+        self.daten.save_init_file()
 
         # Zeige die Startseite
         self.show_mainpage(widget)
@@ -693,14 +704,15 @@ class Kontolupe(toga.App):
         )
         self.box_mainpage.add(self.mainpage_section_bills)
         
-        if self.daten.allowance_active():
-            # Section: Beihilfe-Einreichungen
-            self.mainpage_section_allowance = SectionAllowance(
-                self.daten.allowances_bills,
-                on_press_show   = self.show_list_beihilfe,
-                on_press_new    = self.show_form_beihilfe_new,
-            )
-            self.box_mainpage.add(self.mainpage_section_allowance)
+        # Section: Beihilfe-Einreichungen
+        self.mainpage_box_section_allowance = toga.Box(style=style_box_column)
+        self.mainpage_section_allowance = SectionAllowance(
+            self.daten.allowances_bills,
+            on_press_show   = self.show_list_beihilfe,
+            on_press_new    = self.show_form_beihilfe_new,
+        )
+        self.mainpage_box_section_allowance.add(self.mainpage_section_allowance)
+        self.box_mainpage.add(self.mainpage_box_section_allowance)
 
         # Section: PKV-Einreichungen
         self.mainpage_section_insurance = SectionInsurance(
@@ -724,6 +736,11 @@ class Kontolupe(toga.App):
 
     def show_mainpage(self, widget):
         """Zurück zur Startseite."""
+
+        if self.daten.allowance_active():
+            self.mainpage_box_section_allowance.add(self.mainpage_section_allowance)
+        else:
+            self.mainpage_box_section_allowance.remove(self.mainpage_section_allowance)
 
         # Archivieren-Button
         if self.daten.init.get('automatic_archive', False):
