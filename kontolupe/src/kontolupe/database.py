@@ -638,11 +638,27 @@ class DataInterface:
                     case 'plz_ort':
                         value = (data.get('plz', '') or '') + (' ' if data.get('plz', '') else '') + (data.get('ort', '') or '')
                     case 'einrichtung_name':
-                        value = self.institutions.find({'db_id': get_value('einrichtung_id', None)}).name or ''
+                        try:
+                            value = self.institutions.find({'db_id': get_value('einrichtung_id', None)}).name or ''
+                        except ValueError:
+                            value = ''
                     case 'person_name':
-                        value = self.persons.find({'db_id': get_value('person_id', None)}).name or ''
+                        try:
+                            value = self.persons.find({'db_id': get_value('person_id', None)}).name or ''
+                        except ValueError:
+                            value = ''
                     case 'info':
-                        value = (self.persons.find({'db_id': get_value('person_id', None)}).name + ', ' or '') + (self.institutions.find({'db_id': get_value('einrichtung_id', None)}).name or '')
+                        try:
+                            name = self.persons.find({'db_id': get_value('person_id', None)}).name
+                        except ValueError:
+                            name = ''
+                        if name:
+                            name += ', '
+                        try:
+                            einrichtung = self.institutions.find({'db_id': get_value('einrichtung_id', None)}).name
+                        except ValueError:
+                            einrichtung = ''
+                        value = name + einrichtung
                 init_data[attribute['name_object']] = value
 
         return init_data

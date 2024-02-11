@@ -11,7 +11,7 @@ FARBE_GRUEN                     = '#4c9c60'
 FARBE_GRAU                      = '#444444'
 FARBE_MITTEL                    = '#666666' 
 FARBE_HELLGRAU                  = '#EEEEEE'
-FARBE_ROT                       = '#CB3040'
+FARBE_ROT                       = '#AE133E'
 
 # Allgemeine Styles
 style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
