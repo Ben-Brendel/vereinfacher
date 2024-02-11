@@ -51,6 +51,7 @@ class SectionOpenSum(toga.Box):
     def set_value_source(self, value_source):
         self.value_source = value_source
         self.value_source.add_listener(self.listener)
+        self.update_info()
 
     def update_info(self, *args):
         result = round(self.value_source.value, 2)
@@ -83,6 +84,7 @@ class Section(toga.Box):
     def set_list_source(self, list_source):
         self.list_source = list_source
         self.list_source.add_listener(self.listener)
+        self.update_info()
 
     def hide(self):
         self.remove(self.title)
@@ -199,6 +201,7 @@ class ConnectedButton(toga.Button):
     def set_list_source(self, list_source):
         self.list_source = list_source
         self.list_source.add_listener(self.listener)
+        self.update_status()
 
     def update_status(self, *args):
         if self.list_source:
@@ -413,6 +416,7 @@ class Table(toga.Box):
     def set_list_source(self, list_source):
         self.list_source = list_source
         self.list_source.add_listener(self.listener)
+        self.update()
 
     def create(self):
         for index in range(len(self.list_source)):
