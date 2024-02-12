@@ -238,10 +238,10 @@ class Kontolupe(toga.App):
             inhalt += 'Abzugsbetrag Beihilfe: {:.2f} €\n'.format(element.abzug_beihilfe).replace('.', ',') if element.abzug_beihilfe else ''
             inhalt += 'Abzugsbetrag Private KV: {:.2f} €\n'.format(element.abzug_pkv).replace('.', ',') if element.abzug_pkv else ''
             inhalt += 'Person: {}\n'.format(element.person_name)
-            inhalt += 'Beihilfe: {:.0f} %\n\n'.format(element.beihilfesatz)
+            inhalt += 'Beihilfe: {:.0f} %\n\n'.format(element.beihilfesatz) if element.beihilfesatz else ''
             inhalt += 'Einrichtung: {}\n'.format(element.einrichtung_name)
-            inhalt += 'Notiz: {}\n'.format(element.notiz)
-            inhalt += 'Bezahldatum: {}\n'.format(element.buchungsdatum) if element.buchungsdatum else 'Bezahldatum: -\n'
+            inhalt += 'Notiz: {}\n'.format(element.notiz) if element.notiz else ''
+            inhalt += 'Bezahldatum: {}\n'.format(element.buchungsdatum) if element.buchungsdatum else ''
             inhalt += 'Bezahlt: Ja' if element.bezahlt else 'Bezahlt: Nein'
         elif typ == 'Beihilfe' or typ == 'PKV':
             titel = 'Beihilfe-Einreichung' if typ == 'Beihilfe' else 'PKV-Einreichung'
@@ -255,7 +255,6 @@ class Kontolupe(toga.App):
                     inhalt += '\n- {}'.format(rechnung.info)
                     #inhalt += ', {}'.format(rechnung.rechnungsdatum)
                     inhalt += ', {:.2f} €'.format(rechnung.betrag).replace('.', ',')
-                    inhalt += ', {:.0f} %'.format(rechnung.beihilfesatz)
         elif typ == 'Einrichtung':
             titel = 'Einrichtung'
             inhalt = 'Name: {}\n'.format(element.name)
