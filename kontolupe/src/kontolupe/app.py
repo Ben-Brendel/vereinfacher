@@ -651,6 +651,9 @@ class Kontolupe(toga.App):
         self.button_start_archiv.set_list_source(self.daten.archivables)
         self.form_bill_person.set_items(self.daten.persons)
         self.form_bill_einrichtung.set_items(self.daten.institutions)
+        self.mainpage_table_buttons.set_connection('refresh', self.daten.open_bookings)
+        self.list_allowance_buttons.set_connection('new_allowance', self.daten.allowances_bills)
+        self.list_insurance_buttons.set_connection('new_insurance', self.daten.insurances_bills)
 
         # Einstellungen-Seite anpassen
         self.settings_automatic_booking.set_value(False)
@@ -691,7 +694,8 @@ class Kontolupe(toga.App):
         self.mainpage_table_buttons = ButtonBox(
             labels  = ['Aktualisieren'],
             targets = [self.check_open_bills],
-            ids     = ['refresh']
+            ids     = ['refresh'],
+            connections = [self.daten.open_bookings]
         )
         self.box_mainpage.add(self.mainpage_table_buttons)
 

@@ -994,6 +994,15 @@ class ButtonBox(toga.Box):
             self.add(self.box1)
             self.add(self.box2)
 
+    def set_connection(self, button_id, connection):
+        """Set a connection to a button by its ID."""
+        for button in self.buttons:
+            if button.id == button_id:
+                button.set_list_source(connection)
+                return
+        else:
+            print("+++ Kontolupe: Button mit ID " + str(button_id) + " nicht gefunden.")
+
     def set_enabled(self, button_id, status):
         """Enable or disable a button by its ID."""
         for button in self.buttons:
