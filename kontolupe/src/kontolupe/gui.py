@@ -13,21 +13,120 @@ class StatisticsGraph(toga.Canvas):
 
     def __init__(self, **kwargs):
         super().__init__(
-            style=style_canvas
+            style = style_canvas,
+            on_resize = kwargs.get('on_resize', None)
         )
 
-    def draw(self, width, **kwargs):
+    def draw(self, width, data_selection, statistic_data, **kwargs):
+
+        def number_of_months(data):
+            if int(data['from'][1]) > int(data['to'][1]) or (int(data['from'][1]) == int(data['to'][1]) and int(data['from'][0]) > int(data['to'][0])):
+                return 0
+            return (int(data['to'][1]) - int(data['from'][1])) * 12 + (int(data['to'][0]) - int(data['from'][0])) + 1
+
+        def number_of_segments(data):
+            match data['step']:
+                case 'Monat':
+                    step = 1
+                case 'Quartal':
+                    step = 3
+                case 'Halbjahr':
+                    step = 6
+                case 'Jahr':
+                    step = 12
+            return number_of_months(data) // step
         
+        def date_in_range(date, data):
+            day, month, year = map(int, date.split('.'))
+            date = [month, year]
+
+            if int(data['from'][1]) > int(data['to'][1]) or (int(data['from'][1]) == int(data['to'][1]) and int(data['from'][0]) > int(data['to'][0])):
+                return False
+            if int(data['from'][1]) < date[1] < int(data['to'][1]):
+                return True
+            if int(data['from'][1]) == date[1] and int(data['from'][0]) <= date[0]:
+                return True
+            if int(data['to'][1]) == date[1] and int(data['to'][0]) >= date[0]:
+                return True
+            return False
+        
+        # Daten vorbereiten
+        values = {}
+
+        # the person_id in statistic_data['persons'] with the name of data_selection['person']
+        if data_selection['person'] == 'Alle':
+            person_id = None
+        else:
+            person_id = [person['db_id'] for person in statistic_data['persons'] if person['name'] == data_selection['person']][0]
+
+        # same for institution
+        if data_selection['institution'] == 'Alle':
+            institution_id = None
+        else:
+            institution_id = [institution['db_id'] for institution in statistic_data['institutions'] if institution['name'] == data_selection['institution']][0]
+
+        if data_selection['type'] == 'Rechnungen' or data_selection['type'] == 'Alle':
+            for bill in statistic_data['bills']:
+                if date_in_range(bill['rechnungsdatum'], data_selection) and (person_id is None or bill['person_id'] == person_id) and (institution_id is None or bill['einrichtung_id'] == institution_id):
+                    day, month, year = bill['rechnungsdatum'].split('.')
+                    values.setdefault('bills', {}).setdefault(year, {}).setdefault(month, 0)
+                    values['bills'][year][month] += bill['betrag']
+        
+        if data_selection['type'] == 'Beihilfe' or data_selection['type'] == 'Alle':
+            for allowance in statistic_data['allowances']:
+                if date_in_range(allowance['datum'], data_selection):
+                    day, month, year = allowance['datum'].split('.')
+                    values.setdefault('allowances', {}).setdefault(year, {}).setdefault(month, 0)
+                    values['allowances'][year][month] += allowance['betrag']
+        
+        if data_selection['type'] == 'Private KV' or data_selection['type'] == 'Alle':
+            for insurance in statistic_data['insurances']:
+                if date_in_range(insurance['datum'], data_selection):
+                    day, month, year = insurance['datum'].split('.')
+                    values.setdefault('insurances', {}).setdefault(year, {}).setdefault(month, 0)
+                    values['insurances'][year][month] += insurance['betrag']
+
+        # Canvas zurücksetzen
         self.clear()
 
-        with self.Stroke(line_width = 1) as x_axis:
-            x_axis.move_to(10, 210)
-            x_axis.line_to(width - 10, 210)
+        # Größe des Canvas
+        # Höhe = height - 2 * offset
+        # Breite = width (argument) - 2 * offset
+        offset = 10
+        height = 220
 
+        # x-Achse
+        with self.Stroke(line_width = 1) as x_axis:
+            x_axis.move_to(offset, height - offset)
+            x_axis.line_to(width - offset, height - offset)
+
+        # y-Achse
         with self.Stroke(line_width = 1) as y_axis:
-            y_axis.move_to(10, 10)
-            y_axis.line_to(10, 210)
+            y_axis.move_to(offset, offset)
+            y_axis.line_to(offset, height - offset)
+
+        # Segmente ermitteln
+        segments = number_of_segments(data_selection)
+        segment_width = (width - 2 * offset) / segments
+        #segment_scaler = (height - 2 * offset) / max(data['values'])
+        segment_scaler = 1
+        bar_width = (segment_width * 0.75) / 3
+
+        # Segmente zeichnen
+        for i in range(segments):
+            with self.Stroke(line_width = 1) as segment:
+                segment.move_to(offset + (i+0.5) * segment_width, height - offset)
+                segment.line_to(offset + (i+0.5) * segment_width, height - offset + 5)
+
+            with self.Fill(color=FARBE_BLAU) as bar:
+                bar.rect(
+                    offset + (i+0.5) * segment_width - bar_width / 2,
+                    offset,
+                    bar_width,
+                    height - 2 * offset
+                )
         
+            
 
     def clear(self):
         self.context.clear()

@@ -42,6 +42,9 @@ class Kontolupe(toga.App):
         self.flag_edit_pkv = False
         self.edit_pkv_id = 0
 
+        # Speicher für die Statistikdaten
+        self.statistic_data = {}
+
         # Weitere Hilfsvariablen
         self.back_to = 'startseite'
 
@@ -326,6 +329,15 @@ class Kontolupe(toga.App):
 
     def show_statistics(self, widget):
         """Zeigt die Seite mit der Statistik."""
+
+        # Lade alle Daten aus der Datenbank
+        self.statistic_data['bills'] = self.daten.db.load(BILL_OBJECT, only_active=False)
+        if self.daten.allowance_active():
+            self.statistic_data['allowances'] = self.daten.db.load(ALLOWANCE_OBJECT, only_active=False)
+        self.statistic_data['insurances'] = self.daten.db.load(INSURANCE_OBJECT, only_active=False)
+        self.statistic_data['persons'] = self.daten.db.load(PERSON_OBJECT, only_active=False)
+        self.statistic_data['institutions'] = self.daten.db.load(INSTITUTION_OBJECT, only_active=False)
+
         # Update the items of the type selection
         temp = self.statistics_type.get_value()
         if self.daten.allowance_active():
@@ -338,14 +350,14 @@ class Kontolupe(toga.App):
         # Update the items of the person and einrichtung selections
         temp = self.statistics_person.get_value()
         self.statistics_person.set_items(
-            (['Alle'] if len(self.daten.persons) > 1 else []) + [person.name for person in self.daten.persons]
+            (['Alle'] if len(self.statistic_data['persons']) > 1 else []) + [person['name'] for person in self.statistic_data['persons']]
         )
         if temp in self.statistics_person.get_items():
             self.statistics_person.set_value(temp)
 
         temp = self.statistics_institution.get_value()
         self.statistics_institution.set_items(
-            (['Alle'] if len(self.daten.institutions) > 1 else []) + [institution.name for institution in self.daten.institutions]
+            (['Alle'] if len(self.statistic_data['institutions']) > 1 else []) + [institution['name'] for institution in self.statistic_data['institutions']]
         )
         if temp in self.statistics_institution.get_items():
             self.statistics_institution.set_value(temp)
@@ -441,9 +453,9 @@ class Kontolupe(toga.App):
 
         self.statistics_step = LabeledSelection(
             'Auswertungsschritt:', 
-            ['Monat', 'Quartal', 'Jahr'], 
+            ['Monat', 'Quartal', 'Halbjahr', 'Jahr'], 
             on_change = self.statistics_changed,
-            value = 'Quartal'
+            value = 'Monat'
         )
         self.box_statistics.add(self.statistics_step)
 
@@ -458,15 +470,24 @@ class Kontolupe(toga.App):
 
         self.box_statistics.add(SubtextDivider('Grafik'))
 
-        self.statistics_graph = StatisticsGraph()
+        self.statistics_graph = StatisticsGraph(on_resize = self.draw_statistic)
         self.box_statistics.add(self.statistics_graph)
 
 
-    def draw_statistic(self, widget):
+    def draw_statistic(self, widget, width=None, height=None, **kwargs):
         """Zeichnet die Statistik."""
 
+        data_selection = {
+            'type': self.statistics_type.get_value(),
+            'person': self.statistics_person.get_value(),
+            'institution': self.statistics_institution.get_value(),
+            'from': self.statistics_from.get_value(),
+            'to': self.statistics_to.get_value(),
+            'step': self.statistics_step.get_value()
+        }
+
         # Get the current screen size
-        self.statistics_graph.draw(self.main_window.size[0])
+        self.statistics_graph.draw(self.main_window.size[0], data_selection, self.statistic_data)
 
 
     def export_statistic(self, widget):
