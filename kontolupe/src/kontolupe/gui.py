@@ -12,10 +12,22 @@ class StatisticsGraph(toga.Canvas):
     """Erzeugt einen Canvas für die Statistik."""
 
     def __init__(self, **kwargs):
-        super().__init__(style=style_canvas)
+        super().__init__(
+            style=style_canvas
+        )
 
-    def draw(self):
-        pass
+    def draw(self, width, **kwargs):
+        
+        self.clear()
+
+        with self.Stroke(line_width = 1) as x_axis:
+            x_axis.move_to(10, 210)
+            x_axis.line_to(width - 10, 210)
+
+        with self.Stroke(line_width = 1) as y_axis:
+            y_axis.move_to(10, 10)
+            y_axis.line_to(10, 210)
+        
 
     def clear(self):
         self.context.clear()

@@ -456,7 +456,7 @@ class Kontolupe(toga.App):
         )  
         self.box_statistics.add(self.statistics_buttons)
 
-        self.box_statistics.add(toga.Divider(style=style_divider))
+        self.box_statistics.add(SubtextDivider('Grafik'))
 
         self.statistics_graph = StatisticsGraph()
         self.box_statistics.add(self.statistics_graph)
@@ -464,7 +464,9 @@ class Kontolupe(toga.App):
 
     def draw_statistic(self, widget):
         """Zeichnet die Statistik."""
-        pass
+
+        # Get the current screen size
+        self.statistics_graph.draw(self.main_window.size[0])
 
 
     def export_statistic(self, widget):
