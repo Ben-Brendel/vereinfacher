@@ -3,7 +3,7 @@
 project_name = "Vereinfacher"
 bundle = "net.biberwerk"
 version = "0.3.5"
-build = 1
+build = 2
 url = "https://biberwerk.net/kontolupe"
 license = "MIT license"
 author = "Biberwerk"

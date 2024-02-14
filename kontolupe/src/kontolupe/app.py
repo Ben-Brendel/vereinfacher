@@ -438,7 +438,7 @@ class Kontolupe(toga.App):
         self.statistics_from = LabeledDoubleSelection( 
             'Von:', 
             data = [months, years], 
-            values = ['{:02d}'.format(current_month), str(current_year-1)],
+            values = ['{:02d}'.format(current_month + 1 if current_month < 12 else 1), str(current_year-1)],
             on_change=[self.statistics_changed, self.statistics_changed]
         )
         self.box_statistics.add(self.statistics_from)

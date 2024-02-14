@@ -19,22 +19,27 @@ class StatisticsGraph(toga.Canvas):
 
     def draw(self, width, data_selection, statistic_data, **kwargs):
 
-        def number_of_months(data):
-            if int(data['from'][1]) > int(data['to'][1]) or (int(data['from'][1]) == int(data['to'][1]) and int(data['from'][0]) > int(data['to'][0])):
-                return 0
-            return (int(data['to'][1]) - int(data['from'][1])) * 12 + (int(data['to'][0]) - int(data['from'][0])) + 1
-
         def number_of_segments(data):
+            start_month = int(data['from'][0]) + (int(data['from'][1]) - 1) * 12
+            end_month = int(data['to'][0]) + (int(data['to'][1]) - 1) * 12
+
             match data['step']:
                 case 'Monat':
                     step = 1
                 case 'Quartal':
+                    start_month = ((start_month - 1) // 3) * 3 + 1
+                    end_month = ((end_month - 1) // 3 + 1) * 3
                     step = 3
                 case 'Halbjahr':
+                    start_month = ((start_month - 1) // 6) * 6 + 1
+                    end_month = ((end_month - 1) // 6 + 1) * 6
                     step = 6
                 case 'Jahr':
+                    start_month = ((start_month - 1) // 12) * 12 + 1
+                    end_month = ((end_month - 1) // 12 + 1) * 12
                     step = 12
-            return number_of_months(data) // step
+
+            return (end_month - start_month) // step + 1
         
         def date_in_range(date, data):
             day, month, year = map(int, date.split('.'))
@@ -68,23 +73,29 @@ class StatisticsGraph(toga.Canvas):
         if data_selection['type'] == 'Rechnungen' or data_selection['type'] == 'Alle':
             for bill in statistic_data['bills']:
                 if date_in_range(bill['rechnungsdatum'], data_selection) and (person_id is None or bill['person_id'] == person_id) and (institution_id is None or bill['einrichtung_id'] == institution_id):
-                    day, month, year = bill['rechnungsdatum'].split('.')
+                    day, month, year = map(int, bill['rechnungsdatum'].split('.'))
                     values.setdefault('bills', {}).setdefault(year, {}).setdefault(month, 0)
                     values['bills'][year][month] += bill['betrag']
-        
+            
         if data_selection['type'] == 'Beihilfe' or data_selection['type'] == 'Alle':
             for allowance in statistic_data['allowances']:
                 if date_in_range(allowance['datum'], data_selection):
-                    day, month, year = allowance['datum'].split('.')
+                    day, month, year = map(int, allowance['datum'].split('.'))
                     values.setdefault('allowances', {}).setdefault(year, {}).setdefault(month, 0)
-                    values['allowances'][year][month] += allowance['betrag']
-        
+                    for bill in statistic_data['bills']:
+                        if bill['beihilfe_id'] == allowance['db_id'] and (person_id is None or bill['person_id'] == person_id) and (institution_id is None or bill['einrichtung_id'] == institution_id):
+                            values['allowances'][year][month] += (bill['betrag'] - bill['abzug_beihilfe']) * bill['beihilfesatz'] / 100
+
         if data_selection['type'] == 'Private KV' or data_selection['type'] == 'Alle':
             for insurance in statistic_data['insurances']:
                 if date_in_range(insurance['datum'], data_selection):
-                    day, month, year = insurance['datum'].split('.')
+                    day, month, year = map(int, insurance['datum'].split('.'))
                     values.setdefault('insurances', {}).setdefault(year, {}).setdefault(month, 0)
-                    values['insurances'][year][month] += insurance['betrag']
+                    for bill in statistic_data['bills']:
+                        if bill['pkv_id'] == insurance['db_id'] and (person_id is None or bill['person_id'] == person_id) and (institution_id is None or bill['einrichtung_id'] == institution_id):
+                            values['insurances'][year][month] += (bill['betrag'] - bill['abzug_pkv']) * (100 - bill['beihilfesatz']) / 100
+
+        print(values)
 
         # Canvas zurücksetzen
         self.clear()
@@ -106,25 +117,78 @@ class StatisticsGraph(toga.Canvas):
             y_axis.line_to(offset, height - offset)
 
         # Segmente ermitteln
-        segments = number_of_segments(data_selection)
-        segment_width = (width - 2 * offset) / segments
-        #segment_scaler = (height - 2 * offset) / max(data['values'])
-        segment_scaler = 1
+        segments_number = number_of_segments(data_selection)
+        segment_width = (width - 2 * offset) / segments_number
+
+        # segments should be a list with the length of segments_number
+        # each segment should contain a dictionary with the keys 'Rechnungen', 'Beihilfe' and 'Private KV'
+        # the values of each segment should be the sum of the values of the respective type in the dictionary values
+        # that correspond to the segments timespan
+        # Segments generation
+
+        # Determine the step size based on the user's selection
+        start_month = int(data_selection['from'][0])
+        if data_selection['step'] == 'Monat':
+            step = 1
+        elif data_selection['step'] == 'Quartal':
+            step = 3
+            start_month = ((start_month - 1) // 3) * 3 + 1
+        elif data_selection['step'] == 'Halbjahr':
+            step = 6
+            start_month = ((start_month - 1) // 6) * 6 + 1
+        elif data_selection['step'] == 'Jahr':
+            step = 12
+            start_month = 1
+
+        segments = []
+        start_year = int(data_selection['from'][1])
+        for i in range(segments_number):
+            segment = {'bills': 0, 'allowances': 0, 'insurances': 0}
+            for data_type in ['bills', 'allowances', 'insurances']:
+                if data_type in values:
+                    for j in range(step):
+                        month = (start_month - 1 + i * step + j) % 12 + 1
+                        year = start_year + (start_month - 1 + i * step + j) // 12
+                        if year in values[data_type] and month in values[data_type][year]:
+                            segment[data_type] += values[data_type][year][month]
+            segments.append(segment)
+
+        # calculate the scaling factor for the y-axis
+        # the maximum value of all values in segments
+        max_value = max([max([segment[key] for key in segment.keys()]) for segment in segments])
         bar_width = (segment_width * 0.75) / 3
 
         # Segmente zeichnen
-        for i in range(segments):
+        for i in range(segments_number):
+
             with self.Stroke(line_width = 1) as segment:
                 segment.move_to(offset + (i+0.5) * segment_width, height - offset)
                 segment.line_to(offset + (i+0.5) * segment_width, height - offset + 5)
 
-            with self.Fill(color=FARBE_BLAU) as bar:
-                bar.rect(
-                    offset + (i+0.5) * segment_width - bar_width / 2,
-                    offset,
-                    bar_width,
-                    height - 2 * offset
-                )
+            # Balken-Offset bestimmen
+            offset_bills = 0
+            offset_allowances = 0
+            offset_insurances = 0
+            if data_selection['type'] == 'Alle':
+                offset_bills = -bar_width
+                offset_allowances = 0
+                offset_insurances = bar_width
+
+            data_types = {
+                'Rechnungen': {'color': FARBE_BLAU, 'offset': offset_bills, 'key': 'bills'},
+                'Beihilfe': {'color': FARBE_LILA, 'offset': offset_allowances, 'key': 'allowances'},
+                'Private KV': {'color': FARBE_GRUEN, 'offset': offset_insurances, 'key': 'insurances'}
+            }
+
+            for data_type, properties in data_types.items():
+                if data_selection['type'] == data_type or data_selection['type'] == 'Alle':
+                    with self.Fill(color=properties['color']) as bar:
+                        bar.rect(
+                            offset + properties['offset'] + (i+0.5) * segment_width - bar_width / 2,
+                            offset + (height - 2 * offset) * (1 - segments[i][properties['key']] / max_value),
+                            bar_width,
+                            (height - 2 * offset) * segments[i][properties['key']] / max_value
+                        )
         
             
 
