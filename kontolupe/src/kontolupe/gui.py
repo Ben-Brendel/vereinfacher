@@ -95,10 +95,8 @@ class StatisticsGraph(toga.Canvas):
                         if bill['pkv_id'] == insurance['db_id'] and (person_id is None or bill['person_id'] == person_id) and (institution_id is None or bill['einrichtung_id'] == institution_id):
                             values['insurances'][year][month] += (bill['betrag'] - bill['abzug_pkv']) * (100 - bill['beihilfesatz']) / 100
 
+        # Print the values for debugging
         print(values)
-
-        # Canvas zurücksetzen
-        self.clear()
 
         # Größe des Canvas
         # Höhe = height - 2 * offset
@@ -106,25 +104,9 @@ class StatisticsGraph(toga.Canvas):
         offset = 10
         height = 220
 
-        # x-Achse
-        with self.Stroke(line_width = 1) as x_axis:
-            x_axis.move_to(offset, height - offset)
-            x_axis.line_to(width - offset, height - offset)
-
-        # y-Achse
-        with self.Stroke(line_width = 1) as y_axis:
-            y_axis.move_to(offset, offset)
-            y_axis.line_to(offset, height - offset)
-
         # Segmente ermitteln
         segments_number = number_of_segments(data_selection)
         segment_width = (width - 2 * offset) / segments_number
-
-        # segments should be a list with the length of segments_number
-        # each segment should contain a dictionary with the keys 'Rechnungen', 'Beihilfe' and 'Private KV'
-        # the values of each segment should be the sum of the values of the respective type in the dictionary values
-        # that correspond to the segments timespan
-        # Segments generation
 
         # Determine the step size based on the user's selection
         start_month = int(data_selection['from'][0])
@@ -153,10 +135,26 @@ class StatisticsGraph(toga.Canvas):
                             segment[data_type] += values[data_type][year][month]
             segments.append(segment)
 
+        # print the segments for debugging
+        print(segments)
+
         # calculate the scaling factor for the y-axis
         # the maximum value of all values in segments
         max_value = max([max([segment[key] for key in segment.keys()]) for segment in segments])
         bar_width = (segment_width * 0.75) / 3
+
+        # Canvas zurücksetzen
+        self.clear()
+
+        # x-Achse
+        with self.Stroke(line_width = 1) as x_axis:
+            x_axis.move_to(offset, height - offset)
+            x_axis.line_to(width - offset, height - offset)
+
+        # y-Achse
+        with self.Stroke(line_width = 1) as y_axis:
+            y_axis.move_to(offset, offset)
+            y_axis.line_to(offset, height - offset)
 
         # Segmente zeichnen
         for i in range(segments_number):

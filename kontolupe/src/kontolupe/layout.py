@@ -105,4 +105,4 @@ style_table_box_odd             = Pack(direction=ROW, alignment=CENTER, backgrou
 style_table_box_even            = Pack(direction=ROW, alignment=CENTER, background_color=FARBE_HELL)
 
 # Statistik
-style_canvas                    = Pack(flex=1, height=220, background_color=FARBE_HELLGRAU, padding=0, padding_bottom=50)
+style_canvas                    = Pack(flex=1, height=220, padding=0, padding_bottom=50)

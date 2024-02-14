@@ -468,7 +468,7 @@ class Kontolupe(toga.App):
         # )  
         # self.box_statistics.add(self.statistics_buttons)
 
-        self.box_statistics.add(SubtextDivider('Grafik'))
+        self.box_statistics.add(SubtextDivider('Auswertung'))
 
         self.statistics_graph = StatisticsGraph(on_resize = self.draw_statistic)
         self.box_statistics.add(self.statistics_graph)
