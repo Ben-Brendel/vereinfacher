@@ -402,7 +402,7 @@ class Kontolupe(toga.App):
         self.statistics_type = LabeledSelection(
             'Typ(en):', 
             ['Alle', 'Rechnungen', 'Beihilfe', 'Private KV'], 
-            on_change=self.statistics_changed
+            on_change=self.draw_statistic
         )
         self.box_statistics.add(self.statistics_type)
 
@@ -410,7 +410,7 @@ class Kontolupe(toga.App):
         self.statistics_person = LabeledSelection(
             'Person(en):', 
             ['Alle'], 
-            on_change=self.statistics_changed
+            on_change=self.draw_statistic
         )
         self.box_statistics.add(self.statistics_person)
 
@@ -418,7 +418,7 @@ class Kontolupe(toga.App):
         self.statistics_institution = LabeledSelection(
             'Einrichtung(en):', 
             ['Alle'], 
-            on_change=self.statistics_changed
+            on_change=self.draw_statistic
         )
         self.box_statistics.add(self.statistics_institution)
 
@@ -439,7 +439,7 @@ class Kontolupe(toga.App):
             'Von:', 
             data = [months, years], 
             values = ['{:02d}'.format(current_month + 1 if current_month < 12 else 1), str(current_year-1)],
-            on_change=[self.statistics_changed, self.statistics_changed]
+            on_change=[self.draw_statistic, self.draw_statistic]
         )
         self.box_statistics.add(self.statistics_from)
 
@@ -447,26 +447,26 @@ class Kontolupe(toga.App):
             'Bis:', 
             data = [months, years], 
             values = ['{:02d}'.format(current_month), str(current_year)],
-            on_change=[self.statistics_changed, self.statistics_changed]
+            on_change=[self.draw_statistic, self.draw_statistic]
         )
         self.box_statistics.add(self.statistics_to)
 
         self.statistics_step = LabeledSelection(
             'Auswertungsschritt:', 
             ['Monat', 'Quartal', 'Halbjahr', 'Jahr'], 
-            on_change = self.statistics_changed,
+            on_change = self.draw_statistic,
             value = 'Monat'
         )
         self.box_statistics.add(self.statistics_step)
 
         # ButtonBox
-        self.statistics_buttons = ButtonBox(
-            labels  = ['Anzeigen', 'Exportieren'],
-            targets = [self.draw_statistic, self.export_statistic],
-            ids     = ['draw_statistic', 'export_statistic'],
-            enabled = [True, False]
-        )  
-        self.box_statistics.add(self.statistics_buttons)
+        # self.statistics_buttons = ButtonBox(
+        #     labels  = ['Anzeigen', 'Exportieren'],
+        #     targets = [self.draw_statistic, self.export_statistic],
+        #     ids     = ['draw_statistic', 'export_statistic'],
+        #     enabled = [True, False]
+        # )  
+        # self.box_statistics.add(self.statistics_buttons)
 
         self.box_statistics.add(SubtextDivider('Grafik'))
 
