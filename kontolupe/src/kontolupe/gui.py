@@ -168,6 +168,11 @@ class StatisticsGraph(toga.Canvas):
         # print the segments for debugging
         print(segments)
 
+        # stop if all values in segments are 0
+        if all([segment['bills'] == 0 and segment['allowances'] == 0 and segment['insurances'] == 0 for segment in segments]):
+            self.clear()
+            return
+
         # calculate the scaling factor for the y-axis
         # the maximum value of all values in segments excluding 'description'
         max_value = max([max([segment[key] for key in segment.keys() if key != 'description']) for segment in segments])
