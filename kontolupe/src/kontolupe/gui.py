@@ -1,11 +1,13 @@
 """GUI-Objekte für die Kontolupe-App."""
 
 import toga
+from toga.constants import Baseline
 from kontolupe.layout import *
 from kontolupe.validator import *
 from kontolupe.database import *
 from kontolupe.general import *
 from datetime import datetime
+import math
 
 
 class StatisticsGraph(toga.Canvas):
@@ -98,15 +100,8 @@ class StatisticsGraph(toga.Canvas):
         # Print the values for debugging
         print(values)
 
-        # Größe des Canvas
-        # Höhe = height - 2 * offset
-        # Breite = width (argument) - 2 * offset
-        offset = 10
-        height = 220
-
         # Segmente ermitteln
         segments_number = number_of_segments(data_selection)
-        segment_width = (width - 2 * offset) / segments_number
 
         # Determine the step size based on the user's selection
         start_month = int(data_selection['from'][0])
@@ -125,7 +120,7 @@ class StatisticsGraph(toga.Canvas):
         segments = []
         start_year = int(data_selection['from'][1])
         for i in range(segments_number):
-            segment = {'bills': 0, 'allowances': 0, 'insurances': 0}
+            segment = {'bills': 0, 'allowances': 0, 'insurances': 0, 'description': ''}
             for data_type in ['bills', 'allowances', 'insurances']:
                 if data_type in values:
                     for j in range(step):
@@ -133,63 +128,94 @@ class StatisticsGraph(toga.Canvas):
                         year = start_year + (start_month - 1 + i * step + j) // 12
                         if year in values[data_type] and month in values[data_type][year]:
                             segment[data_type] += values[data_type][year][month]
+            if step == 1:
+                segment['description'] = f"{month:02d}/{year}"
+            elif step == 3:
+                segment['description'] = f"Q{(month - 1) // 3 + 1}/{year}"
+            elif step == 6:
+                segment['description'] = f"H{(month - 1) // 6 + 1}/{year}"
+            elif step == 12:
+                segment['description'] = f"{year}"
             segments.append(segment)
 
         # print the segments for debugging
         print(segments)
 
+        # calculate the max value of the measurements of the description lengths
+        max_description_length = max(self.measure_text(segment['description'])[0] for segment in segments)
+        max_description_height = max(self.measure_text(segment['description'])[1] for segment in segments)
+
+        # Calculate the measurements for the graph
+        graph_offset = 10
+        graph_description_line = 5
+        offset_description = 5
+        graph_height = STATISTIK_HOEHE - 2 * graph_offset - graph_description_line - max_description_length
+        graph_width = width - 2 * graph_offset
+        graph_offset_x = graph_offset
+        segment_width = graph_width / segments_number
+
         # calculate the scaling factor for the y-axis
-        # the maximum value of all values in segments
-        max_value = max([max([segment[key] for key in segment.keys()]) for segment in segments])
+        # the maximum value of all values in segments excluding 'description'
+        max_value = max([max([segment[key] for key in segment.keys() if key != 'description']) for segment in segments])
         bar_width = (segment_width * 0.75) / 3
+
+        offsets = {'bills': 0, 'allowances': 0, 'insurances': 0}
+        if data_selection['type'] == 'Alle':
+            offsets = {'bills': -bar_width, 'allowances': 0, 'insurances': bar_width}
+
+        data_types = {
+            'Rechnungen': {'color': FARBE_BLAU, 'offset': offsets['bills'], 'key': 'bills'},
+            'Beihilfe': {'color': FARBE_LILA, 'offset': offsets['allowances'], 'key': 'allowances'},
+            'Private KV': {'color': FARBE_GRUEN, 'offset': offsets['insurances'], 'key': 'insurances'}
+        }
 
         # Canvas zurücksetzen
         self.clear()
 
         # x-Achse
         with self.Stroke(line_width = 1) as x_axis:
-            x_axis.move_to(offset, height - offset)
-            x_axis.line_to(width - offset, height - offset)
+            x_axis.move_to(graph_offset_x, graph_height + graph_offset)
+            x_axis.line_to(graph_width + graph_offset_x, graph_height + graph_offset)
 
         # y-Achse
         with self.Stroke(line_width = 1) as y_axis:
-            y_axis.move_to(offset, offset)
-            y_axis.line_to(offset, height - offset)
+            y_axis.move_to(graph_offset_x, graph_offset)
+            y_axis.line_to(graph_offset_x, graph_height + graph_offset)
 
         # Segmente zeichnen
         for i in range(segments_number):
 
             with self.Stroke(line_width = 1) as segment:
-                segment.move_to(offset + (i+0.5) * segment_width, height - offset)
-                segment.line_to(offset + (i+0.5) * segment_width, height - offset + 5)
+                segment.move_to(graph_offset_x + (i+0.5) * segment_width, graph_height + graph_offset)
+                segment.line_to(graph_offset_x + (i+0.5) * segment_width, graph_height + graph_offset + graph_description_line)
 
-            # Balken-Offset bestimmen
-            offset_bills = 0
-            offset_allowances = 0
-            offset_insurances = 0
-            if data_selection['type'] == 'Alle':
-                offset_bills = -bar_width
-                offset_allowances = 0
-                offset_insurances = bar_width
-
-            data_types = {
-                'Rechnungen': {'color': FARBE_BLAU, 'offset': offset_bills, 'key': 'bills'},
-                'Beihilfe': {'color': FARBE_LILA, 'offset': offset_allowances, 'key': 'allowances'},
-                'Private KV': {'color': FARBE_GRUEN, 'offset': offset_insurances, 'key': 'insurances'}
-            }
+            with self.Fill(color=FARBE_DUNKEL) as text_filler:
+                if max_description_length > segment_width - graph_offset:
+                    text_filler.rotate(-math.pi/2)
+                    text_filler.write_text(
+                        segments[i]['description'], 
+                        x = -1 * (graph_height + graph_offset + graph_description_line + max_description_length + offset_description),
+                        y = graph_offset_x + (i+0.5) * segment_width - max_description_height / 2,
+                        baseline = Baseline.TOP
+                    )
+                else:
+                    text_filler.write_text(
+                        segments[i]['description'], 
+                        x = graph_offset_x + (i+0.5) * segment_width - max_description_length / 2, 
+                        y = graph_height + graph_offset + graph_description_line + offset_description,
+                        baseline = Baseline.TOP
+                    )
 
             for data_type, properties in data_types.items():
                 if data_selection['type'] == data_type or data_selection['type'] == 'Alle':
                     with self.Fill(color=properties['color']) as bar:
                         bar.rect(
-                            offset + properties['offset'] + (i+0.5) * segment_width - bar_width / 2,
-                            offset + (height - 2 * offset) * (1 - segments[i][properties['key']] / max_value),
+                            graph_offset_x + properties['offset'] + (i+0.5) * segment_width - bar_width / 2,
+                            graph_offset + graph_height * (1 - segments[i][properties['key']] / max_value),
                             bar_width,
-                            (height - 2 * offset) * segments[i][properties['key']] / max_value
+                            graph_height * segments[i][properties['key']] / max_value
                         )
         
-            
-
     def clear(self):
         self.context.clear()
 

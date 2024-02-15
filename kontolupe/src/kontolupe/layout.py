@@ -13,6 +13,8 @@ FARBE_MITTEL                    = '#666666'
 FARBE_HELLGRAU                  = '#EEEEEE'
 FARBE_ROT                       = '#AE133E'
 
+STATISTIK_HOEHE                 = 350
+
 # Allgemeine Styles
 style_box_column                = Pack(direction=COLUMN, alignment=CENTER)
 style_box_column_left           = Pack(direction=COLUMN, alignment=LEFT)
@@ -105,4 +107,4 @@ style_table_box_odd             = Pack(direction=ROW, alignment=CENTER, backgrou
 style_table_box_even            = Pack(direction=ROW, alignment=CENTER, background_color=FARBE_HELL)
 
 # Statistik
-style_canvas                    = Pack(flex=1, height=220, padding=0, padding_bottom=50)
+style_canvas                    = Pack(flex=1, height=STATISTIK_HOEHE, padding=0, padding_bottom=50)
