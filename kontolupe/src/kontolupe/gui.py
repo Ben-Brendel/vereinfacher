@@ -21,6 +21,33 @@ class StatisticsGraph(toga.Canvas):
 
     def draw(self, width, data_selection, statistic_data, **kwargs):
 
+        def round_up_to_clean_number(n):
+            if n == 0:
+                return 0
+            power = 10 ** (math.floor(math.log10(n)))
+            return math.ceil(n / power) * power
+        
+        def calculate_segments(n):
+            if n == 0:
+                return 0, 0
+
+            # Calculate the base segment width
+            base_segment_width = 5 * (10 ** (math.floor(math.log10(n / 5))))
+
+            # Calculate the number of base segments
+            base_segments = n / base_segment_width
+
+            # If the number of base segments is less than 4, halve the segment width and round to nearest multiple of 5
+            if base_segments < 4:
+                segment_width = round(base_segment_width / 2 / 5) * 5
+            else:
+                segment_width = base_segment_width
+
+            # Calculate the number of segments
+            segments = math.ceil(n / segment_width)
+
+            return segments, segment_width
+
         def number_of_segments(data):
             start_month = int(data['from'][0]) + (int(data['from'][1]) - 1) * 12
             end_month = int(data['to'][0]) + (int(data['to'][1]) - 1) * 12
@@ -141,22 +168,36 @@ class StatisticsGraph(toga.Canvas):
         # print the segments for debugging
         print(segments)
 
+        # calculate the scaling factor for the y-axis
+        # the maximum value of all values in segments excluding 'description'
+        max_value = max([max([segment[key] for key in segment.keys() if key != 'description']) for segment in segments])
+        
+        # calculate the y-axis using max_value
+        # the max_value should be increased to the next clean number
+        max_value = round_up_to_clean_number(max_value)
+
+        # calculate the number of segments on the y-axis 
+        segments_y_axis, segment_value = calculate_segments(max_value)
+
+        # create a list of descriptions for the y-axis
+        y_axis_descriptions = [f"{int(i * segment_value)} €" for i in range(segments_y_axis + 1)]
+
+        # calculate the max value of the measurements of the y-axis descriptions
+        max_description_length_y = max(self.measure_text(description)[0] for description in y_axis_descriptions)
+        max_description_height_y = max(self.measure_text(description)[1] for description in y_axis_descriptions)
+
         # calculate the max value of the measurements of the description lengths
-        max_description_length = max(self.measure_text(segment['description'])[0] for segment in segments)
-        max_description_height = max(self.measure_text(segment['description'])[1] for segment in segments)
+        max_description_length_x = max(self.measure_text(segment['description'])[0] for segment in segments)
+        max_description_height_x = max(self.measure_text(segment['description'])[1] for segment in segments)
 
         # Calculate the measurements for the graph
         graph_offset = 10
         graph_description_line = 5
         offset_description = 5
-        graph_height = STATISTIK_HOEHE - 2 * graph_offset - graph_description_line - max_description_length
-        graph_width = width - 2 * graph_offset
-        graph_offset_x = graph_offset
+        graph_height = STATISTIK_HOEHE - 2 * graph_offset - graph_description_line - max_description_length_x
+        graph_offset_x = graph_offset + max_description_length_y + offset_description + graph_description_line
+        graph_width = width - graph_offset - graph_offset_x
         segment_width = graph_width / segments_number
-
-        # calculate the scaling factor for the y-axis
-        # the maximum value of all values in segments excluding 'description'
-        max_value = max([max([segment[key] for key in segment.keys() if key != 'description']) for segment in segments])
         bar_width = (segment_width * 0.75) / 3
 
         offsets = {'bills': 0, 'allowances': 0, 'insurances': 0}
@@ -182,6 +223,20 @@ class StatisticsGraph(toga.Canvas):
             y_axis.move_to(graph_offset_x, graph_offset)
             y_axis.line_to(graph_offset_x, graph_height + graph_offset)
 
+        # descriptions on the y-axis
+        for i in range(segments_y_axis+1):
+            with self.Stroke(line_width = 1) as segment:
+                segment.move_to(graph_offset_x, graph_height + graph_offset - i * (graph_height - graph_offset) / segments_y_axis)
+                segment.line_to(graph_offset_x - graph_description_line, graph_height + graph_offset - i * (graph_height - graph_offset) / segments_y_axis)
+
+            with self.Fill(color=FARBE_DUNKEL) as text_filler:
+                text_filler.write_text(
+                    y_axis_descriptions[i], 
+                    x = graph_offset, 
+                    y = graph_offset + graph_height - i * (graph_height - graph_offset) / segments_y_axis + max_description_height_y / 2,
+                    baseline = Baseline.ALPHABETIC
+                )
+
         # Segmente zeichnen
         for i in range(segments_number):
 
@@ -190,18 +245,18 @@ class StatisticsGraph(toga.Canvas):
                 segment.line_to(graph_offset_x + (i+0.5) * segment_width, graph_height + graph_offset + graph_description_line)
 
             with self.Fill(color=FARBE_DUNKEL) as text_filler:
-                if max_description_length > segment_width - graph_offset:
+                if max_description_length_x > segment_width - graph_offset:
                     text_filler.rotate(-math.pi/2)
                     text_filler.write_text(
                         segments[i]['description'], 
-                        x = -1 * (graph_height + graph_offset + graph_description_line + max_description_length + offset_description),
-                        y = graph_offset_x + (i+0.5) * segment_width - max_description_height / 2,
+                        x = -1 * (graph_height + graph_offset + graph_description_line + max_description_length_x + offset_description),
+                        y = graph_offset_x + (i+0.5) * segment_width - max_description_height_x / 2,
                         baseline = Baseline.TOP
                     )
                 else:
                     text_filler.write_text(
                         segments[i]['description'], 
-                        x = graph_offset_x + (i+0.5) * segment_width - max_description_length / 2, 
+                        x = graph_offset_x + (i+0.5) * segment_width - max_description_length_x / 2, 
                         y = graph_height + graph_offset + graph_description_line + offset_description,
                         baseline = Baseline.TOP
                     )
