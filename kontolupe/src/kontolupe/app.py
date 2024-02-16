@@ -44,6 +44,7 @@ class Kontolupe(toga.App):
 
         # Speicher für die Statistikdaten
         self.statistic_data = {}
+        self.statistic_initialized = False
 
         # Weitere Hilfsvariablen
         self.back_to = 'startseite'
@@ -330,6 +331,8 @@ class Kontolupe(toga.App):
     def show_statistics(self, widget):
         """Zeigt die Seite mit der Statistik."""
 
+        self.statistic_initialized = False
+
         # Lade alle Daten aus der Datenbank
         self.statistic_data['bills'] = self.daten.db.load(BILL_OBJECT, only_active=False)
         if self.daten.allowance_active():
@@ -374,6 +377,8 @@ class Kontolupe(toga.App):
             self.statistics_from.add_item(str(current_year), 1)
             self.statistics_to.add_item(str(current_year), 1)
             self.statistics_from.set_value(temp)
+
+        self.statistic_initialized = True
         
         self.main_window.content = self.sc_statistics
 
@@ -477,17 +482,19 @@ class Kontolupe(toga.App):
     def draw_statistic(self, widget, width=None, height=None, **kwargs):
         """Zeichnet die Statistik."""
 
-        data_selection = {
-            'type': self.statistics_type.get_value(),
-            'person': self.statistics_person.get_value(),
-            'institution': self.statistics_institution.get_value(),
-            'from': self.statistics_from.get_value(),
-            'to': self.statistics_to.get_value(),
-            'step': self.statistics_step.get_value()
-        }
+        if self.statistic_initialized:
 
-        # Get the current screen size
-        self.statistics_graph.draw(self.main_window.size[0], data_selection, self.statistic_data)
+            data_selection = {
+                'type': self.statistics_type.get_value(),
+                'person': self.statistics_person.get_value(),
+                'institution': self.statistics_institution.get_value(),
+                'from': self.statistics_from.get_value(),
+                'to': self.statistics_to.get_value(),
+                'step': self.statistics_step.get_value()
+            }
+
+            # Get the current screen size
+            self.statistics_graph.draw(self.main_window.size[0], data_selection, self.statistic_data)
 
 
     def export_statistic(self, widget):

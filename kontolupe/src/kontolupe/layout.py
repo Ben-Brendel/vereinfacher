@@ -13,7 +13,7 @@ FARBE_MITTEL                    = '#666666'
 FARBE_HELLGRAU                  = '#EEEEEE'
 FARBE_ROT                       = '#AE133E'
 
-STATISTIK_HOEHE                 = 350
+STATISTIK_HOEHE                 = 400
 
 # Allgemeine Styles
 style_box_column                = Pack(direction=COLUMN, alignment=CENTER)

@@ -38,10 +38,11 @@ class StatisticsGraph(toga.Canvas):
             base_segments = n / base_segment_width
 
             # If the number of base segments is less than 4, halve the segment width and round to nearest multiple of 5
-            if base_segments < 4:
-                segment_width = round(base_segment_width / 2 / 5) * 5
-            else:
-                segment_width = base_segment_width
+            while base_segments < 4:
+                base_segment_width = round(base_segment_width / 2 / 5) * 5
+                base_segments = n / base_segment_width
+
+            segment_width = base_segment_width
 
             # Calculate the number of segments
             segments = math.ceil(n / segment_width)
@@ -146,6 +147,9 @@ class StatisticsGraph(toga.Canvas):
 
         segments = []
         start_year = int(data_selection['from'][1])
+        # Initialize month and year
+        month = start_month
+        year = start_year
         for i in range(segments_number):
             segment = {'bills': 0, 'allowances': 0, 'insurances': 0, 'description': ''}
             for data_type in ['bills', 'allowances', 'insurances']:
@@ -195,24 +199,47 @@ class StatisticsGraph(toga.Canvas):
         max_description_length_x = max(self.measure_text(segment['description'])[0] for segment in segments)
         max_description_height_x = max(self.measure_text(segment['description'])[1] for segment in segments)
 
-        # Calculate the measurements for the graph
+        # The measurements for the graph
+        graph_legend_height = 50
+        graph_legend_bar_width = 40
+        graph_legend_bar_height = 10
+        graph_legend_space = 5
+        graph_legend_section_space = 25
         graph_offset = 10
         graph_description_line = 5
         offset_description = 5
-        graph_height = STATISTIK_HOEHE - 2 * graph_offset - graph_description_line - max_description_length_x
+        graph_height = STATISTIK_HOEHE - 2 * graph_offset - graph_description_line - max_description_length_x - graph_legend_height
         graph_offset_x = graph_offset + max_description_length_y + offset_description + graph_description_line
+        graph_offset_y = graph_offset + graph_legend_height
         graph_width = width - graph_offset - graph_offset_x
         segment_width = graph_width / segments_number
         bar_width = (segment_width * 0.75) / 3
 
-        offsets = {'bills': 0, 'allowances': 0, 'insurances': 0}
+        texts_legend = {
+            'bills': 'Rechnungen',
+            'allowances': 'Beihilfe',
+            'insurances': 'Private KV'
+        }
+        
         if data_selection['type'] == 'Alle':
-            offsets = {'bills': -bar_width, 'allowances': 0, 'insurances': bar_width}
+            offsets_bars = {'bills': -bar_width, 'allowances': 0, 'insurances': bar_width}
+            offsets_legend = {
+                'bills': -graph_legend_bar_width - graph_legend_space - graph_legend_section_space - self.measure_text(texts_legend['bills'])[0] - (self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2, 
+                'allowances': -(self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2, 
+                'insurances': graph_legend_section_space + (self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2
+            }
+        else:
+            offsets_bars = {'bills': 0, 'allowances': 0, 'insurances': 0}
+            offsets_legend = {
+                'bills': -(self.measure_text(texts_legend['bills'])[0] + graph_legend_bar_width + graph_legend_space) / 2, 
+                'allowances': -(self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2, 
+                'insurances': -(self.measure_text(texts_legend['insurances'])[0] + graph_legend_bar_width + graph_legend_space) / 2
+            }
 
         data_types = {
-            'Rechnungen': {'color': FARBE_BLAU, 'offset': offsets['bills'], 'key': 'bills'},
-            'Beihilfe': {'color': FARBE_LILA, 'offset': offsets['allowances'], 'key': 'allowances'},
-            'Private KV': {'color': FARBE_GRUEN, 'offset': offsets['insurances'], 'key': 'insurances'}
+            'Rechnungen': {'color': FARBE_BLAU, 'offset': offsets_bars['bills'], 'offset_legend': offsets_legend['bills'], 'key': 'bills'},
+            'Beihilfe': {'color': FARBE_LILA, 'offset': offsets_bars['allowances'], 'offset_legend': offsets_legend['allowances'], 'key': 'allowances'},
+            'Private KV': {'color': FARBE_GRUEN, 'offset': offsets_bars['insurances'], 'offset_legend': offsets_legend['insurances'], 'key': 'insurances'}
         }
 
         # Canvas zurücksetzen
@@ -220,41 +247,62 @@ class StatisticsGraph(toga.Canvas):
 
         # x-Achse
         with self.Stroke(line_width = 1) as x_axis:
-            x_axis.move_to(graph_offset_x, graph_height + graph_offset)
-            x_axis.line_to(graph_width + graph_offset_x, graph_height + graph_offset)
+            x_axis.move_to(graph_offset_x, graph_height + graph_offset_y)
+            x_axis.line_to(graph_width + graph_offset_x, graph_height + graph_offset_y)
 
         # y-Achse
         with self.Stroke(line_width = 1) as y_axis:
-            y_axis.move_to(graph_offset_x, graph_offset)
-            y_axis.line_to(graph_offset_x, graph_height + graph_offset)
+            y_axis.move_to(graph_offset_x, graph_offset_y)
+            y_axis.line_to(graph_offset_x, graph_height + graph_offset_y)
+
+        # Legende
+        for data_type, properties in data_types.items():
+            if data_selection['type'] == data_type or data_selection['type'] == 'Alle':
+                text_length = self.measure_text(texts_legend[properties['key']])[0]
+
+                with self.Fill(color=FARBE_DUNKEL) as text_filler:
+                    text_filler.write_text(
+                        texts_legend[properties['key']], 
+                        x = graph_offset_x + (width - graph_offset_x - graph_offset) / 2 + properties['offset_legend'], 
+                        y = graph_legend_height / 2,
+                        baseline = Baseline.MIDDLE
+                    )
+                
+                with self.Fill(color=properties['color']) as bar:
+                    bar.rect(
+                        graph_offset_x + (width - graph_offset_x - graph_offset) / 2 + properties['offset_legend'] + graph_legend_space + text_length,
+                        (graph_legend_height - graph_legend_bar_height) / 2,
+                        graph_legend_bar_width,
+                        graph_legend_bar_height
+                    )
 
         # descriptions on the y-axis
         for i in range(segments_y_axis+1):
             with self.Stroke(line_width = 1) as segment:
-                segment.move_to(graph_offset_x, graph_height + graph_offset - i * (graph_height - graph_offset) / segments_y_axis)
-                segment.line_to(graph_offset_x - graph_description_line, graph_height + graph_offset - i * (graph_height - graph_offset) / segments_y_axis)
+                segment.move_to(graph_offset_x, graph_height + graph_offset_y - i * (graph_height - graph_offset) / segments_y_axis)
+                segment.line_to(graph_offset_x - graph_description_line, graph_height + graph_offset_y - i * (graph_height - graph_offset) / segments_y_axis)
 
             with self.Fill(color=FARBE_DUNKEL) as text_filler:
                 text_filler.write_text(
                     y_axis_descriptions[i], 
-                    x = graph_offset, 
-                    y = graph_offset + graph_height - i * (graph_height - graph_offset) / segments_y_axis + max_description_height_y / 2,
-                    baseline = Baseline.ALPHABETIC
+                    x = graph_offset + max_description_length_y - self.measure_text(y_axis_descriptions[i])[0], 
+                    y = graph_offset_y + graph_height - i * (graph_height - graph_offset) / segments_y_axis + max_description_height_y / 2,
+                    baseline = Baseline.BOTTOM
                 )
 
         # Segmente zeichnen
         for i in range(segments_number):
 
             with self.Stroke(line_width = 1) as segment:
-                segment.move_to(graph_offset_x + (i+0.5) * segment_width, graph_height + graph_offset)
-                segment.line_to(graph_offset_x + (i+0.5) * segment_width, graph_height + graph_offset + graph_description_line)
+                segment.move_to(graph_offset_x + (i+0.5) * segment_width, graph_height + graph_offset_y)
+                segment.line_to(graph_offset_x + (i+0.5) * segment_width, graph_height + graph_offset_y + graph_description_line)
 
             with self.Fill(color=FARBE_DUNKEL) as text_filler:
                 if max_description_length_x > segment_width - graph_offset:
                     text_filler.rotate(-math.pi/2)
                     text_filler.write_text(
                         segments[i]['description'], 
-                        x = -1 * (graph_height + graph_offset + graph_description_line + max_description_length_x + offset_description),
+                        x = -1 * (graph_height + graph_offset_y + graph_description_line + self.measure_text(segments[i]['description'])[0] + offset_description),
                         y = graph_offset_x + (i+0.5) * segment_width - max_description_height_x / 2,
                         baseline = Baseline.TOP
                     )
@@ -262,7 +310,7 @@ class StatisticsGraph(toga.Canvas):
                     text_filler.write_text(
                         segments[i]['description'], 
                         x = graph_offset_x + (i+0.5) * segment_width - max_description_length_x / 2, 
-                        y = graph_height + graph_offset + graph_description_line + offset_description,
+                        y = graph_height + graph_offset_y + graph_description_line + offset_description,
                         baseline = Baseline.TOP
                     )
 
@@ -271,7 +319,7 @@ class StatisticsGraph(toga.Canvas):
                     with self.Fill(color=properties['color']) as bar:
                         bar.rect(
                             graph_offset_x + properties['offset'] + (i+0.5) * segment_width - bar_width / 2,
-                            graph_offset + graph_height * (1 - segments[i][properties['key']] / max_value),
+                            graph_offset_y + graph_height * (1 - segments[i][properties['key']] / max_value),
                             bar_width,
                             graph_height * segments[i][properties['key']] / max_value
                         )
