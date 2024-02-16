@@ -175,6 +175,13 @@ class StatisticsGraph(toga.Canvas):
         # stop if all values in segments are 0
         if all([segment['bills'] == 0 and segment['allowances'] == 0 and segment['insurances'] == 0 for segment in segments]):
             self.clear()
+            with self.Fill(color=FARBE_DUNKEL) as text_filler:
+                    text_filler.write_text(
+                        'Keine Daten in der Auswahl vorhanden.', 
+                        x = (width - self.measure_text('Keine Daten in der Auswahl vorhanden.')[0]) / 2, 
+                        y = 20,
+                        baseline = Baseline.TOP
+                    )
             return
 
         # calculate the scaling factor for the y-axis
