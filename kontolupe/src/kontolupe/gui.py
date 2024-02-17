@@ -350,7 +350,8 @@ class StatisticsGraph(toga.Canvas):
                         )
         
     def clear(self):
-        self.context.clear()
+        self.context.clear()    
+
 
 class SectionOpenSum(toga.Box):
     """Erzeugt den Anzeigebereich für den offenen Betrag."""
