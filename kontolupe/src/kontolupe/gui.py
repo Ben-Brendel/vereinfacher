@@ -208,10 +208,10 @@ class StatisticsGraph(toga.Canvas):
 
         # The measurements for the graph
         graph_legend_height = 50
-        graph_legend_bar_width = 40
+        graph_legend_bar_width = 30
         graph_legend_bar_height = 10
         graph_legend_space = 5
-        graph_legend_section_space = 25
+        graph_legend_section_space = 20
         graph_offset = 10
         graph_description_line = 5
         offset_description = 5
@@ -222,18 +222,36 @@ class StatisticsGraph(toga.Canvas):
         segment_width = graph_width / segments_number
         bar_width = (segment_width * 0.75) / 3
 
-        texts_legend = {
-            'bills': 'Rechnungen',
-            'allowances': 'Beihilfe',
-            'insurances': 'Private KV'
-        }
+        # measure the length of the legend containing of Rechnungen, Beihilfe, Private KV
+        # it is the sum of the length of the descriptions and the length of the bars and the space between them
+        graph_legend_width = sum([self.measure_text(text)[0] for text in ['Rechnungen', 'Beihilfe', 'Private KV']]) + 3 * graph_legend_space + 2 * graph_legend_section_space + 3 * graph_legend_bar_width
+
+        if graph_legend_width > graph_width:
+            texts_legend = {
+                'bills': 'Rechn.',
+                'allowances': 'Beihilfe',
+                'insurances': 'PKV'
+            }
+        else:  
+            texts_legend = {
+                'bills': 'Rechnungen',
+                'allowances': 'Beihilfe',
+                'insurances': 'Private KV'
+            }
         
+        graph_legend_width = sum([self.measure_text(text)[0] for text in texts_legend.values()]) + 3 * graph_legend_space + 2 * graph_legend_section_space + 3 * graph_legend_bar_width
+
         if data_selection['type'] == 'Alle':
             offsets_bars = {'bills': -bar_width, 'allowances': 0, 'insurances': bar_width}
+            # offsets_legend = {
+            #     'bills': -graph_legend_bar_width - graph_legend_space - graph_legend_section_space - self.measure_text(texts_legend['bills'])[0] - (self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2, 
+            #     'allowances': -(self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2, 
+            #     'insurances': graph_legend_section_space + (self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2
+            # }
             offsets_legend = {
-                'bills': -graph_legend_bar_width - graph_legend_space - graph_legend_section_space - self.measure_text(texts_legend['bills'])[0] - (self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2, 
-                'allowances': -(self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2, 
-                'insurances': graph_legend_section_space + (self.measure_text(texts_legend['allowances'])[0] + graph_legend_bar_width + graph_legend_space) / 2
+                'bills': -graph_legend_width / 2,
+                'allowances': -graph_legend_width / 2 + (self.measure_text(texts_legend['bills'])[0] + graph_legend_bar_width + graph_legend_space + graph_legend_section_space),
+                'insurances': graph_legend_width / 2 - (self.measure_text(texts_legend['insurances'])[0] + graph_legend_bar_width + graph_legend_space)
             }
         else:
             offsets_bars = {'bills': 0, 'allowances': 0, 'insurances': 0}
@@ -270,14 +288,14 @@ class StatisticsGraph(toga.Canvas):
                 with self.Fill(color=FARBE_DUNKEL) as text_filler:
                     text_filler.write_text(
                         texts_legend[properties['key']], 
-                        x = graph_offset_x + (width - graph_offset_x - graph_offset) / 2 + properties['offset_legend'], 
+                        x = graph_offset_x + graph_width / 2 + properties['offset_legend'], 
                         y = graph_legend_height / 2,
                         baseline = Baseline.MIDDLE
                     )
                 
                 with self.Fill(color=properties['color']) as bar:
                     bar.rect(
-                        graph_offset_x + (width - graph_offset_x - graph_offset) / 2 + properties['offset_legend'] + graph_legend_space + text_length,
+                        graph_offset_x + graph_width / 2 + properties['offset_legend'] + graph_legend_space + text_length,
                         (graph_legend_height - graph_legend_bar_height) / 2,
                         graph_legend_bar_width,
                         graph_legend_bar_height
