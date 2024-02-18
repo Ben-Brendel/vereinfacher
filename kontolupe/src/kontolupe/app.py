@@ -802,15 +802,17 @@ class Kontolupe(toga.App):
         self.box_list_bills.add(self.list_bills_topbox)
 
         # Tabelle mit den Rechnungen
+        
         self.table_bills = toga.Table(
-            headings    = ['Info', 'Betrag', 'Bezahlt'],
-            accessors   = ['info', 'betrag_euro', 'bezahlt_text'],
+            headings    = ['Info', 'Betrag', 'Vom', 'Bezahlt'],
+            accessors   = ['info', 'betrag_euro', 'rechnungsdatum_kurz', 'bezahlt_text'],
             data        = self.daten.bills,
             style       = style_table,
             on_select   = self.update_buttons,
             on_activate = self.info_dialog_booking
         )
-        self.box_list_bills.add(self.table_bills)
+        self.sc_table_bills = toga.ScrollContainer(style=style_scroll_container, content=self.table_bills)
+        self.box_list_bills.add(self.sc_table_bills)
 
         # ButtonBox mit den Buttons
         self.list_bills_buttons = ButtonBox(

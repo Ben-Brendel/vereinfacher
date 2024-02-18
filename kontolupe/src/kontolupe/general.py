@@ -74,6 +74,12 @@ BILLS_ATTRIBUTES = [
         'default_value': None,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'rechnungsdatum_kurz',
+        'default_value': None,
+    },
+    {
         'name_db': 'einrichtung_id',
         'type_db': 'INTEGER',
         'name_object': 'einrichtung_id',
@@ -125,6 +131,12 @@ BILLS_ATTRIBUTES = [
         'name_db': 'buchungsdatum',
         'type_db': 'TEXT',
         'name_object': 'buchungsdatum',
+        'default_value': None,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'buchungsdatum_kurz',
         'default_value': None,
     },
     {

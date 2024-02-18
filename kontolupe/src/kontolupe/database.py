@@ -669,6 +669,10 @@ class DataInterface:
                         value = 'Ja' if get_value(attribute['name_object'].replace('_eingereicht', '_id'), None) else 'Nein'
                     case 'plz_ort':
                         value = (data.get('plz', '') or '') + (' ' if data.get('plz', '') else '') + (data.get('ort', '') or '')
+                    case 'rechnungsdatum_kurz':
+                        value = get_value('rechnungsdatum', '')[:6] + get_value('rechnungsdatum', '')[8:]      
+                    case 'buchungsdatum_kurz':
+                        value = get_value('buchungsdatum', '')[:6] + get_value('buchungsdatum', '')[8:]
                     case 'einrichtung_name':
                         try:
                             value = self.institutions.find({'db_id': get_value('einrichtung_id', None)}).name or ''
