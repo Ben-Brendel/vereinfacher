@@ -1934,12 +1934,6 @@ class Kontolupe(toga.App):
         self.flag_edit_pkv = False
         self.form_pkv_topbox.set_label('Neue PKV-Einreichung')
 
-        # Tabelleninhalt aktualisieren
-        if not self.daten.allowance_active() and 'Beihilfe' in self.form_pkv_bills.headings:
-            self.form_pkv_bills.remove_column(2)
-        elif self.daten.allowance_active() and 'Beihilfe' not in self.form_pkv_bills.headings:
-            self.form_pkv_bills.insert_column(2, 'Beihilfe', 'beihilfesatz_prozent')
-
         # Zeige die Seite
         self.main_window.content = self.sc_form_pkv
 
