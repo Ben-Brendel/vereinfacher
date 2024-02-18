@@ -673,6 +673,8 @@ class DataInterface:
                         value = get_value('rechnungsdatum', '')[:6] + get_value('rechnungsdatum', '')[8:]      
                     case 'buchungsdatum_kurz':
                         value = get_value('buchungsdatum', '')[:6] + get_value('buchungsdatum', '')[8:]
+                    case 'datum_kurz':
+                        value = get_value('datum', '')[:6] + get_value('datum', '')[8:]
                     case 'einrichtung_name':
                         try:
                             value = self.institutions.find({'db_id': get_value('einrichtung_id', None)}).name or ''

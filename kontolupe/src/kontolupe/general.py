@@ -209,6 +209,12 @@ ALLOWANCE_ATTRIBUTES = [
         'default_value': None,
     },
     {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'datum_kurz',
+        'default_value': None,
+    },
+    {
         'name_db': 'aktiv',
         'type_db': 'INTEGER',
         'name_object': 'aktiv',
@@ -251,6 +257,12 @@ INSURANCE_ATTRIBUTES = [
         'name_db': 'datum',
         'type_db': 'TEXT',
         'name_object': 'datum',
+        'default_value': None,
+    },
+    {
+        'name_db': None,
+        'type_db': None,
+        'name_object': 'datum_kurz',
         'default_value': None,
     },
     {

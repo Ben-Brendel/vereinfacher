@@ -1721,7 +1721,7 @@ class Kontolupe(toga.App):
         # Tabelle mit den Beihilfepaketen
         self.table_allowance = toga.Table(
             headings    = ['Datum', 'Betrag', 'Erstattet'], 
-            accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
+            accessors   = ['datum_kurz', 'betrag_euro', 'erhalten_text'],
             data        = self.daten.allowances,
             style       = style_table,
             on_select   = self.update_buttons,
@@ -1758,7 +1758,7 @@ class Kontolupe(toga.App):
         # Tabelle mit den PKV-Einreichungen
         self.table_insurance = toga.Table(
             headings    = ['Datum', 'Betrag', 'Erstattet'], 
-            accessors   = ['datum', 'betrag_euro', 'erhalten_text'],
+            accessors   = ['datum_kurz', 'betrag_euro', 'erhalten_text'],
             data        = self.daten.insurances,
             style       = style_table,
             on_select   = self.update_buttons,
