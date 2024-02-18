@@ -319,7 +319,7 @@ class Kontolupe(toga.App):
 
         match widget:
             case self.info_institution_website.button:
-                self.webview.url = 'https://' + self.daten.list_einrichtungen[self.edit_institution_id].webseite
+                self.webview.url = 'https://' + self.daten.institutions[self.edit_institution_id].webseite
                 self.back_to = 'info_einrichtung'
             case self.cmd_dataprotection:
                 self.webview.url = 'https://kontolupe.biberwerk.net/kontolupe-datenschutz.html'
