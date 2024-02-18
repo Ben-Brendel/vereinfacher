@@ -1810,8 +1810,8 @@ class Kontolupe(toga.App):
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_beihilfe_bills = toga.Table(
-            headings        = ['Info', 'Betrag', 'Bezahlt'],
-            accessors       = ['info', 'betrag_euro', 'bezahlt_text'],
+            headings        = ['Info', 'Betrag', 'Vom', 'Bezahlt'],
+            accessors       = ['info', 'betrag_euro', 'rechnungsdatum_kurz', 'bezahlt_text'],
             data            = self.daten.allowances_bills,
             multiple_select = True,
             on_select       = self.on_select_beihilfe_bills,
@@ -1858,8 +1858,8 @@ class Kontolupe(toga.App):
 
         # Bereich zur Auswahl der zugehörigen Rechnungen
         self.form_pkv_bills = toga.Table(
-            headings        = ['Info', 'Betrag', 'Bezahlt'],
-            accessors       = ['info', 'betrag_euro', 'bezahlt_text'],
+            headings        = ['Info', 'Betrag', 'Vom', 'Bezahlt'],
+            accessors       = ['info', 'betrag_euro', 'rechnungsdatum_kurz', 'bezahlt_text'],
             data            = self.daten.insurances_bills,
             multiple_select = True,
             on_select       = self.on_select_pkv_bills,   

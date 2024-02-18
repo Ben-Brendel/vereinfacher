@@ -869,7 +869,6 @@ class DataInterface:
     def save(self, object_type, element, update=True, **kwargs):
         """Speichert ein Element."""
 
-
         if isinstance(element, dict):
             old_dict = element
             updated_dict = self.update_object(object_type, **element)
