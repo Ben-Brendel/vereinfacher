@@ -756,13 +756,13 @@ class Kontolupe(toga.App):
         self.box_mainpage.add(self.mainpage_section_insurance)
 
         # Weitere Funktionen
-        self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
-        self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_institutions)
+        # self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
+        # self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_institutions)
         self.button_start_archiv = ArchiveButton(self.daten.archivables, self.archivieren_bestaetigen)
 
         self.box_startseite_daten = toga.Box(style=style_section_daten)
-        self.box_startseite_daten.add(self.button_start_personen)
-        self.box_startseite_daten.add(self.button_start_einrichtungen)
+        # self.box_startseite_daten.add(self.button_start_personen)
+        # self.box_startseite_daten.add(self.button_start_einrichtungen)
         self.box_startseite_daten.add(self.button_start_archiv)
         self.box_mainpage.add(self.box_startseite_daten)
 
