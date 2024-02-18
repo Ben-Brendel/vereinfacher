@@ -1170,7 +1170,8 @@ class Kontolupe(toga.App):
             on_select   = self.update_buttons,
             on_activate = self.show_info_institution
         )
-        self.box_list_institutions.add(self.table_institutions)
+        self.sc_table_institutions = toga.ScrollContainer(style=style_scroll_container, content=self.table_institutions)
+        self.box_list_institutions.add(self.sc_table_institutions)
 
         # ButtonBox mit den Buttons
         self.list_institutions_buttons = ButtonBox(
@@ -1497,7 +1498,8 @@ class Kontolupe(toga.App):
             style       = style_table,
             on_select   = self.update_buttons
         )
-        self.box_list_persons.add(self.table_persons)
+        self.sc_table_persons = toga.ScrollContainer(style=style_scroll_container, content=self.table_persons)
+        self.box_list_persons.add(self.sc_table_persons)
 
         # ButtonBox mit den Buttons
         self.list_persons_buttons = ButtonBox(
@@ -1725,7 +1727,8 @@ class Kontolupe(toga.App):
             on_select   = self.update_buttons,
             on_activate = self.info_dialog_booking
         )
-        self.box_list_allowance.add(self.table_allowance)
+        self.sc_table_allowance = toga.ScrollContainer(style=style_scroll_container, content=self.table_allowance)
+        self.box_list_allowance.add(self.sc_table_allowance)
 
         # Buttons
         self.list_allowance_buttons = ButtonBox(
@@ -1761,7 +1764,8 @@ class Kontolupe(toga.App):
             on_select   = self.update_buttons,
             on_activate = self.info_dialog_booking
         )
-        self.box_list_insurance.add(self.table_insurance)
+        self.sc_table_insurance = toga.ScrollContainer(style=style_scroll_container, content=self.table_insurance)
+        self.box_list_insurance.add(self.sc_table_insurance)
 
         # Buttons
         self.list_insurance_buttons = ButtonBox(
