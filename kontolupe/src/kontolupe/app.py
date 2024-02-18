@@ -321,7 +321,7 @@ class Kontolupe(toga.App):
             case self.info_institution_website.button:
                 self.webview.url = 'https://' + self.daten.list_einrichtungen[self.edit_institution_id].webseite
                 self.back_to = 'info_einrichtung'
-            case self.cmd_datenschutz:
+            case self.cmd_dataprotection:
                 self.webview.url = 'https://kontolupe.biberwerk.net/kontolupe-datenschutz.html'
                 self.back_to = 'startseite'
 
@@ -2066,184 +2066,63 @@ class Kontolupe(toga.App):
 
     def create_commands(self):
         """Erzeugt die Menüleiste."""
+        # Catch the about command
+        
         # Erzeuge die Menüleiste
-        gruppe_rechnungen = toga.Group('Rechnungen', order = 1)
+        group_bookings = toga.Group('Buchungen', parent=toga.Group.COMMANDS, order=10)
+        group_bills = toga.Group('Rechnungen', parent=group_bookings, order=10)
+        group_allowances = toga.Group('Beihilfe', parent=group_bookings, order=20)
+        group_insurances = toga.Group('PKV', parent=group_bookings, order=30)
 
-        self.cmd_rechnungen_anzeigen = toga.Command(
-            self.show_list_bills,
-            'Rechnungen anzeigen',
-            tooltip = 'Zeigt die Liste der Rechnungen an.',
-            group = gruppe_rechnungen,
-            order = 10,
-            enabled=True
-        )
+        group_data = toga.Group('Weitere Daten', parent=toga.Group.COMMANDS, order=20)
+        group_persons = toga.Group('Personen', parent=group_data, order=10)
+        group_institutions = toga.Group('Einrichtungen', parent=group_data, order=20)
 
-        self.cmd_rechnungen_neu = toga.Command(
-            self.show_form_bill_new,
-            'Neue Rechnung',
-            tooltip = 'Erstellt eine neue Rechnung.',
-            group = gruppe_rechnungen,
-            order = 20,
-            enabled=True
-        )
+        group_tools = toga.Group('Tools', parent=toga.Group.COMMANDS, order=30)
 
-        gruppe_beihilfe = toga.Group('Beihilfe', order = 2)
+        self.cmd_bills_show = toga.Command(self.show_list_bills, 'Rechnungen anzeigen', group=group_bills, order=10, section=10)
+        self.cmd_bills_new = toga.Command(self.show_form_bill_new, 'Neue Rechnung', group=group_bills, order=20, section=10)
 
-        self.cmd_beihilfepakete_anzeigen = toga.Command(
-            self.show_list_beihilfe,
-            'Einreichungen anzeigen',
-            tooltip = 'Zeigt die Liste der Beihilfe-Einreichungen an.',
-            group = gruppe_beihilfe,
-            section = 0,
-            order = 10,
-            enabled=True
-        )
+        self.cmd_allowances_show = toga.Command(self.show_list_beihilfe, 'Beihilfe-Einreichungen anzeigen', group=group_allowances, order=10, section=20)
+        self.cmd_allowances_new = toga.Command(self.show_form_beihilfe_new, 'Neue Beihilfe-Einreichung', group=group_allowances, order=20, section=20, enabled=False)
 
-        self.cmd_beihilfepakete_neu = toga.Command(
-            self.show_form_beihilfe_new,
-            'Neue Einreichung',
-            tooltip = 'Erstellt eine neue Beihilfe-Einreichung.',
-            group = gruppe_beihilfe,
-            section = 0,
-            order = 20,
-            enabled=False
-        )
+        self.cmd_insurances_show = toga.Command(self.show_list_pkv, 'PKV-Einreichungen anzeigen', group=group_insurances, order=10, section=30)
+        self.cmd_insurances_new = toga.Command(self.show_form_pkv_new, 'Neue PKV-Einreichung', group=group_insurances, order=20, section=30, enabled=False)
 
-        gruppe_pkv = toga.Group('Private KV', order = 3)
+        self.cmd_persons_show = toga.Command(self.show_list_persons, 'Personen anzeigen', group=group_persons, order=10, section=10)
+        self.cmd_persons_new = toga.Command(self.show_form_persons_new, 'Neue Person', group=group_persons, order=20, section=10)
 
-        self.cmd_pkvpakete_anzeigen = toga.Command(
-            self.show_list_pkv,
-            'Einreichungen anzeigen',
-            tooltip = 'Zeigt die Liste der PKV-Einreichungen an.',
-            group = gruppe_pkv,
-            section = 1,
-            order = 30,
-            enabled=True
-        )
+        self.cmd_institutions_show = toga.Command(self.show_list_institutions, 'Einrichtungen anzeigen', group=group_institutions, order=10, section=20)
+        self.cmd_institutions_new = toga.Command(self.show_form_institution_new, 'Neue Einrichtung', group=group_institutions, order=20, section=20)
 
-        self.cmd_pkvpakete_neu = toga.Command(
-            self.show_form_pkv_new,
-            'Neue Einreichung',
-            tooltip = 'Erstellt eine neue PKV-Einreichung.',
-            group = gruppe_pkv,
-            section = 1,
-            order = 40,
-            enabled=False
-        )
-
-        gruppe_personen = toga.Group('Personen', order = 4)
-
-        self.cmd_personen_anzeigen = toga.Command(
-            self.show_list_persons,
-            'Personen anzeigen',
-            tooltip = 'Zeigt die Liste der Personen an.',
-            group = gruppe_personen,
-            section = 0,
-            order = 10,
-            enabled=True
-        )
-
-        self.cmd_personen_neu = toga.Command(
-            self.show_form_persons_new,
-            'Neue Person',
-            tooltip = 'Erstellt eine neue Person.',
-            group = gruppe_personen,
-            section = 0,
-            order = 20,
-            enabled=True
-        )
-
-        gruppe_einrichtungen = toga.Group('Einrichtungen', order = 5)
-
-        self.cmd_einrichtungen_anzeigen = toga.Command(
-            self.show_list_institutions,
-            'Einrichtungen anzeigen',
-            tooltip = 'Zeigt die Liste der Einrichtungen an.',
-            group = gruppe_einrichtungen,
-            section = 0,
-            order = 10,
-            enabled = True
-        )
-
-        self.cmd_einrichtungen_neu = toga.Command(
-            self.show_form_institution_new,
-            'Neue Einrichtung',
-            tooltip = 'Erstellt eine neue Einrichtung.',
-            group = gruppe_einrichtungen,
-            section = 0,
-            order = 20,
-            enabled = True
-        )
-
-        gruppe_tools = toga.Group('Tools', order = 6)
-
-        self.cmd_archivieren = toga.Command(
-            self.archivieren_bestaetigen,
-            'Archivieren',
-            tooltip = 'Archiviere alle bezahlten und erhaltenen Buchungen.',
-            group = gruppe_tools,
-            order = 5,
-            section = 1,
-            enabled = False
-        )
-
-        self.cmd_datenschutz = toga.Command(
-            self.show_webview,
-            'Datenschutz',
-            tooltip = 'Öffne die Datenschutzerklärung.',
-            group = gruppe_tools,
-            order = 15,
-            section = 2,
-            enabled = True
-        )
-
-        self.cmd_reset = toga.Command(
-            self.reset_app,
-            'Zurücksetzen',
-            tooltip = 'Setzt die Anwendung zurück.',
-            group = gruppe_tools,
-            order = 20,
-            section = 2,
-            enabled=True
-        )
-
-        self.cmd_settings = toga.Command(
-            self.show_settings,
-            'Einstellungen',
-            tooltip = 'Öffnet die Einstellungen.',
-            order = 7,
-            enabled=True
-        )
-
-        self.cmd_statistics = toga.Command(
-            self.show_statistics,
-            'Statistiken',
-            tooltip = 'Öffnet die Statistiken.',
-            order = 8,
-            enabled=True
-        )
+        self.cmd_settings = toga.Command(self.show_settings, 'Einstellungen', group=group_tools, order=10, section=10)
+        self.cmd_statistics = toga.Command(self.show_statistics, 'Statistiken', group=group_tools, order=20, section=10)
+        self.cmd_archive = toga.Command(self.archivieren_bestaetigen, 'Archivieren', group=group_tools, order=30, section=10, enabled=False)
+        self.cmd_reset = toga.Command(self.reset_app, 'Zurücksetzen', group = group_tools, order=40, section=10)
+        
+        self.cmd_dataprotection = toga.Command(self.show_webview, 'Datenschutz', group=toga.Group.COMMANDS, order=40)        
 
         # Add listeners to the commands
-        self.daten.archivables.add_listener(ArchiveCommandListener(self.cmd_archivieren, self.daten.archivables))
-        self.daten.allowances_bills.add_listener(CommandListener(self.cmd_beihilfepakete_neu, self.daten.allowances_bills))
-        self.daten.insurances_bills.add_listener(CommandListener(self.cmd_pkvpakete_neu, self.daten.insurances_bills))
+        self.daten.archivables.add_listener(ArchiveCommandListener(self.cmd_archive, self.daten.archivables))
+        self.daten.allowances_bills.add_listener(CommandListener(self.cmd_allowances_new, self.daten.allowances_bills))
+        self.daten.insurances_bills.add_listener(CommandListener(self.cmd_insurances_new, self.daten.insurances_bills))
 
         # Erstelle die Menüleiste
-        self.commands.add(self.cmd_rechnungen_anzeigen)
-        self.commands.add(self.cmd_rechnungen_neu)
+        self.commands.add(self.cmd_bills_show)
+        self.commands.add(self.cmd_bills_new)
         if self.daten.allowance_active():
-            self.commands.add(self.cmd_beihilfepakete_anzeigen)
-            self.commands.add(self.cmd_beihilfepakete_neu)
-        self.commands.add(self.cmd_pkvpakete_anzeigen)
-        self.commands.add(self.cmd_pkvpakete_neu)
-        self.commands.add(self.cmd_personen_anzeigen)
-        self.commands.add(self.cmd_personen_neu)
-        self.commands.add(self.cmd_einrichtungen_anzeigen)
-        self.commands.add(self.cmd_einrichtungen_neu)
+            self.commands.add(self.cmd_allowances_show)
+            self.commands.add(self.cmd_allowances_new)
+        self.commands.add(self.cmd_insurances_show)
+        self.commands.add(self.cmd_insurances_new)
+        self.commands.add(self.cmd_persons_show)
+        self.commands.add(self.cmd_persons_new)
+        self.commands.add(self.cmd_institutions_show)
+        self.commands.add(self.cmd_institutions_new)
         self.commands.add(self.cmd_settings)
-        self.commands.add(self.cmd_archivieren)
+        self.commands.add(self.cmd_archive)
         self.commands.add(self.cmd_reset)
-        self.commands.add(self.cmd_datenschutz)
+        self.commands.add(self.cmd_dataprotection)
         self.commands.add(self.cmd_statistics)
 
 
@@ -2282,6 +2161,10 @@ class Kontolupe(toga.App):
             self.show_mainpage(None)
         
         self.main_window.show()
+
+        print(f'+++ Kontolupe.create_commands: Commands: {self.commands}')
+        for cmd in self.commands:
+            print(f'+++ Kontolupe.create_commands: Found command: {cmd}')
 
 
     async def reset_app(self, widget):
