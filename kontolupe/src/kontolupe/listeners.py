@@ -50,8 +50,11 @@ class SubmitsListener(Listener):
         if self.list_allowances != None:
             try:
                 list_item = self.list_allowances.find({'db_id': item.db_id})
+                index = self.list_allowances.index(list_item)
                 if item.beihilfe_id is not None:
                     self.list_allowances.remove(list_item)
+                else:
+                    self.list_allowances[index] = dict_from_row(BILL_OBJECT, item)
             except ValueError:    
                 if item.beihilfe_id is None:
                     self.list_allowances.append(dict_from_row(BILL_OBJECT, item))
@@ -59,8 +62,11 @@ class SubmitsListener(Listener):
         if self.list_insurances != None:
             try:
                 list_item = self.list_insurances.find({'db_id': item.db_id})
+                index = self.list_insurances.index(list_item)
                 if item.pkv_id is not None:
                     self.list_insurances.remove(list_item)
+                else:
+                    self.list_insurances[index] = dict_from_row(BILL_OBJECT, item)
             except ValueError:
                 if item.pkv_id is None:
                     self.list_insurances.append(dict_from_row(BILL_OBJECT, item))
@@ -79,7 +85,9 @@ class SubmitsListener(Listener):
         if self.list_allowances != None:
             if item.beihilfe_id == None:
                 try:
-                    self.list_allowances.find({'db_id': item.db_id})
+                    list_item = self.list_allowances.find({'db_id': item.db_id})
+                    list_index = self.list_allowances.index(list_item)
+                    self.list_allowances[list_index] = dict_from_row(BILL_OBJECT, item)
                 except ValueError:
                     self.list_allowances.append(dict_from_row(BILL_OBJECT, item))
                     print(f'### SubmitsListener.insert: appended item with dbid {item.db_id} and beihilfe_id {item.beihilfe_id} to list_allowances')
@@ -93,7 +101,9 @@ class SubmitsListener(Listener):
         if self.list_insurances != None:
             if item.pkv_id == None:
                 try:
-                    self.list_insurances.find({'db_id': item.db_id})
+                    list_item = self.list_insurances.find({'db_id': item.db_id})
+                    list_index = self.list_insurances.index(list_item)
+                    self.list_insurances[list_index] = dict_from_row(BILL_OBJECT, item)
                 except ValueError:
                     self.list_insurances.append(dict_from_row(BILL_OBJECT, item))
             else:
