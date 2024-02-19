@@ -1,4 +1,4 @@
-"""Enthält die Klassen für die Datenbank und das Daten-Interface."""
+"""Contains the database and data-interface classes."""
 
 import sqlite3 as sql
 import shutil

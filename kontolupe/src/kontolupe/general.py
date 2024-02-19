@@ -1,4 +1,4 @@
-"""Konstanten und allgemeine Funktionen für die Anwendung."""
+"""Constants and functions used throughout the application."""
 
 import toga
 
@@ -6,18 +6,21 @@ DATAPROTECTION_URL = 'https://kontolupe.biberwerk.net/datenschutz_240218.html'
 
 DATABASE_VERSION = 1
 
+# constants to use for data functions and listeners
 BILL_OBJECT = 'bill'
 ALLOWANCE_OBJECT = 'allowance'
 INSURANCE_OBJECT = 'insurance'
 INSTITUTION_OBJECT = 'institution'
 PERSON_OBJECT = 'person'
 
+# lists of object types for the database
 BILL_TYPES = ('bill', 'bills', 'rechnung', 'rechnungen', 'Rechnung', 'Rechnungen')
 ALLOWANCE_TYPES = ('allowance', 'allowances', 'beihilfe', 'beihilfepakete', 'Beihilfe', 'Beihilfepakete')
 INSURANCE_TYPES = ('insurance', 'insurances', 'pkv', 'pkvpakete', 'PKV', 'PKVpakete')
 INSTITUTION_TYPES = ('institution', 'institutions', 'einrichtung', 'einrichtungen', 'Einrichtung', 'Einrichtungen')
 PERSON_TYPES = ('person', 'persons', 'personen', 'Person', 'Personen')
 
+# dictionary to map object types to database table names
 OBJECT_TYPE_TO_DB_TABLE = {
     **dict.fromkeys(BILL_TYPES, 'rechnungen'),
     **dict.fromkeys(ALLOWANCE_TYPES, 'beihilfepakete'),
@@ -26,6 +29,7 @@ OBJECT_TYPE_TO_DB_TABLE = {
     **dict.fromkeys(PERSON_TYPES, 'personen')
 }
 
+# definitions of the attributes for each object type
 BILLS_ATTRIBUTES = [
     {
         'name_db': 'id',
@@ -390,7 +394,8 @@ PERSON_ATTRIBUTES = [
 ]
 
 def get_attributes(object_type):
-    """Gibt die zur Tabelle gehörende Liste der Attribute zurück."""
+    """Return the attributes dictionary corresponding to object_type."""
+
     attributes = []
     if object_type in BILL_TYPES:
         attributes = BILLS_ATTRIBUTES
@@ -406,20 +411,25 @@ def get_attributes(object_type):
 
 def get_accessors(object_type):
     """Extract 'name_object' from attributes based on object_type."""
+    
     attributes = get_attributes(object_type)
     return [attribute['name_object'] for attribute in attributes if attribute['name_object']]
 
 def dict_from_row(object_type, row):
         """Convert a Row object to a dictionary."""
+        
         return {attribute['name_object']: getattr(row, attribute['name_object']) for attribute in get_attributes(object_type)}
 
 def table_index_selection(widget):
-    """Ermittelt den Index des ausgewählten Elements einer Tabelle."""
+    """Return the index of the selected row in a Table widget."""
+    
     if isinstance(widget, toga.Table) and widget.selection is not None:
         return widget.data.index(widget.selection) 
     return None
     
 def add_newlines(input_string, max_line_length):
+    """Insert newlines into input_string to limit line length to max_line_length."""
+
     if input_string is None:
         return ''
     lines = input_string.split(' ')

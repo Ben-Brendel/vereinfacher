@@ -1,4 +1,4 @@
-"""Layout-Definitionen für die Kontolupe-App."""
+"""Layout and styles for the app."""
 
 from toga.style.pack import COLUMN, LEFT, RIGHT, ROW, TOP, BOTTOM, CENTER, Pack
 

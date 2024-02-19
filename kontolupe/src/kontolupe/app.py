@@ -1,9 +1,9 @@
 """
-Behalte den Überblick über Deine Rechnungen, Beihilfe- und PKV-Erstattungen.
+Kontolupe - Die Gesundheitsrechnungen-App
 
 Mit Kontolupe kannst Du Deine Gesundheitsrechnungen erfassen und verwalten.
 Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen
-überwachen. Die App ist für die private Nutzung kostenlos.
+überwachen. Die App zeigt Dir die offenen Buchungen und Statistiken an.
 """
 
 import toga
@@ -2187,5 +2187,5 @@ class Kontolupe(toga.App):
 
 def main():
     """Main loop of the application."""
-    
+
     return Kontolupe()
