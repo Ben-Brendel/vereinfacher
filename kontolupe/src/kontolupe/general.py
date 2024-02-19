@@ -2,6 +2,8 @@
 
 import toga
 
+DATAPROTECTION_URL = 'https://kontolupe.biberwerk.net/datenschutz_240218.html'
+
 DATABASE_VERSION = 1
 
 BILL_OBJECT = 'bill'

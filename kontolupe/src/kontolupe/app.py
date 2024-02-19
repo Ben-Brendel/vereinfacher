@@ -314,15 +314,15 @@ class Kontolupe(toga.App):
         self.box_webview.add(self.webview)
 
 
-    def show_webview(self, widget):
+    async def show_webview(self, widget):
         """Zeigt die WebView zur Anzeige von Webseiten."""
 
         match widget:
             case self.info_institution_website.button:
-                self.webview.url = 'https://' + self.daten.institutions[self.edit_institution_id].webseite
+                await self.webview.load_url('https://' + self.daten.institutions[self.edit_institution_id].webseite)
                 self.back_to = 'info_einrichtung'
             case self.cmd_dataprotection:
-                self.webview.url = 'https://kontolupe.biberwerk.net/kontolupe-datenschutz.html'
+                await self.webview.load_url(DATAPROTECTION_URL)
                 self.back_to = 'startseite'
 
         self.main_window.content = self.box_webview
