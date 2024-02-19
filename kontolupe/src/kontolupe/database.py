@@ -10,10 +10,10 @@ from kontolupe.general import *
 
 
 class Database:
-    """Klasse zur Verwaltung der Datenbank."""
+    """Class that manages the database."""
 
     def __init__(self, data_path=None):
-        """Initialisierung der Datenbank."""
+        """Initializes the database."""
         
         # use the provided data path that should be the toga specific path to the data directory
         # if data-path is None and it is an android device use the provided android path
@@ -89,7 +89,7 @@ class Database:
         self.__update_init()
 
     def __update_init(self):
-        """Überprüfe, ob die init-Datei aktualisiert werden muss."""
+        """Checks and updates the init file."""
         
         # check if the init file exists
         if not self.init_file.exists():
@@ -133,7 +133,8 @@ class Database:
             return
 
     def is_first_start(self):
-        """Prüfen, ob die App zum ersten Mal gestartet wird."""
+        """Returns if the app is started for the first time."""
+
         if not self.init_file.exists():
             print(f'### Database.is_first_start: Init file {self.init_file} does not exist. First start.')
             self.save_init_file()
@@ -146,9 +147,8 @@ class Database:
         return not init_file['initialized']
     
     def save_init_file(self, **kwargs):
-        """Speichern der init.txt Datei."""
-        # create the init file
-        # write the variables to the init file
+        """Saves the init file."""
+
         # if the value is a boolean, it should be converted to True or False
         content = ''
 
@@ -167,8 +167,8 @@ class Database:
         print(f'### Database.save_init_file: Saved init file {self.init_file}')
 
     def load_init_file(self):
-        """Laden der init.txt Datei und Rückgabe als Dictionary."""
-        # load the init file
+        """Loads the init file."""
+        
         # the value should be converted to the correct type
         # return the variables as a dictionary
         result = {}
@@ -198,7 +198,8 @@ class Database:
         return result
 
     def reset(self):
-        """Setzt alle Daten zurück."""
+        """Reset all data."""
+
         # create a backup of the database
         self.__delete_backups()
         self.__create_backup()
@@ -214,7 +215,7 @@ class Database:
             print(f'### Database: Deleted init file {self.init_file}')
 
     def __check_paths(self):
-        """Überprüfen, ob die Daten am richtigen Ort gespeichert sind."""
+        """Checks if the data is saved at the correct path and moves it if necessary."""
 
         if not self.db_path.exists():
             if Path('/data/data/net.biberwerk.kontolupe/kontolupe.db').exists():
@@ -237,7 +238,8 @@ class Database:
                 print(f'### Database.__check_paths: Moved init file to {self.init_file}')
 
     def __get_column_type(self, table_name, column_name):
-        """Lade den Typ der Spalte aus dem self.__tables Dictionary."""
+        """Get the type of a column from the self.__tables dictionary."""
+
         for column in self.__tables[table_name]:
             if column[0] == column_name:
                 print(f'### Database.__get_column_type: Column type for column {column_name} in table {table_name} is {column[1]}')
@@ -246,7 +248,8 @@ class Database:
         return None  # return None if the column is not found
 
     def __create_backup(self):
-        """Erstellen eines Backups der Datenbank."""
+        """Create a backup of the database."""
+
         # Get the current date and time, formatted as a string
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
@@ -262,15 +265,20 @@ class Database:
             print(f'### Database.__create_backup: Database {self.db_path} does not exist. No backup created.')
 
     def __delete_backups(self):
-        """Löschen aller Backups der Datenbank."""
+        """Delete all backups of the database."""
+
         for file in self.db_dir.glob('kontolupe_*.db.backup'):
             print(f'### Database: Deleting backup {file}')
             file.unlink()
 
     def __create_table_if_not_exists(self, cursor, table_name, columns):
+        """Create a table if it does not exist."""
+
         cursor.execute(f"CREATE TABLE IF NOT EXISTS {table_name} ({', '.join([f'{column[0]} {column[1]}' for column in columns])})")
 
     def __add_column_if_not_exists(self, cursor, table_name, new_column, column_type):
+        """Add a column to a table if it does not exist."""
+
         cursor.execute(f"PRAGMA table_info({table_name})")
         if not any(row[1] == new_column for row in cursor.fetchall()):
             cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {new_column} {column_type}")
@@ -279,6 +287,8 @@ class Database:
                 cursor.execute(f"UPDATE {table_name} SET aktiv = 1")
 
     def __copy_column(self, cursor, table_name, old_column, new_column):
+        """Copy a column within a table (renaming a column)."""
+
         # Check if table_name exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table_name,))
         if not cursor.fetchone():
@@ -304,6 +314,8 @@ class Database:
             print(f'### Database.__copy_column: Column {old_column} does not exist in table {table_name}')
 
     def __copy_table_and_delete(self, cursor, old_table, new_table):
+        """Copy a table to a new table and delete the old table."""
+
         # Check if old_table exists
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (old_table,))
         if not cursor.fetchone():
@@ -339,7 +351,7 @@ class Database:
         print(f'### Database.__copy_table_and_delete: Dropped table {old_table}')
 
     def __create_db(self):
-        """Erstellen und Update der Datenbank."""
+        """Create the database if it does not exist and update it if the structure has changed."""
 
         # Check if database exists and is structured correctly
         # If not, create a backup and rebuild the database
@@ -427,7 +439,8 @@ class Database:
             print(f'### Database.__rename_tables: Migrated data from {old_table} to {new_table} and deleted {old_table}')
 
     def __new_element(self, table, element):
-        """Einfügen eines neuen Elements in die Datenbank."""
+        """Insert a new element into the database."""
+
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
@@ -460,7 +473,8 @@ class Database:
         return db_id
     
     def __change_element(self, table, element):
-        """Ändern eines Elements in der Datenbank."""
+        """Change an element in the database."""
+
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
@@ -491,7 +505,8 @@ class Database:
         connection.close()
 
     def __delete_element(self, table, element):
-        """Löschen eines Elements aus der Datenbank."""
+        """Delete an element from the database."""
+
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
@@ -508,7 +523,8 @@ class Database:
         connection.close()
 
     def __load_data(self, table, only_active=False):
-        """Laden der Elemente einer Tabelle aus der Datenbank."""
+        """Load data from a table."""
+
         # Datenbankverbindung herstellen
         connection = sql.connect(self.db_path)
         cursor = connection.cursor()
@@ -540,7 +556,8 @@ class Database:
         return result 
 
     def new(self, object_type, element):
-        """Einfügen eines neuen Elements in die Datenbank."""
+        """Database frontend: insert a new element into the database."""
+
         db_table = OBJECT_TYPE_TO_DB_TABLE.get(object_type)
         if db_table:
             return self.__new_element(db_table, element)
@@ -548,7 +565,8 @@ class Database:
             raise ValueError(f'### Database.new: Element {element} not found')
 
     def save(self, object_type, element):
-        """Ändern eines Elements in der Datenbank."""
+        """Database frontend: change an element in the database."""
+
         db_table = OBJECT_TYPE_TO_DB_TABLE.get(object_type)
         if db_table:
             self.__change_element(db_table, element)
@@ -556,7 +574,8 @@ class Database:
             raise ValueError(f'### Database.save: Element {element} not found')
 
     def delete(self, object_type, element):
-        """Löschen eines Elements aus der Datenbank."""
+        """Database frontend: delete an element from the database."""
+
         db_table = OBJECT_TYPE_TO_DB_TABLE.get(object_type)
         if db_table:
             self.__delete_element(db_table, element)
@@ -564,7 +583,8 @@ class Database:
             raise ValueError(f'### Database.delete: Element {element} not found')
 
     def load(self, object_type, only_active=True):
-        """Load the elements of a certain type from the database."""
+        """Database frontend: load data from the database."""
+
         db_table = OBJECT_TYPE_TO_DB_TABLE.get(object_type)
         if db_table:
             print(f'### Database: Loading {db_table} from database')
@@ -574,10 +594,10 @@ class Database:
     
 
 class DataInterface:
-    """Daten-Interface für die GUI."""
+    """Data-interface for the application."""
 
     def __init__(self, data_path=None):
-        """Initialisierung des Daten-Interfaces."""
+        """Initializes the data-interface."""
         
         # Datenbank initialisieren
         self.data_path = data_path
@@ -643,7 +663,7 @@ class DataInterface:
         # self.bills.add_listener(ListListener(self, self.archivables))
 
     def update_object(self, object_type, row=None, **data):
-        """Update an object."""
+        """Updates the additional, non db-values of an object."""
 
         def format_euro(value):
             return '{:.2f} €'.format(value).replace('.', ',')
@@ -701,16 +721,24 @@ class DataInterface:
 
         return init_data
 
+    def is_first_start(self):
+        """Returns if the app is started for the first time."""
+
+        return self.db.is_first_start()
+
     def initialized(self):
-        """Prüft, ob die Anwendung initialisiert wurde. Default ist False."""
+        """Returns if the app is initialized. Default is False."""
+
         return self.init.get('initialized', False)
     
     def allowance_active(self):
-        """Prüft, ob Beihilfe aktiviert ist. Default ist True."""
+        """Returns if the allowance functionality is active."""
+
         return self.init.get('beihilfe', True)
 
     def reset(self):
-        """Zurücksetzen des Daten-Interfaces."""
+        """Resets all data and the database."""
+
         print(f'### DatenInterface.reset: resetting all data')
 
         # delete list sources
@@ -732,21 +760,19 @@ class DataInterface:
         # initialize object again
         self.__init__(self.data_path)
 
-    def is_first_start(self):
-        """Prüft, ob das Programm zum ersten Mal gestartet wird."""
-        return self.db.is_first_start()
-
     def save_init_file(self):
-        """Speichert die Initialisierungsdatei."""
+        """Saves the init file."""
+
         self.db.save_init_file(**self.init)
         print(self.init)
 
     def load_init_file(self):
-        """Lädt die Initialisierungsdatei und speichert sie in der Klassenvariable."""
+        """Loads the init file."""
+
         self.init = self.db.load_init_file()
 
     def archive(self):
-        """Archiviert alle archivierbaren Buchungen."""
+        """Archives all archivable bookings (set them to inactive)."""
 
         if not self.archivables:
             print(f'### DatenInterface.archive: No archivables found')
@@ -764,7 +790,8 @@ class DataInterface:
         self.archivables.clear()
 
     def get_element_by_dbid(self, list_source, db_id):
-        """Gibt ein Element einer Liste anhand der ID zurück."""
+        """Gets an element of a list source by its database id."""
+
         try:
             return list_source.find({'db_id': db_id})
         except ValueError:
@@ -772,7 +799,8 @@ class DataInterface:
             return None
 
     def get_allowance_by_name(self, name):
-        """Gibt den Beihilfesatz einer Person anhand des Namens zurück."""
+        """Gets the allowance percentage for a person by its name."""
+
         try:
             person = self.persons.find({'name': name})
             print(f'### DatenInterface.get_allowance_by_name: Found allowance percentage for person {name}')
@@ -781,7 +809,8 @@ class DataInterface:
             return None
         
     def get_element_index_by_dbid(self, list_source, db_id):
-        """Ermittelt den Index eines Elements einer Liste anhand der ID."""
+        """Gets the index of an element of a list source by its database id."""
+
         try:
             row = list_source.find({'db_id': db_id})
             return list_source.index(row)
@@ -790,7 +819,7 @@ class DataInterface:
             return None
         
     def new(self, object_type, data, **kwargs):
-        """Erstellt ein neues Element."""
+        """Creates a new element and returns its database id."""
 
         if object_type in BILL_TYPES:
             # update the bill data and add it to the list source to create the row object
@@ -867,7 +896,7 @@ class DataInterface:
             raise ValueError(f'### DataInterface.new_element: element type not known')     
 
     def save(self, object_type, element, update=True, **kwargs):
-        """Speichert ein Element."""
+        """Saves an element and updates the connected values."""
 
         if isinstance(element, dict):
             old_dict = element
@@ -906,7 +935,7 @@ class DataInterface:
             raise ValueError(f'### DataInterface.save_element: element type not known')
             
     def delete(self, object_type, element):
-        """Löscht ein Element und gibt zurück ob es erfolgreich war."""
+        """Deletes an element and updates the connected values."""
 
         if object_type in BILL_TYPES:
             if isinstance(element, dict):
@@ -990,7 +1019,7 @@ class DataInterface:
             raise ValueError(f'### DataInterface.delete_element: element type not known')
             
     def deactivate(self, object_type, element):
-        """Deaktiviert ein Element und gibt zurück, ob es erfolgreich war."""
+        """Deactivates an element and updates the connected values."""
         
         if object_type in BILL_TYPES:
             if isinstance(element, dict):
@@ -1070,7 +1099,7 @@ class DataInterface:
             raise ValueError(f'### DataInterface.deactivate_element: element type not known')
             
     def pay_receive(self, object_type, element, date=None):
-        """Rechnung bezahlen oder Beihilfe/PKV erhalten."""
+        """Marks a bill as paid or an allowance/insurance as received and updates the connected values."""
 
         if object_type in BILL_TYPES:
             element.bezahlt = True
@@ -1085,7 +1114,8 @@ class DataInterface:
             self.save(object_type, element)
 
     def __check_person_used(self, person):
-        """Prüft, ob eine Person verwendet wird."""
+        """Returns if a person is used in a bill."""
+
         try:
             bill = self.bills.find({'person_id': person.db_id})
             print(f'### DatenInterface.__check_person_used: Person with id {person.db_id} is used in bill with id {bill.db_id}')
@@ -1094,7 +1124,8 @@ class DataInterface:
             return False
         
     def __check_institution_used(self, institution):
-        """Prüft, ob eine Einrichtung verwendet wird."""
+        """Returns if an institution is used in a bill."""
+
         try:
             bill = self.bills.find({'einrichtung_id': institution.db_id})
             print(f'### DatenInterface.__check_institution_used: Institution with id {institution.db_id} is used in bill with id {bill.db_id}')
@@ -1103,7 +1134,7 @@ class DataInterface:
             return False
 
     def update_submit_amount(self, object_type, element):
-        """Aktualisiert eine Beihilfe-Einreichung"""
+        """Updates the amount of an allowance or insurance and saves it in the database."""
 
         if not (object_type in ALLOWANCE_TYPES or object_type in INSURANCE_TYPES):
             raise ValueError(f'### DatenInterface.update_submit_amount: Object type {object_type} is not an allowance or insurance')
@@ -1129,7 +1160,7 @@ class DataInterface:
             self.delete(object_type, element)
 
     def update_bills(self):
-        """Aktualisiert die referenzierten Werte in den Rechnungen und speichert sie in der Datenbank."""
+        """Updates the bills and checks if the connected values are still valid."""
 
         for index, bill in enumerate(self.bills):
 
@@ -1175,7 +1206,7 @@ class DataInterface:
                 self.db.save(BILL_OBJECT, self.bills[index])
         
     def update_open_bookings(self):
-        """Aktualisiert die Liste der offenen Buchungen."""
+        """Updates the list of open bookings."""
 
         self.open_bookings.clear()
         
@@ -1214,7 +1245,8 @@ class DataInterface:
                 })
 
     def update_allowances_bills(self):
-        """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die Beihilfe."""
+        """Updates the list of not yet submitted bills for the allowance."""
+
         self.allowances_bills.clear()
         for bill in self.bills:
             if not bill.beihilfe_id:
@@ -1222,7 +1254,8 @@ class DataInterface:
                 self.allowances_bills.append(dict)
 
     def update_insurances_bills(self):
-        """Aktualisiert die Liste der noch nicht eingereichten Rechnungen für die PKV."""
+        """Updates the list of not yet submitted bills for the insurance."""
+
         self.insurances_bills.clear()
         for bill in self.bills:
             if not bill.pkv_id:
@@ -1230,7 +1263,8 @@ class DataInterface:
                 self.insurances_bills.append(dict)
     
     def update_open_sum(self):
-        """Aktualisiert die Summe der offenen Buchungen."""
+        """Updates the sum of all open bookings."""
+
         sum = 0.00
         
         if self.bills is not None:
@@ -1258,7 +1292,7 @@ class DataInterface:
         self.open_sum.value = sum
 
     def update_archivables(self):
-        """Ermittelt die archivierbaren Elemente des Daten-Interfaces."""
+        """Updates the list of archivable bookings."""
 
         temp = {
             'rechnung' : [],
