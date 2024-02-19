@@ -658,28 +658,6 @@ class Kontolupe(toga.App):
         # Erstelle die Menüs
         self.create_commands()
 
-        # Verknüpfe die ListSources mit den Tabellen
-        self.table_bills.data = self.daten.bills
-        self.table_allowance.data = self.daten.allowances
-        self.table_insurance.data = self.daten.insurances
-        self.table_institutions.data = self.daten.institutions
-        self.table_persons.data = self.daten.persons
-        self.form_beihilfe_bills.data = self.daten.allowances_bills
-        self.form_pkv_bills.data = self.daten.insurances_bills
-
-        # Aktualisiere die weiteren Verknüpfungen
-        self.open_sum.set_value_source(self.daten.open_sum)
-        self.table_open_bookings.set_list_source(self.daten.open_bookings)
-        self.mainpage_section_bills.set_list_source(self.daten.bills)
-        self.mainpage_section_allowance.set_list_source(self.daten.allowances_bills)
-        self.mainpage_section_insurance.set_list_source(self.daten.insurances_bills)
-        self.button_start_archiv.set_list_source(self.daten.archivables)
-        self.form_bill_person.set_items(self.daten.persons)
-        self.form_bill_einrichtung.set_items(self.daten.institutions)
-        self.mainpage_table_buttons.set_connection('refresh', self.daten.open_bookings)
-        self.list_allowance_buttons.set_connection('new_allowance', self.daten.allowances_bills)
-        self.list_insurance_buttons.set_connection('new_insurance', self.daten.insurances_bills)
-
         # Einstellungen-Seite anpassen
         self.settings_automatic_booking.set_value(False)
         self.settings_automatic_archive.set_value(False)

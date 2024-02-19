@@ -214,6 +214,15 @@ class Database:
             self.init_file.unlink()
             print(f'### Database: Deleted init file {self.init_file}')
 
+        # Speicherorte überprüfen und aktualisieren
+        self.__check_paths()
+
+        # Datenbank-Datei initialisieren und ggf. aktualisieren
+        self.__create_db()
+
+        # Aktualisiere die init-Datei
+        self.__update_init()
+
     def __check_paths(self):
         """Checks if the data is saved at the correct path and moves it if necessary."""
 
@@ -602,9 +611,6 @@ class DataInterface:
         # Datenbank initialisieren
         self.data_path = data_path
         self.db = Database(data_path)
-
-        # Init-Dictionary laden
-        self.init = self.db.load_init_file()
         
         self.accessors_open_bookings = [
                 'db_id',                        # Datenbank-Id des jeweiligen Elements
@@ -634,6 +640,17 @@ class DataInterface:
 
         self.open_sum = ValueSource()
 
+        # Listeners
+        self.bills.add_listener(SubmitsListener(self.allowances_bills, self.insurances_bills))
+
+        self.__init_data()
+
+    def __init_data(self):
+        """Initial loading of the data after reset or first start."""
+
+        # Init-Dictionary laden
+        self.init = self.db.load_init_file()
+
         # Aktive Einträge aus der Datenbank laden
         object_types = [
             (PERSON_OBJECT, self.persons),
@@ -651,16 +668,9 @@ class DataInterface:
 
         # Listen initialisieren
         self.update_bills()
-        self.update_allowances_bills()
-        self.update_insurances_bills()
         self.update_open_bookings()
         self.update_archivables()
         self.update_open_sum()
-
-        # Listeners
-        self.bills.add_listener(SubmitsListener(self.allowances_bills, self.insurances_bills))
-        # self.bills.add_listener(ListListener(self, self.open_bookings))
-        # self.bills.add_listener(ListListener(self, self.archivables))
 
     def update_object(self, object_type, row=None, **data):
         """Updates the additional, non db-values of an object."""
@@ -741,24 +751,23 @@ class DataInterface:
 
         print(f'### DatenInterface.reset: resetting all data')
 
-        # delete list sources
-        del self.bills
-        del self.allowances_bills
-        del self.insurances_bills
-        del self.institutions
-        del self.persons
-        del self.allowances
-        del self.insurances
-        del self.open_bookings
-        del self.archivables
-        del self.open_sum
-        del self.init
-
         # reset database
         self.db.reset()
 
-        # initialize object again
-        self.__init__(self.data_path)
+        # reset lists
+        self.bills.clear()
+        self.allowances.clear()
+        self.insurances.clear()
+        self.institutions.clear()
+        self.persons.clear()
+        self.allowances_bills.clear()
+        self.insurances_bills.clear()
+        self.open_bookings.clear()
+        self.archivables.clear()
+        self.open_sum.value = 0
+
+        # Daten initialisieren
+        self.__init_data()
 
     def save_init_file(self):
         """Saves the init file."""
