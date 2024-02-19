@@ -16,10 +16,10 @@ from kontolupe.gui import *
 from kontolupe.general import *
 
 class Kontolupe(toga.App):
-    """Die Hauptklasse der Anwendung."""
+    """This is the main class of the application."""
 
     def __init__(self, *args, **kwargs):
-        """Initialisierung der Anwendung."""
+        """Initializes the main class and sets some helper variables."""
         super().__init__(*args, **kwargs)
 
         # Hilfsvariablen zur Bearbeitung von Rechnungen
@@ -51,7 +51,7 @@ class Kontolupe(toga.App):
 
 
     def show_settings(self, widget):
-        """Zeigt die Seite für die Einstellungen der App."""
+        """Shows the settings page."""
 
         # update the switches states
         self.settings_automatic_booking.set_value(self.daten.init.get('automatic_booking', False))
@@ -61,7 +61,7 @@ class Kontolupe(toga.App):
 
 
     def on_change_setting(self, widget):
-        """Reagiert auf die Änderung einer Einstellung."""
+        """Saves the settings when they are changed."""
         if self.daten.initialized():
             self.daten.init['automatic_booking'] = self.settings_automatic_booking.get_value()
             self.daten.init['automatic_archive'] = self.settings_automatic_archive.get_value()
@@ -69,7 +69,7 @@ class Kontolupe(toga.App):
 
 
     def create_settings(self):
-        """Erstellt die Seite mit den Einstellungen der App."""
+        """Creates the settings page."""
 
         # Container für die Seite
         self.box_settings = toga.Box(style=style_box_column)
@@ -110,7 +110,7 @@ class Kontolupe(toga.App):
 
 
     async def check_open_bills(self, widget):
-        """Aktualisiert den Bezahlstatus der offenen Rechnungen."""
+        """Checks if there are open bills and asks if they have been paid or pays them automatically."""
         
         # loop through the list of open bookings
         # if there is a bill, check if there is a payment date set
@@ -156,15 +156,16 @@ class Kontolupe(toga.App):
 
 
     def update_buttons(self, widget):
-        """Aktualisiert die Anzeigen und Aktivierungszustand der Buttons von Tabellen."""
+        """Updates the status of the buttons based on the selection in the tables."""
 
-        # Ändert den Aktivierungszustand der zur aufrufenden Tabelle gehörenden Buttons.
+        # Retrieve the status of the selection in the table
         status = False
         if widget and type(widget) == toga.Table and widget.selection is not None:
             status = True
         else:
             status = False
 
+        # set the button status based on the widget
         match widget:
             case self.table_bills:
                 self.list_bills_buttons.set_enabled('delete_bill', status)
@@ -191,7 +192,12 @@ class Kontolupe(toga.App):
 
 
     def info_dialog_booking(self, widget, row=None):
-        """Zeigt die Info einer Buchung."""
+        """
+        Shows an info dialog with the details of a specific booking.
+        
+        It can be used for the help buttons in the list of open bookings
+        or by activating entries in the tables of bills, allowances and insurances.
+        """
         
         # Initialisierung Variablen
         titel = ''
@@ -274,7 +280,8 @@ class Kontolupe(toga.App):
 
 
     def go_back(self, widget):
-        """Ermittelt das Ziel der Zurück-Funktion und ruft die entsprechende Seite auf."""
+        """Chooses the page to go back to based on the value of self.back_to."""
+
         match self.back_to:
             case 'startseite':
                 self.show_mainpage(widget)
@@ -305,7 +312,8 @@ class Kontolupe(toga.App):
 
 
     def create_webview(self):
-        """Erzeugt eine WebView zur Anzeige von Webseiten."""
+        """Creates the webview page."""
+
         self.box_webview = toga.Box(style=style_box_column)
         box_webview_top = toga.Box(style=style_box_column_dunkel)
         box_webview_top.add(toga.Button('Zurück', style=style_button, on_press=self.go_back))
@@ -315,7 +323,7 @@ class Kontolupe(toga.App):
 
 
     async def show_webview(self, widget):
-        """Zeigt die WebView zur Anzeige von Webseiten."""
+        """Shows the webview and chooses the url to show based on the widget that was pressed."""
 
         match widget:
             case self.info_institution_website.button:
@@ -329,7 +337,7 @@ class Kontolupe(toga.App):
 
 
     def show_statistics(self, widget):
-        """Zeigt die Seite mit der Statistik."""
+        """Shows the statistics page."""
 
         self.statistic_initialized = False
 
@@ -383,13 +391,9 @@ class Kontolupe(toga.App):
         self.main_window.content = self.sc_statistics
 
 
-    def statistics_changed(self, widget):
-        """Reagiert auf Änderungen in der Statistik-Auswahl."""
-        pass
-
-
     def create_statistics(self):
-        """Erstellt die Seite mit der Statistik."""
+        """Creates the statistics page."""
+
         self.box_statistics = toga.Box(style=style_box_column)
         self.sc_statistics = toga.ScrollContainer(content=self.box_statistics, style=style_scroll_container)
 
@@ -464,23 +468,13 @@ class Kontolupe(toga.App):
         )
         self.box_statistics.add(self.statistics_step)
 
-        # ButtonBox
-        # self.statistics_buttons = ButtonBox(
-        #     labels  = ['Anzeigen', 'Exportieren'],
-        #     targets = [self.draw_statistic, self.export_statistic],
-        #     ids     = ['draw_statistic', 'export_statistic'],
-        #     enabled = [True, False]
-        # )  
-        # self.box_statistics.add(self.statistics_buttons)
-
         self.box_statistics.add(SubtextDivider('Auswertung'))
-
         self.statistics_graph = StatisticsGraph(on_resize = self.draw_statistic)
         self.box_statistics.add(self.statistics_graph)
 
 
     def draw_statistic(self, widget, width=None, height=None, **kwargs):
-        """Zeichnet die Statistik."""
+        """Draws the statistic based on the current selection."""
 
         if self.statistic_initialized:
 
@@ -497,13 +491,8 @@ class Kontolupe(toga.App):
             self.statistics_graph.draw(self.main_window.size[0], data_selection, self.statistic_data)
 
 
-    def export_statistic(self, widget):
-        """Exportiert die Statistik."""
-        pass
-
-
     def show_init_page(self, widget):
-        """Zeigt die Seite zur Initialisierung der Anwendung."""
+        """Shows the initialisation page."""
 
         # Aktualisiere die Anzeigen
         self.update_init_page(widget)
@@ -513,7 +502,7 @@ class Kontolupe(toga.App):
 
 
     def update_init_page(self, widget):
-        """Aktualisiert die Initialisierungsseite."""
+        """Updates the initialisation page based on the current data."""
 
         # Setze das Formular zurück
         # self.init_persons_name.set_value('')
@@ -579,7 +568,12 @@ class Kontolupe(toga.App):
 
 
     def create_init_page(self):
-        """Erzeugt die Seite zur Initialisierung der Anwendung nach dem ersten Start."""
+        """
+        Creates the initialisation page.
+        
+        This page is used to set up the app for the first time or
+        to set it up after a reset.
+        """
 
         # Container für die Seite
         self.sc_init_page = toga.ScrollContainer(style=style_scroll_container)
@@ -602,7 +596,7 @@ class Kontolupe(toga.App):
 
         self.label_beihilfe = toga.Label('Private KV und Beihilfe', style=style_label_subline_hell)
         self.box_init_beihilfe_content.add(self.label_beihilfe)
-        self.init_beihilfe = toga.Switch('', style=style_switch_center_hell, on_change=self.init_beihilfe_changed, value=True)
+        self.init_beihilfe = toga.Switch('', style=style_switch_center_hell, on_change=self.init_allowance_changed, value=True)
         box_init_beihilfe_switch = toga.Box(style=style_switch_box_center, children=[self.init_beihilfe])
         self.box_init_beihilfe_content.add(box_init_beihilfe_switch)
         self.box_init_beihilfe_content.add(toga.Label('Aktiviere diese Funktion, wenn Du beihilfeberechtigt bist.', style=style_description_hell))
@@ -650,15 +644,16 @@ class Kontolupe(toga.App):
         self.box_init_page.add(self.box_init_page_button)
 
 
-    def init_beihilfe_changed(self, widget):
-        """Reagiert auf die Änderung der Beihilfeeinstellung während der Initialisierung."""
+    def init_allowance_changed(self, widget):
+        """Racts to the change of the allowance switch."""
+
         self.daten.init['beihilfe'] = widget.value
         self.daten.save_init_file()
         self.update_init_page(widget)
 
 
     def finish_init(self, widget):
-        """Speichert die Daten und beendet die Initialisierung."""
+        """Finish the initialisation and start the app."""
 
         # Erstelle die Menüs
         self.create_commands()
@@ -699,7 +694,7 @@ class Kontolupe(toga.App):
 
 
     def create_mainpage(self):
-        """Erzeugt die Startseite der Anwendung."""
+        """Creates the main page of the app."""
 
         # Container für die Startseite
         self.box_mainpage = toga.Box(style=style_box_column)
@@ -758,7 +753,7 @@ class Kontolupe(toga.App):
         # Weitere Funktionen
         # self.button_start_personen = toga.Button('Personen verwalten', style=style_button, on_press=self.show_list_persons)
         # self.button_start_einrichtungen = toga.Button('Einrichtungen verwalten', style=style_button, on_press=self.show_list_institutions)
-        self.button_start_archiv = ArchiveButton(self.daten.archivables, self.archivieren_bestaetigen)
+        self.button_start_archiv = ArchiveButton(self.daten.archivables, self.archive)
 
         self.box_startseite_daten = toga.Box(style=style_section_daten)
         # self.box_startseite_daten.add(self.button_start_personen)
@@ -768,7 +763,7 @@ class Kontolupe(toga.App):
 
 
     def show_mainpage(self, widget):
-        """Zurück zur Startseite."""
+        """Shows the main page of the app."""
 
         if self.daten.allowance_active():
             self.mainpage_box_section_allowance.add(self.mainpage_section_allowance)
@@ -788,7 +783,7 @@ class Kontolupe(toga.App):
 
 
     def create_list_bills(self):
-        """Erzeugt die Seite, auf der die Rechnungen angezeigt werden."""
+        """Creates the page with the list of bills."""
 
         # Container für die Seite mit der Liste der Rechnungen
         self.box_list_bills = toga.Box(style=style_box_column)
@@ -825,12 +820,13 @@ class Kontolupe(toga.App):
 
 
     def show_list_bills(self, widget):
-        """Zeigt die Seite mit der Liste der Rechnungen."""
+        """Shows the page with the list of bills."""
+
         self.main_window.content = self.box_list_bills
 
 
     def create_form_bill(self):
-        """ Erzeugt das Formular zum Erstellen und Bearbeiten einer Rechnung."""
+        """Creates the page for the form to enter a new bill or edit an existing one."""
         
         # Container für das Formular
         self.sc_form_bill = toga.ScrollContainer(style=style_scroll_container)
@@ -911,7 +907,7 @@ class Kontolupe(toga.App):
 
 
     def show_form_bill_new(self, widget):
-        """Zeigt die Seite zum Erstellen einer Rechnung."""
+        """Shows the page to enter a new bill."""
         
         # Setze die Eingabefelder zurück
         self.form_bill_betrag.set_value('')
@@ -945,7 +941,7 @@ class Kontolupe(toga.App):
 
     
     def show_form_bill_edit(self, widget):
-        """Zeigt die Seite zum Bearbeiten einer Rechnung."""
+        """Shows the page to edit a bill."""
 
         # Ermittle den Index der ausgewählten Rechnung
         if widget in self.list_bills_buttons.buttons:
@@ -1000,7 +996,7 @@ class Kontolupe(toga.App):
 
 
     async def save_bill(self, widget):
-        """Prüft die Eingaben und speichert die Rechnung."""
+        """Checks the input and saves the bill."""
 
         nachricht = ''
 
@@ -1121,7 +1117,8 @@ class Kontolupe(toga.App):
 
 
     async def delete_bill(self, widget):
-        """Löscht eine Rechnung."""
+        """Deletes a bill."""
+
         if self.table_bills.selection:
             if await self.main_window.question_dialog('Rechnung löschen', 'Soll die ausgewählte Rechnung wirklich gelöscht werden?'): 
                 # Index der ausgewählten Rechnung ermitteln
@@ -1147,7 +1144,7 @@ class Kontolupe(toga.App):
 
 
     def create_list_institutions(self):
-        """Erzeugt die Seite, auf der die Einrichtungen angezeigt werden."""
+        """Creates the page with the list of institutions."""
 
         # Container
         self.box_list_institutions = toga.Box(style=style_box_column)
@@ -1184,12 +1181,14 @@ class Kontolupe(toga.App):
 
 
     def show_list_institutions(self, widget):
-        """Zeigt die Seite mit der Liste der Einrichtungen."""
+        """Shows the page with the list of institutions."""
+
         self.main_window.content = self.box_list_institutions
 
 
     def create_form_institution(self):
-        """Erzeugt das Formular zum Erstellen und Bearbeiten einer Einrichtung."""
+        """Creates the page for the form to enter a new institution or edit an existing one."""
+
         self.sc_form_institution = toga.ScrollContainer(style=style_scroll_container)
         self.box_form_institution = toga.Box(style=style_box_column)
         self.sc_form_institution.content = self.box_form_institution
@@ -1233,7 +1232,8 @@ class Kontolupe(toga.App):
 
 
     def show_form_institution_new(self, widget):
-        """Zeigt die Seite zum Erstellen einer Einrichtung."""
+        """Shows the page to enter a new institution."""
+
         # Setze die Eingabefelder zurück
         self.form_institution_name.set_value('')
         self.form_institution_strasse.set_value('')
@@ -1253,7 +1253,7 @@ class Kontolupe(toga.App):
 
 
     def show_form_institution_edit(self, widget):
-        """Zeigt die Seite zum Bearbeiten einer Einrichtung."""
+        """Shows the page to edit an institution."""
         
         # Prüfe ob eine Einrichtung ausgewählt ist
         if self.table_institutions.selection:
@@ -1282,7 +1282,8 @@ class Kontolupe(toga.App):
 
 
     async def save_institution(self, widget):
-        """Prüft die Eingaben und speichert die Einrichtung."""
+        """Checks the input and saves the institution."""
+
         nachricht = ''
 
         # Überprüfe die Eingaben auf Richtigkeit
@@ -1396,7 +1397,7 @@ class Kontolupe(toga.App):
 
 
     def create_info_institution(self):
-        """Erzeugt die Seite, auf der die Details einer Einrichtung angezeigt werden."""
+        """Creates the page to display the details of an institution."""
 
         # Container
         self.sc_info_institution = toga.ScrollContainer(style=style_scroll_container)
@@ -1434,7 +1435,8 @@ class Kontolupe(toga.App):
 
 
     def show_info_institution(self, widget, row=None):
-        """Zeigt die Seite mit den Details einer Einrichtung."""
+        """Shows the page with the details of an institution."""
+
         # Prüfe, ob eine Einrichtung ausgewählt ist
         if self.table_institutions.selection:
 
@@ -1465,7 +1467,8 @@ class Kontolupe(toga.App):
 
     
     async def delete_institution(self, widget):
-        """Bestätigt das Löschen einer Einrichtung."""
+        """Deletes an institution."""
+
         if self.table_institutions.selection:
             if await self.main_window.question_dialog('Einrichtung löschen', 'Soll die ausgewählte Einrichtung wirklich gelöscht werden?'):
                 if not self.daten.deactivate(INSTITUTION_OBJECT, self.table_institutions.selection):
@@ -1477,7 +1480,7 @@ class Kontolupe(toga.App):
 
 
     def create_list_persons(self):
-        """Erzeugt die Seite, auf der die Personen angezeigt werden."""
+        """Creates the page with the list of persons."""
 
         # Container
         self.box_list_persons = toga.Box(style=style_box_column)
@@ -1512,7 +1515,7 @@ class Kontolupe(toga.App):
 
 
     def show_list_persons(self, widget):
-        """Zeigt die Seite mit der Liste der Personen."""
+        """Shows the page with the list of persons."""
         
         if not self.daten.allowance_active() and 'Beihilfe' in self.table_persons.headings:
             self.table_persons.remove_column(1)
@@ -1523,7 +1526,7 @@ class Kontolupe(toga.App):
 
 
     def create_form_person(self):
-        """Erzeugt das Formular zum Erstellen und Bearbeiten einer Person."""
+        """Creates the page for the form to enter a new person or edit an existing one."""
 
         # Container
         self.sc_form_person = toga.ScrollContainer(style=style_scroll_container)
@@ -1554,7 +1557,8 @@ class Kontolupe(toga.App):
 
 
     def show_form_persons_new(self, widget):
-        """Zeigt die Seite zum Erstellen einer Person."""
+        """Shows the page to enter a new person."""
+
         # Setze die Eingabefelder zurück
         self.form_person_name.set_value('')
         self.form_person_beihilfe.set_value('')
@@ -1573,7 +1577,7 @@ class Kontolupe(toga.App):
 
 
     def show_form_persons_edit(self, widget):
-        """Zeigt die Seite zum Bearbeiten einer Person."""
+        """Shows the page to edit a person."""
             
         # Prüfe ob eine Person ausgewählt ist
         if self.table_persons.selection:
@@ -1601,7 +1605,7 @@ class Kontolupe(toga.App):
 
 
     async def save_person(self, widget):
-        """Prüft die Eingaben und speichert die Person."""
+        """Checks the input and saves the person."""
 
         # Überprüfe die Eingaben auf Richtigkeit
 
@@ -1693,7 +1697,8 @@ class Kontolupe(toga.App):
 
 
     async def delete_person(self, widget):
-        """Bestätigt das Löschen einer Person."""
+        """Deletes a person."""
+
         if self.table_persons.selection:
             if await self.main_window.question_dialog('Person löschen', 'Soll die ausgewählte Person wirklich gelöscht werden?'):
                 if not self.daten.deactivate(PERSON_OBJECT, self.table_persons.selection):
@@ -1705,7 +1710,7 @@ class Kontolupe(toga.App):
 
 
     def create_list_beihilfe(self):
-        """Erzeugt die Seite, auf der die Beihilfe-Einreichungen angezeigt werden."""
+        """Creates the page with the list of allowance submissions."""
         
         # Container
         self.box_list_allowance = toga.Box(style=style_box_column)
@@ -1742,7 +1747,7 @@ class Kontolupe(toga.App):
 
 
     def create_list_pkv(self):
-        """Erzeugt die Seite, auf der die PKV-Einreichungen angezeigt werden."""
+        """Creates the page with the list of PKV submissions."""
 
         # Container
         self.box_list_insurance = toga.Box(style=style_box_column)
@@ -1779,19 +1784,21 @@ class Kontolupe(toga.App):
 
 
     def show_list_beihilfe(self, widget):
-        """Zeigt die Seite mit der Liste der Beihilfepakete."""
+        """Shows the page with the list of allowance submissions."""
+
         self.update_buttons(self.table_allowance)
         self.main_window.content = self.box_list_allowance
 
     
     def show_list_pkv(self, widget):
-        """Zeigt die Seite mit der Liste der PKV-Einreichungen."""
+        """Shows the page with the list of PKV submissions."""
+
         self.update_buttons(self.table_insurance)
         self.main_window.content = self.box_list_insurance
 
     
     def create_form_beihilfe(self):
-        """Erzeugt das Formular zum Erstellen und Bearbeiten einer Beihilfe-Einreichung."""
+        """Creates the page for the form to enter a new allowance submission."""
 
         # Container
         self.sc_form_beihilfe = toga.ScrollContainer(style=style_scroll_container)
@@ -1839,7 +1846,7 @@ class Kontolupe(toga.App):
 
 
     def create_form_pkv(self):
-        """Erzeugt das Formular zum Erstellen und Bearbeiten einer PKV-Einreichung."""
+        """Creates the page for the form to enter a new PKV submission."""
 
         # Container
         self.sc_form_pkv = toga.ScrollContainer(style=style_scroll_container)
@@ -1887,7 +1894,8 @@ class Kontolupe(toga.App):
 
 
     def on_select_beihilfe_bills(self, widget):
-        """Ermittelt die Summe des Beihilfe-Anteils der ausgewählten Rechnungen."""
+        """Calculates the sum of the allowance for the selected bills."""
+
         summe = 0
         for sel in widget.selection:
             bill = self.daten.get_element_by_dbid(self.daten.bills, sel.db_id)
@@ -1896,7 +1904,8 @@ class Kontolupe(toga.App):
 
 
     def on_select_pkv_bills(self, widget):
-        """Ermittelt die Summe des PKV-Anteils der ausgewählten Rechnungen."""
+        """Calculates the sum of the PKV for the selected bills."""
+
         summe = 0
         for sel in widget.selection:
             bill = self.daten.get_element_by_dbid(self.daten.bills, sel.db_id)
@@ -1908,7 +1917,8 @@ class Kontolupe(toga.App):
 
 
     def show_form_beihilfe_new(self, widget):
-        """Zeigt die Seite zum Erstellen eines Beihilfepakets."""
+        """Shows the page to enter a new allowance submission."""
+
         # Setze die Eingabefelder zurück
         self.on_select_beihilfe_bills(self.form_beihilfe_bills)
 
@@ -1924,7 +1934,7 @@ class Kontolupe(toga.App):
 
 
     def show_form_pkv_new(self, widget):
-        """Zeigt die Seite zum Erstellen einer PKV-Einreichung."""
+        """Shows the page to enter a new PKV submission."""
         # Setze die Eingabefelder zurück
         self.on_select_pkv_bills(self.form_pkv_bills)
         self.form_pkv_datum.set_value(datetime.now())
@@ -1939,7 +1949,7 @@ class Kontolupe(toga.App):
 
 
     def save_beihilfe(self, widget):
-        """Prüft die Eingaben und speichert die Beihilfe-Einreichung."""
+        """Checks the input and saves the allowance submission."""
 
         nachricht = ''
 
@@ -1977,7 +1987,7 @@ class Kontolupe(toga.App):
 
 
     def save_pkv(self, widget):
-        """Prüft die Eingaben und speichert die PKV-Einreichung."""
+        """Checks the input and saves the PKV submission."""
 
         nachricht = ''
 
@@ -2015,28 +2025,31 @@ class Kontolupe(toga.App):
 
 
     async def delete_beihilfe(self, widget):
-        """Löscht eine Beihilfe-Einreichung."""
+        """Deletes an allowance submission."""
+
         if self.table_allowance.selection:
             if await self.main_window.question_dialog('Beihilfe-Einreichung zurücksetzen', 'Soll die ausgewählte Beihilfe-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.'):
                 self.daten.delete(ALLOWANCE_OBJECT, self.table_allowance.selection)
 
 
     async def delete_pkv(self, widget):
-        """Löscht eine PKV-Einreichung."""
+        """Deletes a PKV submission."""
+
         if self.table_insurance.selection:
             if await self.main_window.question_dialog('PKV-Einreichung zurücksetzen', 'Soll die ausgewählte PKV-Einreichung wirklich zurückgesetzt werden? Die zugehörigen Rechnungen müssen dann erneut eingereicht werden.'):
                 self.daten.delete(INSURANCE_OBJECT, self.table_insurance.selection)
             
 
-    async def archivieren_bestaetigen(self, widget):
-        """Bestätigt das Archivieren von Buchungen."""
+    async def archive(self, widget):
+        """Archives the archivable bookings."""
+
         if await self.main_window.question_dialog('Buchungen archivieren', 'Sollen alle archivierbaren Buchungen wirklich archiviert werden? Sie werden dann in der App nicht mehr angezeigt.'):
             self.daten.archive()
             self.show_mainpage(widget)
             
 
     async def pay_receive(self, widget):
-        """Bestätigt die Bezahlung einer Rechnung oder Erstattung einer Einreichung."""
+        """Confirms the payment or receipt of a booking."""
 
         match widget.id:
             case 'receive_allowance':
@@ -2065,18 +2078,7 @@ class Kontolupe(toga.App):
 
 
     def create_commands(self):
-        """Erzeugt die Menüleiste."""
-        # Catch the about command
-        
-        # Erzeuge die Menüleiste
-        # group_bookings = toga.Group('Buchungen', parent=toga.Group.COMMANDS, order=10)
-        # group_bills = toga.Group('Rechnungen', parent=group_bookings, order=10)
-        # group_allowances = toga.Group('Beihilfe', parent=group_bookings, order=20)
-        # group_insurances = toga.Group('Private KV', parent=group_bookings, order=30)
-        # group_data = toga.Group('Weitere Daten', parent=toga.Group.COMMANDS, order=20)
-        # group_persons = toga.Group('Personen', parent=group_data, order=10)
-        # group_institutions = toga.Group('Einrichtungen', parent=group_data, order=20)
-        # group_tools = toga.Group('Tools', parent=toga.Group.COMMANDS, order=30)
+        """Creates the commands for the menu bar."""
 
         group_show = toga.Group('Anzeigen', parent=toga.Group.COMMANDS, order=10)
         group_new = toga.Group('Neu', parent=toga.Group.COMMANDS, order=20)
@@ -2100,7 +2102,7 @@ class Kontolupe(toga.App):
         self.cmd_settings = toga.Command(self.show_settings, 'Einstellungen', group=toga.Group.COMMANDS, order=30)
 
         self.cmd_statistics = toga.Command(self.show_statistics, 'Statistiken', group=group_functions, order=10,)
-        self.cmd_archive = toga.Command(self.archivieren_bestaetigen, 'Archivieren', group=group_functions, order=20, enabled=False)
+        self.cmd_archive = toga.Command(self.archive, 'Archivieren', group=group_functions, order=20, enabled=False)
         self.cmd_reset = toga.Command(self.reset_app, 'Zurücksetzen', group = group_functions, order=30)
         
         self.cmd_dataprotection = toga.Command(self.show_webview, 'Datenschutz', group=toga.Group.COMMANDS, order=50)        
@@ -2130,7 +2132,7 @@ class Kontolupe(toga.App):
 
 
     def startup(self):
-        """Laden der Daten, Erzeugen der GUI-Elemente und des Hauptfensters."""
+        """Load the data, create the gui elements and show the main window."""
 
         # Erstelle das Hauptfenster
         self.main_window = toga.MainWindow(title=self.formal_name)
@@ -2171,7 +2173,7 @@ class Kontolupe(toga.App):
 
 
     async def reset_app(self, widget):
-        """Setzt die Anwendung zurück."""
+        """Reset the application to the initial state."""
 
         # 1. Abfrage ob wirklich zurückgesetzt werden soll
         if await self.main_window.question_dialog('Zurücksetzen', 'Soll die Anwendung wirklich zurückgesetzt werden? Es werden alle Daten gelöscht.'):
@@ -2184,5 +2186,6 @@ class Kontolupe(toga.App):
         
 
 def main():
-    """Hauptschleife der Anwendung"""
+    """Main loop of the application."""
+    
     return Kontolupe()
