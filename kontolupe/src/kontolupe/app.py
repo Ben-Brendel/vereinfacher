@@ -1318,32 +1318,32 @@ class Kontolupe(toga.App):
 
         elif widget in self.form_institution_buttons.buttons and self.flag_edit_institution:
             print('+++ Einrichtung bearbeiten')
-            institution = self.daten.institutions[self.edit_institution_id]
+            institution = dict_from_row(INSTITUTION_OBJECT, self.daten.institutions[self.edit_institution_id])
 
             # Bearbeite die Einrichtung
-            if institution.name != self.form_institution_name.get_value():
-                institution.name = self.form_institution_name.get_value()
+            if institution['name'] != self.form_institution_name.get_value():
+                institution['name'] = self.form_institution_name.get_value()
             
-            if institution.strasse != self.form_institution_strasse.get_value():
-                institution.strasse = self.form_institution_strasse.get_value()
+            if institution['strasse'] != self.form_institution_strasse.get_value():
+                institution['strasse'] = self.form_institution_strasse.get_value()
 
-            if institution.plz != self.form_institution_plz.get_value():
-                institution.plz = self.form_institution_plz.get_value()
+            if institution['plz'] != self.form_institution_plz.get_value():
+                institution['plz'] = self.form_institution_plz.get_value()
             
-            if institution.ort != self.form_institution_ort.get_value():
-                institution.ort = self.form_institution_ort.get_value()
+            if institution['ort'] != self.form_institution_ort.get_value():
+                institution['ort'] = self.form_institution_ort.get_value()
             
-            if institution.telefon != self.form_institution_telefon.get_value():
-                institution.telefon = self.form_institution_telefon.get_value()
+            if institution['telefon'] != self.form_institution_telefon.get_value():
+                institution['telefon'] = self.form_institution_telefon.get_value()
             
-            if institution.email != self.form_institution_email.get_value():
-                institution.email = self.form_institution_email.get_value()
+            if institution['email'] != self.form_institution_email.get_value():
+                institution['email'] = self.form_institution_email.get_value()
             
-            if institution.webseite != self.form_institution_webseite.get_value():
-                institution.webseite = self.form_institution_webseite.get_value()
+            if institution['webseite'] != self.form_institution_webseite.get_value():
+                institution['webseite'] = self.form_institution_webseite.get_value()
             
-            if institution.notiz != self.form_institution_notiz.get_value():
-                institution.notiz = self.form_institution_notiz.get_value()
+            if institution['notiz'] != self.form_institution_notiz.get_value():
+                institution['notiz'] = self.form_institution_notiz.get_value()
 
             # Übergabe der geänderten Einrichtung an das Daten-Interface
             self.daten.save(INSTITUTION_OBJECT, institution)
@@ -1632,7 +1632,7 @@ class Kontolupe(toga.App):
 
         elif widget in self.form_person_buttons.buttons and  self.flag_edit_person:
             # Edit a person
-            person = self.daten.persons[self.edit_person_id]
+            person = dict_from_row(PERSON_OBJECT, self.daten.persons[self.edit_person_id])
 
             # Edit the person
             if person['name'] != self.form_person_name.get_value():
@@ -1643,6 +1643,8 @@ class Kontolupe(toga.App):
 
             # Save the person in the database
             self.daten.save(PERSON_OBJECT, person)
+
+            print(self.daten.persons[self.edit_person_id])
 
             # Reset flag
             self.flag_edit_person = False
