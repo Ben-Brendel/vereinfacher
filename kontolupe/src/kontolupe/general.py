@@ -2,7 +2,7 @@
 
 import toga
 
-DATAPROTECTION_URL = 'https://kontolupe.biberwerk.net/datenschutz_240218.html'
+DATAPROTECTION_URL = 'https://kontolupe.biberwerk.net/datenschutz.html'
 
 DATABASE_VERSION = 1
 
