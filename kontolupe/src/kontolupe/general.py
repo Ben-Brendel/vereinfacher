@@ -429,6 +429,31 @@ def dict_from_row(object_type, row):
         
         return {attribute['name_object']: getattr(row, attribute['name_object']) for attribute in get_attributes(object_type)}
 
+def get_index_new_element(object_type, list_source, element):
+        """Gets the index position of a new or changed element in a list source."""
+        
+        if isinstance(element, dict):
+            data = element
+        else:
+            data = dict_from_row(object_type, element)
+
+        index = 0
+        sort_key = SORT_KEYS.get(object_type)
+        
+        for row in list_source:
+            if 'datum' in sort_key:
+                if "".join(reversed(data[sort_key].split('.'))) < "".join(reversed(getattr(row, sort_key).split('.'))):
+                    index += 1
+                else:
+                    break
+            else:
+                if data[sort_key] > getattr(row, sort_key):
+                    index += 1
+                else:
+                    break
+
+        return index
+
 def table_index_selection(widget):
     """Return the index of the selected row in a Table widget."""
     

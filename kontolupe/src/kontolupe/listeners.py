@@ -57,7 +57,8 @@ class SubmitsListener(Listener):
                     self.list_allowances[index] = dict_from_row(BILL_OBJECT, item)
             except ValueError:    
                 if item.beihilfe_id is None:
-                    self.list_allowances.append(dict_from_row(BILL_OBJECT, item))
+                    index = get_index_new_element(BILL_OBJECT, self.list_allowances, item)
+                    self.list_allowances.insert(index, dict_from_row(BILL_OBJECT, item))
 
         if self.list_insurances != None:
             try:
@@ -69,7 +70,8 @@ class SubmitsListener(Listener):
                     self.list_insurances[index] = dict_from_row(BILL_OBJECT, item)
             except ValueError:
                 if item.pkv_id is None:
-                    self.list_insurances.append(dict_from_row(BILL_OBJECT, item))
+                    index = get_index_new_element(BILL_OBJECT, self.list_insurances, item)
+                    self.list_insurances.insert(index, dict_from_row(BILL_OBJECT, item))
 
 
     def clear(self):
@@ -89,7 +91,8 @@ class SubmitsListener(Listener):
                     list_index = self.list_allowances.index(list_item)
                     self.list_allowances[list_index] = dict_from_row(BILL_OBJECT, item)
                 except ValueError:
-                    self.list_allowances.append(dict_from_row(BILL_OBJECT, item))
+                    index = get_index_new_element(BILL_OBJECT, self.list_allowances, item)
+                    self.list_allowances.insert(index, dict_from_row(BILL_OBJECT, item))
                     print(f'### SubmitsListener.insert: appended item with dbid {item.db_id} and beihilfe_id {item.beihilfe_id} to list_allowances')
             else:
                 try:
@@ -105,7 +108,8 @@ class SubmitsListener(Listener):
                     list_index = self.list_insurances.index(list_item)
                     self.list_insurances[list_index] = dict_from_row(BILL_OBJECT, item)
                 except ValueError:
-                    self.list_insurances.append(dict_from_row(BILL_OBJECT, item))
+                    index = get_index_new_element(BILL_OBJECT, self.list_insurances, item)
+                    self.list_insurances.insert(index, dict_from_row(BILL_OBJECT, item))
             else:
                 try:
                     self.list_insurances.remove(self.list_insurances.find({'db_id': item.db_id}))
