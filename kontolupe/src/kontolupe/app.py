@@ -315,7 +315,7 @@ class Kontolupe(toga.App):
         """Creates the webview page."""
 
         self.box_webview = toga.Box(style=style_box_column)
-        box_webview_top = toga.Box(style=style_box_column_dunkel)
+        box_webview_top = toga.Box(style=style_box_column_dunkel_nopad)
         box_webview_top.add(toga.Button('Zurück', style=style_button, on_press=self.go_back))
         self.box_webview.add(box_webview_top)
         self.webview = toga.WebView(style=style_webview)

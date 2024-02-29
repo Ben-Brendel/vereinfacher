@@ -81,6 +81,7 @@ style_box_column_rechnungen     = Pack(direction=COLUMN, alignment=CENTER, backg
 style_box_column_beihilfe       = Pack(direction=COLUMN, alignment=CENTER, background_color=FARBE_LILA, padding_bottom=10)
 style_box_column_pkv            = Pack(direction=COLUMN, alignment=CENTER, background_color=FARBE_GRUEN, padding_bottom=10)
 style_box_column_dunkel         = Pack(direction=COLUMN, alignment=CENTER, background_color=FARBE_GRAU, padding_bottom=10)
+style_box_column_dunkel_nopad   = Pack(direction=COLUMN, alignment=CENTER, background_color=FARBE_GRAU)
 
 # Init-Seite
 style_box_part                  = Pack(direction=COLUMN, alignment=CENTER, padding_top=10, background_color=FARBE_HELLGRAU)
