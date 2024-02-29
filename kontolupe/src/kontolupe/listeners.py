@@ -93,11 +93,9 @@ class SubmitsListener(Listener):
                 except ValueError:
                     index = get_index_new_element(BILL_OBJECT, self.list_allowances, item)
                     self.list_allowances.insert(index, dict_from_row(BILL_OBJECT, item))
-                    print(f'### SubmitsListener.insert: appended item with dbid {item.db_id} and beihilfe_id {item.beihilfe_id} to list_allowances')
             else:
                 try:
                     self.list_allowances.remove(self.list_allowances.find({'db_id': item.db_id}))
-                    print(f'### SubmitsListener.insert: removed item with dbid {item.db_id} and beihilfe_id {item.beihilfe_id} from list_allowances')
                 except ValueError:
                     pass
 
@@ -122,7 +120,6 @@ class SubmitsListener(Listener):
         if self.list_allowances and item.beihilfe_id == None:
             try:
                 self.list_allowances.remove(self.list_allowances.find({'db_id': item.db_id}))
-                print(f'### SubmitsListener.remove: removed item with dbid {item.db_id} and beihilfe_id {item.beihilfe_id} from list_allowances')
             except ValueError:
                 pass
 

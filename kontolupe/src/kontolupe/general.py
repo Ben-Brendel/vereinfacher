@@ -437,22 +437,35 @@ def get_index_new_element(object_type, list_source, element):
         else:
             data = dict_from_row(object_type, element)
 
-        index = 0
         sort_key = SORT_KEYS.get(object_type)
-        
+
+        # check if the element is already in the list (element changed)
+        try:
+            list_item = list_source.find({'db_id': data['db_id']})
+            list_index = list_source.index(list_item)
+            if getattr(list_source[list_index], sort_key) == data[sort_key]:
+                return list_index
+            element_changed = True
+        except ValueError:
+            element_changed = False
+
+        new_index = 0        
         for row in list_source:
             if 'datum' in sort_key:
                 if "".join(reversed(data[sort_key].split('.'))) < "".join(reversed(getattr(row, sort_key).split('.'))):
-                    index += 1
+                    new_index += 1
                 else:
                     break
             else:
                 if data[sort_key] > getattr(row, sort_key):
-                    index += 1
+                    new_index += 1
                 else:
                     break
 
-        return index
+        if element_changed and new_index > list_index:
+            new_index -= 1
+
+        return new_index
 
 def table_index_selection(widget):
     """Return the index of the selected row in a Table widget."""

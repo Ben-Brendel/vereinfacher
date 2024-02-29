@@ -633,6 +633,14 @@ class DataInterface:
         self.institutions = ListSource(accessors = get_accessors(INSTITUTION_OBJECT))
         self.persons = ListSource(accessors = get_accessors(PERSON_OBJECT))
 
+        self.lists_accessor = {
+            BILL_OBJECT: self.bills,
+            ALLOWANCE_OBJECT: self.allowances,
+            INSURANCE_OBJECT: self.insurances,
+            INSTITUTION_OBJECT: self.institutions,
+            PERSON_OBJECT: self.persons
+        }
+
         self.allowances_bills = ListSource(accessors = get_accessors(BILL_OBJECT))
         self.insurances_bills = ListSource(accessors = get_accessors(BILL_OBJECT))
         self.open_bookings = ListSource(accessors = self.accessors_open_bookings)
@@ -933,21 +941,15 @@ class DataInterface:
             old_dict = dict_from_row(object_type, element)
             updated_dict = self.update_object(object_type, **old_dict)
 
-        if object_type in BILL_TYPES:
-            index = self.bills.index(self.bills.find({'db_id': old_dict['db_id']}))
-            self.bills[index] = updated_dict
-        elif object_type in ALLOWANCE_TYPES:
-            index = self.allowances.index(self.allowances.find({'db_id': old_dict['db_id']}))
-            self.allowances[index] = updated_dict
-        elif object_type in INSURANCE_TYPES:
-            index = self.insurances.index(self.insurances.find({'db_id': old_dict['db_id']}))
-            self.insurances[index] = updated_dict
-        elif object_type in INSTITUTION_TYPES:
-            index = self.institutions.index(self.institutions.find({'db_id': old_dict['db_id']}))
-            self.institutions[index] = updated_dict
-        elif object_type in PERSON_TYPES:
-            index = self.persons.index(self.persons.find({'db_id': old_dict['db_id']}))
-            self.persons[index] = updated_dict
+        if object_type in self.lists_accessor:
+            current_list = self.lists_accessor[object_type]
+            current_index = current_list.index(current_list.find({'db_id': old_dict['db_id']}))
+            new_index = get_index_new_element(object_type, current_list, updated_dict)
+            if current_index == new_index:
+                current_list[current_index] = updated_dict
+            else:
+                current_list.remove(current_list.find({'db_id': old_dict['db_id']}))
+                current_list.insert(new_index, updated_dict)
 
         self.db.save(object_type, element)
 
