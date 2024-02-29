@@ -29,6 +29,15 @@ OBJECT_TYPE_TO_DB_TABLE = {
     **dict.fromkeys(PERSON_TYPES, 'personen')
 }
 
+# sort keys
+SORT_KEYS = {
+    BILL_OBJECT: 'rechnungsdatum',
+    ALLOWANCE_OBJECT: 'datum',
+    INSURANCE_OBJECT: 'datum',
+    INSTITUTION_OBJECT: 'name',
+    PERSON_OBJECT: 'name',
+}
+
 # definitions of the attributes for each object type
 BILLS_ATTRIBUTES = [
     {

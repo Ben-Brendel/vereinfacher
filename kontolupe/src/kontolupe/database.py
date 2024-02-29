@@ -662,8 +662,13 @@ class DataInterface:
         ]
 
         for object_type, object_list in object_types:
+            sort_key = SORT_KEYS.get(object_type)
             list_objects = self.db.load(object_type)
-            print(f'### DataInterface.__init__: Loading {object_type} from database')
+            if sort_key and 'datum' in sort_key:
+                list_objects.sort(key=lambda obj: "".join(reversed(obj[sort_key].split('.'))), reverse=True)
+            elif sort_key and 'name' in sort_key:
+                list_objects.sort(key=lambda obj: obj[sort_key], reverse=False)
+        
             for row in list_objects:
                 object_list.append(self.update_object(object_type, **row))
 
@@ -835,15 +840,41 @@ class DataInterface:
         except ValueError:
             print(f'### DatenInterface.get_list_element_by_dbid: No element found with id {db_id}')
             return None
+
+    def __get_index_new_element(self, object_type, list_source, element):
+        """Gets the index position of a new or changed element in a list source."""
         
+        if isinstance(element, dict):
+            data = element
+        else:
+            data = dict_from_row(object_type, element)
+
+        index = 0
+        sort_key = SORT_KEYS.get(object_type)
+        
+        for row in list_source:
+            if 'datum' in sort_key:
+                if "".join(reversed(data[sort_key].split('.'))) < "".join(reversed(getattr(row, sort_key).split('.'))):
+                    index += 1
+                else:
+                    break
+            else:
+                if data[sort_key] > getattr(row, sort_key):
+                    index += 1
+                else:
+                    break
+
+        return index
+
     def new(self, object_type, data, **kwargs):
         """Creates a new element and returns its database id."""
 
         if object_type in BILL_TYPES:
             # update the bill data and add it to the list source to create the row object
             bill = self.update_object(object_type, **data)
-            bill['db_id'] = self.db.new(object_type, bill)
-            self.bills.append(bill)
+            bill['db_id'] = self.db.new(object_type, bill)            
+            index = self.__get_index_new_element(object_type, self.bills, bill)
+            self.bills.insert(index, bill)
             
             # update connected values
             if bill['bezahlt'] == False:
@@ -859,7 +890,8 @@ class DataInterface:
             # update the allowance data and add it to the list source to create the row object
             allowance = self.update_object(object_type, **data)
             allowance['db_id'] = self.db.new(object_type, allowance)
-            self.allowances.append(allowance)
+            index = self.__get_index_new_element(object_type, self.allowances, allowance)
+            self.allowances.insert(index, allowance)
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = dict_from_row(BILL_OBJECT, self.bills.find({'db_id': bill_db_id}))
@@ -882,7 +914,8 @@ class DataInterface:
             # update the insurance data and add it to the list source to create the row object
             insurance = self.update_object(object_type, **data)
             insurance['db_id'] = self.db.new(object_type, insurance)
-            self.insurances.append(insurance)
+            index = self.__get_index_new_element(object_type, self.insurances, insurance)
+            self.insurances.insert(index, insurance)
             
             for bill_db_id in kwargs.get('bill_db_ids', []):
                 bill = dict_from_row(BILL_OBJECT, self.bills.find({'db_id': bill_db_id}))
@@ -901,13 +934,15 @@ class DataInterface:
         elif object_type in INSTITUTION_TYPES:
             institution = self.update_object(object_type, **data)
             institution['db_id'] = self.db.new(object_type, institution)
-            self.institutions.append(institution)
+            index = self.__get_index_new_element(object_type, self.institutions, institution)
+            self.institutions.insert(index, institution)
             return institution['db_id']
         
         elif object_type in PERSON_TYPES:
             person = self.update_object(object_type, **data)
             person['db_id'] = self.db.new(object_type, person)
-            self.persons.append(person)
+            index = self.__get_index_new_element(object_type, self.persons, person)
+            self.persons.insert(index, person)
             return person['db_id']
         
         else:
