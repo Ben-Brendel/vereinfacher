@@ -640,10 +640,11 @@ class DataInterface:
 
         self.open_sum = ValueSource()
 
-        # Listeners
-        self.bills.add_listener(SubmitsListener(self.allowances_bills, self.insurances_bills))
-
         self.__init_data()
+
+        # Listeners
+        self.submits_listener = SubmitsListener(self.allowances_bills, self.insurances_bills)
+        self.bills.add_listener(self.submits_listener)
 
     def __init_data(self):
         """Initial loading of the data after reset or first start."""
@@ -668,6 +669,8 @@ class DataInterface:
 
         # Listen initialisieren
         self.update_bills()
+        self.update_allowances_bills()
+        self.update_insurances_bills()
         self.update_open_bookings()
         self.update_archivables()
         self.update_open_sum()
@@ -754,6 +757,9 @@ class DataInterface:
         # reset database
         self.db.reset()
 
+        # remove listeners
+        self.bills.remove_listener(self.submits_listener)
+
         # reset lists
         self.bills.clear()
         self.allowances.clear()
@@ -768,6 +774,9 @@ class DataInterface:
 
         # Daten initialisieren
         self.__init_data()
+
+        # add listeners
+        self.bills.add_listener(self.submits_listener)
 
     def save_init_file(self):
         """Saves the init file."""
