@@ -3,7 +3,7 @@
 project_name = "Vereinfacher"
 bundle = "net.biberwerk"
 version = "0.3.6"
-build = 1
+build = 2
 url = "https://biberwerk.net/kontolupe"
 license = "MIT license"
 author = "Biberwerk"
@@ -11,10 +11,9 @@ author_email = "ben@biberwerk.net"
 
 [tool.briefcase.app.kontolupe]
 formal_name = "Kontolupe"
-description = "Behalte den Überblick über Gesundheits-Rechnungen und Erstattungen von Beihilfe und PKV."
-long_description = """Mit Kontolupe kannst Du Gesundheits-Rechnungen erfassen und verwalten. 
-Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen überwachen. 
-Die App ist für die private Nutzung kostenlos."""
+description = "Behalte den Überblick über Gesundheitsrechnungen und Erstattungen von Beihilfe und PKV."
+long_description = """Mit Kontolupe kannst Du Gesundheitsrechnungen erfassen und verwalten. 
+Du kannst Beihilfe- und PKV-Einreichungen erstellen und die Erstattungen überwachen."""
 
 icon = "src/kontolupe/resources/kontolupe"
 
