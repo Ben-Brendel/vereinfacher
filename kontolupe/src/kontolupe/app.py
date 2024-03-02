@@ -1946,6 +1946,9 @@ class Kontolupe(toga.App):
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
             return
         
+        # Wechsel zur Startseite
+        self.show_mainpage(widget)
+        
         # Beginn der Speicherroutine
         if not self.flag_edit_beihilfe:
             # Erstelle ein neues Beihilfepaket
@@ -1961,9 +1964,6 @@ class Kontolupe(toga.App):
 
             # Speichere das Beihilfepaket in der Datenbank
             self.daten.new(ALLOWANCE_OBJECT, allowance, bill_db_ids=bill_db_ids)
-
-        # Wechsel zur Startseite
-        self.show_mainpage(widget)
 
 
     def save_pkv(self, widget):
@@ -1983,6 +1983,9 @@ class Kontolupe(toga.App):
         if nachricht != '':
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
             return
+        
+        # Wechsel zur Startseite
+        self.show_mainpage(widget)
 
         # Beginn der Speicherroutine
         if not self.flag_edit_pkv:
@@ -1999,9 +2002,6 @@ class Kontolupe(toga.App):
 
             # Speichere das PKV-Paket in der Datenbank
             self.daten.new(INSURANCE_OBJECT, insurance, bill_db_ids=bill_db_ids)
-
-        # Wechsel zur Startseite
-        self.show_mainpage(widget)
 
 
     async def delete_beihilfe(self, widget):
