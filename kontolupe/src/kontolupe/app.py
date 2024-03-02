@@ -1011,6 +1011,9 @@ class Kontolupe(toga.App):
             self.main_window.error_dialog('Fehlerhafte Eingabe', nachricht)
             return
         
+        # Zeigt die Liste der Rechnungen an.
+        self.show_list_bills(widget) 
+        
         # Beginn der Speicherroutine
         if not self.flag_edit_bill:
         # Erstelle eine neue Rechnung
@@ -1088,10 +1091,7 @@ class Kontolupe(toga.App):
             # und wenn ja, frage, ob diese aktualisiert werden soll
             if update_einreichung and bill['pkv_id'] is not None:
                 if await self.main_window.question_dialog('Zugehörige PKV-Einreichung aktualisieren', 'Soll die zugehörige PKV-Einreichung aktualisiert werden?'):
-                    self.daten.update_submit_amount(INSURANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.insurances, bill['pkv_id']))
-
-        # Zeigt die Liste der Rechnungen an.
-        self.show_list_bills(widget)     
+                    self.daten.update_submit_amount(INSURANCE_OBJECT, self.daten.get_element_by_dbid(self.daten.insurances, bill['pkv_id']))    
 
 
     async def delete_bill(self, widget):
