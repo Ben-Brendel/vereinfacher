@@ -2120,23 +2120,41 @@ class Kontolupe(toga.App):
         # Daten-Interface initialisieren
         self.daten = DataInterface(self.paths.data)
 
+        print(f'+++ Kontolupe.startup: Daten initialisiert')
+
         # Erzeuge alle GUI-Elemente
         self.create_init_page()
+        print('+++ Kontolupe.startup: Init-Seite erstellt')
         self.create_mainpage()
+        print('+++ Kontolupe.startup: Hauptseite erstellt')
         self.create_list_bills()
+        print('+++ Kontolupe.startup: Rechnungsliste erstellt')
         self.create_form_bill()
+        print('+++ Kontolupe.startup: Rechnungsformular erstellt')
         self.create_list_institutions()
+        print('+++ Kontolupe.startup: Einrichtungsliste erstellt')
         self.create_form_institution()
+        print('+++ Kontolupe.startup: Einrichtungsformular erstellt')
         self.create_info_institution()
+        print('+++ Kontolupe.startup: Einrichtungsdetails erstellt')
         self.create_list_beihilfe()
+        print('+++ Kontolupe.startup: Beihilfeliste erstellt')
         self.create_form_beihilfe()
+        print('+++ Kontolupe.startup: Beihilfeformular erstellt')
         self.create_list_pkv()
+        print('+++ Kontolupe.startup: PKV-Liste erstellt')
         self.create_form_pkv()
+        print('+++ Kontolupe.startup: PKV-Formular erstellt')
         self.create_list_persons()
+        print('+++ Kontolupe.startup: Personenliste erstellt')
         self.create_form_person()
+        print('+++ Kontolupe.startup: Personenformular erstellt')
         self.create_webview()   
+        print('+++ Kontolupe.startup: Webview erstellt')
         self.create_settings()
+        print('+++ Kontolupe.startup: Einstellungen erstellt')
         self.create_statistics()
+        print('+++ Kontolupe.startup: Statistiken erstellt')
 
         # Zeige die Startseite oder die Init-Seite
         if self.daten.is_first_start():
